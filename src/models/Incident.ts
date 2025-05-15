@@ -12,4 +12,5 @@ export interface Incident {
     esErroneo: boolean;
     aplica: boolean;
     cliente: string;
+    idJira?: string;
 }

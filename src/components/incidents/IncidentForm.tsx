@@ -10,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import AsyncSelect from 'react-select/async';
+import { useJiraIdSuggestions, JiraOption } from '@/hooks/useJiraIdSuggestions';
+import "./styles.css";
 
 interface IncidentFormProps {
     isOpen: boolean;
@@ -29,12 +32,14 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
             asignadoA: '',
             cliente: '',
             esErroneo: false,
-            aplica: true
+            aplica: true,
+            idJira: ''
         }
     );
     
     const [cells, setCells] = useState<Cell[]>([]);
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
+    const { searchJiraIds, loading } = useJiraIdSuggestions();
 
     useEffect(() => {
         // Cargar células
@@ -79,7 +84,52 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                     </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">                    <div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <Label htmlFor="idJira">ID de JIRA</Label>
+                        <AsyncSelect<JiraOption>
+                            inputId="idJira"
+                            cacheOptions
+                            defaultOptions
+                            value={formData.idJira ? { value: formData.idJira, label: formData.idJira } : null}
+                            loadOptions={searchJiraIds}
+                            onChange={(option) => 
+                                setFormData(prev => ({ ...prev, idJira: option?.value || '' }))
+                            }
+                            placeholder="Buscar ID de JIRA..."
+                            classNamePrefix="react-select"
+                            noOptionsMessage={() => "No se encontraron resultados"}
+                            loadingMessage={() => "Buscando..."}
+                            isClearable
+                            styles={{
+                                control: (base) => ({
+                                    ...base,
+                                    minHeight: '40px',
+                                    backgroundColor: 'white',
+                                    borderColor: '#d1d5db',
+                                    '&:hover': {
+                                        borderColor: '#9ca3af'
+                                    }
+                                }),
+                                menu: (base) => ({
+                                    ...base,
+                                    backgroundColor: 'white',
+                                    zIndex: 50
+                                }),
+                                option: (base, state) => ({
+                                    ...base,
+                                    backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? '#bfdbfe' : 'white',
+                                    color: state.isSelected ? 'white' : '#374151',
+                                    cursor: 'pointer',
+                                    ':active': {
+                                        backgroundColor: state.isSelected ? '#2563eb' : '#93c5fd'
+                                    }
+                                })
+                            }}
+                        />
+                    </div>
+
+                    <div>
                         <Label htmlFor="celula">Célula</Label>
                         <Select
                             id="celula"
@@ -148,7 +198,9 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             onChange={handleChange}
                             required
                         />
-                    </div>                    <div className="grid grid-cols-2 gap-4">
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="informadoPor">Informado por</Label>
                             <Select
@@ -167,17 +219,17 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             </Select>
                         </div>
 
-                        <div>
-                            <Label htmlFor="asignadoA">Asignado a</Label>
+                        <div>                            <Label htmlFor="asignadoA">Asignado a</Label>
                             <Select
                                 id="asignadoA"
-                                name="asignadoA"
+                                name="asignadoA" 
                                 value={formData.asignadoA}
                                 onChange={handleChange}
                                 required
+                                className="min-h-[40px] w-full"
                             >
                                 <option value="">Seleccionar analista</option>
-                                {analysts.map(analyst => (
+                                {analysts.sort((a, b) => a.name.localeCompare(b.name)).map(analyst => (
                                     <option key={analyst.id} value={analyst.name}>
                                         {analyst.name}
                                     </option>

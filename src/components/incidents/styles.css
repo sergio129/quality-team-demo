@@ -1,0 +1,54 @@
+.react-select-container {
+  font-size: 0.875rem;
+}
+
+.react-select__control {
+  min-height: 38px !important;
+  border-radius: 0.375rem !important;
+  border-color: hsl(var(--input)) !important;
+}
+
+.react-select__control:hover {
+  border-color: hsl(var(--input)) !important;
+}
+
+.react-select__control--is-focused {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2) !important;
+}
+
+.react-select__menu {
+  border-radius: 0.375rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.react-select__option {
+  padding: 8px 12px !important;
+}
+
+.react-select__option:hover {
+  background-color: hsl(var(--accent) / 0.1) !important;
+}
+
+.react-select__option--is-focused {
+  background-color: hsl(var(--accent) / 0.1) !important;
+}
+
+.react-select__option--is-selected {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.react-select__value-container {
+  padding: 2px 8px !important;
+}
+
+.react-select__input-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.react-select__placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
