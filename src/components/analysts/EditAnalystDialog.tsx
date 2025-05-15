@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useState } from "react";
 import { AnalystForm } from "./AnalystForm";
 
 interface EditAnalystDialogProps {
@@ -18,8 +19,10 @@ interface EditAnalystDialogProps {
 }
 
 export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           Editar
@@ -29,7 +32,12 @@ export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogP
         <DialogHeader>
           <DialogTitle>Editar Analista</DialogTitle>
         </DialogHeader>
-        <AnalystForm analyst={analyst} onSave={onSave} cells={cells} />
+        <AnalystForm 
+          analyst={analyst} 
+          onSave={onSave}
+          cells={cells}
+          onSuccess={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

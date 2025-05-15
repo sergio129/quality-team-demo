@@ -6,23 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { toast } from 'sonner';
 
 interface CellInfo {
   id: string;
   name: string;
-  teamId: string;
 }
 
 interface AnalystFormProps {
   analyst?: QAAnalyst;
   onSave?: () => void;
+  onSuccess?: () => void;
   cells?: CellInfo[];
 }
 
-export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFormProps) {
+export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }: AnalystFormProps) {
   const router = useRouter();
   const [name, setName] = useState(analyst?.name || '');
-  const [email, setEmail] = useState(analyst?.email || '');  const [cellIds, setCellIds] = useState<string[]>(analyst?.cellIds || []);
+  const [email, setEmail] = useState(analyst?.email || '');
+  const [cellIds, setCellIds] = useState<string[]>(analyst?.cellIds || []);
   const [role, setRole] = useState(analyst?.role || '');
   const [cells, setCells] = useState<CellInfo[]>(initialCells || []);
 
@@ -41,32 +43,41 @@ export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFor
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const url = '/api/analysts';
-    const method = analyst ? 'PUT' : 'POST';      const body = analyst 
-      ? JSON.stringify({ id: analyst.id, name, email, cellIds, role })
-      : JSON.stringify({ name, email, cellIds, role });
+    const promise = async () => {
+      const url = '/api/analysts';
+      const method = analyst ? 'PUT' : 'POST';
+      const body = analyst 
+        ? JSON.stringify({ id: analyst.id, name, email, cellIds, role })
+        : JSON.stringify({ name, email, cellIds, role });
 
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
 
-    if (response.ok) {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al guardar el analista');
+      }
+
       if (onSave) {
         onSave();
-      } else {
-        router.refresh();
       }
-      // Cerrar el diálogo
-      const closeButton = document.querySelector('[data-dialog-close]');
-      if (closeButton instanceof HTMLElement) {
-        closeButton.click();
+      
+      router.refresh();
+
+      // Cerrar el diálogo usando el callback
+      if (onSuccess) {
+        onSuccess();
       }
-    } else {
-      const data = await response.json();
-      alert(data.error || 'Error al guardar el analista');
-    }
+    };
+
+    toast.promise(promise, {
+      loading: analyst ? 'Actualizando analista...' : 'Creando analista...',
+      success: analyst ? 'Analista actualizado exitosamente' : 'Analista creado exitosamente',
+      error: (err) => err.message
+    });
   };
 
   return (
@@ -91,7 +102,8 @@ export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFor
           placeholder="Email del analista"
           required
         />
-      </div>      <div className="space-y-2">
+      </div>      
+      <div className="space-y-2">
         <Label htmlFor="cells">Células</Label>
         <select
           id="cells"
