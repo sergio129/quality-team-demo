@@ -9,10 +9,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { TeamForm } from "./TeamForm";
+import { useState } from "react";
 
 export function AddTeamButton() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Nuevo Equipo</Button>
       </DialogTrigger>
@@ -20,7 +23,7 @@ export function AddTeamButton() {
         <DialogHeader>
           <DialogTitle>Agregar Nuevo Equipo</DialogTitle>
         </DialogHeader>
-        <TeamForm />
+        <TeamForm onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

@@ -8,16 +8,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CellForm } from "./CellForm";
-
-interface TeamInfo {
-  id: string;
-  name: string;
-}
+import { useState } from "react";
+import { CellForm } from "@/components/cells/CellForm";
 
 export function AddCellButton() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Agregar Célula</Button>
       </DialogTrigger>
@@ -25,7 +23,7 @@ export function AddCellButton() {
         <DialogHeader>
           <DialogTitle>Agregar Nueva Célula</DialogTitle>
         </DialogHeader>
-        <CellForm />
+        <CellForm onSuccess={() => setOpen(false)} />
       </DialogContent>
     </Dialog>
   );

@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { TeamForm } from "./TeamForm";
+import { useState } from "react";
 
 interface EditTeamDialogProps {
   team: Team;
@@ -17,8 +18,10 @@ interface EditTeamDialogProps {
 }
 
 export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           Editar
@@ -28,7 +31,11 @@ export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
         <DialogHeader>
           <DialogTitle>Editar Equipo</DialogTitle>
         </DialogHeader>
-        <TeamForm team={team} onSave={onSave} />
+        <TeamForm 
+          team={team} 
+          onSave={onSave} 
+          onSuccess={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

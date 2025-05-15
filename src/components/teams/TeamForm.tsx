@@ -12,9 +12,10 @@ import { toast } from 'sonner';
 interface TeamFormProps {
   team?: Team;
   onSave?: () => void;
+  onSuccess?: () => void;
 }
 
-export function TeamForm({ team, onSave }: TeamFormProps) {
+export function TeamForm({ team, onSave, onSuccess }: TeamFormProps) {
   const router = useRouter();
   const [name, setName] = useState(team?.name || '');
   const [description, setDescription] = useState(team?.description || '');
@@ -36,18 +37,15 @@ export function TeamForm({ team, onSave }: TeamFormProps) {
 
       if (!response.ok) {
         throw new Error('Error al guardar el equipo');
-      }
-
-      if (onSave) {
+      }      if (onSave) {
         onSave();
       } else {
         router.refresh();
       }
 
-      // Cerrar el diálogo
-      const closeButton = document.querySelector('[data-dialog-close]');
-      if (closeButton instanceof HTMLElement) {
-        closeButton.click();
+      // Cerrar el diálogo usando el callback
+      if (onSuccess) {
+        onSuccess();
       }
     };
 

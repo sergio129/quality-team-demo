@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
+import { toast } from 'sonner';
 
 interface TeamInfo {
   id: string;
@@ -16,10 +17,11 @@ interface TeamInfo {
 interface CellFormProps {
   cell?: Cell;
   onSave?: () => void;
+  onSuccess?: () => void;
   teams?: TeamInfo[];
 }
 
-export function CellForm({ cell, onSave, teams: initialTeams }: CellFormProps) {
+export function CellForm({ cell, onSave, onSuccess, teams: initialTeams }: CellFormProps) {
   const router = useRouter();
   const [name, setName] = useState(cell?.name || '');
   const [teamId, setTeamId] = useState(cell?.teamId || '');
@@ -41,33 +43,41 @@ export function CellForm({ cell, onSave, teams: initialTeams }: CellFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const url = '/api/cells';
-    const method = cell ? 'PUT' : 'POST';
-    const body = cell 
-      ? JSON.stringify({ id: cell.id, name, teamId, description })
-      : JSON.stringify({ name, teamId, description });
+    const promise = async () => {
+      const url = '/api/cells';
+      const method = cell ? 'PUT' : 'POST';
+      const body = cell 
+        ? JSON.stringify({ id: cell.id, name, teamId, description })
+        : JSON.stringify({ name, teamId, description });
 
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      });
 
-    if (response.ok) {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al guardar la célula');
+      }
+
       if (onSave) {
         onSave();
       } else {
         router.refresh();
       }
-      // Cerrar el diálogo
-      const closeButton = document.querySelector('[data-dialog-close]');
-      if (closeButton instanceof HTMLElement) {
-        closeButton.click();
+
+      // Cerrar el diálogo usando el callback
+      if (onSuccess) {
+        onSuccess();
       }
-    } else {
-      const data = await response.json();
-      alert(data.error || 'Error al guardar la célula');
-    }
+    };
+
+    toast.promise(promise, {
+      loading: cell ? 'Actualizando célula...' : 'Creando célula...',
+      success: cell ? 'Célula actualizada exitosamente' : 'Célula creada exitosamente',
+      error: (err) => err.message
+    });
   };
 
   return (

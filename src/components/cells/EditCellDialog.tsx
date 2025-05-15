@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useState } from "react";
 import { CellForm } from "./CellForm";
 
 interface EditCellDialogProps {
@@ -18,8 +19,10 @@ interface EditCellDialogProps {
 }
 
 export function EditCellDialog({ cell, onSave, teams }: EditCellDialogProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           Editar
@@ -29,7 +32,12 @@ export function EditCellDialog({ cell, onSave, teams }: EditCellDialogProps) {
         <DialogHeader>
           <DialogTitle>Editar Célula</DialogTitle>
         </DialogHeader>
-        <CellForm cell={cell} onSave={onSave} teams={teams} />
+        <CellForm 
+          cell={cell} 
+          onSave={onSave} 
+          teams={teams} 
+          onSuccess={() => setOpen(false)}
+        />
       </DialogContent>
     </Dialog>
   );

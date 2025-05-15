@@ -5,13 +5,13 @@
     "id": "dff81438-8dac-4b51-b9b8-f0fb54463cd8"
   },
   {
-    "name": "Sergio Anaya Romero",
-    "description": "",
-    "id": "ee6c27ac-749c-4073-b644-f37d02411d32"
+    "name": "General",
+    "description": "Pruebde Agregar cualquier Analista",
+    "id": "5a4904f8-ac1b-4883-a3d4-a0a8b0ef0528"
   },
   {
-    "name": "Sergio Anaya Romero",
-    "description": "",
-    "id": "fbecbffe-2430-4185-a8d7-b926e98c4896"
+    "name": "TechBridge",
+    "description": "Lider Angela Perez",
+    "id": "c05c462d-0b35-43e7-9cd5-3f4e468c9e9c"
   }
 ]

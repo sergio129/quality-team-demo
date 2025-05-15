@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "name": "KCRM",
+    "teamId": "dff81438-8dac-4b51-b9b8-f0fb54463cd8",
+    "description": "Bancolombia",
+    "id": "18cec5e1-b822-491a-86af-c22264f0e307"
+  },
+  {
+    "name": "Servicio Virtuales",
+    "teamId": "c05c462d-0b35-43e7-9cd5-3f4e468c9e9c",
+    "description": "Clientes Varios",
+    "id": "ed17c938-0bf2-4a55-99ba-18b195712c23"
+  }
+]

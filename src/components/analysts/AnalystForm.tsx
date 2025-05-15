@@ -22,8 +22,7 @@ interface AnalystFormProps {
 export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFormProps) {
   const router = useRouter();
   const [name, setName] = useState(analyst?.name || '');
-  const [email, setEmail] = useState(analyst?.email || '');
-  const [cellId, setCellId] = useState(analyst?.cellId || '');
+  const [email, setEmail] = useState(analyst?.email || '');  const [cellIds, setCellIds] = useState<string[]>(analyst?.cellIds || []);
   const [role, setRole] = useState(analyst?.role || '');
   const [cells, setCells] = useState<CellInfo[]>(initialCells || []);
 
@@ -43,10 +42,9 @@ export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFor
     e.preventDefault();
 
     const url = '/api/analysts';
-    const method = analyst ? 'PUT' : 'POST';
-    const body = analyst 
-      ? JSON.stringify({ id: analyst.id, name, email, cellId, role })
-      : JSON.stringify({ name, email, cellId, role });
+    const method = analyst ? 'PUT' : 'POST';      const body = analyst 
+      ? JSON.stringify({ id: analyst.id, name, email, cellIds, role })
+      : JSON.stringify({ name, email, cellIds, role });
 
     const response = await fetch(url, {
       method,
@@ -93,23 +91,26 @@ export function AnalystForm({ analyst, onSave, cells: initialCells }: AnalystFor
           placeholder="Email del analista"
           required
         />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="cellId">Célula</Label>
+      </div>      <div className="space-y-2">
+        <Label htmlFor="cells">Células</Label>
         <select
-          id="cellId"
-          value={cellId}
-          onChange={(e) => setCellId(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          id="cells"
+          multiple
+          value={cellIds}
+          onChange={(e) => {
+            const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+            setCellIds(selectedOptions);
+          }}
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           required
         >
-          <option value="">Seleccionar célula</option>
           {cells.map((cell) => (
             <option key={cell.id} value={cell.id}>
               {cell.name}
             </option>
           ))}
         </select>
+        <p className="text-sm text-gray-500">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples células</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="role">Rol</Label>

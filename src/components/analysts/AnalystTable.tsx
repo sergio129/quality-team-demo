@@ -56,14 +56,16 @@ export function DataTable() {
     }
   };
 
-  const getCellName = (cellId: string) => {
-    return cells.find(cell => cell.id === cellId)?.name || 'Célula no encontrada';
+  const  getCellNames = (cellIds: string[]) => {
+    return cellIds
+      .map(id => cells.find(cell => cell.id === id)?.name || 'Célula no encontrada')
+      .join(', ');
   };
 
   const filteredAnalysts = analysts.filter(analyst =>
     analyst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     analyst.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getCellName(analyst.cellId).toLowerCase().includes(searchTerm.toLowerCase()) ||
+    analyst.cellIds.some(id => getCellNames([id]).toLowerCase().includes(searchTerm.toLowerCase())) ||
     analyst.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -89,11 +91,10 @@ export function DataTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAnalysts.map((analyst) => (
-              <TableRow key={analyst.id}>
+            {filteredAnalysts.map((analyst) => (              <TableRow key={analyst.id}>
                 <TableCell>{analyst.name}</TableCell>
                 <TableCell>{analyst.email}</TableCell>
-                <TableCell>{getCellName(analyst.cellId)}</TableCell>
+                <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
                 <TableCell>{analyst.role}</TableCell>
                 <TableCell className="text-right">
                   <EditAnalystDialog analyst={analyst} onSave={fetchAnalysts} cells={cells} />
