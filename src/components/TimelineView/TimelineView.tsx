@@ -11,15 +11,20 @@ interface TimelineViewProps {
 
 export function TimelineView({ projects, analysts }: TimelineViewProps) {
     const [dates, setDates] = useState<Date[]>([]);
-    const [startDate, setStartDate] = useState(new Date());
+    const [startDate, setStartDate] = useState(() => {
+        const today = new Date();
+        // Comenzar desde el primer día del mes actual
+        return new Date(today.getFullYear(), today.getMonth(), 1);
+    });
 
     // Generar fechas para un mes
     useEffect(() => {
         const newDates: Date[] = [];
         const currentDate = new Date(startDate);
+        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
         
-        // Generar 30 días desde la fecha inicial
-        for (let i = 0; i < 30; i++) {
+        // Generar fechas hasta el último día del mes
+        while (currentDate <= lastDayOfMonth) {
             newDates.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
@@ -33,17 +38,22 @@ export function TimelineView({ projects, analysts }: TimelineViewProps) {
     };
 
     const formatDate = (date: Date) => {
-        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+        return date.getDate() + ' ' + date.toLocaleDateString('es-ES', { month: 'short' });
     };
 
     // Verificar si un proyecto está activo en una fecha dada
     const isProjectActive = (project: Project, date: Date) => {
-        const startDate = new Date(project.fechaEntrega);
-        const endDate = project.fechaCertificacion ? new Date(project.fechaCertificacion) : 
-                       project.fechaRealEntrega ? new Date(project.fechaRealEntrega) :
-                       new Date(project.fechaEntrega);
-        
-        return date >= startDate && date <= endDate;
+        const projectDate = new Date(project.fechaEntrega);
+        const projectEndDate = project.fechaCertificacion ? new Date(project.fechaCertificacion) : 
+                             project.fechaRealEntrega ? new Date(project.fechaRealEntrega) :
+                             new Date(project.fechaEntrega);
+
+        // Asegurarnos de que comparamos solo las fechas sin la hora
+        const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const startDate = new Date(projectDate.getFullYear(), projectDate.getMonth(), projectDate.getDate());
+        const endDate = new Date(projectEndDate.getFullYear(), projectEndDate.getMonth(), projectEndDate.getDate());
+
+        return compareDate >= startDate && compareDate <= endDate;
     };
 
     // Función para determinar el color del proyecto
