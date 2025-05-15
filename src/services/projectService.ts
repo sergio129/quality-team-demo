@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+const fs = require('fs').promises;
+const path = require('path');
 import { Project } from '@/models/Project';
 
 const FILE_PATH = path.join(process.cwd(), 'data', 'seguimiento.txt');

@@ -2,7 +2,6 @@
 
 import { Project } from '@/models/Project';
 import { useState, useEffect } from 'react';
-import { projectService } from '@/services/projectService';
 
 export default function ProjectTable() {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -16,25 +15,47 @@ export default function ProjectTable() {
     }, []);
 
     async function loadProjects() {
-        const data = await projectService.getAllProjects();
+        const response = await fetch('/api/projects');
+        const data = await response.json();
         setProjects(data);
     }
 
     async function handleSave(project: Project) {
-        if (editingProject) {
-            await projectService.updateProject(project.idJira, project);
-        } else {
-            await projectService.saveProject(project as Project);
+        const url = '/api/projects';
+        const method = editingProject ? 'PUT' : 'POST';
+        const body = editingProject ? 
+            JSON.stringify({ idJira: project.idJira, project }) : 
+            JSON.stringify(project);
+
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body
+        });
+
+        if (response.ok) {
+            await loadProjects();
+            setEditingProject(null);
+            setShowForm(false);
+            setNewProject({});
         }
-        await loadProjects();
-        setEditingProject(null);
-        setShowForm(false);
     }
 
     async function handleDelete(idJira: string) {
         if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
-            await projectService.deleteProject(idJira);
-            await loadProjects();
+            const response = await fetch('/api/projects', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idJira })
+            });
+
+            if (response.ok) {
+                await loadProjects();
+            }
         }
     }
 
