@@ -21,10 +21,10 @@ interface IncidentFormProps {
 }
 
 export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFormProps) {
-    const [formData, setFormData] = useState<Partial<Incident>>(incident || {
+    const [formData, setFormData] = useState<Partial<Incident>>({
         celula: '',
         estado: 'Abierto',
-        prioridad: '',
+        prioridad: 'Media', // Default to 'Media'
         descripcion: '',
         fechaCreacion: new Date(),
         informadoPor: '',
@@ -35,6 +35,13 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         cliente: '',
         idJira: ''
     });
+
+    // Update formData when incident changes
+    useEffect(() => {
+        if (incident) {
+            setFormData(incident);
+        }
+    }, [incident]);
 
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
     const { searchJiraIds, loading } = useJiraIdSuggestions();
@@ -61,7 +68,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         await onSubmit({
             ...formData,
             fechaCreacion: formData.fechaCreacion || new Date(),
-            diasAbierto: 0
+            diasAbierto: formData.diasAbierto || 0
         });
         onClose();
     };
