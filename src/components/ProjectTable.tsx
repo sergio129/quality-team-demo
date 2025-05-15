@@ -2,8 +2,13 @@
 
 import { Project } from '@/models/Project';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 const HOURS_PER_DAY = 9;
+
+interface FormErrors {
+    [key: string]: string;
+}
 
 export default function ProjectTable() {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -11,12 +16,13 @@ export default function ProjectTable() {
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [newProject, setNewProject] = useState<Partial<Project>>({});
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         loadProjects();
     }, []);
 
-    // Calculate days when hours change
     useEffect(() => {
         if (newProject.horas) {
             setNewProject(prev => ({
@@ -26,7 +32,6 @@ export default function ProjectTable() {
         }
     }, [newProject.horas]);
 
-    // Calculate delay days when dates change
     useEffect(() => {
         if (newProject.fechaEntrega && newProject.fechaRealEntrega) {
             const entrega = new Date(newProject.fechaEntrega);
@@ -46,26 +51,92 @@ export default function ProjectTable() {
         setProjects(data);
     }
 
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
+        
+        if (!newProject.idJira?.trim()) {
+            newErrors.idJira = 'El ID de Jira es requerido';
+        } else if (!/^[A-Z]+-\d+$/.test(newProject.idJira)) {
+            newErrors.idJira = 'Formato inválido. Debe ser como "PROJ-123"';
+        }
+
+        if (!newProject.proyecto?.trim()) {
+            newErrors.proyecto = 'El nombre del proyecto es requerido';
+        }
+
+        if (!newProject.equipo?.trim()) {
+            newErrors.equipo = 'El equipo es requerido';
+        }
+
+        if (!newProject.celula?.trim()) {
+            newErrors.celula = 'La célula es requerida';
+        }
+
+        if (!newProject.horas || newProject.horas <= 0) {
+            newErrors.horas = 'Las horas deben ser mayores a 0';
+        }
+
+        if (!newProject.fechaEntrega) {
+            newErrors.fechaEntrega = 'La fecha de entrega es requerida';
+        }
+
+        if (!newProject.analistaProducto?.trim()) {
+            newErrors.analistaProducto = 'El analista de producto es requerido';
+        }
+
+        if (!newProject.planTrabajo?.trim()) {
+            newErrors.planTrabajo = 'El plan de trabajo es requerido';
+        }
+
+        if (newProject.fechaRealEntrega && newProject.fechaCertificacion) {
+            const realEntrega = new Date(newProject.fechaRealEntrega);
+            const certificacion = new Date(newProject.fechaCertificacion);
+            
+            if (certificacion < realEntrega) {
+                newErrors.fechaCertificacion = 'La fecha de certificación no puede ser anterior a la fecha real de entrega';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     async function handleSave(project: Project) {
-        const url = '/api/projects';
-        const method = editingProject ? 'PUT' : 'POST';
-        const body = editingProject ? 
-            JSON.stringify({ idJira: project.idJira, project }) : 
-            JSON.stringify(project);
+        if (!validateForm()) {
+            toast.error('Por favor, corrija los errores en el formulario');
+            return;
+        }
 
-        const response = await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body
-        });
+        setIsLoading(true);
+        try {
+            const url = '/api/projects';
+            const method = editingProject ? 'PUT' : 'POST';
+            const body = editingProject ? 
+                JSON.stringify({ idJira: project.idJira, project }) : 
+                JSON.stringify(project);
 
-        if (response.ok) {
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al guardar el proyecto');
+            }
+
             await loadProjects();
             setEditingProject(null);
             setShowForm(false);
             setNewProject({});
+            setErrors({});
+            toast.success(editingProject ? 'Proyecto actualizado correctamente' : 'Proyecto creado correctamente');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Error al guardar el proyecto');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -114,7 +185,7 @@ export default function ProjectTable() {
 
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4">
+                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
                         <form onSubmit={(e) => {
                             e.preventDefault();
@@ -122,139 +193,217 @@ export default function ProjectTable() {
                         }} className="space-y-4">
                             {/* ID Jira */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    ID Jira
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    placeholder="ID Jira"
-                                    className="border p-2 rounded w-full"
+                                    placeholder="Ej: PROJ-123"
+                                    pattern="[A-Z]+-[0-9]+"
+                                    className={`border p-2 rounded w-full ${errors.idJira ? 'border-red-500' : ''}`}
                                     value={newProject.idJira || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, idJira: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, idJira: e.target.value.toUpperCase() });
+                                        if (errors.idJira) {
+                                            setErrors({ ...errors, idJira: '' });
+                                        }
+                                    }}
                                     required
                                 />
+                                {errors.idJira && <p className="text-red-500 text-sm">{errors.idJira}</p>}
                             </div>
 
                             {/* Proyecto */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Proyecto
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    placeholder="Proyecto"
-                                    className="border p-2 rounded w-full"
+                                    placeholder="Nombre del proyecto"
+                                    className={`border p-2 rounded w-full ${errors.proyecto ? 'border-red-500' : ''}`}
                                     value={newProject.proyecto || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, proyecto: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, proyecto: e.target.value });
+                                        if (errors.proyecto) setErrors({ ...errors, proyecto: '' });
+                                    }}
                                     required
                                 />
+                                {errors.proyecto && <p className="text-red-500 text-sm">{errors.proyecto}</p>}
                             </div>
 
                             {/* Equipo */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Equipo
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    placeholder="Equipo"
-                                    className="border p-2 rounded w-full"
+                                    placeholder="Nombre del equipo"
+                                    className={`border p-2 rounded w-full ${errors.equipo ? 'border-red-500' : ''}`}
                                     value={newProject.equipo || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, equipo: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, equipo: e.target.value });
+                                        if (errors.equipo) setErrors({ ...errors, equipo: '' });
+                                    }}
                                     required
                                 />
+                                {errors.equipo && <p className="text-red-500 text-sm">{errors.equipo}</p>}
                             </div>
 
                             {/* Célula */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Célula
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    placeholder="Célula"
-                                    className="border p-2 rounded w-full"
+                                    placeholder="Nombre de la célula"
+                                    className={`border p-2 rounded w-full ${errors.celula ? 'border-red-500' : ''}`}
                                     value={newProject.celula || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, celula: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, celula: e.target.value });
+                                        if (errors.celula) setErrors({ ...errors, celula: '' });
+                                    }}
                                     required
                                 />
+                                {errors.celula && <p className="text-red-500 text-sm">{errors.celula}</p>}
                             </div>
 
                             {/* Horas */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Horas
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="number"
-                                    placeholder="Horas"
-                                    className="border p-2 rounded w-full"
-                                    value={newProject.horas || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, horas: parseInt(e.target.value) })}
                                     min="1"
+                                    placeholder="Número de horas"
+                                    className={`border p-2 rounded w-full ${errors.horas ? 'border-red-500' : ''}`}
+                                    value={newProject.horas || ''}
+                                    onChange={(e) => {
+                                        const hours = parseInt(e.target.value);
+                                        setNewProject({ ...newProject, horas: hours });
+                                        if (errors.horas) setErrors({ ...errors, horas: '' });
+                                    }}
                                     required
                                 />
+                                {errors.horas && <p className="text-red-500 text-sm">{errors.horas}</p>}
+                                <p className="text-sm text-gray-500">Las horas se convertirán automáticamente a días (9 horas = 1 día)</p>
                             </div>
 
                             {/* Días (calculado automáticamente) */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Días (Automático)</label>
                                 <input
                                     type="number"
-                                    placeholder="Días"
+                                    placeholder="Días calculados"
                                     className="border p-2 rounded w-full bg-gray-100"
                                     value={newProject.dias || ''}
                                     readOnly
                                 />
-                                <p className="text-sm text-gray-500">Calculado automáticamente (9 horas = 1 día)</p>
                             </div>
 
                             {/* Fecha Entrega */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Fecha de Entrega Planificada
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="date"
-                                    className="border p-2 rounded w-full"
+                                    className={`border p-2 rounded w-full ${errors.fechaEntrega ? 'border-red-500' : ''}`}
                                     value={newProject.fechaEntrega ? new Date(newProject.fechaEntrega).toISOString().split('T')[0] : ''}
-                                    onChange={(e) => setNewProject({ ...newProject, fechaEntrega: new Date(e.target.value) })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, fechaEntrega: new Date(e.target.value) });
+                                        if (errors.fechaEntrega) setErrors({ ...errors, fechaEntrega: '' });
+                                    }}
                                     required
                                 />
-                                <p className="text-sm text-gray-500">Fecha de entrega planificada</p>
+                                {errors.fechaEntrega && <p className="text-red-500 text-sm">{errors.fechaEntrega}</p>}
                             </div>
 
                             {/* Fecha Real Entrega */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Fecha Real de Entrega</label>
                                 <input
                                     type="date"
-                                    className="border p-2 rounded w-full"
+                                    className={`border p-2 rounded w-full ${errors.fechaRealEntrega ? 'border-red-500' : ''}`}
                                     value={newProject.fechaRealEntrega ? new Date(newProject.fechaRealEntrega).toISOString().split('T')[0] : ''}
-                                    onChange={(e) => setNewProject({ ...newProject, fechaRealEntrega: new Date(e.target.value) })}
+                                    onChange={(e) => {
+                                        const date = e.target.value ? new Date(e.target.value) : null;
+                                        setNewProject({ ...newProject, fechaRealEntrega: date || undefined });
+                                        if (errors.fechaRealEntrega) setErrors({ ...errors, fechaRealEntrega: '' });
+                                    }}
                                 />
-                                <p className="text-sm text-gray-500">Fecha real de entrega (opcional)</p>
+                                {errors.fechaRealEntrega && <p className="text-red-500 text-sm">{errors.fechaRealEntrega}</p>}
                             </div>
 
                             {/* Fecha Certificación */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Fecha de Certificación</label>
                                 <input
                                     type="date"
-                                    className="border p-2 rounded w-full"
+                                    className={`border p-2 rounded w-full ${errors.fechaCertificacion ? 'border-red-500' : ''}`}
                                     value={newProject.fechaCertificacion ? new Date(newProject.fechaCertificacion).toISOString().split('T')[0] : ''}
-                                    onChange={(e) => setNewProject({ ...newProject, fechaCertificacion: new Date(e.target.value) })}
+                                    onChange={(e) => {
+                                        const date = e.target.value ? new Date(e.target.value) : null;
+                                        setNewProject({ ...newProject, fechaCertificacion: date || undefined });
+                                        if (errors.fechaCertificacion) setErrors({ ...errors, fechaCertificacion: '' });
+                                    }}
                                 />
-                                <p className="text-sm text-gray-500">Fecha de certificación (opcional)</p>
+                                {errors.fechaCertificacion && <p className="text-red-500 text-sm">{errors.fechaCertificacion}</p>}
                             </div>
 
                             {/* Días de Retraso (calculado automáticamente) */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Días de Retraso (Automático)</label>
                                 <input
                                     type="number"
-                                    placeholder="Días de Retraso"
+                                    placeholder="Días de retraso"
                                     className="border p-2 rounded w-full bg-gray-100"
                                     value={newProject.diasRetraso || 0}
                                     readOnly
                                 />
-                                <p className="text-sm text-gray-500">Calculado automáticamente al establecer la fecha real de entrega</p>
                             </div>
 
                             {/* Analista Producto */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Analista de Producto
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <input
-                                    placeholder="Analista de Producto"
-                                    className="border p-2 rounded w-full"
+                                    placeholder="Nombre del analista"
+                                    className={`border p-2 rounded w-full ${errors.analistaProducto ? 'border-red-500' : ''}`}
                                     value={newProject.analistaProducto || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, analistaProducto: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, analistaProducto: e.target.value });
+                                        if (errors.analistaProducto) setErrors({ ...errors, analistaProducto: '' });
+                                    }}
                                     required
                                 />
+                                {errors.analistaProducto && <p className="text-red-500 text-sm">{errors.analistaProducto}</p>}
                             </div>
 
                             {/* Plan de Trabajo */}
                             <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Plan de Trabajo
+                                    <span className="text-red-500">*</span>
+                                </label>
                                 <textarea
-                                    placeholder="Plan de Trabajo"
-                                    className="border p-2 rounded w-full h-24"
+                                    placeholder="Descripción del plan de trabajo"
+                                    className={`border p-2 rounded w-full h-24 ${errors.planTrabajo ? 'border-red-500' : ''}`}
                                     value={newProject.planTrabajo || ''}
-                                    onChange={(e) => setNewProject({ ...newProject, planTrabajo: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewProject({ ...newProject, planTrabajo: e.target.value });
+                                        if (errors.planTrabajo) setErrors({ ...errors, planTrabajo: '' });
+                                    }}
                                     required
                                 />
+                                {errors.planTrabajo && <p className="text-red-500 text-sm">{errors.planTrabajo}</p>}
                             </div>
 
                             <div className="flex justify-end space-x-2">
@@ -264,16 +413,29 @@ export default function ProjectTable() {
                                         setShowForm(false);
                                         setEditingProject(null);
                                         setNewProject({});
+                                        setErrors({});
                                     }}
-                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                                    disabled={isLoading}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
+                                    disabled={isLoading}
                                 >
-                                    {editingProject ? 'Actualizar' : 'Guardar'}
+                                    {isLoading ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Guardando...
+                                        </>
+                                    ) : (
+                                        editingProject ? 'Actualizar' : 'Guardar'
+                                    )}
                                 </button>
                             </div>
                         </form>
