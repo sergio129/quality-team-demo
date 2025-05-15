@@ -1,7 +1,7 @@
 [
   {
     "celula": "KCRM",
-    "estado": "Abierto",
+    "estado": "Resuelto",
     "prioridad": "Media",
     "descripcion": "Agregar responsable existente en las listas -se evidencia que al realizar la configuración está agregando de manera exitosa cuando debería visualizarse mensaje de validación que el responsable se encuentra registrado ",
     "fechaCreacion": "2025-05-15T22:29:25.468Z",
@@ -12,6 +12,7 @@
     "aplica": false,
     "cliente": "Koin",
     "idJira": "KOIN-235",
-    "id": "INC-20250515-001"
+    "id": "INC-20250515-001",
+    "fechaSolucion": "2025-05-15T22:50:37.672Z"
   }
 ]

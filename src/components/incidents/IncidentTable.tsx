@@ -5,6 +5,8 @@ import { Incident } from '@/models/Incident';
 import { IncidentStats } from '@/services/incidentService';
 import { StatsView } from './StatsView';
 import { IncidentForm } from './IncidentForm';
+import { IncidentDetailsDialog } from './IncidentDetailsDialog';
+import { ChangeStatusDialog } from './ChangeStatusDialog';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,10 +33,18 @@ export function IncidentTable() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedIncident, setSelectedIncident] = useState<Incident | undefined>();
     
+    // Estado para el diálogo de cambio de estado
+    const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+    const [incidentToChangeStatus, setIncidentToChangeStatus] = useState<Incident | null>(null);
+    
     // Confirmation dialog state
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [incidentToDelete, setIncidentToDelete] = useState<string | null>(null);
     
+    // Estado para el diálogo de detalles
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+    const [incidentToView, setIncidentToView] = useState<Incident | null>(null);
+
     // Filter state
     const [filters, setFilters] = useState({
         estado: '',
@@ -53,9 +63,9 @@ export function IncidentTable() {
             const response = await fetch('/api/incidents');
             const data = await response.json();
             setIncidents(data);
+            setLoading(false);
         } catch (error) {
             console.error('Error fetching incidents:', error);
-        } finally {
             setLoading(false);
         }
     };
@@ -70,23 +80,7 @@ export function IncidentTable() {
         }
     };
 
-    const getPriorityColor = (prioridad: string) => {
-        switch (prioridad) {
-            case 'Alta': return 'bg-red-100 text-red-800';
-            case 'Media': return 'bg-yellow-100 text-yellow-800';
-            case 'Baja': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };
-
-    const getStatusColor = (estado: string) => {
-        switch (estado) {
-            case 'Abierto': return 'bg-red-100 text-red-800';
-            case 'En Progreso': return 'bg-yellow-100 text-yellow-800';
-            case 'Resuelto': return 'bg-green-100 text-green-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
-    };    const handleCreateIncident = async (incident: Partial<Incident>) => {
+    const handleCreateIncident = async (incident: Partial<Incident>) => {
         try {
             const response = await fetch('/api/incidents', {
                 method: 'POST',
@@ -108,7 +102,10 @@ export function IncidentTable() {
             const response = await fetch('/api/incidents', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: selectedIncident?.id, incident })
+                body: JSON.stringify({ 
+                    id: selectedIncident?.id || incidentToChangeStatus?.id, 
+                    incident 
+                })
             });
             
             if (response.ok) {
@@ -152,6 +149,19 @@ export function IncidentTable() {
         setSelectedIncident(undefined);
     };
 
+    const getStatusColor = (estado: string) => {
+        switch (estado) {
+            case 'Abierto': return 'bg-red-100 text-red-800';
+            case 'En Progreso': return 'bg-yellow-100 text-yellow-800';
+            case 'Resuelto': return 'bg-green-100 text-green-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    if (loading) {
+        return <div>Cargando...</div>;
+    }
+
     const filteredIncidents = incidents.filter(incident => {
         const matchesSearch = incident.descripcion.toLowerCase().includes(filters.search.toLowerCase()) ||
                             incident.informadoPor.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -165,56 +175,62 @@ export function IncidentTable() {
         return matchesSearch && matchesEstado && matchesPrioridad && matchesCliente;
     });
 
-    if (loading) {
-        return <div>Cargando...</div>;
-    }
-
     return (
-        <div className="space-y-6">
-            <StatsView stats={stats} />
-
-            <div className="bg-white p-6 rounded-lg shadow-lg">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">Lista de Incidencias</h2>
-                    <Button onClick={() => setIsFormOpen(true)}>Nueva Incidencia</Button>
+        <div className="container mx-auto py-6">
+            <div className="flex justify-between items-start mb-6">
+                <div className="space-y-4">
+                    <h1 className="text-2xl font-bold">Gestión de Incidentes</h1>
+                    <StatsView stats={stats} />
                 </div>
+                <Button
+                    onClick={() => {
+                        setSelectedIncident(undefined);
+                        setIsFormOpen(true);
+                    }}
+                >
+                    Nuevo Incidente
+                </Button>
+            </div>
 
-                {/* Filters */}
-                <div className="grid grid-cols-4 gap-4 mb-4">
-                    <Input
-                        placeholder="Buscar..."
-                        value={filters.search}
-                        onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    />
-                    <Select
-                        value={filters.estado}
-                        onChange={(e) => setFilters(prev => ({ ...prev, estado: e.target.value }))}
-                    >
-                        <option value="">Todos los estados</option>
-                        <option value="Abierto">Abierto</option>
-                        <option value="En Progreso">En Progreso</option>
-                        <option value="Resuelto">Resuelto</option>
-                    </Select>
-                    <Select
-                        value={filters.prioridad}
-                        onChange={(e) => setFilters(prev => ({ ...prev, prioridad: e.target.value }))}
-                    >
-                        <option value="">Todas las prioridades</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Media">Media</option>
-                        <option value="Baja">Baja</option>
-                    </Select>
-                    <Select
-                        value={filters.cliente}
-                        onChange={(e) => setFilters(prev => ({ ...prev, cliente: e.target.value }))}
-                    >
-                        <option value="">Todos los clientes</option>
-                        {Object.keys(stats.totalPorCliente).map(cliente => (
-                            <option key={cliente} value={cliente}>{cliente}</option>
-                        ))}
-                    </Select>
-                </div>
+            <div className="grid grid-cols-4 gap-4 mb-6">
+                <Input
+                    placeholder="Buscar..."
+                    value={filters.search}
+                    onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                />
+                
+                <Select
+                    value={filters.estado}
+                    onChange={e => setFilters(prev => ({ ...prev, estado: e.target.value }))}
+                >
+                    <option value="">Todos los estados</option>
+                    <option value="Abierto">Abierto</option>
+                    <option value="En Progreso">En Progreso</option>
+                    <option value="Resuelto">Resuelto</option>
+                </Select>
 
+                <Select
+                    value={filters.prioridad}
+                    onChange={e => setFilters(prev => ({ ...prev, prioridad: e.target.value }))}
+                >
+                    <option value="">Todas las prioridades</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja</option>
+                </Select>
+
+                <Select
+                    value={filters.cliente}
+                    onChange={e => setFilters(prev => ({ ...prev, cliente: e.target.value }))}
+                >
+                    <option value="">Todos los clientes</option>
+                    {Object.keys(stats.totalPorCliente).map(cliente => (
+                        <option key={cliente} value={cliente}>{cliente}</option>
+                    ))}
+                </Select>
+            </div>
+            
+            <div className="mt-6">
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
@@ -235,7 +251,7 @@ export function IncidentTable() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {incidents.map((incident) => (
+                            {filteredIncidents.map((incident) => (
                                 <TableRow key={incident.id}>
                                     <TableCell>{incident.id}</TableCell>
                                     <TableCell>{incident.celula}</TableCell>
@@ -244,19 +260,28 @@ export function IncidentTable() {
                                             {incident.estado}
                                         </span>
                                     </TableCell>
-                                    <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(incident.prioridad)}`}>
-                                            {incident.prioridad}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="max-w-md truncate">{incident.descripcion}</TableCell>
+                                    <TableCell>{incident.prioridad}</TableCell>
+                                    <TableCell>{incident.descripcion}</TableCell>
                                     <TableCell>{new Date(incident.fechaCreacion).toLocaleDateString()}</TableCell>
                                     <TableCell>{incident.informadoPor}</TableCell>
                                     <TableCell>{incident.asignadoA}</TableCell>
-                                    <TableCell>{incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}</TableCell>
+                                    <TableCell>
+                                        {incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}
+                                    </TableCell>
                                     <TableCell>{incident.diasAbierto}</TableCell>
                                     <TableCell>{incident.esErroneo ? 'Sí' : 'No'}</TableCell>
-                                    <TableCell>{incident.aplica ? 'Sí' : 'No'}</TableCell>                                <TableCell>
+                                    <TableCell>{incident.aplica ? 'Sí' : 'No'}</TableCell>
+                                    <TableCell>
+                                        <Button 
+                                            variant="outline" 
+                                            className="mr-2"
+                                            onClick={() => {
+                                                setIncidentToView(incident);
+                                                setIsDetailsDialogOpen(true);
+                                            }}
+                                        >
+                                            Ver
+                                        </Button>
                                         <Button 
                                             variant="outline" 
                                             className="mr-2"
@@ -266,6 +291,16 @@ export function IncidentTable() {
                                             }}
                                         >
                                             Editar
+                                        </Button>
+                                        <Button 
+                                            variant="outline"
+                                            className="mr-2"
+                                            onClick={() => {
+                                                setIncidentToChangeStatus(incident);
+                                                setIsStatusDialogOpen(true);
+                                            }}
+                                        >
+                                            Cambiar Estado
                                         </Button>
                                         <Button 
                                             variant="destructive"
@@ -293,6 +328,29 @@ export function IncidentTable() {
                 onSubmit={handleSubmit}
                 incident={selectedIncident}
             />
+
+            {incidentToView && (
+                <IncidentDetailsDialog
+                    isOpen={isDetailsDialogOpen}
+                    onClose={() => {
+                        setIsDetailsDialogOpen(false);
+                        setIncidentToView(null);
+                    }}
+                    incident={incidentToView}
+                />
+            )}
+
+            {incidentToChangeStatus && (
+                <ChangeStatusDialog
+                    isOpen={isStatusDialogOpen}
+                    onClose={() => {
+                        setIsStatusDialogOpen(false);
+                        setIncidentToChangeStatus(null);
+                    }}
+                    onSubmit={handleUpdateIncident}
+                    incident={incidentToChangeStatus}
+                />
+            )}
 
             <ConfirmDialog
                 isOpen={isConfirmOpen}
