@@ -80,9 +80,9 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[700px] p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+            <DialogContent className="sm:max-w-[700px] p-8 bg-white rounded-lg shadow-lg border border-gray-200">
                 <DialogHeader className="mb-6">
-                    <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <DialogTitle className="text-2xl font-bold text-gray-700">
                         {incident ? 'Editar Incidente' : 'Nuevo Incidente'}
                     </DialogTitle>
                 </DialogHeader>
@@ -90,7 +90,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="idJira" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <Label htmlFor="idJira" className="text-sm font-medium text-gray-600 mb-2">
                                 ID de JIRA
                             </Label>
                             <AsyncSelect<JiraOption>
@@ -156,7 +156,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <Label htmlFor="celula" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="celula" className="text-sm font-medium text-gray-600 mb-2">
                                     Célula *
                                 </Label>
                                 <Select
@@ -165,7 +165,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     value={formData.celula}
                                     onChange={handleChange}
                                     required
-                                    className="w-full mt-1"
+                                    className="w-full mt-1 bg-white border-gray-300"
                                 >
                                     <option value="">Seleccionar célula...</option>
                                     <option value="Servicio Virtuales">Servicio Virtuales</option>
@@ -177,7 +177,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             </div>
 
                             <div>
-                                <Label htmlFor="cliente" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="cliente" className="text-sm font-medium text-gray-600 mb-2">
                                     Cliente *
                                 </Label>
                                 <Input
@@ -194,7 +194,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <Label htmlFor="informadoPor" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="informadoPor" className="text-sm font-medium text-gray-600 mb-2">
                                     Informado por *
                                 </Label>
                                 <Select
@@ -203,7 +203,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     value={formData.informadoPor}
                                     onChange={handleChange}
                                     required
-                                    className="w-full mt-1"
+                                    className="w-full mt-1 bg-white border-gray-300"
                                 >
                                     <option value="">Seleccionar analista...</option>
                                     {analysts.map((analyst) => (
@@ -215,29 +215,24 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             </div>
 
                             <div>
-                                <Label htmlFor="asignadoA" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="asignadoA" className="text-sm font-medium text-gray-600 mb-2">
                                     Asignado a *
                                 </Label>
-                                <Select
+                                <Input
+                                    type="text"
                                     id="asignadoA"
                                     name="asignadoA"
                                     value={formData.asignadoA}
                                     onChange={handleChange}
                                     required
+                                    placeholder="Nombre del responsable"
                                     className="w-full mt-1"
-                                >
-                                    <option value="">Seleccionar analista...</option>
-                                    {analysts.map((analyst) => (
-                                        <option key={analyst.id} value={analyst.name}>
-                                            {analyst.name}
-                                        </option>
-                                    ))}
-                                </Select>
+                                />
                             </div>
                         </div>
 
                         <div>
-                            <Label htmlFor="descripcion" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <Label htmlFor="descripcion" className="text-sm font-medium text-gray-600 mb-2">
                                 Descripción *
                             </Label>
                             <Textarea
@@ -247,13 +242,13 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                 onChange={handleChange}
                                 required
                                 rows={3}
-                                className="w-full mt-1 resize-none"
+                                className="w-full mt-1 resize-none bg-white border-gray-300"
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <Label htmlFor="estado" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="estado" className="text-sm font-medium text-gray-600 mb-2">
                                     Estado *
                                 </Label>
                                 <Select
@@ -262,7 +257,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     value={formData.estado}
                                     onChange={handleChange}
                                     required
-                                    className="w-full mt-1"
+                                    className="w-full mt-1 bg-white border-gray-300"
                                 >
                                     <option value="Abierto">Abierto</option>
                                     <option value="En Progreso">En Progreso</option>
@@ -271,7 +266,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             </div>
 
                             <div>
-                                <Label htmlFor="prioridad" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <Label htmlFor="prioridad" className="text-sm font-medium text-gray-600 mb-2">
                                     Prioridad *
                                 </Label>
                                 <Select
@@ -280,7 +275,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     value={formData.prioridad}
                                     onChange={handleChange}
                                     required
-                                    className="w-full mt-1"
+                                    className="w-full mt-1 bg-white border-gray-300"
                                 >
                                     <option value="">Seleccionar prioridad...</option>
                                     <option value="Alta">Alta</option>
@@ -299,7 +294,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     onChange={handleChange}
                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
-                                <Label htmlFor="esErroneo" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                <Label htmlFor="esErroneo" className="ml-2 text-sm text-gray-600">
                                     Marcado como erróneo
                                 </Label>
                             </div>
@@ -312,7 +307,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     onChange={handleChange}
                                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 />
-                                <Label htmlFor="aplica" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                <Label htmlFor="aplica" className="ml-2 text-sm text-gray-600">
                                     Aplica
                                 </Label>
                             </div>
@@ -320,7 +315,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                     </div>
 
                     {error && (
-                        <div className="text-sm text-red-600 dark:text-red-400">
+                        <div className="text-sm text-red-600">
                             {error}
                         </div>
                     )}
@@ -330,7 +325,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             Cancelar
                         </Button>

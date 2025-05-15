@@ -12,5 +12,19 @@
     "idJira": "",
     "fechaCreacion": "2025-05-15T21:55:22.742Z",
     "diasAbierto": 1
+  },
+  {
+    "celula": "Servicio Virtuales",
+    "estado": "Resuelto",
+    "prioridad": "Media",
+    "descripcion": "Agregar responsable existente en las listas -se evidencia que al realizar la configuración está agregando de manera exitosa cuando debería visualizarse mensaje de validación que el responsable se encuentra registrado ",
+    "fechaCreacion": "2025-05-15T22:10:54.425Z",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Camilo Lazaro Roa",
+    "diasAbierto": 1,
+    "esErroneo": false,
+    "aplica": true,
+    "cliente": "Koin",
+    "idJira": "KOIN-235"
   }
 ]
