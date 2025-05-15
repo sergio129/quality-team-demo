@@ -8,5 +8,25 @@
     ],
     "role": "Senior",
     "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a"
+  },
+  {
+    "name": "Yoarlis Carrillo\t",
+    "email": "Yoarlys.carrillo@konecta.com",
+    "cellIds": [
+      "18cec5e1-b822-491a-86af-c22264f0e307",
+      "ed17c938-0bf2-4a55-99ba-18b195712c23"
+    ],
+    "role": "Senior",
+    "id": "8947b61d-d634-4844-8b30-9100b632d236"
+  },
+  {
+    "name": "Yulieth Paola\t",
+    "email": "yulieth.guarin@konecta.com",
+    "cellIds": [
+      "18cec5e1-b822-491a-86af-c22264f0e307",
+      "ed17c938-0bf2-4a55-99ba-18b195712c23"
+    ],
+    "role": "Senior",
+    "id": "04367fee-2e91-4a58-ac24-24274222991e"
   }
 ]
