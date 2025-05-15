@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Incident } from '@/models/Incident';
+import { QAAnalyst } from '@/models/QAAnalyst';
+import { Cell } from '@/models/Cell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +32,23 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
             aplica: true
         }
     );
+    
+    const [cells, setCells] = useState<Cell[]>([]);
+    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
+
+    useEffect(() => {
+        // Cargar células
+        fetch('/api/cells')
+            .then(response => response.json())
+            .then(data => setCells(data))
+            .catch(error => console.error('Error loading cells:', error));
+
+        // Cargar analistas
+        fetch('/api/analysts')
+            .then(response => response.json())
+            .then(data => setAnalysts(data))
+            .catch(error => console.error('Error loading analysts:', error));
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -60,16 +79,22 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                     </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
+                <form onSubmit={handleSubmit} className="space-y-4">                    <div>
                         <Label htmlFor="celula">Célula</Label>
-                        <Input
+                        <Select
                             id="celula"
                             name="celula"
                             value={formData.celula}
                             onChange={handleChange}
                             required
-                        />
+                        >
+                            <option value="">Seleccionar célula</option>
+                            {cells.map(cell => (
+                                <option key={cell.id} value={cell.name}>
+                                    {cell.name}
+                                </option>
+                            ))}
+                        </Select>
                     </div>
 
                     <div>
@@ -123,29 +148,41 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             onChange={handleChange}
                             required
                         />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
+                    </div>                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="informadoPor">Informado por</Label>
-                            <Input
+                            <Select
                                 id="informadoPor"
                                 name="informadoPor"
                                 value={formData.informadoPor}
                                 onChange={handleChange}
                                 required
-                            />
+                            >
+                                <option value="">Seleccionar analista</option>
+                                {analysts.map(analyst => (
+                                    <option key={analyst.id} value={analyst.name}>
+                                        {analyst.name}
+                                    </option>
+                                ))}
+                            </Select>
                         </div>
 
                         <div>
                             <Label htmlFor="asignadoA">Asignado a</Label>
-                            <Input
+                            <Select
                                 id="asignadoA"
                                 name="asignadoA"
                                 value={formData.asignadoA}
                                 onChange={handleChange}
                                 required
-                            />
+                            >
+                                <option value="">Seleccionar analista</option>
+                                {analysts.map(analyst => (
+                                    <option key={analyst.id} value={analyst.name}>
+                                        {analyst.name}
+                                    </option>
+                                ))}
+                            </Select>
                         </div>
                     </div>
 
