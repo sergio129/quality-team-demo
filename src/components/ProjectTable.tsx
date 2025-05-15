@@ -29,7 +29,8 @@ export default function ProjectTable() {
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
-    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');
+    }>({ key: null, direction: 'asc' });
+    const [filterEquipo, setFilterEquipo] = useState<string>('');
     const [filterAnalista, setFilterAnalista] = useState<string>('');
     const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'year' | 'custom'>('month');
     const [startDate, setStartDate] = useState(() => {
@@ -78,6 +79,37 @@ export default function ProjectTable() {
         }
     }, [newProject.equipo, cells, teams]);
 
+    useEffect(() => {
+        const today = new Date();
+        let start: Date;
+        let end: Date;
+
+        switch (selectedDateFilter) {
+            case 'week':
+                // Inicio de la semana actual (lunes)
+                start = new Date(today);
+                start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+                start.setHours(0, 0, 0, 0);
+                end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                break;
+            case 'year':
+                // Inicio del año actual
+                start = new Date(today.getFullYear(), 0, 1);
+                end = new Date(today.getFullYear(), 11, 31);
+                break;
+            case 'month':
+            default:
+                // Inicio del mes actual
+                start = new Date(today.getFullYear(), today.getMonth(), 1);
+                end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+        }
+
+        setStartDate(start);
+        setEndDate(end);
+    }, [selectedDateFilter]);
+
     async function loadProjects() {
         const response = await fetch('/api/projects');
         const data = await response.json();
@@ -116,7 +148,7 @@ export default function ProjectTable() {
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
-        
+
         if (!newProject.idJira?.trim()) {
             newErrors.idJira = 'El ID de Jira es requerido';
         } else if (!/^[A-Z]+-\d+$/.test(newProject.idJira)) {
@@ -154,7 +186,7 @@ export default function ProjectTable() {
         if (newProject.fechaRealEntrega && newProject.fechaCertificacion) {
             const realEntrega = new Date(newProject.fechaRealEntrega);
             const certificacion = new Date(newProject.fechaCertificacion);
-            
+
             if (certificacion < realEntrega) {
                 newErrors.fechaCertificacion = 'La fecha de certificación no puede ser anterior a la fecha real de entrega';
             }
@@ -174,8 +206,8 @@ export default function ProjectTable() {
         try {
             const url = '/api/projects';
             const method = editingProject ? 'PUT' : 'POST';
-            const body = editingProject ? 
-                JSON.stringify({ idJira: project.idJira, project }) : 
+            const body = editingProject ?
+                JSON.stringify({ idJira: project.idJira, project }) :
                 JSON.stringify(project);
 
             const response = await fetch(url, {
@@ -241,7 +273,7 @@ export default function ProjectTable() {
 
     const getSortIcon = (key: keyof Project) => {
         if (sortConfig.key !== key) return <ChevronsUpDown className="h-4 w-4 inline-block ml-1" />;
-        return sortConfig.direction === 'asc' 
+        return sortConfig.direction === 'asc'
             ? <ChevronUp className="h-4 w-4 inline-block ml-1 text-blue-600" />
             : <ChevronDown className="h-4 w-4 inline-block ml-1 text-blue-600" />;
     };
@@ -259,7 +291,7 @@ export default function ProjectTable() {
     };
 
     const filteredProjects = sortData(projects.filter(project => {
-        const matchesSearch = 
+        const matchesSearch =
             project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
             project.proyecto.toLowerCase().includes(searchTerm.toLowerCase()) ||
             project.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -268,7 +300,11 @@ export default function ProjectTable() {
         const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
 
-        return matchesSearch && matchesEquipo && matchesAnalista;
+        // Filtrar por fecha
+        const projectDate = new Date(project.fechaEntrega);
+        const matchesDate = projectDate >= startDate && (!endDate || projectDate <= endDate);
+
+        return matchesSearch && matchesEquipo && matchesAnalista && matchesDate;
     }));
 
     const equipos = Array.from(new Set(projects.map(p => p.equipo)));
@@ -287,8 +323,8 @@ export default function ProjectTable() {
                     <div className="flex rounded-lg overflow-hidden border">
                         <button
                             className={`px-4 py-2 transition-colors ${
-                                activeView === 'table' 
-                                    ? 'bg-blue-600 text-white' 
+                                activeView === 'table'
+                                    ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                             onClick={() => setActiveView('table')}
@@ -297,8 +333,8 @@ export default function ProjectTable() {
                         </button>
                         <button
                             className={`px-4 py-2 transition-colors ${
-                                activeView === 'timeline' 
-                                    ? 'bg-blue-600 text-white' 
+                                activeView === 'timeline'
+                                    ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                             onClick={() => setActiveView('timeline')}
@@ -306,14 +342,15 @@ export default function ProjectTable() {
                             Vista Calendario
                         </button>
                     </div>
-                </div>                <div className="flex items-center space-x-4">
+                </div>
+                <div className="flex items-center space-x-4">
                     {/* Filtros de fecha */}
                     <div className="flex gap-2">
                         <button
                             onClick={() => setSelectedDateFilter('week')}
                             className={`px-3 py-1.5 rounded text-sm transition-colors ${
-                                selectedDateFilter === 'week' 
-                                    ? 'bg-blue-600 text-white' 
+                                selectedDateFilter === 'week'
+                                    ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 hover:bg-gray-200'
                             }`}
                         >
@@ -322,8 +359,8 @@ export default function ProjectTable() {
                         <button
                             onClick={() => setSelectedDateFilter('month')}
                             className={`px-3 py-1.5 rounded text-sm transition-colors ${
-                                selectedDateFilter === 'month' 
-                                    ? 'bg-blue-600 text-white' 
+                                selectedDateFilter === 'month'
+                                    ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 hover:bg-gray-200'
                             }`}
                         >
@@ -332,8 +369,8 @@ export default function ProjectTable() {
                         <button
                             onClick={() => setSelectedDateFilter('year')}
                             className={`px-3 py-1.5 rounded text-sm transition-colors ${
-                                selectedDateFilter === 'year' 
-                                    ? 'bg-blue-600 text-white' 
+                                selectedDateFilter === 'year'
+                                    ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 hover:bg-gray-200'
                             }`}
                         >
@@ -434,8 +471,8 @@ export default function ProjectTable() {
                                     className={`border p-2 rounded w-full ${errors.equipo ? 'border-red-500' : ''}`}
                                     value={newProject.equipo || ''}
                                     onChange={(e) => {
-                                        setNewProject(prev => ({ 
-                                            ...prev, 
+                                        setNewProject(prev => ({
+                                            ...prev,
                                             equipo: e.target.value,
                                             celula: '' // Reset célula when team changes
                                         }));
@@ -662,7 +699,7 @@ export default function ProjectTable() {
             )}
 
             {activeView === 'timeline' ? (
-                <TimelineView 
+                <TimelineView
                     projects={filteredProjects}
                     analysts={analysts}
                     filterAnalista={filterAnalista}
@@ -678,7 +715,8 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>                                <th 
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
+                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaEntrega')}
                                 >
@@ -687,7 +725,7 @@ export default function ProjectTable() {
                                         {getSortIcon('fechaEntrega')}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaRealEntrega')}
                                 >
@@ -695,7 +733,8 @@ export default function ProjectTable() {
                                         <span className="mr-1">Fecha Real</span>
                                         {getSortIcon('fechaRealEntrega')}
                                     </div>
-                                </th>                                <th 
+                                </th>
+                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaCertificacion')}
                                 >
@@ -704,7 +743,7 @@ export default function ProjectTable() {
                                         {getSortIcon('fechaCertificacion')}
                                     </div>
                                 </th>
-                                <th 
+                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('diasRetraso')}
                                 >
@@ -737,8 +776,8 @@ export default function ProjectTable() {
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
                                         {project.fechaRealEntrega && (
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                project.diasRetraso > 0 
-                                                    ? 'bg-red-100 text-red-800' 
+                                                project.diasRetraso > 0
+                                                    ? 'bg-red-100 text-red-800'
                                                     : 'bg-green-100 text-green-800'
                                             }`}>
                                                 {formatDate(project.fechaRealEntrega)}
