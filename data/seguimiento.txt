@@ -224,34 +224,6 @@
     "planTrabajo": ""
   },
   {
-    "idJira": "BCCR-1404",
-    "proyecto": "Integración Robotica-CRM",
-    "equipo": "Otro",
-    "celula": "SV",
-    "horas": 15,
-    "dias": 1.67,
-    "fechaEntrega": "2025-05-02T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-06T00:00:00.000Z",
-    "diasRetraso": -45122,
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": ""
-  },
-  {
-    "idJira": "BCCR-1404",
-    "proyecto": "Integración Robotica-CRM",
-    "equipo": "TechBridge",
-    "celula": "SV",
-    "horas": 12,
-    "dias": 1.33,
-    "fechaEntrega": "2025-05-05T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-06T00:00:00.000Z",
-    "diasRetraso": -45125,
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": ""
-  },
-  {
     "idJira": "SRCA-6516",
     "proyecto": "Modificación Reporte Monitoreo Proveedor",
     "equipo": "TechBridge",

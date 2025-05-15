@@ -3,6 +3,7 @@
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { useEffect, useState } from 'react';
+import { getJiraUrl } from '@/utils/jiraUtils';
 
 interface TimelineViewProps {
     projects: Project[];
@@ -159,6 +160,14 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         return 'bg-blue-200 hover:bg-blue-300';
     };
 
+    const renderProjectTooltip = (project: Project) => `
+${project.proyecto}
+ID: ${project.idJira}
+Fecha Entrega: ${formatDate(project.fechaEntrega)}
+${project.fechaCertificacion ? `Fecha Certificación: ${formatDate(project.fechaCertificacion)}` : ''}
+${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
+    `.trim();
+
     // Generar array de años para el selector (5 años atrás y adelante)
     const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
     const months = Array.from({ length: 12 }, (_, i) => new Date(2024, i, 1));
@@ -284,23 +293,34 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
                                             className={`w-12 flex-shrink-0 border-r relative
                                                 ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-gray-50' : ''}
                                                 ${isToday(date) ? 'bg-blue-50' : ''}`}
-                                        >
-                                            {analystProjects.map(project => (
-                                                isProjectActive(project, date) && (
-                                                    <div
-                                                        key={project.idJira}
-                                                        className={`mx-1 text-xs p-1 rounded shadow-sm transition-colors
-                                                            ${getProjectColor(project)} cursor-pointer`}
-                                                        title={`${project.idJira} - ${project.proyecto}
-Equipo: ${project.equipo}
-Fecha Entrega: ${formatDate(project.fechaEntrega)}
-${project.fechaCertificacion ? `Fecha Certificación: ${formatDate(project.fechaCertificacion)}` : ''}
-${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}`}
-                                                    >
-                                                        {project.idJira}
+                                        >                                            {analystProjects.map(project => {
+                                                if (!isProjectActive(project, date)) return null;
+                                                const jiraUrl = getJiraUrl(project.idJira);
+                                                return (
+                                                    <div key={project.idJira}>
+                                                        {jiraUrl ? (
+                                                            <a
+                                                                href={jiraUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                title={renderProjectTooltip(project)}
+                                                                className={`mx-1 text-xs p-1 rounded shadow-sm transition-colors
+                                                                    ${getProjectColor(project)} cursor-pointer block`}
+                                                            >
+                                                                {project.idJira}
+                                                            </a>
+                                                        ) : (
+                                                            <span
+                                                                title={renderProjectTooltip(project)}
+                                                                className={`mx-1 text-xs p-1 rounded shadow-sm
+                                                                    ${getProjectColor(project)} block`}
+                                                            >
+                                                                {project.idJira}
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                )
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ))}
                                 </div>

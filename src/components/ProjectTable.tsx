@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { getJiraUrl } from '@/utils/jiraUtils';
 
 const HOURS_PER_DAY = 9;
 
@@ -290,9 +291,20 @@ export default function ProjectTable() {
         });
     };
 
-    const getJiraUrl = (idJira: string): string => {
-        if (!idJira) return '';
-        return `https://konecta-group.atlassian.net/browse/${idJira}`;
+    const renderJiraId = (idJira: string) => {
+        const jiraUrl = getJiraUrl(idJira);
+        if (!jiraUrl) return idJira;
+
+        return (
+            <a
+                href={jiraUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 hover:underline"
+            >
+                {idJira}
+            </a>
+        );
     };
 
     const filteredProjects = sortData(projects.filter(project => {
@@ -766,18 +778,7 @@ export default function ProjectTable() {
                             {filteredProjects.map((project, index) => (
                                 <tr key={index} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
-                                        {project.idJira ? (
-                                            <a 
-                                                href={getJiraUrl(project.idJira)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:text-blue-800 hover:underline"
-                                            >
-                                                {project.idJira}
-                                            </a>
-                                        ) : (
-                                            '-'
-                                        )}
+                                        {renderJiraId(project.idJira)}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo}</td>
