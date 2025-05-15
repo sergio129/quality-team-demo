@@ -26,19 +26,5 @@
     "diasRetraso": -45072,
     "analistaProducto": "Leidy Iral",
     "planTrabajo": "Plan 2"
-  },
-  {
-    "idJira": "SRCA-6450",
-    "proyecto": "Prueba concepto montaje WAF",
-    "equipo": "TechBridge",
-    "celula": "Suramericana",
-    "horas": 0,
-    "dias": 0,
-    "fechaEntrega": "2025-03-16",
-    "fechaRealEntrega": "2025-04-10",
-    "fechaCertificacion": "2025-03-24",
-    "diasRetraso": -45077,
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "Plan 3"
   }
 ]
