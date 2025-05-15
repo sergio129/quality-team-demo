@@ -290,6 +290,11 @@ export default function ProjectTable() {
         });
     };
 
+    const getJiraUrl = (idJira: string): string => {
+        if (!idJira) return '';
+        return `https://konecta-group.atlassian.net/browse/${idJira}`;
+    };
+
     const filteredProjects = sortData(projects.filter(project => {
         const matchesSearch =
             project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -760,7 +765,20 @@ export default function ProjectTable() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredProjects.map((project, index) => (
                                 <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{project.idJira}</td>
+                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
+                                        {project.idJira ? (
+                                            <a 
+                                                href={getJiraUrl(project.idJira)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                                            >
+                                                {project.idJira}
+                                            </a>
+                                        ) : (
+                                            '-'
+                                        )}
+                                    </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula}</td>
