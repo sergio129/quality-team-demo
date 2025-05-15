@@ -25,6 +25,12 @@ export default function ProjectTable() {
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [activeView, setActiveView] = useState<'table' | 'timeline'>('table');
+    const [sortConfig, setSortConfig] = useState<{
+        key: keyof Project | null;
+        direction: 'asc' | 'desc';
+    }>({ key: null, direction: 'asc' });
+    const [filterEquipo, setFilterEquipo] = useState<string>('');
+    const [filterAnalista, setFilterAnalista] = useState<string>('');
 
     useEffect(() => {
         loadProjects();
@@ -207,16 +213,50 @@ export default function ProjectTable() {
         }
     }
 
-    const filteredProjects = projects.filter(project => 
-        project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.proyecto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.analistaProducto.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const sortData = (data: Project[]) => {
+        if (!sortConfig.key) return data;
+
+        return [...data].sort((a, b) => {
+            if (sortConfig.key === 'fechaEntrega' || sortConfig.key === 'fechaRealEntrega' || sortConfig.key === 'fechaCertificacion') {
+                const dateA = a[sortConfig.key] ? new Date(a[sortConfig.key]!).getTime() : 0;
+                const dateB = b[sortConfig.key] ? new Date(b[sortConfig.key]!).getTime() : 0;
+                return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+            }
+            return 0;
+        });
+    };
+
+    const requestSort = (key: keyof Project) => {
+        setSortConfig(current => ({
+            key,
+            direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+        }));
+    };
+
+    const getSortSymbol = (key: keyof Project) => {
+        if (sortConfig.key !== key) return '↕';
+        return sortConfig.direction === 'asc' ? '↑' : '↓';
+    };
+
+    const filteredProjects = sortData(projects.filter(project => {
+        const matchesSearch = 
+            project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            project.proyecto.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            project.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            project.analistaProducto.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
+        const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
+
+        return matchesSearch && matchesEquipo && matchesAnalista;
+    }));
+
+    const equipos = Array.from(new Set(projects.map(p => p.equipo)));
+    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto)));
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
                 <div className="flex space-x-2">
                     <button
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
@@ -247,11 +287,31 @@ export default function ProjectTable() {
                         </button>
                     </div>
                 </div>
-                <div className="w-64">
+                <div className="flex items-center space-x-4">
+                    <select
+                        className="border rounded px-3 py-2"
+                        value={filterEquipo}
+                        onChange={(e) => setFilterEquipo(e.target.value)}
+                    >
+                        <option value="">Todos los equipos</option>
+                        {equipos.map(equipo => (
+                            <option key={equipo} value={equipo}>{equipo}</option>
+                        ))}
+                    </select>
+                    <select
+                        className="border rounded px-3 py-2"
+                        value={filterAnalista}
+                        onChange={(e) => setFilterAnalista(e.target.value)}
+                    >
+                        <option value="">Todos los analistas</option>
+                        {analistas.map(analista => (
+                            <option key={analista} value={analista}>{analista}</option>
+                        ))}
+                    </select>
                     <input
                         type="text"
                         placeholder="Buscar proyecto..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -548,6 +608,8 @@ export default function ProjectTable() {
                 <TimelineView 
                     projects={filteredProjects}
                     analysts={analysts}
+                    filterAnalista={filterAnalista}
+                    filterEquipo={filterEquipo}
                 />
             ) : (
                 <div className="overflow-x-auto bg-white rounded-lg shadow">
@@ -560,9 +622,24 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Entrega</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">R. Entrega</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Certificación</th>
+                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => requestSort('fechaEntrega')}
+                                >
+                                    F. Entrega {getSortSymbol('fechaEntrega')}
+                                </th>
+                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => requestSort('fechaRealEntrega')}
+                                >
+                                    R. Entrega {getSortSymbol('fechaRealEntrega')}
+                                </th>
+                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => requestSort('fechaCertificacion')}
+                                >
+                                    F. Certificación {getSortSymbol('fechaCertificacion')}
+                                </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">D. Retraso</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>

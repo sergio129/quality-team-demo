@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 interface TimelineViewProps {
     projects: Project[];
     analysts: QAAnalyst[];
+    filterEquipo?: string;
+    filterAnalista?: string;
 }
 
-export function TimelineView({ projects, analysts }: TimelineViewProps) {
+export function TimelineView({ projects, analysts, filterEquipo, filterAnalista }: TimelineViewProps) {
     const [dates, setDates] = useState<Date[]>([]);
     const [startDate, setStartDate] = useState(() => {
         const today = new Date();
@@ -32,9 +34,19 @@ export function TimelineView({ projects, analysts }: TimelineViewProps) {
         setDates(newDates);
     }, [startDate]);
 
-    // Obtener proyectos por analista
+    // Filtrar analistas según el filtro seleccionado
+    const filteredAnalysts = analysts.filter(analyst => {
+        if (filterAnalista && analyst.name !== filterAnalista) return false;
+        return true;
+    });
+
+    // Obtener proyectos por analista con filtro de equipo
     const getProjectsForAnalyst = (analystName: string) => {
-        return projects.filter(p => p.analistaProducto === analystName);
+        return projects.filter(p => {
+            const matchesAnalista = p.analistaProducto === analystName;
+            const matchesEquipo = !filterEquipo || p.equipo === filterEquipo;
+            return matchesAnalista && matchesEquipo;
+        });
     };
 
     const formatDate = (date: Date) => {
@@ -90,7 +102,7 @@ export function TimelineView({ projects, analysts }: TimelineViewProps) {
 
                 {/* Filas de analistas */}
                 <div>
-                    {analysts.map(analyst => {
+                    {filteredAnalysts.map(analyst => {
                         const analystProjects = getProjectsForAnalyst(analyst.name);
 
                         return (
@@ -111,7 +123,7 @@ export function TimelineView({ projects, analysts }: TimelineViewProps) {
                                                     <div
                                                         key={project.idJira}
                                                         className={`mx-1 text-xs p-1 rounded ${getProjectColor(project)}`}
-                                                        title={`${project.idJira} - ${project.proyecto}`}
+                                                        title={`${project.idJira} - ${project.proyecto}\nEquipo: ${project.equipo}`}
                                                     >
                                                         {project.idJira}
                                                     </div>

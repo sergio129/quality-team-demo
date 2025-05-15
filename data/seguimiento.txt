@@ -1,19 +1,5 @@
 [
   {
-    "idJira": "KOIN256",
-    "proyecto": "Koin Paquete 1 2025(Nuevo Koin (Paquete 5))",
-    "equipo": "TechBridge",
-    "celula": "SV",
-    "horas": 54,
-    "dias": 6,
-    "fechaEntrega": "2025-03-12",
-    "fechaRealEntrega": "2025-03-19",
-    "fechaCertificacion": "2025-03-14",
-    "diasRetraso": -45072,
-    "analistaProducto": "Leidy Iral",
-    "planTrabajo": "Plan 1"
-  },
-  {
     "idJira": "KOIN-256",
     "proyecto": "Koin Paquete 1 2025(Nuevo Koin (Paquete 5))",
     "equipo": "CRM Bancolombia",
