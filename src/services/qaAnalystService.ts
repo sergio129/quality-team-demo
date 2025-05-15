@@ -23,12 +23,12 @@ export class QAAnalystService {
             }
             throw error;
         }
-    }
-
-    async saveAnalyst(analyst: QAAnalyst): Promise<QAAnalyst | null> {
-        // Verify cell exists
-        const cell = await this.cellService.getCellById(analyst.cellId);
-        if (!cell) return null;
+    }    async saveAnalyst(analyst: QAAnalyst): Promise<QAAnalyst | null> {
+        // Verify all cells exist
+        for (const cellId of analyst.cellIds) {
+            const cell = await this.cellService.getCellById(cellId);
+            if (!cell) return null;
+        }
 
         const analysts = await this.getAllAnalysts();
         analyst.id = crypto.randomUUID();
@@ -38,10 +38,12 @@ export class QAAnalystService {
     }
 
     async updateAnalyst(id: string, analyst: QAAnalyst): Promise<QAAnalyst | null> {
-        // Verify cell exists if cellId is being updated
-        if (analyst.cellId) {
-            const cell = await this.cellService.getCellById(analyst.cellId);
-            if (!cell) return null;
+        // Verify all cells exist if cellIds is being updated
+        if (analyst.cellIds) {
+            for (const cellId of analyst.cellIds) {
+                const cell = await this.cellService.getCellById(cellId);
+                if (!cell) return null;
+            }
         }
 
         const analysts = await this.getAllAnalysts();
@@ -65,10 +67,8 @@ export class QAAnalystService {
     async getAnalystById(id: string): Promise<QAAnalyst | null> {
         const analysts = await this.getAllAnalysts();
         return analysts.find(a => a.id === id) || null;
-    }
-
-    async getAnalystsByCellId(cellId: string): Promise<QAAnalyst[]> {
+    }    async getAnalystsByCellId(cellId: string): Promise<QAAnalyst[]> {
         const analysts = await this.getAllAnalysts();
-        return analysts.filter(a => a.cellId === cellId);
+        return analysts.filter(a => a.cellIds.includes(cellId));
     }
 }

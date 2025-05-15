@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "name": "Sergio Anaya Romero",
+    "email": "sanayaromero62@gmail.com",
+    "cellIds": [
+      "18cec5e1-b822-491a-86af-c22264f0e307",
+      "ed17c938-0bf2-4a55-99ba-18b195712c23"
+    ],
+    "role": "Senior",
+    "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a"
+  }
+]

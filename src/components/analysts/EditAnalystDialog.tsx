@@ -10,12 +10,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { AnalystForm } from "./AnalystForm";
+import { AnalystForm } from "@/components/analysts/AnalystForm";
 
 interface EditAnalystDialogProps {
   analyst: QAAnalyst;
   onSave: () => void;
-  cells: { id: string; name: string; teamId: string; }[];
+  cells: { id: string; name: string; }[];
 }
 
 export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogProps) {
