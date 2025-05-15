@@ -15,17 +15,17 @@
   },
   {
     "idJira": "KOIN-256",
-    "proyecto": "Koin Paquete 5 2025(KOIN-256)",
-    "equipo": "TechBridge",
-    "celula": "SV",
+    "proyecto": "Koin Paquete 1 2025(Nuevo Koin (Paquete 5))",
+    "equipo": "CRM Bancolombia",
+    "celula": "KCRM",
     "horas": 54,
     "dias": 6,
     "fechaEntrega": "2025-03-12T00:00:00.000Z",
     "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-04-14T00:00:00.000Z",
+    "fechaCertificacion": "2025-03-19T00:00:00.000Z",
     "diasRetraso": -45072,
     "analistaProducto": "Leidy Iral",
-    "planTrabajo": ""
+    "planTrabajo": "https://docs.google.com/spreadsheets/d/1O9ZVaEn3-En_ryorbhHok1joTsHMr7TOXDdKMHDZbK4/edit?gid=2109915917#gid=2109915917"
   },
   {
     "idJira": "SRCA-6450",
@@ -80,7 +80,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-03-26T00:00:00.000Z",
     "diasRetraso": -45081,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -108,7 +108,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-04-10T00:00:00.000Z",
     "diasRetraso": -45087,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -178,7 +178,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-04-24T00:00:00.000Z",
     "diasRetraso": -45106,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -192,7 +192,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-04-24T00:00:00.000Z",
     "diasRetraso": -45113,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -206,7 +206,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-04-29T00:00:00.000Z",
     "diasRetraso": -45118,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -220,7 +220,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-04-28T00:00:00.000Z",
     "diasRetraso": -45118,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -276,7 +276,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-08T00:00:00.000Z",
     "diasRetraso": -45126,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -290,7 +290,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-08T00:00:00.000Z",
     "diasRetraso": -45126,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -318,7 +318,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-09T00:00:00.000Z",
     "diasRetraso": -45128,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -346,7 +346,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-14T00:00:00.000Z",
     "diasRetraso": -45133,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -360,7 +360,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-16T00:00:00.000Z",
     "diasRetraso": -45133,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -416,7 +416,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-19T00:00:00.000Z",
     "diasRetraso": -45135,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -444,7 +444,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-22T00:00:00.000Z",
     "diasRetraso": -45140,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -472,7 +472,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-26T00:00:00.000Z",
     "diasRetraso": -45142,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -528,7 +528,7 @@
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-07-01T00:00:00.000Z",
     "diasRetraso": -45175,
-    "analistaProducto": "Yoarlis Carrillo",
+    "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": ""
   },
   {
@@ -682,5 +682,41 @@
     "fechaCertificacion": "2025-05-23T00:00:00.000Z",
     "analistaProducto": "Yulieth Paola\t",
     "planTrabajo": "no se ha definido"
+  },
+  {
+    "idJira": "SRCA-6556",
+    "equipo": "TechBridge",
+    "celula": "Suramericana",
+    "proyecto": "Reestructuración Parametrización \"Prefijos\"",
+    "horas": 4,
+    "dias": 1,
+    "fechaEntrega": "2025-05-21T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-21T00:00:00.000Z",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "en Desarrollo"
+  },
+  {
+    "idJira": "SRCA-6548",
+    "proyecto": "Revisión funcionalidades actuales SARA-Revisión documentación Migración GC sura",
+    "equipo": "TechBridge",
+    "celula": "Suramericana",
+    "horas": 12,
+    "dias": 2,
+    "fechaEntrega": "2025-05-22T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-23T00:00:00.000Z",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "en Desarrollo"
+  },
+  {
+    "idJira": "SRCA-6565",
+    "proyecto": "Integración cambio habilidades - SARA-GC/ Migración GC",
+    "equipo": "TechBridge",
+    "celula": "Suramericana",
+    "horas": 10,
+    "dias": 2,
+    "fechaEntrega": "2025-05-23T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-23T00:00:00.000Z",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "En desarrollo"
   }
 ]

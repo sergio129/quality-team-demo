@@ -16,5 +16,17 @@
     "teamId": "6f971aac-ed29-44fc-9da0-8db0b29f1133",
     "description": "",
     "id": "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
+  },
+  {
+    "name": "Cobranzas",
+    "teamId": "c05c462d-0b35-43e7-9cd5-3f4e468c9e9c",
+    "description": "",
+    "id": "7ef92e37-abc4-4960-a59e-449ee7fc4fd3"
+  },
+  {
+    "name": "Suramericana",
+    "teamId": "c05c462d-0b35-43e7-9cd5-3f4e468c9e9c",
+    "description": "",
+    "id": "1eee65a6-7a36-4c55-bbe3-a116186eb837"
   }
 ]
