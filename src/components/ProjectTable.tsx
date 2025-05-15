@@ -3,6 +3,8 @@
 import { Project } from '@/models/Project';
 import { useState, useEffect } from 'react';
 
+const HOURS_PER_DAY = 9;
+
 export default function ProjectTable() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +15,30 @@ export default function ProjectTable() {
     useEffect(() => {
         loadProjects();
     }, []);
+
+    // Calculate days when hours change
+    useEffect(() => {
+        if (newProject.horas) {
+            setNewProject(prev => ({
+                ...prev,
+                dias: Math.ceil(prev.horas! / HOURS_PER_DAY)
+            }));
+        }
+    }, [newProject.horas]);
+
+    // Calculate delay days when dates change
+    useEffect(() => {
+        if (newProject.fechaEntrega && newProject.fechaRealEntrega) {
+            const entrega = new Date(newProject.fechaEntrega);
+            const realEntrega = new Date(newProject.fechaRealEntrega);
+            const diffTime = realEntrega.getTime() - entrega.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            setNewProject(prev => ({
+                ...prev,
+                diasRetraso: Math.max(0, diffDays)
+            }));
+        }
+    }, [newProject.fechaEntrega, newProject.fechaRealEntrega]);
 
     async function loadProjects() {
         const response = await fetch('/api/projects');
@@ -88,42 +114,166 @@ export default function ProjectTable() {
 
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
-                        <h2 className="text-xl font-bold mb-4">
-                            {editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}
-                        </h2>
+                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4">
+                        <h2 className="text-xl font-bold mb-4">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
                         <form onSubmit={(e) => {
                             e.preventDefault();
                             handleSave(newProject as Project);
-                        }}>
-                            <div className="grid grid-cols-2 gap-4">
+                        }} className="space-y-4">
+                            {/* ID Jira */}
+                            <div className="space-y-2">
                                 <input
                                     placeholder="ID Jira"
-                                    className="border p-2 rounded"
+                                    className="border p-2 rounded w-full"
                                     value={newProject.idJira || ''}
-                                    onChange={e => setNewProject({...newProject, idJira: e.target.value})}
+                                    onChange={(e) => setNewProject({ ...newProject, idJira: e.target.value })}
+                                    required
                                 />
+                            </div>
+
+                            {/* Proyecto */}
+                            <div className="space-y-2">
                                 <input
                                     placeholder="Proyecto"
-                                    className="border p-2 rounded"
+                                    className="border p-2 rounded w-full"
                                     value={newProject.proyecto || ''}
-                                    onChange={e => setNewProject({...newProject, proyecto: e.target.value})}
+                                    onChange={(e) => setNewProject({ ...newProject, proyecto: e.target.value })}
+                                    required
                                 />
-                                {/* Añade más campos según necesites */}
                             </div>
-                            <div className="flex justify-end gap-2 mt-4">
+
+                            {/* Equipo */}
+                            <div className="space-y-2">
+                                <input
+                                    placeholder="Equipo"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.equipo || ''}
+                                    onChange={(e) => setNewProject({ ...newProject, equipo: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            {/* Célula */}
+                            <div className="space-y-2">
+                                <input
+                                    placeholder="Célula"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.celula || ''}
+                                    onChange={(e) => setNewProject({ ...newProject, celula: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            {/* Horas */}
+                            <div className="space-y-2">
+                                <input
+                                    type="number"
+                                    placeholder="Horas"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.horas || ''}
+                                    onChange={(e) => setNewProject({ ...newProject, horas: parseInt(e.target.value) })}
+                                    min="1"
+                                    required
+                                />
+                            </div>
+
+                            {/* Días (calculado automáticamente) */}
+                            <div className="space-y-2">
+                                <input
+                                    type="number"
+                                    placeholder="Días"
+                                    className="border p-2 rounded w-full bg-gray-100"
+                                    value={newProject.dias || ''}
+                                    readOnly
+                                />
+                                <p className="text-sm text-gray-500">Calculado automáticamente (9 horas = 1 día)</p>
+                            </div>
+
+                            {/* Fecha Entrega */}
+                            <div className="space-y-2">
+                                <input
+                                    type="date"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.fechaEntrega ? new Date(newProject.fechaEntrega).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setNewProject({ ...newProject, fechaEntrega: new Date(e.target.value) })}
+                                    required
+                                />
+                                <p className="text-sm text-gray-500">Fecha de entrega planificada</p>
+                            </div>
+
+                            {/* Fecha Real Entrega */}
+                            <div className="space-y-2">
+                                <input
+                                    type="date"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.fechaRealEntrega ? new Date(newProject.fechaRealEntrega).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setNewProject({ ...newProject, fechaRealEntrega: new Date(e.target.value) })}
+                                />
+                                <p className="text-sm text-gray-500">Fecha real de entrega (opcional)</p>
+                            </div>
+
+                            {/* Fecha Certificación */}
+                            <div className="space-y-2">
+                                <input
+                                    type="date"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.fechaCertificacion ? new Date(newProject.fechaCertificacion).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setNewProject({ ...newProject, fechaCertificacion: new Date(e.target.value) })}
+                                />
+                                <p className="text-sm text-gray-500">Fecha de certificación (opcional)</p>
+                            </div>
+
+                            {/* Días de Retraso (calculado automáticamente) */}
+                            <div className="space-y-2">
+                                <input
+                                    type="number"
+                                    placeholder="Días de Retraso"
+                                    className="border p-2 rounded w-full bg-gray-100"
+                                    value={newProject.diasRetraso || 0}
+                                    readOnly
+                                />
+                                <p className="text-sm text-gray-500">Calculado automáticamente al establecer la fecha real de entrega</p>
+                            </div>
+
+                            {/* Analista Producto */}
+                            <div className="space-y-2">
+                                <input
+                                    placeholder="Analista de Producto"
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.analistaProducto || ''}
+                                    onChange={(e) => setNewProject({ ...newProject, analistaProducto: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            {/* Plan de Trabajo */}
+                            <div className="space-y-2">
+                                <textarea
+                                    placeholder="Plan de Trabajo"
+                                    className="border p-2 rounded w-full h-24"
+                                    value={newProject.planTrabajo || ''}
+                                    onChange={(e) => setNewProject({ ...newProject, planTrabajo: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex justify-end space-x-2">
                                 <button
                                     type="button"
-                                    className="px-4 py-2 bg-gray-200 rounded"
-                                    onClick={() => setShowForm(false)}
+                                    onClick={() => {
+                                        setShowForm(false);
+                                        setEditingProject(null);
+                                        setNewProject({});
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded"
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                                 >
-                                    Guardar
+                                    {editingProject ? 'Actualizar' : 'Guardar'}
                                 </button>
                             </div>
                         </form>
