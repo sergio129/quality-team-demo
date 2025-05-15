@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 
 export function Navigation() {
   const pathname = usePathname();
-
   const links = [
     { href: '/proyectos', label: 'Proyectos' },
+    { href: '/incidents', label: 'Incidentes' },
     { href: '/equipos', label: 'Equipos' },
     { href: '/celulas', label: 'Células' },
     { href: '/analistas', label: 'Analistas QA' },
