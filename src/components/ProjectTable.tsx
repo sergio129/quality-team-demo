@@ -1,8 +1,10 @@
 "use client";
 
 import { Project } from '@/models/Project';
+import { QAAnalyst } from '@/models/QAAnalyst';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { TimelineView } from './TimelineView/TimelineView';
 
 const HOURS_PER_DAY = 9;
 
@@ -20,8 +22,9 @@ export default function ProjectTable() {
     const [isLoading, setIsLoading] = useState(false);
     const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
     const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [analysts, setAnalysts] = useState<{ id: string; name: string }[]>([]);
+    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [activeView, setActiveView] = useState<'table' | 'timeline'>('table');
 
     useEffect(() => {
         loadProjects();
@@ -214,12 +217,36 @@ export default function ProjectTable() {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <button
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                    onClick={() => setShowForm(true)}
-                >
-                    Nuevo Proyecto
-                </button>
+                <div className="flex space-x-2">
+                    <button
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        onClick={() => setShowForm(true)}
+                    >
+                        Nuevo Proyecto
+                    </button>
+                    <div className="flex rounded-lg overflow-hidden border">
+                        <button
+                            className={`px-4 py-2 transition-colors ${
+                                activeView === 'table' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            onClick={() => setActiveView('table')}
+                        >
+                            Vista Tabla
+                        </button>
+                        <button
+                            className={`px-4 py-2 transition-colors ${
+                                activeView === 'timeline' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            onClick={() => setActiveView('timeline')}
+                        >
+                            Vista Calendario
+                        </button>
+                    </div>
+                </div>
                 <div className="w-64">
                     <input
                         type="text"
@@ -517,69 +544,76 @@ export default function ProjectTable() {
                 </div>
             )}
 
-            <div className="overflow-x-auto bg-white rounded-lg shadow">
-                <table className="min-w-full">
-                    <thead>
-                        <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Id Jira</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Proyecto</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Entrega</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">R. Entrega</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Certificación</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">D. Retraso</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProjects.map((project, index) => (
-                            <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{project.idJira}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                    {new Date(project.fechaEntrega).toLocaleDateString('es-ES')}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                    {project.fechaRealEntrega && new Date(project.fechaRealEntrega).toLocaleDateString('es-ES')}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                    {project.fechaCertificacion && new Date(project.fechaCertificacion).toLocaleDateString('es-ES')}
-                                </td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto}</td>
-                                <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo}</td>
-                                <td className="px-4 py-2 text-sm whitespace-nowrap">
-                                    <button
-                                        onClick={() => {
-                                            setEditingProject(project);
-                                            setNewProject(project);
-                                            setShowForm(true);
-                                        }}
-                                        className="text-blue-600 hover:text-blue-800 mr-2"
-                                    >
-                                        Editar
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(project.idJira)}
-                                        className="text-red-600 hover:text-red-800"
-                                    >
-                                        Eliminar
-                                    </button>
-                                </td>
+            {activeView === 'timeline' ? (
+                <TimelineView 
+                    projects={filteredProjects}
+                    analysts={analysts}
+                />
+            ) : (
+                <div className="overflow-x-auto bg-white rounded-lg shadow">
+                    <table className="min-w-full">
+                        <thead>
+                            <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Id Jira</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Proyecto</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Entrega</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">R. Entrega</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">F. Certificación</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">D. Retraso</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredProjects.map((project, index) => (
+                                <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{project.idJira}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                                        {new Date(project.fechaEntrega).toLocaleDateString('es-ES')}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                                        {project.fechaRealEntrega && new Date(project.fechaRealEntrega).toLocaleDateString('es-ES')}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                                        {project.fechaCertificacion && new Date(project.fechaCertificacion).toLocaleDateString('es-ES')}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo}</td>
+                                    <td className="px-4 py-2 text-sm whitespace-nowrap">
+                                        <button
+                                            onClick={() => {
+                                                setEditingProject(project);
+                                                setNewProject(project);
+                                                setShowForm(true);
+                                            }}
+                                            className="text-blue-600 hover:text-blue-800 mr-2"
+                                        >
+                                            Editar
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(project.idJira)}
+                                            className="text-red-600 hover:text-red-800"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 }
