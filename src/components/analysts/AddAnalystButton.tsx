@@ -8,19 +8,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TeamForm } from "./TeamForm";
+import { AnalystForm } from "./AnalystForm";
 
-export function AddTeamButton() {
+interface CellInfo {
+  id: string;
+  name: string;
+  teamId: string;
+}
+
+export function AddAnalystButton() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Nuevo Equipo</Button>
+        <Button>Agregar Analista</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Agregar Nuevo Equipo</DialogTitle>
+          <DialogTitle>Agregar Nuevo Analista</DialogTitle>
         </DialogHeader>
-        <TeamForm />
+        <AnalystForm />
       </DialogContent>
     </Dialog>
   );

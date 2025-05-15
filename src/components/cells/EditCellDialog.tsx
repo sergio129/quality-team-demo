@@ -1,6 +1,6 @@
 'use client';
 
-import { Team } from "@/models/Team";
+import { Cell } from "@/models/Cell";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,14 +9,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TeamForm } from "./TeamForm";
+import { CellForm } from "./CellForm";
 
-interface EditTeamDialogProps {
-  team: Team;
+interface EditCellDialogProps {
+  cell: Cell;
   onSave: () => void;
+  teams: { id: string; name: string; }[];
 }
 
-export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
+export function EditCellDialog({ cell, onSave, teams }: EditCellDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -26,9 +27,9 @@ export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar Equipo</DialogTitle>
+          <DialogTitle>Editar Célula</DialogTitle>
         </DialogHeader>
-        <TeamForm team={team} onSave={onSave} />
+        <CellForm cell={cell} onSave={onSave} teams={teams} />
       </DialogContent>
     </Dialog>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { Team } from "@/models/Team";
+import { QAAnalyst } from "@/models/QAAnalyst";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,14 +9,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { TeamForm } from "./TeamForm";
+import { AnalystForm } from "./AnalystForm";
 
-interface EditTeamDialogProps {
-  team: Team;
+interface EditAnalystDialogProps {
+  analyst: QAAnalyst;
   onSave: () => void;
+  cells: { id: string; name: string; teamId: string; }[];
 }
 
-export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
+export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -26,9 +27,9 @@ export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar Equipo</DialogTitle>
+          <DialogTitle>Editar Analista</DialogTitle>
         </DialogHeader>
-        <TeamForm team={team} onSave={onSave} />
+        <AnalystForm analyst={analyst} onSave={onSave} cells={cells} />
       </DialogContent>
     </Dialog>
   );
