@@ -1,0 +1,44 @@
+[
+  {
+    "idJira": "KOIN256",
+    "proyecto": "Koin Paquete 1 2025(Nuevo Koin (Paquete 5))",
+    "equipo": "TechBridge",
+    "celula": "SV",
+    "horas": 54,
+    "dias": 6,
+    "fechaEntrega": "2025-03-12",
+    "fechaRealEntrega": "2025-03-19",
+    "fechaCertificacion": "2025-03-14",
+    "diasRetraso": -45072,
+    "analistaProducto": "Leidy Iral",
+    "planTrabajo": "Plan 1"
+  },
+  {
+    "idJira": "KOIN-256",
+    "proyecto": "Koin Paquete 5 2025(KOIN-256)",
+    "equipo": "TechBridge",
+    "celula": "SV",
+    "horas": 54,
+    "dias": 6,
+    "fechaEntrega": "2025-03-12",
+    "fechaRealEntrega": "2025-04-13",
+    "fechaCertificacion": "2025-04-19",
+    "diasRetraso": -45072,
+    "analistaProducto": "Leidy Iral",
+    "planTrabajo": "Plan 2"
+  },
+  {
+    "idJira": "SRCA-6450",
+    "proyecto": "Prueba concepto montaje WAF",
+    "equipo": "TechBridge",
+    "celula": "Suramericana",
+    "horas": 0,
+    "dias": 0,
+    "fechaEntrega": "2025-03-16",
+    "fechaRealEntrega": "2025-04-10",
+    "fechaCertificacion": "2025-03-24",
+    "diasRetraso": -45077,
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "Plan 3"
+  }
+]
