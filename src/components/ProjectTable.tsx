@@ -624,35 +624,41 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
-                                <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaEntrega')}
                                 >
                                     <div className="flex items-center">
-                                        <span className="mr-1">F. Entrega</span>
+                                        <span className="mr-1">Fecha Entrega</span>
                                         {getSortIcon('fechaEntrega')}
                                     </div>
                                 </th>
                                 <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaRealEntrega')}
                                 >
                                     <div className="flex items-center">
-                                        <span className="mr-1">R. Entrega</span>
+                                        <span className="mr-1">Fecha Real</span>
                                         {getSortIcon('fechaRealEntrega')}
                                     </div>
-                                </th>
-                                <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
+                                </th>                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('fechaCertificacion')}
                                 >
                                     <div className="flex items-center">
-                                        <span className="mr-1">F. Certificación</span>
+                                        <span className="mr-1">Certificación</span>
                                         {getSortIcon('fechaCertificacion')}
                                     </div>
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">D. Retraso</th>
+                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
+                                    onClick={() => requestSort('diasRetraso')}
+                                >
+                                    <div className="flex items-center">
+                                        <span className="mr-1">Días Retraso</span>
+                                        {getSortIcon('diasRetraso')}
+                                    </div>
+                                </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
