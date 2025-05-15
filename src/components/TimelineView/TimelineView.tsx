@@ -44,22 +44,46 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         });
     };
 
-    const formatDate = (date: Date) => {
-        return date.getDate() + ' ' + date.toLocaleDateString('es-ES', { month: 'short' });
+    const formatDate = (date: Date | string | null | undefined) => {
+        if (!date) return '';
+        const d = new Date(date);
+        // Ajustar la fecha a UTC para evitar problemas de zona horaria
+        return d.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZone: 'UTC'
+        });
     };
 
     const isProjectActive = (project: Project, date: Date) => {
-        // Convertir las fechas de string a Date
+        // Convertir las fechas a UTC
         const projectStartDate = new Date(project.fechaEntrega);
-        const projectEndDate = project.fechaCertificacion ? new Date(project.fechaCertificacion) : new Date(project.fechaEntrega);
-        
-        // Normalizar todas las fechas para comparar solo día/mes/año
-        const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        const startDate = new Date(projectStartDate.getFullYear(), projectStartDate.getMonth(), projectStartDate.getDate());
-        const endDate = new Date(projectEndDate.getFullYear(), projectEndDate.getMonth(), projectEndDate.getDate());
-        
-        // Comprobar si la fecha está dentro del rango del proyecto
-        return compareDate >= startDate && compareDate <= endDate;
+        const projectEndDate = project.fechaCertificacion 
+            ? new Date(project.fechaCertificacion) 
+            : new Date(project.fechaEntrega);
+
+        // Normalizar todas las fechas a UTC
+        const compareDate = new Date(Date.UTC(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+        ));
+
+        const startDateUTC = new Date(Date.UTC(
+            projectStartDate.getUTCFullYear(),
+            projectStartDate.getUTCMonth(),
+            projectStartDate.getUTCDate()
+        ));
+
+        const endDateUTC = new Date(Date.UTC(
+            projectEndDate.getUTCFullYear(),
+            projectEndDate.getUTCMonth(),
+            projectEndDate.getUTCDate()
+        ));
+
+        // Comparar las fechas normalizadas
+        return compareDate >= startDateUTC && compareDate <= endDateUTC;
     };
 
     const getProjectColor = (project: Project) => {

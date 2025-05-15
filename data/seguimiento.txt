@@ -449,31 +449,17 @@
   },
   {
     "idJira": "SRSS-139",
-    "proyecto": "Modificación WS Consulta Hada SURA",
-    "equipo": "IVR",
-    "celula": "IVR",
-    "horas": 11,
-    "dias": 1.22,
-    "fechaEntrega": "2025-05-21T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-23T00:00:00.000Z",
-    "diasRetraso": -45141,
-    "analistaProducto": "Yulieth Paola",
-    "planTrabajo": ""
-  },
-  {
-    "idJira": "SRSS-139",
     "proyecto": "Migración Web Service Proactive Sura a GC",
     "equipo": "IVR",
-    "celula": "IVR",
+    "celula": "IVR\t",
     "horas": 11,
-    "dias": 1.22,
+    "dias": 2,
     "fechaEntrega": "2025-05-22T00:00:00.000Z",
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-26T00:00:00.000Z",
     "diasRetraso": -45142,
-    "analistaProducto": "Yulieth Paola",
-    "planTrabajo": ""
+    "analistaProducto": "Yulieth Paola\t",
+    "planTrabajo": "no se ha definido"
   },
   {
     "idJira": "BCUT-243",
@@ -684,5 +670,17 @@
     "diasRetraso": -45356,
     "analistaProducto": "Leidy Iral",
     "planTrabajo": ""
+  },
+  {
+    "idJira": "SRSS-143",
+    "proyecto": "Modificación WS Consulta Hada SURA",
+    "equipo": "IVR",
+    "celula": "IVR\t",
+    "horas": 11,
+    "dias": 2,
+    "fechaEntrega": "2025-05-21T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-23T00:00:00.000Z",
+    "analistaProducto": "Yulieth Paola\t",
+    "planTrabajo": "no se ha definido"
   }
 ]

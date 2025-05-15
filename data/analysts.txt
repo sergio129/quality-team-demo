@@ -24,7 +24,8 @@
     "email": "yulieth.guarin@konecta.com",
     "cellIds": [
       "18cec5e1-b822-491a-86af-c22264f0e307",
-      "ed17c938-0bf2-4a55-99ba-18b195712c23"
+      "ed17c938-0bf2-4a55-99ba-18b195712c23",
+      "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
     ],
     "role": "Senior",
     "id": "04367fee-2e91-4a58-ac24-24274222991e"

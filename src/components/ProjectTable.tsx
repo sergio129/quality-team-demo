@@ -241,6 +241,18 @@ export default function ProjectTable() {
             : <ChevronDown className="h-4 w-4 inline-block ml-1 text-blue-600" />;
     };
 
+    // Función helper para formatear fechas
+    const formatDate = (date: Date | string | null | undefined) => {
+        if (!date) return '';
+        const d = new Date(date);
+        return d.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZone: 'UTC'
+        });
+    };
+
     const filteredProjects = sortData(projects.filter(project => {
         const matchesSearch = 
             project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -676,7 +688,7 @@ export default function ProjectTable() {
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
                                         {project.fechaEntrega && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                {new Date(project.fechaEntrega).toLocaleDateString('es-ES')}
+                                                {formatDate(project.fechaEntrega)}
                                             </span>
                                         )}
                                     </td>
@@ -687,14 +699,14 @@ export default function ProjectTable() {
                                                     ? 'bg-red-100 text-red-800' 
                                                     : 'bg-green-100 text-green-800'
                                             }`}>
-                                                {new Date(project.fechaRealEntrega).toLocaleDateString('es-ES')}
+                                                {formatDate(project.fechaRealEntrega)}
                                             </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
                                         {project.fechaCertificacion && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                {new Date(project.fechaCertificacion).toLocaleDateString('es-ES')}
+                                                {formatDate(project.fechaCertificacion)}
                                             </span>
                                         )}
                                     </td>
