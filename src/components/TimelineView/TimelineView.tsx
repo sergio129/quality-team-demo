@@ -17,20 +17,73 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth(), 1);
     });
+    const [selectedFilter, setSelectedFilter] = useState<'week' | 'month' | 'year' | 'custom'>('month');
+    const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
 
+    // Efecto para actualizar las fechas cuando cambia el filtro
+    useEffect(() => {
+        const today = new Date();
+        let start: Date;
+        
+        switch (selectedFilter) {
+            case 'week':
+                // Inicio de la semana actual (lunes)
+                start = new Date(today);
+                start.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+                start.setHours(0, 0, 0, 0);
+                break;
+            
+            case 'year':
+                // Inicio del año actual
+                start = new Date(today.getFullYear(), 0, 1);
+                break;
+            
+            case 'month':
+            case 'custom':
+            default:
+                // Inicio del mes actual o el mes seleccionado
+                start = new Date(startDate);
+                break;
+        }
+        
+        setStartDate(start);
+    }, [selectedFilter]);
+
+    // Efecto para actualizar el calendario
     useEffect(() => {
         const newDates: Date[] = [];
         const currentDate = new Date(startDate);
-        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        let endDate: Date;
+
+        switch (selectedFilter) {
+            case 'week':
+                // 7 días desde el inicio de la semana
+                endDate = new Date(currentDate);
+                endDate.setDate(currentDate.getDate() + 6);
+                break;
+            
+            case 'year':
+                // Hasta fin del año
+                endDate = new Date(currentDate.getFullYear(), 11, 31);
+                break;
+            
+            case 'month':
+            case 'custom':
+            default:
+                // Hasta fin del mes
+                endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                break;
+        }
         
-        while (currentDate <= lastDayOfMonth) {
+        while (currentDate <= endDate) {
             newDates.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
         }
         
         setDates(newDates);
-    }, [startDate]);
+    }, [startDate, selectedFilter]);
 
+    // Resto de funciones auxiliares
     const filteredAnalysts = analysts.filter(analyst => {
         if (filterAnalista && analyst.name !== filterAnalista) return false;
         return true;
@@ -40,6 +93,7 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         return projects.filter(p => {
             const matchesAnalista = p.analistaProducto === analystName;
             const matchesEquipo = !filterEquipo || p.equipo === filterEquipo;
+            const fechaEntrega = new Date(p.fechaEntrega);
             return matchesAnalista && matchesEquipo;
         });
     };
@@ -56,9 +110,7 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
     };
 
     const formatDayHeader = (date: Date) => {
-        // Format day number
         const day = date.getDate();
-        // Get day name abbreviation
         const dayName = date.toLocaleDateString('es-ES', { weekday: 'short' });
         return { day, dayName };
     };
@@ -96,7 +148,6 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
             projectEndDate.getUTCDate()
         ));
 
-        // Comparar las fechas normalizadas
         return compareDate >= startDateUTC && compareDate <= endDateUTC;
     };
 
@@ -108,9 +159,84 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         return 'bg-blue-200 hover:bg-blue-300';
     };
 
+    // Generar array de años para el selector (5 años atrás y adelante)
+    const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
+    const months = Array.from({ length: 12 }, (_, i) => new Date(2024, i, 1));
+
     return (
         <div className="overflow-x-auto">
             <div className="min-w-max">
+                {/* Controles de filtro */}
+                <div className="mb-4 flex items-center gap-4">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setSelectedFilter('week')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedFilter === 'week' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Semana actual
+                        </button>
+                        <button
+                            onClick={() => setSelectedFilter('month')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedFilter === 'month' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Mes actual
+                        </button>
+                        <button
+                            onClick={() => setSelectedFilter('year')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedFilter === 'year' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Año actual
+                        </button>
+                    </div>
+
+                    {/* Selectores de año/mes para vista personalizada */}
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={startDate.getFullYear()}
+                            onChange={(e) => {
+                                const newDate = new Date(startDate);
+                                newDate.setFullYear(parseInt(e.target.value));
+                                setSelectedFilter('custom');
+                                setStartDate(newDate);
+                            }}
+                            className="px-3 py-1.5 border rounded text-sm"
+                        >
+                            {years.map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={startDate.getMonth()}
+                            onChange={(e) => {
+                                const newDate = new Date(startDate);
+                                newDate.setMonth(parseInt(e.target.value));
+                                setSelectedFilter('custom');
+                                setStartDate(newDate);
+                            }}
+                            className="px-3 py-1.5 border rounded text-sm"
+                        >
+                            {months.map((date, index) => (
+                                <option key={index} value={index}>
+                                    {date.toLocaleDateString('es-ES', { month: 'long' })}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
                 {/* Header con fechas */}
                 <div className="flex border-b">
                     <div className="w-40 flex-shrink-0 p-2 font-semibold bg-gray-100 border-r">
@@ -188,25 +314,45 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}`}
                     <button
                         onClick={() => {
                             const newDate = new Date(startDate);
-                            newDate.setMonth(newDate.getMonth() - 1);
+                            if (selectedFilter === 'week') {
+                                newDate.setDate(newDate.getDate() - 7);
+                            } else if (selectedFilter === 'year') {
+                                newDate.setFullYear(newDate.getFullYear() - 1);
+                            } else {
+                                newDate.setMonth(newDate.getMonth() - 1);
+                            }
                             setStartDate(newDate);
                         }}
                         className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                     >
-                        Mes anterior
+                        {selectedFilter === 'week' ? 'Semana anterior' : 
+                         selectedFilter === 'year' ? 'Año anterior' : 
+                         'Mes anterior'}
                     </button>
                     <span className="font-semibold">
-                        {startDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                        {selectedFilter === 'week' 
+                            ? `Semana del ${formatDate(startDate)}` 
+                            : selectedFilter === 'year'
+                            ? startDate.getFullYear()
+                            : startDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                     </span>
                     <button
                         onClick={() => {
                             const newDate = new Date(startDate);
-                            newDate.setMonth(newDate.getMonth() + 1);
+                            if (selectedFilter === 'week') {
+                                newDate.setDate(newDate.getDate() + 7);
+                            } else if (selectedFilter === 'year') {
+                                newDate.setFullYear(newDate.getFullYear() + 1);
+                            } else {
+                                newDate.setMonth(newDate.getMonth() + 1);
+                            }
                             setStartDate(newDate);
                         }}
                         className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                     >
-                        Mes siguiente
+                        {selectedFilter === 'week' ? 'Semana siguiente' : 
+                         selectedFilter === 'year' ? 'Año siguiente' : 
+                         'Mes siguiente'}
                     </button>
                 </div>
             </div>
