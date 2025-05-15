@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { EditTeamDialog } from './EditTeamDialog';
+import { toast } from 'sonner';
 
 export function DataTable() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -27,19 +28,27 @@ export function DataTable() {
     const data = await response.json();
     setTeams(data);
   };
-
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this team?')) return;
+    toast.promise(
+      async () => {
+        const response = await fetch('/api/teams', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+        });
 
-    const response = await fetch('/api/teams', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
+        if (!response.ok) {
+          throw new Error('Error al eliminar el equipo');
+        }
 
-    if (response.ok) {
-      fetchTeams();
-    }
+        fetchTeams();
+      },
+      {
+        loading: 'Eliminando equipo...',
+        success: 'Equipo eliminado exitosamente',
+        error: 'No se pudo eliminar el equipo'
+      }
+    );
   };
 
   const filteredTeams = teams.filter(team =>
@@ -48,10 +57,9 @@ export function DataTable() {
   );
 
   return (
-    <div>
-      <div className="flex items-center py-4">
+    <div>      <div className="flex items-center py-4">
         <Input
-          placeholder="Search teams..."
+          placeholder="Buscar equipos..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
@@ -61,9 +69,9 @@ export function DataTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Descripción</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,10 +84,17 @@ export function DataTable() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDelete(team.id)}
+                    onClick={() => {
+                      toast.error('¿Eliminar equipo?', {
+                        action: {
+                          label: 'Eliminar',
+                          onClick: () => handleDelete(team.id)
+                        },
+                      });
+                    }}
                     className="ml-2"
                   >
-                    Delete
+                    Eliminar
                   </Button>
                 </TableCell>
               </TableRow>
