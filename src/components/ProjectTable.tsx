@@ -18,9 +18,16 @@ export default function ProjectTable() {
     const [newProject, setNewProject] = useState<Partial<Project>>({});
     const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
+    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [analysts, setAnalysts] = useState<{ id: string; name: string }[]>([]);
+    const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
 
     useEffect(() => {
         loadProjects();
+        fetchTeams();
+        fetchCells();
+        fetchAnalysts();
     }, []);
 
     useEffect(() => {
@@ -45,11 +52,52 @@ export default function ProjectTable() {
         }
     }, [newProject.fechaEntrega, newProject.fechaRealEntrega]);
 
+    useEffect(() => {
+        if (newProject.equipo) {
+            setFilteredCells(cells.filter(cell => {
+                const team = teams.find(t => t.name === newProject.equipo);
+                return team ? cell.teamId === team.id : false;
+            }));
+        } else {
+            setFilteredCells([]);
+        }
+    }, [newProject.equipo, cells, teams]);
+
     async function loadProjects() {
         const response = await fetch('/api/projects');
         const data = await response.json();
         setProjects(data);
     }
+
+    const fetchTeams = async () => {
+        try {
+            const response = await fetch('/api/teams');
+            const data = await response.json();
+            setTeams(data);
+        } catch (error) {
+            console.error('Error fetching teams:', error);
+        }
+    };
+
+    const fetchCells = async () => {
+        try {
+            const response = await fetch('/api/cells');
+            const data = await response.json();
+            setCells(data);
+        } catch (error) {
+            console.error('Error fetching cells:', error);
+        }
+    };
+
+    const fetchAnalysts = async () => {
+        try {
+            const response = await fetch('/api/analysts');
+            const data = await response.json();
+            setAnalysts(data);
+        } catch (error) {
+            console.error('Error fetching analysts:', error);
+        }
+    };
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
@@ -238,16 +286,26 @@ export default function ProjectTable() {
                                     Equipo
                                     <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    placeholder="Nombre del equipo"
+                                <select
                                     className={`border p-2 rounded w-full ${errors.equipo ? 'border-red-500' : ''}`}
                                     value={newProject.equipo || ''}
                                     onChange={(e) => {
-                                        setNewProject({ ...newProject, equipo: e.target.value });
+                                        setNewProject(prev => ({ 
+                                            ...prev, 
+                                            equipo: e.target.value,
+                                            celula: '' // Reset célula when team changes
+                                        }));
                                         if (errors.equipo) setErrors({ ...errors, equipo: '' });
                                     }}
                                     required
-                                />
+                                >
+                                    <option value="">Seleccionar equipo</option>
+                                    {teams.map(team => (
+                                        <option key={team.id} value={team.name}>
+                                            {team.name}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.equipo && <p className="text-red-500 text-sm">{errors.equipo}</p>}
                             </div>
 
@@ -257,8 +315,7 @@ export default function ProjectTable() {
                                     Célula
                                     <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    placeholder="Nombre de la célula"
+                                <select
                                     className={`border p-2 rounded w-full ${errors.celula ? 'border-red-500' : ''}`}
                                     value={newProject.celula || ''}
                                     onChange={(e) => {
@@ -266,8 +323,19 @@ export default function ProjectTable() {
                                         if (errors.celula) setErrors({ ...errors, celula: '' });
                                     }}
                                     required
-                                />
+                                    disabled={!newProject.equipo} // Disable if no team is selected
+                                >
+                                    <option value="">Seleccionar célula</option>
+                                    {filteredCells.map(cell => (
+                                        <option key={cell.id} value={cell.name}>
+                                            {cell.name}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.celula && <p className="text-red-500 text-sm">{errors.celula}</p>}
+                                {!newProject.equipo && (
+                                    <p className="text-sm text-gray-500">Selecciona un equipo primero</p>
+                                )}
                             </div>
 
                             {/* Horas */}
@@ -374,8 +442,7 @@ export default function ProjectTable() {
                                     Analista de Producto
                                     <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    placeholder="Nombre del analista"
+                                <select
                                     className={`border p-2 rounded w-full ${errors.analistaProducto ? 'border-red-500' : ''}`}
                                     value={newProject.analistaProducto || ''}
                                     onChange={(e) => {
@@ -383,7 +450,14 @@ export default function ProjectTable() {
                                         if (errors.analistaProducto) setErrors({ ...errors, analistaProducto: '' });
                                     }}
                                     required
-                                />
+                                >
+                                    <option value="">Seleccionar analista</option>
+                                    {analysts.map(analyst => (
+                                        <option key={analyst.id} value={analyst.name}>
+                                            {analyst.name}
+                                        </option>
+                                    ))}
+                                </select>
                                 {errors.analistaProducto && <p className="text-red-500 text-sm">{errors.analistaProducto}</p>}
                             </div>
 
