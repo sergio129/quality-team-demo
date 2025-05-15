@@ -5,6 +5,7 @@ import { QAAnalyst } from '@/models/QAAnalyst';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 const HOURS_PER_DAY = 9;
 
@@ -233,9 +234,11 @@ export default function ProjectTable() {
         }));
     };
 
-    const getSortSymbol = (key: keyof Project) => {
-        if (sortConfig.key !== key) return '↕';
-        return sortConfig.direction === 'asc' ? '↑' : '↓';
+    const getSortIcon = (key: keyof Project) => {
+        if (sortConfig.key !== key) return <ChevronsUpDown className="h-4 w-4 inline-block ml-1" />;
+        return sortConfig.direction === 'asc' 
+            ? <ChevronUp className="h-4 w-4 inline-block ml-1 text-blue-600" />
+            : <ChevronDown className="h-4 w-4 inline-block ml-1 text-blue-600" />;
     };
 
     const filteredProjects = sortData(projects.filter(project => {
@@ -623,22 +626,31 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th>
                                 <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
                                     onClick={() => requestSort('fechaEntrega')}
                                 >
-                                    F. Entrega {getSortSymbol('fechaEntrega')}
+                                    <div className="flex items-center">
+                                        <span className="mr-1">F. Entrega</span>
+                                        {getSortIcon('fechaEntrega')}
+                                    </div>
                                 </th>
                                 <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
                                     onClick={() => requestSort('fechaRealEntrega')}
                                 >
-                                    R. Entrega {getSortSymbol('fechaRealEntrega')}
+                                    <div className="flex items-center">
+                                        <span className="mr-1">R. Entrega</span>
+                                        {getSortIcon('fechaRealEntrega')}
+                                    </div>
                                 </th>
                                 <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100"
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group"
                                     onClick={() => requestSort('fechaCertificacion')}
                                 >
-                                    F. Certificación {getSortSymbol('fechaCertificacion')}
+                                    <div className="flex items-center">
+                                        <span className="mr-1">F. Certificación</span>
+                                        {getSortIcon('fechaCertificacion')}
+                                    </div>
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">D. Retraso</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
@@ -656,13 +668,29 @@ export default function ProjectTable() {
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                        {new Date(project.fechaEntrega).toLocaleDateString('es-ES')}
+                                        {project.fechaEntrega && (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {new Date(project.fechaEntrega).toLocaleDateString('es-ES')}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                        {project.fechaRealEntrega && new Date(project.fechaRealEntrega).toLocaleDateString('es-ES')}
+                                        {project.fechaRealEntrega && (
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                project.diasRetraso > 0 
+                                                    ? 'bg-red-100 text-red-800' 
+                                                    : 'bg-green-100 text-green-800'
+                                            }`}>
+                                                {new Date(project.fechaRealEntrega).toLocaleDateString('es-ES')}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                        {project.fechaCertificacion && new Date(project.fechaCertificacion).toLocaleDateString('es-ES')}
+                                        {project.fechaCertificacion && (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {new Date(project.fechaCertificacion).toLocaleDateString('es-ES')}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto}</td>
