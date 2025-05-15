@@ -29,9 +29,14 @@ export default function ProjectTable() {
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
-    }>({ key: null, direction: 'asc' });
-    const [filterEquipo, setFilterEquipo] = useState<string>('');
+    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');
     const [filterAnalista, setFilterAnalista] = useState<string>('');
+    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'year' | 'custom'>('month');
+    const [startDate, setStartDate] = useState(() => {
+        const today = new Date();
+        return new Date(today.getFullYear(), today.getMonth(), 1);
+    });
+    const [endDate, setEndDate] = useState<Date | null>(null);
 
     useEffect(() => {
         loadProjects();
@@ -301,8 +306,45 @@ export default function ProjectTable() {
                             Vista Calendario
                         </button>
                     </div>
-                </div>
-                <div className="flex items-center space-x-4">
+                </div>                <div className="flex items-center space-x-4">
+                    {/* Filtros de fecha */}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setSelectedDateFilter('week')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedDateFilter === 'week' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Semana actual
+                        </button>
+                        <button
+                            onClick={() => setSelectedDateFilter('month')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedDateFilter === 'month' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Mes actual
+                        </button>
+                        <button
+                            onClick={() => setSelectedDateFilter('year')}
+                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                                selectedDateFilter === 'year' 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                            }`}
+                        >
+                            Año actual
+                        </button>
+                    </div>
+
+                    {/* Separador */}
+                    <div className="w-px h-8 bg-gray-300"></div>
+
+                    {/* Filtros existentes */}
                     <select
                         className="border rounded px-3 py-2"
                         value={filterEquipo}
