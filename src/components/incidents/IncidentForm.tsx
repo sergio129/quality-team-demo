@@ -66,16 +66,14 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         onClose();
     };
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-    ) => {
+    const handleChange = (e: any) => {
         const { name, value, type } = e.target;
-        setFormData((prev) => ({
+        setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+            [name]: type === 'checkbox' ? e.target.checked : value,
+            // If estado changes to "Resuelto", set fechaSolucion to current date
+            ...(name === 'estado' && value === 'Resuelto' ? { fechaSolucion: new Date() } : {}),
         }));
-        // Limpiar el error cuando el usuario empiece a escribir
-        if (error) setError('');
     };
 
     return (

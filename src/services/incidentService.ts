@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { Incident } from '../models/Incident';
 
 const incidentsFile = path.join(process.cwd(), 'data', 'incidents.txt');
 
@@ -20,7 +21,8 @@ function calculateDaysOpen(fechaCreacion: Date, fechaSolucion?: Date): number {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
-export const incidentService = {    async getAll() {
+export const incidentService = {
+    async getAll() {
         if (!fs.existsSync(incidentsFile)) {
             await fs.promises.writeFile(incidentsFile, '[]');
             return [];
@@ -29,28 +31,45 @@ export const incidentService = {    async getAll() {
         const incidents = JSON.parse(content || '[]');
         
         // Update days open for each incident
-        return incidents.map((incident: any) => ({
+        return incidents.map((incident: Incident) => ({
             ...incident,
             fechaCreacion: new Date(incident.fechaCreacion),
             fechaSolucion: incident.fechaSolucion ? new Date(incident.fechaSolucion) : undefined,
             diasAbierto: calculateDaysOpen(incident.fechaCreacion, incident.fechaSolucion)
         }));
-    },    async save(incident: any) {
+    },
+
+    async save(incident: Partial<Incident>) {
         const incidents = await this.getAll();
+        // Generate a unique ID (format: INC-YYYYMMDD-XXX)
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0,10).replace(/-/g,'');
+        const existingIds = incidents
+            .map((i: Incident) => i.id || '')
+            .filter((id: string) => id.startsWith(`INC-${dateStr}`))
+            .map((id: string) => parseInt(id.split('-')[2] || '0'));
+        const sequence = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+        const newId = `INC-${dateStr}-${String(sequence).padStart(3, '0')}`;
+        
         const newIncident = {
             ...incident,
-            fechaCreacion: new Date(incident.fechaCreacion),
+            id: newId,
+            fechaCreacion: new Date(incident.fechaCreacion || new Date()),
             fechaSolucion: incident.fechaSolucion ? new Date(incident.fechaSolucion) : undefined,
-            diasAbierto: calculateDaysOpen(incident.fechaCreacion, incident.fechaSolucion)
-        };
+            diasAbierto: calculateDaysOpen(
+                incident.fechaCreacion || new Date(), 
+                incident.fechaSolucion
+            )
+        } as Incident;
+        
         incidents.push(newIncident);
         await fs.promises.writeFile(incidentsFile, JSON.stringify(incidents, null, 2));
         return newIncident;
     },
 
-    async update(id: string, incident: any) {
+    async update(id: string, incident: Partial<Incident>) {
         const incidents = await this.getAll();
-        const index = incidents.findIndex((i: any) => i.id === id);
+        const index = incidents.findIndex((i: Incident) => i.id === id);
         if (index !== -1) {
             const updatedIncident = {
                 ...incidents[index],
@@ -71,9 +90,11 @@ export const incidentService = {    async getAll() {
 
     async delete(id: string) {
         const incidents = await this.getAll();
-        const filteredIncidents = incidents.filter((i: any) => i.id !== id);
+        const filteredIncidents = incidents.filter((i: Incident) => i.id !== id);
         await fs.promises.writeFile(incidentsFile, JSON.stringify(filteredIncidents, null, 2));
-    },    async getStats(): Promise<IncidentStats> {
+    },
+    
+    async getStats(): Promise<IncidentStats> {
         const incidents = await this.getAll();
         const stats: IncidentStats = {
             totalPorCliente: {},
@@ -85,7 +106,7 @@ export const incidentService = {    async getAll() {
             totalAbiertas: 0
         };
 
-        incidents.forEach((incident: any) => {
+        incidents.forEach((incident: Incident) => {
             // Contar por cliente
             if (!stats.totalPorCliente[incident.cliente]) {
                 stats.totalPorCliente[incident.cliente] = 0;
@@ -94,7 +115,9 @@ export const incidentService = {    async getAll() {
 
             // Contar por prioridad y estado
             if (!incident.fechaSolucion && incident.estado !== 'Resuelto') {
-                stats.totalPorPrioridad[incident.prioridad]++;
+                if (incident.prioridad === 'Alta' || incident.prioridad === 'Media' || incident.prioridad === 'Baja') {
+                    stats.totalPorPrioridad[incident.prioridad]++;
+                }
                 stats.totalAbiertas++;
             }
         });

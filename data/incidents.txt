@@ -1,16 +1,16 @@
 [
   {
-    "celula": "Servicio Virtuales",
+    "celula": "KCRM",
     "estado": "Abierto",
     "prioridad": "Media",
-    "descripcion": "sds",
-    "informadoPor": "Yulieth Paola\t",
-    "asignadoA": "Yoarlis Carrillo\t",
-    "cliente": "sdsd",
+    "descripcion": "Se agrega responsable director del programa o director cliente y el sistema al agregar uno automáticamente agrega ambos",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Camilo Lazaro Roa",
+    "cliente": "Koin",
     "esErroneo": false,
-    "aplica": true,
-    "idJira": "",
-    "fechaCreacion": "2025-05-15T21:55:22.742Z",
+    "aplica": false,
+    "idJira": "KOIN-235",
+    "fechaCreacion": "2025-05-15T22:19:11.710Z",
     "diasAbierto": 1
   },
   {
@@ -26,5 +26,20 @@
     "aplica": true,
     "cliente": "Koin",
     "idJira": "KOIN-235"
+  },
+  {
+    "celula": "KCRM",
+    "estado": "Abierto",
+    "prioridad": "Media",
+    "descripcion": "Se agrega responsable director del programa o director cliente y el sistema al agregar uno automáticamente agrega ambos",
+    "fechaCreacion": "2025-05-15T22:19:11.710Z",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Camilo Lazaro Roa",
+    "diasAbierto": 1,
+    "esErroneo": false,
+    "aplica": false,
+    "cliente": "Koin",
+    "idJira": "KOIN-235",
+    "id": "INC-20250515-001"
   }
 ]
