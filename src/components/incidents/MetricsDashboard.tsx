@@ -102,7 +102,7 @@ export function MetricsDashboard({ incidents }: MetricsProps) {
 
     useEffect(() => {
         filterIncidents();
-    }, [timeFilter, incidents, selectedTeam, selectedCell]);
+    }, [timeFilter, incidents, selectedTeam, selectedCell, teams, cells]);
 
     const filterIncidents = () => {
         let filtered = [...incidents];
@@ -165,14 +165,15 @@ export function MetricsDashboard({ incidents }: MetricsProps) {
         setBugTypeDistribution(Object.entries(bugCount).map(([name, value]) => ({
             name,
             value
-        })));
-
-        // Distribución por equipo/célula
+        })));        // Distribución por equipo/célula
         const distribution = filtered.reduce((acc: any, incident) => {
+            // Only attempt to map to teams if teams and cells data is available
             const key = groupBy === 'equipo' 
-                ? teams.find(t => 
-                    cells.find(c => c.name === incident.celula)?.teamId === t.id
-                  )?.name || 'Sin equipo'
+                ? (teams.length > 0 && cells.length > 0)
+                  ? teams.find(t => 
+                      cells.find(c => c.name === incident.celula)?.teamId === t.id
+                    )?.name || 'Sin equipo'
+                  : incident.celula // If teams or cells data isn't loaded yet, use celula instead
                 : incident.celula;
             
             if (!key) return acc;

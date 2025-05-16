@@ -70,5 +70,37 @@
     "historialEstados": [],
     "id": "INC-20250516-002",
     "fechaSolucion": "2025-05-08T00:00:00.000Z"
+  },
+  {
+    "celula": "KCRM",
+    "estado": "Resuelto",
+    "prioridad": "Media",
+    "descripcion": "Error en la actualización del campo CheckBox \"Desembolso en Línea\" y comportamiento del Tab agenda",
+    "fechaCreacion": "2025-05-16T19:41:45.745Z",
+    "fechaReporte": "2025-04-16T00:00:00.000Z",
+    "informadoPor": "Yoarlis Carrillo\t",
+    "asignadoA": "Sergio cabrera",
+    "diasAbierto": 31,
+    "esErroneo": false,
+    "aplica": false,
+    "cliente": "Bancolombia",
+    "idJira": "BCGT-1033",
+    "tipoBug": "Funcional",
+    "areaAfectada": "Frontend",
+    "etiquetas": [
+      "Bancolombia"
+    ],
+    "historialEstados": [
+      {
+        "estado": "En Progreso",
+        "fecha": "2025-05-16T19:58:12.574Z"
+      },
+      {
+        "estado": "Abierto",
+        "fecha": "2025-05-16T19:58:16.966Z"
+      }
+    ],
+    "id": "INC-20250516-003",
+    "fechaSolucion": "2025-04-16T00:00:00.000Z"
   }
 ]
