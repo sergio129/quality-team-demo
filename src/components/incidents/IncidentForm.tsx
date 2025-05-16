@@ -33,12 +33,9 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         esErroneo: false,
         aplica: false,
         cliente: '',
-        idJira: '',
-        tipoBug: undefined,
+        idJira: '',        tipoBug: undefined,
         areaAfectada: undefined,
         etiquetas: [],
-        tiempoEstimado: undefined,
-        tiempoReal: undefined,
         historialEstados: []
     });
 
@@ -81,10 +78,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
     const handleChange = (e: any) => {
         const { name, value, type } = e.target;
         setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? e.target.checked : 
-                    name === 'tiempoEstimado' || name === 'tiempoReal' ? 
-                    (value ? parseFloat(value) : undefined) : value,
+            ...prev,            [name]: type === 'checkbox' ? e.target.checked : value,
             ...(name === 'estado' && value !== prev.estado ? {
                 historialEstados: [
                     ...(prev.historialEstados || []),
@@ -364,44 +358,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                         <option value="Otro">Otro</option>
                                     </Select>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <Label htmlFor="tiempoEstimado" className="text-sm font-medium text-gray-600 mb-2">
-                                        Tiempo Estimado (horas)
-                                    </Label>
-                                    <Input
-                                        type="number"
-                                        id="tiempoEstimado"
-                                        name="tiempoEstimado"
-                                        value={formData.tiempoEstimado || ''}
-                                        onChange={handleChange}
-                                        min="0"
-                                        step="0.5"
-                                        className="w-full mt-1"
-                                        placeholder="Ej: 4.5"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="tiempoReal" className="text-sm font-medium text-gray-600 mb-2">
-                                        Tiempo Real (horas)
-                                    </Label>
-                                    <Input
-                                        type="number"
-                                        id="tiempoReal"
-                                        name="tiempoReal"
-                                        value={formData.tiempoReal || ''}
-                                        onChange={handleChange}
-                                        min="0"
-                                        step="0.5"
-                                        className="w-full mt-1"
-                                        placeholder="Ej: 5.5"
-                                    />
-                                </div>
-                            </div>
-
-                            {formData.historialEstados && formData.historialEstados.length > 0 && (
+                            </div>                            {formData.historialEstados && formData.historialEstados.length > 0 && (
                                 <div>
                                     <Label className="text-sm font-medium text-gray-600 mb-2">
                                         Historial de Estados

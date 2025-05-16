@@ -72,27 +72,6 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
                             <h4 className="text-sm font-medium text-gray-600">Días Abierto</h4>
                             <p className="text-gray-900">{incident.diasAbierto}</p>
                         </div>
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-medium text-gray-600">Tiempo Estimado</h4>
-                            <p className="text-gray-900">{incident.tiempoEstimado ? `${incident.tiempoEstimado} horas` : '-'}</p>
-                        </div>
-                        <div className="space-y-1">
-                            <h4 className="text-sm font-medium text-gray-600">Tiempo Real</h4>
-                            <p className="text-gray-900">{incident.tiempoReal ? `${incident.tiempoReal} horas` : '-'}</p>
-                        </div>
-                        {incident.tiempoEstimado && incident.tiempoReal && (
-                            <div className="space-y-1 col-span-2">
-                                <h4 className="text-sm font-medium text-gray-600">Variación de Tiempo</h4>
-                                <p className={`font-medium ${
-                                    incident.tiempoReal > incident.tiempoEstimado ? 'text-red-600' : 'text-green-600'
-                                }`}>
-                                    {incident.tiempoReal > incident.tiempoEstimado ? 
-                                        `+${(incident.tiempoReal - incident.tiempoEstimado).toFixed(1)} horas sobre lo estimado` :
-                                        `${(incident.tiempoEstimado - incident.tiempoReal).toFixed(1)} horas bajo lo estimado`
-                                    }
-                                </p>
-                            </div>
-                        )}
                     </div>
 
                     <div className="space-y-3 pt-4 border-t border-gray-200">

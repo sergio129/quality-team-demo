@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { MetricsDashboard } from './MetricsDashboard';
 
 export function IncidentTable() {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -195,6 +196,9 @@ export function IncidentTable() {
                     Nuevo Incidente
                 </Button>
             </div>
+
+            {/* Dashboard de Métricas */}
+            <MetricsDashboard incidents={incidents} />
 
             <div className="grid grid-cols-4 gap-4 mb-6">
                 <Input

@@ -21,13 +21,9 @@ export interface Incident {
     esErroneo: boolean;
     aplica: boolean;
     cliente: string;
-    idJira: string;
-    // Nuevos campos para categorización
+    idJira: string;    // Nuevos campos para categorización
     tipoBug?: BugType;
     areaAfectada?: AreaAfectada;
     etiquetas?: string[];
-    // Nuevos campos para seguimiento de tiempo
-    tiempoEstimado?: number; // en horas
-    tiempoReal?: number; // en horas
     historialEstados?: StateChange[];
 }
