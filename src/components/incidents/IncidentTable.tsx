@@ -183,10 +183,7 @@ export function IncidentTable() {
     return (
         <div className="container mx-auto py-6">
             <div className="flex justify-between items-start mb-6">
-                <div className="space-y-4">
-                    <h1 className="text-2xl font-bold">Gestión de Incidentes</h1>
-                    <StatsView stats={stats} />
-                </div>
+                <h1 className="text-2xl font-bold">Gestión de Incidentes</h1>
                 <Button
                     onClick={() => {
                         setSelectedIncident(undefined);
@@ -196,9 +193,6 @@ export function IncidentTable() {
                     Nuevo Incidente
                 </Button>
             </div>
-
-            {/* Dashboard de Métricas */}
-            <MetricsDashboard incidents={incidents} />
 
             <div className="grid grid-cols-4 gap-4 mb-6">
                 <Input
@@ -235,7 +229,7 @@ export function IncidentTable() {
                 </Select>
             </div>
 
-            <div className="border rounded-lg">
+            <div className="border rounded-lg mb-8">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -324,6 +318,11 @@ export function IncidentTable() {
                         ))}
                     </TableBody>
                 </Table>
+            </div>
+
+            <div className="space-y-8">
+                <StatsView stats={stats} />
+                <MetricsDashboard incidents={incidents} />
             </div>
 
             <IncidentForm
