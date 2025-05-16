@@ -29,11 +29,11 @@ export const incidentService = {
         }
         const content = await fs.promises.readFile(incidentsFile, 'utf-8');
         const incidents = JSON.parse(content || '[]');
-        
-        // Update days open for each incident
+          // Update days open for each incident
         return incidents.map((incident: Incident) => ({
             ...incident,
             fechaCreacion: new Date(incident.fechaCreacion),
+            fechaReporte: new Date(incident.fechaReporte || incident.fechaCreacion), // Si no hay fechaReporte, usar fechaCreacion como fallback
             fechaSolucion: incident.fechaSolucion ? new Date(incident.fechaSolucion) : undefined,
             diasAbierto: calculateDaysOpen(incident.fechaCreacion, incident.fechaSolucion)
         }));
@@ -50,11 +50,11 @@ export const incidentService = {
             .map((id: string) => parseInt(id.split('-')[2] || '0'));
         const sequence = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
         const newId = `INC-${dateStr}-${String(sequence).padStart(3, '0')}`;
-        
-        const newIncident = {
+          const newIncident = {
             ...incident,
             id: newId,
             fechaCreacion: new Date(incident.fechaCreacion || new Date()),
+            fechaReporte: new Date(incident.fechaReporte || new Date()),
             fechaSolucion: incident.fechaSolucion ? new Date(incident.fechaSolucion) : undefined,
             diasAbierto: calculateDaysOpen(
                 incident.fechaCreacion || new Date(), 
@@ -70,11 +70,11 @@ export const incidentService = {
     async update(id: string, incident: Partial<Incident>) {
         const incidents = await this.getAll();
         const index = incidents.findIndex((i: Incident) => i.id === id);
-        if (index !== -1) {
-            const updatedIncident = {
+        if (index !== -1) {            const updatedIncident = {
                 ...incidents[index],
                 ...incident,
                 fechaCreacion: new Date(incident.fechaCreacion || incidents[index].fechaCreacion),
+                fechaReporte: new Date(incident.fechaReporte || incidents[index].fechaReporte),
                 fechaSolucion: incident.fechaSolucion ? new Date(incident.fechaSolucion) : undefined,
                 diasAbierto: calculateDaysOpen(
                     incident.fechaCreacion || incidents[index].fechaCreacion,

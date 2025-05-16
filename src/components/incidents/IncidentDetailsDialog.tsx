@@ -65,6 +65,10 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
                             <p className="text-gray-900">{new Date(incident.fechaCreacion).toLocaleDateString()}</p>
                         </div>
                         <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Fecha de Reporte</h4>
+                            <p className="text-gray-900">{incident.fechaReporte ? new Date(incident.fechaReporte).toLocaleDateString() : '-'}</p>
+                        </div>
+                        <div className="space-y-1">
                             <h4 className="text-sm font-medium text-gray-600">Fecha de Solución</h4>
                             <p className="text-gray-900">{incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}</p>
                         </div>

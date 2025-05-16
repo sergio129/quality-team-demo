@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { MetricsDashboard } from './MetricsDashboard';
+import { ExportExcelButton } from './ExportExcelButton';
 
 export function IncidentTable() {
     const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -181,17 +182,19 @@ export function IncidentTable() {
     });
 
     return (
-        <div className="container mx-auto py-6">
-            <div className="flex justify-between items-start mb-6">
+        <div className="container mx-auto py-6">            <div className="flex justify-between items-start mb-6">
                 <h1 className="text-2xl font-bold">Gestión de Incidentes</h1>
-                <Button
-                    onClick={() => {
-                        setSelectedIncident(undefined);
-                        setIsFormOpen(true);
-                    }}
-                >
-                    Nuevo Incidente
-                </Button>
+                <div className="flex gap-2">
+                    <ExportExcelButton />
+                    <Button
+                        onClick={() => {
+                            setSelectedIncident(undefined);
+                            setIsFormOpen(true);
+                        }}
+                    >
+                        Nuevo Incidente
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-4 gap-4 mb-6">
