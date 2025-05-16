@@ -9,6 +9,7 @@ export interface Project {
     dias: number;
     horasEstimadas?: number;
     estado?: string;
+    estadoCalculado?: 'Por Iniciar' | 'En Progreso' | 'Certificado';  // Estado calculado automáticamente
     descripcion?: string;
     fechaInicio?: Date;
     fechaFin?: Date;

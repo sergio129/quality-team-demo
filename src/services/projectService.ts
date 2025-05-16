@@ -66,6 +66,38 @@ export const projectService = {    async getAllProjects(): Promise<Project[]> {
         } catch (error) {
             console.error('Error deleting project:', error);
             return false;
+        }    },
+    
+    async updateProjectStatus(projectId: string, newStatus: string): Promise<boolean> {
+        try {
+            if (!projectId) {
+                console.error('Error updating project status: No project ID provided');
+                return false;
+            }
+            
+            const projects = await this.getAllProjects();
+            // Buscar por id o idJira
+            const index = projects.findIndex(p => 
+                (p.id && p.id === projectId) || p.idJira === projectId
+            );
+            
+            if (index !== -1) {
+                // Solo actualizar el campo estado y estadoCalculado
+                projects[index].estado = newStatus;
+                projects[index].estadoCalculado = newStatus;
+                
+                // Si el estado es "Certificado" y no tiene fecha de certificación, establecerla
+                if (newStatus === 'Certificado' && !projects[index].fechaCertificacion) {
+                    projects[index].fechaCertificacion = new Date().toISOString();
+                }
+                
+                await fs.writeFile(FILE_PATH, JSON.stringify(projects, null, 2));
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error updating project status:', error);
+            return false;
         }
     }
 };
