@@ -397,13 +397,13 @@
     "equipo": "TechBridge",
     "celula": "Suramericana",
     "horas": 12,
-    "dias": 1.33,
-    "fechaEntrega": "2025-05-16T00:00:00.000Z",
+    "dias": 2,
+    "fechaEntrega": "2025-05-22T00:00:00.000Z",
     "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-19T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-22T00:00:00.000Z",
     "diasRetraso": -45136,
     "analistaProducto": "Sergio Anaya",
-    "planTrabajo": ""
+    "planTrabajo": "Se pasa para el 22 por cambio de fechas"
   },
   {
     "idJira": "BCCR-1504",

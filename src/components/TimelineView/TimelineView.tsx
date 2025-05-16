@@ -153,20 +153,53 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
     };
 
     const getProjectColor = (project: Project) => {
+        const today = new Date();
+        
         if (project.fechaCertificacion) {
+            // Proyecto certificado/finalizado
             const isDelayed = project.diasRetraso > 0;
-            return isDelayed ? 'bg-red-200 hover:bg-red-300' : 'bg-green-200 hover:bg-green-300';
+            return isDelayed 
+                ? 'bg-red-200 hover:bg-red-300 border-red-400' // Finalizado con retraso
+                : 'bg-green-200 hover:bg-green-300 border-green-400'; // Finalizado a tiempo
         }
-        return 'bg-blue-200 hover:bg-blue-300';
+        
+        // Proyecto no certificado aún
+        const fechaEntrega = new Date(project.fechaEntrega);
+        if (fechaEntrega < today) {
+            // Ha pasado la fecha de entrega y no está certificado
+            return 'bg-orange-200 hover:bg-orange-300 border-orange-400';
+        }
+
+        // Proyecto en curso dentro del plazo
+        return 'bg-blue-200 hover:bg-blue-300 border-blue-400';
     };
 
-    const renderProjectTooltip = (project: Project) => `
+    const renderProjectTooltip = (project: Project) => {
+        const today = new Date();
+        const fechaEntrega = new Date(project.fechaEntrega);
+        let estado = '';
+
+        if (project.fechaCertificacion) {
+            if (project.diasRetraso > 0) {
+                estado = '⚠️ Finalizado con retraso';
+            } else {
+                estado = '✅ Finalizado a tiempo';
+            }
+        } else if (fechaEntrega < today) {
+            estado = '⚠️ Fecha de entrega vencida';
+        } else {
+            estado = '🔵 En progreso';
+        }
+
+        return `
 ${project.proyecto}
 ID: ${project.idJira}
+Estado: ${estado}
 Fecha Entrega: ${formatDate(project.fechaEntrega)}
 ${project.fechaCertificacion ? `Fecha Certificación: ${formatDate(project.fechaCertificacion)}` : ''}
 ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
-    `.trim();
+`.trim();
+    };
 
     // Generar array de años para el selector (5 años atrás y adelante)
     const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
