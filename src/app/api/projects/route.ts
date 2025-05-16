@@ -27,16 +27,20 @@ export async function GET(req: NextRequest) {
             return matchesById || matchesByName;
         });
     }
-    
-    // Si se proporciona mes y año, filtrar por fecha
+      // Si se proporciona mes y año, filtrar por fecha
     if (monthFilter && yearFilter) {
         const month = parseInt(monthFilter);
         const year = parseInt(yearFilter);
+        
+        // Imprimir los parámetros para debugging
+        console.log(`Filtering by month: ${month}, year: ${year}`);
         
         filteredProjects = filteredProjects.filter(project => {
             // Verificar si hay fecha de entrega
             if (project.fechaEntrega) {
                 const entregaDate = new Date(project.fechaEntrega);
+                // Imprimir la fecha para verificar
+                console.log(`Project ${project.idJira}: date=${entregaDate.toISOString()}, month=${entregaDate.getMonth()}, year=${entregaDate.getFullYear()}`);
                 return entregaDate.getMonth() === month && entregaDate.getFullYear() === year;
             }
             return false;
