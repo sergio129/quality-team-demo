@@ -7,7 +7,8 @@
       "ed17c938-0bf2-4a55-99ba-18b195712c23",
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27",
       "7ef92e37-abc4-4960-a59e-449ee7fc4fd3",
-      "1eee65a6-7a36-4c55-bbe3-a116186eb837"
+      "1eee65a6-7a36-4c55-bbe3-a116186eb837",
+      "637ed3d2-2c4e-4fd7-b7d0-762737d972c0"
     ],
     "role": "Senior",
     "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a",

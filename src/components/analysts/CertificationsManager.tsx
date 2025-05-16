@@ -41,16 +41,15 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
   return (
     <div className="space-y-3">
       {/* Lista de certificaciones */}
-      <div className="space-y-1.5">
-        {certifications.length > 0 ? (
+      <div className="space-y-1.5">        {certifications.length > 0 ? (
           certifications.map((cert, index) => (
-            <div key={index} className="flex items-center justify-between p-1.5 bg-gray-50 rounded-md border border-gray-100 text-sm">
+            <div key={index} className="flex items-center justify-between p-1 bg-gray-50 rounded-md border border-gray-100 text-xs">
               <div>
-                <div className="font-medium text-xs">{cert.name}</div>
-                <div className="text-xs text-gray-600 flex flex-wrap items-center gap-1">
-                  <span className="bg-blue-50 px-1.5 py-0.5 rounded-sm text-blue-700">{cert.issuer}</span>
-                  <span className="text-[10px] text-gray-500 flex items-center">
-                    <Calendar className="h-3 w-3 mr-0.5 inline" /> 
+                <div className="font-medium text-xs leading-tight">{cert.name}</div>
+                <div className="text-[10px] text-gray-600 flex flex-wrap items-center gap-1">
+                  <span className="bg-blue-50 px-1 py-0.5 rounded-sm text-blue-700 text-[10px]">{cert.issuer}</span>
+                  <span className="text-[9px] text-gray-500 flex items-center">
+                    <Calendar className="h-2 w-2 mr-0.5 inline" /> 
                     {new Date(cert.date).toLocaleDateString()}
                     {cert.expiryDate && ` → ${new Date(cert.expiryDate).toLocaleDateString()}`}
                   </span>
@@ -58,7 +57,7 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
               </div>
               <button
                 onClick={() => handleRemoveCertification(index)}
-                className="text-gray-400 hover:text-red-500 p-1"
+                className="text-gray-400 hover:text-red-500 p-0.5"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -69,62 +68,62 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
         )}
       </div>      {/* Formulario para añadir certificación */}
       {showForm ? (
-        <div className="border p-2 rounded-md bg-gray-50 text-sm">
-          <div className="space-y-2">
+        <div className="border p-1.5 rounded-md bg-gray-50 text-xs">
+          <div className="space-y-1.5">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="cert-name" className="text-xs">Certificación</Label>
+                <Label htmlFor="cert-name" className="text-xs mb-0.5 block">Certificación</Label>
                 <Input
                   id="cert-name"
                   value={newCert.name}
                   onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
                   placeholder="ISTQB Foundation Level"
-                  className="h-7 text-xs"
+                  className="h-6 text-xs px-2"
                 />
               </div>
               
               <div>
-                <Label htmlFor="cert-issuer" className="text-xs">Entidad</Label>
+                <Label htmlFor="cert-issuer" className="text-xs mb-0.5 block">Entidad</Label>
                 <Input
                   id="cert-issuer"
                   value={newCert.issuer}
                   onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
                   placeholder="ISTQB"
-                  className="h-7 text-xs"
+                  className="h-6 text-xs px-2"
                 />
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="cert-date" className="text-xs">Fecha obtención</Label>
+                <Label htmlFor="cert-date" className="text-xs mb-0.5 block">Fecha obtención</Label>
                 <Input
                   id="cert-date"
                   type="date"
                   value={newCert.date}
                   onChange={(e) => setNewCert({ ...newCert, date: e.target.value })}
-                  className="h-7 text-xs"
+                  className="h-6 text-xs px-2"
                 />
               </div>
               
               <div>
-                <Label htmlFor="cert-expiry" className="text-xs">Expiración (opcional)</Label>
+                <Label htmlFor="cert-expiry" className="text-xs mb-0.5 block">Expiración (opc.)</Label>
                 <Input
                   id="cert-expiry"
                   type="date"
                   value={newCert.expiryDate || ''}
                   onChange={(e) => setNewCert({ ...newCert, expiryDate: e.target.value || undefined })}
-                  className="h-7 text-xs"
+                  className="h-6 text-xs px-2"
                 />
               </div>
             </div>
             
-            <div className="flex justify-end gap-1.5 mt-1">
+            <div className="flex justify-end gap-1 mt-1">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => setShowForm(false)}
-                className="h-7 text-xs py-0"
+                className="h-6 text-xs py-0 px-2"
               >
                 Cancelar
               </Button>
@@ -132,21 +131,20 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
                 type="button" 
                 onClick={handleAddCertification}
                 disabled={!newCert.name.trim() || !newCert.issuer.trim()}
-                className="h-7 text-xs py-0"
+                className="h-6 text-xs py-0 px-2"
               >
                 Añadir
               </Button>
             </div>
           </div>
-        </div>
-      ) : (
+        </div>      ) : (
         <Button 
           type="button" 
           variant="outline" 
           onClick={() => setShowForm(true)}
-          className="w-full h-7 text-xs"
+          className="w-full h-6 text-xs"
         >
-          <Plus className="h-3 w-3 mr-1" /> Añadir Certificación
+          <Plus className="h-2.5 w-2.5 mr-1" /> Añadir Certificación
         </Button>
       )}
     </div>

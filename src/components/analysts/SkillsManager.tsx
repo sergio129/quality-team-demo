@@ -114,11 +114,11 @@ export function SkillsManager({ skills, onChange }: SkillsManagerProps) {
           />
           
           {showDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-32 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-24 overflow-y-auto">
               {filteredSkills.map((skill) => (
                 <div
                   key={skill}
-                  className="px-2 py-1 cursor-pointer hover:bg-blue-50 text-xs"
+                  className="px-2 py-0.5 cursor-pointer hover:bg-blue-50 text-xs"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     selectSkill(skill);
@@ -141,17 +141,15 @@ export function SkillsManager({ skills, onChange }: SkillsManagerProps) {
           <option value="Avanzado">Avanzado</option>
           <option value="Experto">Experto</option>
         </select>
-      </div>
-
-      <Button 
+      </div>      <Button 
         type="button" 
         variant="outline" 
         size="sm" 
         onClick={handleAddSkill}
-        className="mt-1 h-7 text-xs"
+        className="mt-1 h-6 text-xs"
         disabled={!newSkill.trim()}
       >
-        <Plus className="h-3 w-3 mr-1" /> Agregar
+        <Plus className="h-2.5 w-2.5 mr-1" /> Agregar
       </Button>
     </div>
   );

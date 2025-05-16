@@ -116,10 +116,8 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
           <TabsTrigger value="info" className="text-xs py-1">Información</TabsTrigger>
           <TabsTrigger value="skills" className="text-xs py-1">Competencias</TabsTrigger>
           <TabsTrigger value="certs" className="text-xs py-1">Certificaciones</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="info" className="space-y-3 pt-2">
-          <div className="grid grid-cols-2 gap-3">
+        </TabsList>        <TabsContent value="info" className="space-y-3 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="name" className="text-xs">Nombre</Label>
               <Input
@@ -146,7 +144,7 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
             </div>
           </div>      
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="cells" className="text-xs">Células</Label>
               <select

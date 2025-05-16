@@ -27,10 +27,9 @@ export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogP
         <Button variant="outline" size="sm">
           Editar
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      </DialogTrigger>      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Editar Analista</DialogTitle>
+          <DialogTitle className="text-base">Editar Analista</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystForm 
