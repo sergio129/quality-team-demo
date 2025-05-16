@@ -75,48 +75,50 @@ export function SkillsManager({ skills, onChange }: SkillsManagerProps) {
     setNewSkill(skill);
     setShowDropdown(false);
   };
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 mb-2">
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-1.5 mb-2">
         {skills.map((skill, index) => (
           <div 
             key={index}
-            className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center text-sm"
+            className={`px-2 py-0.5 rounded-full flex items-center text-xs ${
+              skill.level === 'Experto' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+              skill.level === 'Avanzado' ? 'bg-blue-50 text-blue-800 border border-blue-200' :
+              skill.level === 'Intermedio' ? 'bg-green-50 text-green-800 border border-green-200' :
+              'bg-gray-50 text-gray-800 border border-gray-200'
+            }`}
           >
             <span>{skill.name} ({skill.level})</span>
             <button 
               onClick={() => handleRemoveSkill(index)}
-              className="ml-1 text-blue-800 hover:text-blue-900"
+              className="ml-1 hover:text-red-600"
             >
               <X className="h-3 w-3" />
             </button>
           </div>
         ))}
         {skills.length === 0 && (
-          <div className="text-sm text-gray-500">
-            Añade habilidades para este analista
+          <div className="text-xs text-gray-500 italic">
+            No hay habilidades registradas
           </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-3 gap-2">
-        <div className="relative col-span-2">
+      </div>      <div className="grid grid-cols-6 gap-1.5">
+        <div className="relative col-span-4">
           <Input
             value={newSkill}
             onChange={(e) => handleSkillInputChange(e.target.value)}
-            placeholder="Buscar o añadir habilidad..."
-            className="w-full"
+            placeholder="Buscar habilidad..."
+            className="w-full h-8 text-xs"
             onFocus={() => newSkill && setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
           />
           
           {showDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-40 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-32 overflow-y-auto">
               {filteredSkills.map((skill) => (
                 <div
                   key={skill}
-                  className="px-3 py-1.5 cursor-pointer hover:bg-blue-50"
+                  className="px-2 py-1 cursor-pointer hover:bg-blue-50 text-xs"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     selectSkill(skill);
@@ -132,7 +134,7 @@ export function SkillsManager({ skills, onChange }: SkillsManagerProps) {
         <select
           value={newLevel}
           onChange={(e) => setNewLevel(e.target.value as SkillLevel)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="col-span-2 h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
         >
           <option value="Básico">Básico</option>
           <option value="Intermedio">Intermedio</option>
@@ -146,10 +148,10 @@ export function SkillsManager({ skills, onChange }: SkillsManagerProps) {
         variant="outline" 
         size="sm" 
         onClick={handleAddSkill}
-        className="mt-2"
+        className="mt-1 h-7 text-xs"
         disabled={!newSkill.trim()}
       >
-        <Plus className="h-4 w-4 mr-1" /> Añadir Habilidad
+        <Plus className="h-3 w-3 mr-1" /> Agregar
       </Button>
     </div>
   );

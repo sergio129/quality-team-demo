@@ -38,85 +38,93 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
     updated.splice(index, 1);
     onChange(updated);
   };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Lista de certificaciones */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {certifications.length > 0 ? (
           certifications.map((cert, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+            <div key={index} className="flex items-center justify-between p-1.5 bg-gray-50 rounded-md border border-gray-100 text-sm">
               <div>
-                <div className="font-medium">{cert.name}</div>
-                <div className="text-sm text-gray-600">
-                  {cert.issuer} • Obtenida: {new Date(cert.date).toLocaleDateString()}
-                  {cert.expiryDate && ` • Expira: ${new Date(cert.expiryDate).toLocaleDateString()}`}
+                <div className="font-medium text-xs">{cert.name}</div>
+                <div className="text-xs text-gray-600 flex flex-wrap items-center gap-1">
+                  <span className="bg-blue-50 px-1.5 py-0.5 rounded-sm text-blue-700">{cert.issuer}</span>
+                  <span className="text-[10px] text-gray-500 flex items-center">
+                    <Calendar className="h-3 w-3 mr-0.5 inline" /> 
+                    {new Date(cert.date).toLocaleDateString()}
+                    {cert.expiryDate && ` → ${new Date(cert.expiryDate).toLocaleDateString()}`}
+                  </span>
                 </div>
               </div>
               <button
                 onClick={() => handleRemoveCertification(index)}
-                className="text-gray-500 hover:text-red-500"
+                className="text-gray-400 hover:text-red-500 p-1"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           ))
         ) : (
-          <div className="text-sm text-gray-500">No hay certificaciones registradas</div>
+          <div className="text-xs text-gray-500 italic">No hay certificaciones registradas</div>
         )}
-      </div>
-
-      {/* Formulario para añadir certificación */}
+      </div>      {/* Formulario para añadir certificación */}
       {showForm ? (
-        <div className="border p-3 rounded-md bg-gray-50">
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="cert-name">Nombre de la Certificación</Label>
-              <Input
-                id="cert-name"
-                value={newCert.name}
-                onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
-                placeholder="ISTQB Foundation Level"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="cert-issuer">Entidad Emisora</Label>
-              <Input
-                id="cert-issuer"
-                value={newCert.issuer}
-                onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
-                placeholder="ISTQB"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
+        <div className="border p-2 rounded-md bg-gray-50 text-sm">
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label htmlFor="cert-date">Fecha de Obtención</Label>
+                <Label htmlFor="cert-name" className="text-xs">Certificación</Label>
+                <Input
+                  id="cert-name"
+                  value={newCert.name}
+                  onChange={(e) => setNewCert({ ...newCert, name: e.target.value })}
+                  placeholder="ISTQB Foundation Level"
+                  className="h-7 text-xs"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="cert-issuer" className="text-xs">Entidad</Label>
+                <Input
+                  id="cert-issuer"
+                  value={newCert.issuer}
+                  onChange={(e) => setNewCert({ ...newCert, issuer: e.target.value })}
+                  placeholder="ISTQB"
+                  className="h-7 text-xs"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="cert-date" className="text-xs">Fecha obtención</Label>
                 <Input
                   id="cert-date"
                   type="date"
                   value={newCert.date}
                   onChange={(e) => setNewCert({ ...newCert, date: e.target.value })}
+                  className="h-7 text-xs"
                 />
               </div>
               
               <div>
-                <Label htmlFor="cert-expiry">Fecha de Expiración (opcional)</Label>
+                <Label htmlFor="cert-expiry" className="text-xs">Expiración (opcional)</Label>
                 <Input
                   id="cert-expiry"
                   type="date"
                   value={newCert.expiryDate || ''}
                   onChange={(e) => setNewCert({ ...newCert, expiryDate: e.target.value || undefined })}
+                  className="h-7 text-xs"
                 />
               </div>
             </div>
             
-            <div className="flex justify-end gap-2 mt-2">
+            <div className="flex justify-end gap-1.5 mt-1">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => setShowForm(false)}
+                className="h-7 text-xs py-0"
               >
                 Cancelar
               </Button>
@@ -124,6 +132,7 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
                 type="button" 
                 onClick={handleAddCertification}
                 disabled={!newCert.name.trim() || !newCert.issuer.trim()}
+                className="h-7 text-xs py-0"
               >
                 Añadir
               </Button>
@@ -135,9 +144,9 @@ export function CertificationsManager({ certifications, onChange }: Certificatio
           type="button" 
           variant="outline" 
           onClick={() => setShowForm(true)}
-          className="w-full"
+          className="w-full h-7 text-xs"
         >
-          <Plus className="h-4 w-4 mr-1" /> Añadir Certificación
+          <Plus className="h-3 w-3 mr-1" /> Añadir Certificación
         </Button>
       )}
     </div>

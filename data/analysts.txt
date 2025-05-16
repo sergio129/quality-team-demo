@@ -11,7 +11,19 @@
     ],
     "role": "Senior",
     "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a",
-    "color": "#3B82F6"
+    "color": "#3B82F6",
+    "skills": [],
+    "certifications": [
+      {
+        "name": "ISTQB",
+        "issuer": "ISTQB",
+        "date": "2019-06-16"
+      }
+    ],
+    "specialties": [
+      "Frontend"
+    ],
+    "availability": 100
   },
   {
     "name": "Yoarlis Carrillo\t",
