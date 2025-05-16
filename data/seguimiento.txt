@@ -336,20 +336,6 @@
     "planTrabajo": ""
   },
   {
-    "idJira": "Koin P3",
-    "proyecto": "Koin Paquete 3 2025(Falta peticion de Jira)",
-    "equipo": "TechBridge",
-    "celula": "SV",
-    "horas": 54,
-    "dias": 6,
-    "fechaEntrega": "2025-05-14T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-21T00:00:00.000Z",
-    "diasRetraso": -45134,
-    "analistaProducto": "Leidy Iral",
-    "planTrabajo": ""
-  },
-  {
     "idJira": "BCGT-1098",
     "proyecto": "Ajuste Informe \"Aumento TDC Preaprobados\"",
     "equipo": "CRM Bancolombia",

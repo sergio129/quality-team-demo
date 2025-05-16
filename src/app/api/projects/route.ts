@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
             
             return matchesById || matchesByName;
         });
-    }
-      // Si se proporciona mes y año, filtrar por fecha
+    }    // Si se proporciona mes y año, filtrar por fecha
     if (monthFilter && yearFilter) {
         const month = parseInt(monthFilter);
         const year = parseInt(yearFilter);
@@ -35,13 +34,34 @@ export async function GET(req: NextRequest) {
         // Imprimir los parámetros para debugging
         console.log(`Filtering by month: ${month}, year: ${year}`);
         
+        // Crear fecha de inicio y fin del mes
+        const startOfMonth = new Date(year, month, 1);
+        const endOfMonth = new Date(year, month + 1, 0); // El día 0 del siguiente mes es el último del mes actual
+        
+        console.log(`Start of month: ${startOfMonth.toISOString()}, End of month: ${endOfMonth.toISOString()}`);
+        
         filteredProjects = filteredProjects.filter(project => {
             // Verificar si hay fecha de entrega
             if (project.fechaEntrega) {
                 const entregaDate = new Date(project.fechaEntrega);
-                // Imprimir la fecha para verificar
-                console.log(`Project ${project.idJira}: date=${entregaDate.toISOString()}, month=${entregaDate.getMonth()}, year=${entregaDate.getFullYear()}`);
-                return entregaDate.getMonth() === month && entregaDate.getFullYear() === year;
+                
+                // Un proyecto pertenece al mes si:
+                // 1. Su fecha de entrega está dentro del mes, o
+                // 2. Su fecha de certificación está dentro del mes, o
+                // 3. Si se extiende por todo el mes (inicia antes y termina después)
+                
+                const fechaCert = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
+                
+                const isInMonth = 
+                    // La fecha de entrega está en el mes
+                    (entregaDate >= startOfMonth && entregaDate <= endOfMonth) ||
+                    // La fecha de certificación está en el mes
+                    (fechaCert && fechaCert >= startOfMonth && fechaCert <= endOfMonth) ||
+                    // El proyecto abarca todo el mes (comienza antes y termina después)
+                    (entregaDate <= startOfMonth && fechaCert && fechaCert >= endOfMonth);
+                
+                console.log(`Project ${project.idJira}: date=${entregaDate.toISOString()}, isInMonth=${isInMonth}`);
+                return isInMonth;
             }
             return false;
         });

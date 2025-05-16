@@ -17,9 +17,10 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Simular fecha en mayo 2025 para que funcione con los datos de ejemplo
-        // En producción se usaría: const today = new Date();
-        const today = new Date("2025-05-16"); // Fecha simulada
+        // NOTA: En este ambiente de desarrollo usamos una fecha simulada 
+        // Para producción, descomentar la línea de abajo y comentar la siguiente
+        // const today = new Date(); 
+        const today = new Date("2025-05-16"); // Fecha simulada para desarrollo
         const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
@@ -96,15 +97,28 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     }
     return false;
   });
+  // Capacidad máxima de horas mensuales
+  const MAX_MONTHLY_HOURS = 180;
 
   // Determinar el nivel de carga
   const getWorkloadLevel = (hours: number) => {
-    if (hours < 20) return { level: 'Bajo', color: 'bg-green-100 text-green-800' };
-    if (hours < 40) return { level: 'Medio', color: 'bg-yellow-100 text-yellow-800' };
+    const percentageUsed = (hours / MAX_MONTHLY_HOURS) * 100;
+    
+    if (percentageUsed < 30) return { level: 'Bajo', color: 'bg-green-100 text-green-800' };
+    if (percentageUsed < 70) return { level: 'Medio', color: 'bg-yellow-100 text-yellow-800' };
     return { level: 'Alto', color: 'bg-red-100 text-red-800' };
   };
 
   const workload = getWorkloadLevel(totalHoursAssigned);
+  
+  // Calcular la disponibilidad en función de las horas asignadas
+  const calculateAvailability = (hoursAssigned: number) => {
+    const usedCapacity = Math.min(hoursAssigned / MAX_MONTHLY_HOURS, 1); // No superar 100%
+    const availabilityPercentage = Math.max(0, Math.round((1 - usedCapacity) * 100)); // No menor que 0%
+    return availabilityPercentage;
+  };
+  
+  const availabilityPercentage = calculateAvailability(totalHoursAssigned);
 
   if (loading) {
     return <div className="py-4 text-center">Cargando datos...</div>;
@@ -112,24 +126,30 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
 
   if (!analyst) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
-  }
-  return (
+  }  return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 justify-center">
         <div className={`${workload.color.replace('bg-', 'bg-').replace('text-', 'text-')} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
-          <p className="text-xs font-medium">{totalHoursAssigned}h</p>
+          <p className="text-xs font-medium">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
         </div>
           <div className="bg-blue-50 p-3 rounded-lg text-center w-32">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
           <p className="text-xl font-bold text-blue-600">{activeProjects.length}</p>
           <p className="text-xs text-gray-500">en curso</p>
         </div>
-        
-        <div className="bg-green-50 p-3 rounded-lg text-center w-32">
+          <div className={`p-3 rounded-lg text-center w-32 ${
+          availabilityPercentage > 70 ? 'bg-green-50' : 
+          availabilityPercentage > 30 ? 'bg-yellow-50' :
+          'bg-red-50'
+        }`}>
           <p className="text-xs text-gray-700">Disponibilidad</p>
-          <p className="text-xl font-bold text-green-600">{analyst.availability || 100}%</p>
+          <p className={`text-xl font-bold ${
+            availabilityPercentage > 70 ? 'text-green-600' : 
+            availabilityPercentage > 30 ? 'text-yellow-600' :
+            'text-red-600'
+          }`}>{availabilityPercentage}%</p>
           <p className="text-xs text-gray-500">para proyectos</p>
         </div>
       </div>
