@@ -158,6 +158,10 @@ export function IncidentTable() {
         }
     };
 
+    const truncateText = (text: string, maxLength: number = 50) => {
+        return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+    };
+
     if (loading) {
         return <div>Cargando...</div>;
     }
@@ -198,7 +202,6 @@ export function IncidentTable() {
                     value={filters.search}
                     onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 />
-                
                 <Select
                     value={filters.estado}
                     onChange={e => setFilters(prev => ({ ...prev, estado: e.target.value }))}
@@ -208,7 +211,6 @@ export function IncidentTable() {
                     <option value="En Progreso">En Progreso</option>
                     <option value="Resuelto">Resuelto</option>
                 </Select>
-
                 <Select
                     value={filters.prioridad}
                     onChange={e => setFilters(prev => ({ ...prev, prioridad: e.target.value }))}
@@ -218,122 +220,106 @@ export function IncidentTable() {
                     <option value="Media">Media</option>
                     <option value="Baja">Baja</option>
                 </Select>
-
                 <Select
                     value={filters.cliente}
                     onChange={e => setFilters(prev => ({ ...prev, cliente: e.target.value }))}
                 >
                     <option value="">Todos los clientes</option>
-                    {Object.keys(stats.totalPorCliente).map(cliente => (
+                    {Array.from(new Set(incidents.map(i => i.cliente))).map(cliente => (
                         <option key={cliente} value={cliente}>{cliente}</option>
                     ))}
                 </Select>
             </div>
-            
-            <div className="mt-6">
-                <div className="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Célula</TableHead>
-                                <TableHead>Estado</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead>Área</TableHead>
-                                <TableHead>Prioridad</TableHead>
-                                <TableHead>Descripción</TableHead>
-                                <TableHead>Etiquetas</TableHead>
-                                <TableHead>Fecha Creación</TableHead>
-                                <TableHead>Informado por</TableHead>
-                                <TableHead>Asignado a</TableHead>
-                                <TableHead>Fecha Solución</TableHead>
-                                <TableHead>Días abierto</TableHead>
-                                <TableHead>Erróneo</TableHead>
-                                <TableHead>Aplica</TableHead>
-                                <TableHead>Acciones</TableHead>
+
+            <div className="border rounded-lg">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID</TableHead>
+                            <TableHead>Célula</TableHead>
+                            <TableHead className="w-[150px]">Estado</TableHead>
+                            <TableHead>Prioridad</TableHead>
+                            <TableHead className="w-[250px]">Descripción</TableHead>
+                            <TableHead>Asignado a</TableHead>
+                            <TableHead className="text-right">Acciones</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredIncidents.map((incident) => (
+                            <TableRow key={incident.id} className="cursor-pointer hover:bg-gray-50">
+                                <TableCell
+                                    className="font-medium"
+                                    onClick={() => {
+                                        setIncidentToView(incident);
+                                        setIsDetailsDialogOpen(true);
+                                    }}
+                                >
+                                    {incident.id}
+                                </TableCell>
+                                <TableCell>{incident.celula}</TableCell>
+                                <TableCell>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(incident.estado)}`}>
+                                        {incident.estado}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        incident.prioridad === 'Alta' ? 'bg-red-100 text-red-800' :
+                                        incident.prioridad === 'Media' ? 'bg-yellow-100 text-yellow-800' :
+                                        'bg-green-100 text-green-800'
+                                    }`}>
+                                        {incident.prioridad}
+                                    </span>
+                                </TableCell>
+                                <TableCell>
+                                    <div 
+                                        className="cursor-pointer hover:text-blue-600"
+                                        onClick={() => {
+                                            setIncidentToView(incident);
+                                            setIsDetailsDialogOpen(true);
+                                        }}
+                                    >
+                                        {truncateText(incident.descripcion, 40)}
+                                    </div>
+                                </TableCell>
+                                <TableCell>{incident.asignadoA}</TableCell>
+                                <TableCell className="text-right space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setSelectedIncident(incident);
+                                            setIsFormOpen(true);
+                                        }}
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setIncidentToChangeStatus(incident);
+                                            setIsStatusDialogOpen(true);
+                                        }}
+                                    >
+                                        Estado
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setIncidentToDelete(incident.id);
+                                            setIsConfirmOpen(true);
+                                        }}
+                                        className="text-red-600 hover:text-red-700"
+                                    >
+                                        Eliminar
+                                    </Button>
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredIncidents.map((incident) => (
-                                <TableRow key={incident.id}>
-                                    <TableCell>{incident.id}</TableCell>
-                                    <TableCell>{incident.celula}</TableCell>
-                                    <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(incident.estado)}`}>
-                                            {incident.estado}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{incident.tipoBug || '-'}</TableCell>
-                                    <TableCell>{incident.areaAfectada || '-'}</TableCell>
-                                    <TableCell>{incident.prioridad}</TableCell>
-                                    <TableCell>{incident.descripcion}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1">
-                                            {incident.etiquetas?.map((tag) => (
-                                                <span
-                                                    key={tag}
-                                                    className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            )) || '-'}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{new Date(incident.fechaCreacion).toLocaleDateString()}</TableCell>
-                                    <TableCell>{incident.informadoPor}</TableCell>
-                                    <TableCell>{incident.asignadoA}</TableCell>
-                                    <TableCell>
-                                        {incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}
-                                    </TableCell>
-                                    <TableCell>{incident.diasAbierto}</TableCell>
-                                    <TableCell>{incident.esErroneo ? 'Sí' : 'No'}</TableCell>
-                                    <TableCell>{incident.aplica ? 'Sí' : 'No'}</TableCell>
-                                    <TableCell>
-                                        <Button 
-                                            variant="outline" 
-                                            className="mr-2"
-                                            onClick={() => {
-                                                setIncidentToView(incident);
-                                                setIsDetailsDialogOpen(true);
-                                            }}
-                                        >
-                                            Ver
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="mr-2"
-                                            onClick={() => {
-                                                setSelectedIncident(incident);
-                                                setIsFormOpen(true);
-                                            }}
-                                        >
-                                            Editar
-                                        </Button>
-                                        <Button 
-                                            variant="outline"
-                                            className="mr-2"
-                                            onClick={() => {
-                                                setIncidentToChangeStatus(incident);
-                                                setIsStatusDialogOpen(true);
-                                            }}
-                                        >
-                                            Cambiar Estado
-                                        </Button>
-                                        <Button 
-                                            variant="destructive"
-                                            onClick={() => {
-                                                setIncidentToDelete(incident.id);
-                                                setIsConfirmOpen(true);
-                                            }}
-                                        >
-                                            Eliminar
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
 
             <IncidentForm

@@ -1,3 +1,9 @@
+export interface StateChange {
+    estado: string;
+    fecha: Date;
+    comentario?: string;
+}
+
 export type BugType = 'UI' | 'Funcional' | 'Performance' | 'Seguridad' | 'Base de Datos' | 'Integración' | 'Otro';
 export type AreaAfectada = 'Frontend' | 'Backend' | 'Base de Datos' | 'API' | 'Infraestructura' | 'Integración' | 'Otro';
 
@@ -20,4 +26,8 @@ export interface Incident {
     tipoBug?: BugType;
     areaAfectada?: AreaAfectada;
     etiquetas?: string[];
+    // Nuevos campos para seguimiento de tiempo
+    tiempoEstimado?: number; // en horas
+    tiempoReal?: number; // en horas
+    historialEstados?: StateChange[];
 }

@@ -14,68 +14,124 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                    <DialogTitle>Detalles del Incidente</DialogTitle>
+            <DialogContent className="sm:max-w-[700px] h-auto bg-white rounded-lg shadow-lg">
+                <DialogHeader className="pb-4 border-b border-gray-200">
+                    <DialogTitle className="text-xl font-semibold text-gray-900">Detalles del Incidente</DialogTitle>
                 </DialogHeader>
-                <div className="mt-4 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 className="font-semibold">ID</h4>
-                            <p>{incident.id}</p>
+                <div className="mt-6 space-y-6 max-h-[calc(90vh-120px)] overflow-y-auto p-6">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">ID</h4>
+                            <p className="text-gray-900">{incident.id}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">ID de JIRA</h4>
-                            <p>{incident.idJira || '-'}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">ID de JIRA</h4>
+                            <p className="text-gray-900">{incident.idJira || '-'}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Célula</h4>
-                            <p>{incident.celula}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Célula</h4>
+                            <p className="text-gray-900">{incident.celula}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Cliente</h4>
-                            <p>{incident.cliente}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Cliente</h4>
+                            <p className="text-gray-900">{incident.cliente}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Estado</h4>
-                            <p>{incident.estado}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Tipo de Bug</h4>
+                            <p className="text-gray-900">{incident.tipoBug || '-'}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Prioridad</h4>
-                            <p>{incident.prioridad}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Área Afectada</h4>
+                            <p className="text-gray-900">{incident.areaAfectada || '-'}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Informado por</h4>
-                            <p>{incident.informadoPor}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Estado</h4>
+                            <p className="text-gray-900">{incident.estado}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Asignado a</h4>
-                            <p>{incident.asignadoA}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Prioridad</h4>
+                            <p className="text-gray-900">{incident.prioridad}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Fecha de Creación</h4>
-                            <p>{new Date(incident.fechaCreacion).toLocaleDateString()}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Informado por</h4>
+                            <p className="text-gray-900">{incident.informadoPor}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Fecha de Solución</h4>
-                            <p>{incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Asignado a</h4>
+                            <p className="text-gray-900">{incident.asignadoA}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Días Abierto</h4>
-                            <p>{incident.diasAbierto}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Fecha de Creación</h4>
+                            <p className="text-gray-900">{new Date(incident.fechaCreacion).toLocaleDateString()}</p>
                         </div>
-                        <div>
-                            <h4 className="font-semibold">Estado</h4>
-                            <div className="flex gap-4">
-                                <p>Erróneo: {incident.esErroneo ? 'Sí' : 'No'}</p>
-                                <p>Aplica: {incident.aplica ? 'Sí' : 'No'}</p>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Fecha de Solución</h4>
+                            <p className="text-gray-900">{incident.fechaSolucion ? new Date(incident.fechaSolucion).toLocaleDateString() : '-'}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Días Abierto</h4>
+                            <p className="text-gray-900">{incident.diasAbierto}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Tiempo Estimado</h4>
+                            <p className="text-gray-900">{incident.tiempoEstimado ? `${incident.tiempoEstimado} horas` : '-'}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-medium text-gray-600">Tiempo Real</h4>
+                            <p className="text-gray-900">{incident.tiempoReal ? `${incident.tiempoReal} horas` : '-'}</p>
+                        </div>
+                        {incident.tiempoEstimado && incident.tiempoReal && (
+                            <div className="space-y-1 col-span-2">
+                                <h4 className="text-sm font-medium text-gray-600">Variación de Tiempo</h4>
+                                <p className={`font-medium ${
+                                    incident.tiempoReal > incident.tiempoEstimado ? 'text-red-600' : 'text-green-600'
+                                }`}>
+                                    {incident.tiempoReal > incident.tiempoEstimado ? 
+                                        `+${(incident.tiempoReal - incident.tiempoEstimado).toFixed(1)} horas sobre lo estimado` :
+                                        `${(incident.tiempoEstimado - incident.tiempoReal).toFixed(1)} horas bajo lo estimado`
+                                    }
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-600">Descripción</h4>
+                        <p className="text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-md">{incident.descripcion}</p>
+                    </div>
+
+                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-600">Estado del Incidente</h4>
+                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-md">
+                            <div>
+                                <span className="text-sm text-gray-600">Erróneo:</span>
+                                <span className="ml-2 font-medium text-gray-900">{incident.esErroneo ? 'Sí' : 'No'}</span>
+                            </div>
+                            <div>
+                                <span className="text-sm text-gray-600">Aplica:</span>
+                                <span className="ml-2 font-medium text-gray-900">{incident.aplica ? 'Sí' : 'No'}</span>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <h4 className="font-semibold">Descripción</h4>
-                        <p className="whitespace-pre-wrap">{incident.descripcion}</p>
-                    </div>
+
+                    {incident.historialEstados && incident.historialEstados.length > 0 && (
+                        <div className="space-y-3 pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-medium text-gray-600">Historial de Estados</h4>
+                            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                                {incident.historialEstados.map((cambio, index) => (
+                                    <div key={index} className="flex justify-between items-center text-sm">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                            <span className="text-gray-900">{cambio.estado}</span>
+                                        </div>
+                                        <span className="text-gray-500">
+                                            {new Date(cambio.fecha).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

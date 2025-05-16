@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Incident, BugType, AreaAfectada } from '@/models/Incident';
+import { Incident, BugType, AreaAfectada, StateChange } from '@/models/Incident';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,10 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         idJira: '',
         tipoBug: undefined,
         areaAfectada: undefined,
-        etiquetas: []
+        etiquetas: [],
+        tiempoEstimado: undefined,
+        tiempoReal: undefined,
+        historialEstados: []
     });
 
     useEffect(() => {
@@ -79,8 +82,16 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         const { name, value, type } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? e.target.checked : value,
-            ...(name === 'estado' && value === 'Resuelto' ? { fechaSolucion: new Date() } : {}),
+            [name]: type === 'checkbox' ? e.target.checked : 
+                    name === 'tiempoEstimado' || name === 'tiempoReal' ? 
+                    (value ? parseFloat(value) : undefined) : value,
+            ...(name === 'estado' && value !== prev.estado ? {
+                historialEstados: [
+                    ...(prev.historialEstados || []),
+                    { estado: value, fecha: new Date() }
+                ],
+                ...(value === 'Resuelto' ? { fechaSolucion: new Date() } : {})
+            } : {})
         }));
     };
 
@@ -354,6 +365,59 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     </Select>
                                 </div>
                             </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <Label htmlFor="tiempoEstimado" className="text-sm font-medium text-gray-600 mb-2">
+                                        Tiempo Estimado (horas)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        id="tiempoEstimado"
+                                        name="tiempoEstimado"
+                                        value={formData.tiempoEstimado || ''}
+                                        onChange={handleChange}
+                                        min="0"
+                                        step="0.5"
+                                        className="w-full mt-1"
+                                        placeholder="Ej: 4.5"
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="tiempoReal" className="text-sm font-medium text-gray-600 mb-2">
+                                        Tiempo Real (horas)
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        id="tiempoReal"
+                                        name="tiempoReal"
+                                        value={formData.tiempoReal || ''}
+                                        onChange={handleChange}
+                                        min="0"
+                                        step="0.5"
+                                        className="w-full mt-1"
+                                        placeholder="Ej: 5.5"
+                                    />
+                                </div>
+                            </div>
+
+                            {formData.historialEstados && formData.historialEstados.length > 0 && (
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600 mb-2">
+                                        Historial de Estados
+                                    </Label>
+                                    <div className="mt-2 space-y-2 max-h-32 overflow-y-auto bg-gray-50 rounded-md p-3">
+                                        {formData.historialEstados.map((cambio, index) => (
+                                            <div key={index} className="flex justify-between text-sm">
+                                                <span className="text-gray-700">{cambio.estado}</span>
+                                                <span className="text-gray-500">
+                                                    {new Date(cambio.fecha).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <div>
                                 <Label htmlFor="etiquetas" className="text-sm font-medium text-gray-600 mb-2">
