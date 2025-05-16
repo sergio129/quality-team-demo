@@ -783,9 +783,9 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredProjects.map((project, index) => (
-                                <tr key={index} className="hover:bg-gray-50 transition-colors">                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
+            <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredProjects.filter(project => project && project.idJira).map((project, index) => (<tr key={index} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
                                         {renderJiraId(project.idJira)}
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td>
@@ -815,9 +815,9 @@ export default function ProjectTable() {
                                         {project.fechaCertificacion && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 {formatDate(project.fechaCertificacion)}
-                                            </span>
-                                        )}
-                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
+                                            </span>                                        )}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td>
                                     <td className="px-4 py-2 text-sm whitespace-nowrap">                                        <button

@@ -4,11 +4,19 @@ import { Project } from '@/models/Project';
 
 const FILE_PATH = path.join(process.cwd(), 'data', 'seguimiento.txt');
 
-export const projectService = {
-    async getAllProjects(): Promise<Project[]> {
+export const projectService = {    async getAllProjects(): Promise<Project[]> {
         try {
             const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-            return JSON.parse(fileContent);
+            const projects = JSON.parse(fileContent);
+            
+            // Filtrar proyectos inválidos o incompletos
+            return projects.filter((project: any) => {
+                return project && 
+                       project.idJira && 
+                       project.proyecto && 
+                       project.equipo &&
+                       project.celula;
+            });
         } catch (error) {
             console.error('Error reading projects:', error);
             return [];
