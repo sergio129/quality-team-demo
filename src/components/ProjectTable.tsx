@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
+import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 
 const HOURS_PER_DAY = 9;
 
@@ -109,12 +110,27 @@ export default function ProjectTable() {
 
         setStartDate(start);
         setEndDate(end);
-    }, [selectedDateFilter]);
-
-    async function loadProjects() {
+    }, [selectedDateFilter]);    async function loadProjects() {
         const response = await fetch('/api/projects');
         const data = await response.json();
-        setProjects(data);
+        
+        // Calcular automáticamente el estado de cada proyecto basado en sus fechas
+        const today = new Date();
+        const projectsWithStatus = data.map((project: Project) => {
+            // Determinar estado automáticamente según las fechas
+            // Solo se marca como certificado si tiene fecha de certificación y esa fecha ya pasó
+            if (project.fechaCertificacion && new Date(project.fechaCertificacion) <= today) {
+                return { ...project, estadoCalculado: 'Certificado' };
+            } else if (project.fechaEntrega && new Date(project.fechaEntrega) > today) {
+                // Si la fecha de entrega es futura, está por iniciar
+                return { ...project, estadoCalculado: 'Por Iniciar' };
+            } else {
+                // Si la fecha de entrega ya pasó pero no está certificado, está en progreso
+                return { ...project, estadoCalculado: 'En Progreso' };
+            }
+        });
+        
+        setProjects(projectsWithStatus);
     }
 
     const fetchTeams = async () => {
@@ -213,7 +229,36 @@ export default function ProjectTable() {
                 error: 'Error al eliminar el proyecto'
             }
         );
-    };    const handleSubmit = async (e: React.FormEvent) => {
+    };
+    
+    // Función para manejar el cambio de estado de un proyecto
+    const handleStatusChange = async (projectId: string, newStatus: string) => {
+        try {
+            const response = await fetch('/api/projects/status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ projectId, newStatus }),
+            });
+            
+            if (response.ok) {
+                toast.success(`Estado cambiado a: ${newStatus}`);
+                // Recargar la lista de proyectos para reflejar el cambio
+                await loadProjects();
+                return true;
+            } else {
+                toast.error('Error al cambiar el estado del proyecto');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error al procesar la solicitud:', error);
+            toast.error('Error al procesar la solicitud');
+            return false;
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
         
@@ -630,9 +675,7 @@ export default function ProjectTable() {
                                     }}
                                 />
                                 {errors.fechaCertificacion && <p className="text-red-500 text-sm">{errors.fechaCertificacion}</p>}
-                            </div>
-
-                            {/* Días de Retraso (calculado automáticamente) */}
+                            </div>                            {/* Días de Retraso (calculado automáticamente) */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">Días de Retraso (Automático)</label>
                                 <input
@@ -642,6 +685,37 @@ export default function ProjectTable() {
                                     value={newProject.diasRetraso || 0}
                                     readOnly
                                 />
+                            </div>
+                            
+                            {/* Estado del proyecto */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700">Estado del Proyecto</label>
+                                <select
+                                    className="border p-2 rounded w-full"
+                                    value={newProject.estadoCalculado || ''}
+                                    onChange={(e) => {
+                                        setNewProject({ 
+                                            ...newProject, 
+                                            estadoCalculado: e.target.value as 'Por Iniciar' | 'En Progreso' | 'Certificado' 
+                                        });
+                                        
+                                        // Si se marca como certificado y no tiene fecha de certificación, establecerla automáticamente
+                                        if (e.target.value === 'Certificado' && !newProject.fechaCertificacion) {
+                                            setNewProject(prev => ({ 
+                                                ...prev, 
+                                                fechaCertificacion: new Date() 
+                                            }));
+                                        }
+                                    }}
+                                >
+                                    <option value="">Seleccionar estado</option>
+                                    <option value="Por Iniciar">Por Iniciar</option>
+                                    <option value="En Progreso">En Progreso</option>
+                                    <option value="Certificado">Certificado</option>
+                                </select>
+                                <p className="text-sm text-gray-500">
+                                    El estado se calcula automáticamente según las fechas, pero puede modificarse manualmente.
+                                </p>
                             </div>
 
                             {/* Analista Producto */}
@@ -777,6 +851,22 @@ export default function ProjectTable() {
                                         <span className="mr-1">Días Retraso</span>
                                         {getSortIcon('diasRetraso')}
                                     </div>
+                                </th>                                <th 
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
+                                    onClick={() => requestSort('estadoCalculado')}
+                                >
+                                    <div className="flex items-center">
+                                        <span className="mr-1">Estado</span>
+                                        {getSortIcon('estadoCalculado')}
+                                    </div>
+                                </th>                                <th
+                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
+                                    onClick={() => requestSort('estadoCalculado')}
+                                >
+                                    <div className="flex items-center">
+                                        <span className="mr-1">Estado</span>
+                                        {getSortIcon('estadoCalculado')}
+                                    </div>
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
@@ -816,8 +906,30 @@ export default function ProjectTable() {
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 {formatDate(project.fechaCertificacion)}
                                             </span>                                        )}
+                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+                                        {project.estadoCalculado ? (
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                project.estadoCalculado === 'Por Iniciar' 
+                                                    ? 'bg-amber-100 text-amber-800' 
+                                                    : project.estadoCalculado === 'En Progreso'
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-green-100 text-green-800'
+                                            }`}>
+                                                {project.estadoCalculado}
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                Sin estado
+                                            </span>
+                                        )}
+                                        <div className="mt-1">
+                                            <ChangeProjectStatusDialog
+                                                project={project}
+                                                onStatusChange={handleStatusChange}
+                                            />
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td>
                                     <td className="px-4 py-2 text-sm whitespace-nowrap">                                        <button
