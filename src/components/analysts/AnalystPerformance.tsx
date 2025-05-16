@@ -80,11 +80,9 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
   if (!analyst) {
     return <div>Cargando información del analista...</div>;
   }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Estadísticas de {analyst.name}</h2>
+    <div className="space-y-4">
+      <div className="flex justify-end">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Período:</span>
           <select
@@ -97,37 +95,32 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
             <option value="year">Último año</option>
           </select>
         </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center py-10">
+      </div>      {loading ? (
+        <div className="flex justify-center py-4">
           <span>Cargando estadísticas...</span>
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <>
           {/* Resumen de métricas clave */}
-          <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Resumen de actividad</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-500">Incidentes reportados</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.incidentsCaught}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-500">Incidentes resueltos</p>
-                <p className="text-2xl font-bold text-green-600">{stats.incidentsResolved}</p>
-              </div>
-              <div className="bg-amber-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-500">Tiempo medio (días)</p>
-                <p className="text-2xl font-bold text-amber-600">{stats.avgResolutionTime.toFixed(1)}</p>
-              </div>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <div className="bg-blue-50 p-3 rounded-lg text-center w-32">
+              <p className="text-xs text-gray-500">Incidentes reportados</p>
+              <p className="text-xl font-bold text-blue-600">{stats.incidentsCaught}</p>
             </div>
-          </Card>
-
-          {/* Gráfico por prioridad */}
+            <div className="bg-green-50 p-3 rounded-lg text-center w-32">
+              <p className="text-xs text-gray-500">Incidentes resueltos</p>
+              <p className="text-xl font-bold text-green-600">{stats.incidentsResolved}</p>
+            </div>
+            <div className="bg-amber-50 p-3 rounded-lg text-center w-32">
+              <p className="text-xs text-gray-500">Tiempo medio (días)</p>
+              <p className="text-xl font-bold text-amber-600">{stats.avgResolutionTime.toFixed(1)}</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">          {/* Gráfico por prioridad */}
           <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Incidentes por prioridad</h3>
-            <div className="h-64">
+            <h3 className="text-sm font-medium mb-2">Incidentes por prioridad</h3>
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -135,7 +128,7 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    outerRadius={80}
+                    outerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
@@ -145,7 +138,6 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -153,40 +145,37 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
 
           {/* Gráfico por tipo de bug */}
           <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Incidentes por tipo</h3>
-            <div className="h-64">
+            <h3 className="text-sm font-medium mb-2">Incidentes por tipo</h3>
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.byType}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Legend />
                   <Bar dataKey="value" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </Card>
-
-          {/* Gráfico actividad reciente */}
+          </Card>{/* Gráfico actividad reciente */}
           <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4">Actividad reciente</h3>
-            <div className="h-64">
+            <h3 className="text-sm font-medium mb-2">Actividad reciente</h3>
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.lastMonthActivity}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
-                  <Legend />
                   <Bar dataKey="count" fill="#82ca9d" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
         </div>
+        </>
       ) : (
-        <div className="text-center py-10">
+        <div className="text-center py-6">
           <p>No se encontraron estadísticas para este analista.</p>
         </div>
       )}

@@ -26,12 +26,11 @@ export function AnalystStatsDialog({ analyst }: AnalystStatsDialogProps) {
         <Button variant="ghost" size="sm" title="Ver estadísticas">
           <BarChart2 className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-5xl">
+      </DialogTrigger>      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Estadísticas de Rendimiento</DialogTitle>
+          <DialogTitle>Estadísticas de {analyst.name}</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-2">
           <AnalystPerformance analystId={analyst.id} />
         </div>
       </DialogContent>

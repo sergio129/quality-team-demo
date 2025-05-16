@@ -26,12 +26,11 @@ export function AnalystWorkloadDialog({ analyst }: AnalystWorkloadDialogProps) {
         <Button variant="ghost" size="sm" title="Ver proyectos asignados">
           <LayoutPanelLeft className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      </DialogTrigger>      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Proyectos Asignados a {analyst.name}</DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="py-2">
           <AnalystWorkload analystId={analyst.id} />
         </div>
       </DialogContent>
