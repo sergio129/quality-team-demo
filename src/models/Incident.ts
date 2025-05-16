@@ -1,16 +1,23 @@
+export type BugType = 'UI' | 'Funcional' | 'Performance' | 'Seguridad' | 'Base de Datos' | 'Integración' | 'Otro';
+export type AreaAfectada = 'Frontend' | 'Backend' | 'Base de Datos' | 'API' | 'Infraestructura' | 'Integración' | 'Otro';
+
 export interface Incident {
     id: string;
     celula: string;
-    estado: 'Abierto' | 'Resuelto' | 'En Progreso';
-    prioridad: 'Alta' | 'Media' | 'Baja';
+    estado: string;
+    prioridad: string;
     descripcion: string;
     fechaCreacion: Date;
+    fechaSolucion?: Date;
     informadoPor: string;
     asignadoA: string;
-    fechaSolucion?: Date;
     diasAbierto: number;
     esErroneo: boolean;
     aplica: boolean;
     cliente: string;
-    idJira?: string;
+    idJira: string;
+    // Nuevos campos para categorización
+    tipoBug?: BugType;
+    areaAfectada?: AreaAfectada;
+    etiquetas?: string[];
 }

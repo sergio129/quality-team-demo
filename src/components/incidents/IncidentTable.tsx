@@ -238,8 +238,11 @@ export function IncidentTable() {
                                 <TableHead>ID</TableHead>
                                 <TableHead>Célula</TableHead>
                                 <TableHead>Estado</TableHead>
+                                <TableHead>Tipo</TableHead>
+                                <TableHead>Área</TableHead>
                                 <TableHead>Prioridad</TableHead>
                                 <TableHead>Descripción</TableHead>
+                                <TableHead>Etiquetas</TableHead>
                                 <TableHead>Fecha Creación</TableHead>
                                 <TableHead>Informado por</TableHead>
                                 <TableHead>Asignado a</TableHead>
@@ -260,8 +263,22 @@ export function IncidentTable() {
                                             {incident.estado}
                                         </span>
                                     </TableCell>
+                                    <TableCell>{incident.tipoBug || '-'}</TableCell>
+                                    <TableCell>{incident.areaAfectada || '-'}</TableCell>
                                     <TableCell>{incident.prioridad}</TableCell>
                                     <TableCell>{incident.descripcion}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                            {incident.etiquetas?.map((tag) => (
+                                                <span
+                                                    key={tag}
+                                                    className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            )) || '-'}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{new Date(incident.fechaCreacion).toLocaleDateString()}</TableCell>
                                     <TableCell>{incident.informadoPor}</TableCell>
                                     <TableCell>{incident.asignadoA}</TableCell>

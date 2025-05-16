@@ -13,6 +13,8 @@
     "cliente": "Koin",
     "idJira": "KOIN-235",
     "id": "INC-20250515-001",
-    "fechaSolucion": "2025-05-15T22:50:37.672Z"
+    "fechaSolucion": "2025-05-15T22:50:37.672Z",
+    "tipoBug": "Funcional",
+    "areaAfectada": "Frontend"
   }
 ]
