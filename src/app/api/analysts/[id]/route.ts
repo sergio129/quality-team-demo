@@ -8,7 +8,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Esperar el objeto params antes de acceder a sus propiedades
+    const { id } = await params;
     
     const analyst = await analystService.getAnalystById(id);
     if (!analyst) {

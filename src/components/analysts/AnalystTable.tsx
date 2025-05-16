@@ -91,12 +91,14 @@ export function DataTable() {
               <TableHead>Rol</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAnalysts.map((analyst) => (              <TableRow key={analyst.id}>
+          </TableHeader>          <TableBody>
+            {filteredAnalysts.map((analyst) => (
+              <TableRow key={analyst.id}>
                 <TableCell>{analyst.name}</TableCell>
-                <TableCell>{analyst.email}</TableCell>                <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
-                <TableCell>{analyst.role}</TableCell>                <TableCell className="text-right">
+                <TableCell>{analyst.email}</TableCell>
+                <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
+                <TableCell>{analyst.role}</TableCell>
+                <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-1">
                     <AnalystStatsDialog analyst={analyst} />
                     <AnalystWorkloadDialog analyst={analyst} />

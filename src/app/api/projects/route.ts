@@ -4,20 +4,46 @@ import { projectService } from '@/services/projectService';
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const analystId = url.searchParams.get('analystId');
+    const analystName = url.searchParams.get('analystName');
+    const monthFilter = url.searchParams.get('month');
+    const yearFilter = url.searchParams.get('year');
     
     const projects = await projectService.getAllProjects();
     
-    // Si se proporciona un ID de analista, filtrar los proyectos
-    if (analystId) {
-        const filteredProjects = projects.filter(project => 
-            project.analistas && 
-            Array.isArray(project.analistas) && 
-            project.analistas.includes(analystId)
-        );
-        return NextResponse.json(filteredProjects);
+    // Filtrado inicial de proyectos
+    let filteredProjects = projects;
+    
+    // Si se proporciona un ID de analista o nombre, filtrar los proyectos
+    if (analystId || analystName) {
+        filteredProjects = filteredProjects.filter(project => {
+            // Buscar por ID en el array de analistas
+            const matchesById = analystId && project.analistas && 
+                Array.isArray(project.analistas) && 
+                project.analistas.includes(analystId);
+                
+            // Buscar por nombre en el campo analistaProducto
+            const matchesByName = analystName && project.analistaProducto === analystName;
+            
+            return matchesById || matchesByName;
+        });
     }
     
-    return NextResponse.json(projects);
+    // Si se proporciona mes y año, filtrar por fecha
+    if (monthFilter && yearFilter) {
+        const month = parseInt(monthFilter);
+        const year = parseInt(yearFilter);
+        
+        filteredProjects = filteredProjects.filter(project => {
+            // Verificar si hay fecha de entrega
+            if (project.fechaEntrega) {
+                const entregaDate = new Date(project.fechaEntrega);
+                return entregaDate.getMonth() === month && entregaDate.getFullYear() === year;
+            }
+            return false;
+        });
+    }
+    
+    return NextResponse.json(filteredProjects);
 }
 
 export async function POST(req: NextRequest) {

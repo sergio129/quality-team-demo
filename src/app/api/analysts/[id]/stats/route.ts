@@ -9,7 +9,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    // Esperar el objeto params antes de acceder a sus propiedades
+    const { id } = await params;
     const searchParams = new URL(request.url).searchParams;
     const timeframe = searchParams.get('timeframe') || 'month';
     

@@ -13,24 +13,34 @@ interface AnalystWorkloadProps {
 export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
+  const [loading, setLoading] = useState<boolean>(true);  useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Obtener fecha actual para filtrar proyectos del mes actual
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+
         // Obtener datos del analista
         const analystResponse = await fetch(`/api/analysts/${analystId}`);
         if (analystResponse.ok) {
           const analystData = await analystResponse.json();
           setAnalyst(analystData);
-        }
-
-        // Obtener proyectos asignados al analista
-        const projectsResponse = await fetch(`/api/projects?analystId=${analystId}`);
-        if (projectsResponse.ok) {
-          const projectsData = await projectsResponse.json();
-          setProjects(projectsData);
+          
+          // Obtener proyectos asignados al analista del mes actual (usando ID, nombre y filtro de fecha)
+          const projectsResponse = await fetch(`/api/projects?analystId=${analystId}&analystName=${encodeURIComponent(analystData.name)}&month=${currentMonth}&year=${currentYear}`);
+          if (projectsResponse.ok) {
+            const projectsData = await projectsResponse.json();
+            setProjects(projectsData);
+          }
+        } else {
+          // Si no se puede obtener el analista, intentar con solo el ID
+          const projectsResponse = await fetch(`/api/projects?analystId=${analystId}&month=${currentMonth}&year=${currentYear}`);
+          if (projectsResponse.ok) {
+            const projectsData = await projectsResponse.json();
+            setProjects(projectsData);
+          }
         }
       } catch (error) {
         console.error('Error fetching analyst workload:', error);
@@ -43,19 +53,40 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       fetchData();
     }
   }, [analystId]);
-
   // Calcular estadísticas de carga de trabajo
   const totalHoursAssigned = projects.reduce((total, project) => {
-    return total + (project.horasEstimadas || 0);
+    return total + (project.horasEstimadas || project.horas || 0);
   }, 0);
 
-  const activeProjects = projects.filter(p => 
-    p.estado === 'En Progreso' || p.estado === 'Por Iniciar'
-  );
+  // Determinamos el estado del proyecto basado en fechas si no tiene estado explícito
+  const activeProjects = projects.filter(p => {
+    // Si tiene estado explícito, usar ese
+    if (p.estado === 'En Progreso' || p.estado === 'Por Iniciar') return true;
+    
+    // Si no tiene estado explícito, considerar todos los proyectos sin fechaCertificacion como activos
+    if (!p.estado) {
+      const today = new Date();
+      const entregaDate = new Date(p.fechaEntrega);
+      const certificacionDate = p.fechaCertificacion ? new Date(p.fechaCertificacion) : null;
+      
+      // Si no está certificado o su fecha de certificación es futura, es activo
+      return !certificacionDate || certificacionDate >= today;
+    }
+    return false;
+  });
 
-  const completedProjects = projects.filter(p => 
-    p.estado === 'Completado' || p.estado === 'Cerrado'
-  );
+  const completedProjects = projects.filter(p => {
+    // Si tiene estado explícito, usar ese
+    if (p.estado === 'Completado' || p.estado === 'Cerrado') return true;
+    
+    // Si no tiene estado explícito, considerar proyectos con fechaCertificacion en el pasado como completados
+    if (!p.estado && p.fechaCertificacion) {
+      const today = new Date();
+      const certificacionDate = new Date(p.fechaCertificacion);
+      return certificacionDate < today;
+    }
+    return false;
+  });
 
   // Determinar el nivel de carga
   const getWorkloadLevel = (hours: number) => {
@@ -103,10 +134,9 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
               <div
                 key={project.id}
                 className="p-2 border rounded-md shadow-sm hover:bg-gray-50 text-sm"
-              >
-                <div className="flex justify-between items-start">
+              >                <div className="flex justify-between items-start">
                   <div>
-                    <div className="font-medium">{project.nombre}</div>
+                    <div className="font-medium">{project.nombre || project.proyecto}</div>
                     <div className="text-xs text-gray-600 line-clamp-1">{project.descripcion}</div>
                     <div className="mt-1 flex items-center gap-2 text-xs">
                       <span className="flex items-center gap-1">
