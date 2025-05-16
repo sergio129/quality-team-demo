@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { EditAnalystDialog } from './EditAnalystDialog';
+import { AnalystStatsDialog } from './AnalystStatsDialog';
+import { AnalystWorkloadDialog } from './AnalystWorkloadDialog';
 
 interface CellInfo {
   id: string;
@@ -93,19 +95,21 @@ export function DataTable() {
           <TableBody>
             {filteredAnalysts.map((analyst) => (              <TableRow key={analyst.id}>
                 <TableCell>{analyst.name}</TableCell>
-                <TableCell>{analyst.email}</TableCell>
-                <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
-                <TableCell>{analyst.role}</TableCell>
-                <TableCell className="text-right">
-                  <EditAnalystDialog analyst={analyst} onSave={fetchAnalysts} cells={cells} />
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(analyst.id)}
-                    className="ml-2"
-                  >
-                    Eliminar
-                  </Button>
+                <TableCell>{analyst.email}</TableCell>                <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
+                <TableCell>{analyst.role}</TableCell>                <TableCell className="text-right">
+                  <div className="flex items-center justify-end space-x-1">
+                    <AnalystStatsDialog analyst={analyst} />
+                    <AnalystWorkloadDialog analyst={analyst} />
+                    <EditAnalystDialog analyst={analyst} onSave={fetchAnalysts} cells={cells} />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(analyst.id)}
+                      className="ml-2"
+                    >
+                      Eliminar
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

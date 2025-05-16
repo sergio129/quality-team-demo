@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { projectService } from '@/services/projectService';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const url = new URL(req.url);
+    const analystId = url.searchParams.get('analystId');
+    
     const projects = await projectService.getAllProjects();
+    
+    // Si se proporciona un ID de analista, filtrar los proyectos
+    if (analystId) {
+        const filteredProjects = projects.filter(project => 
+            project.analistas && 
+            Array.isArray(project.analistas) && 
+            project.analistas.includes(analystId)
+        );
+        return NextResponse.json(filteredProjects);
+    }
+    
     return NextResponse.json(projects);
 }
 
