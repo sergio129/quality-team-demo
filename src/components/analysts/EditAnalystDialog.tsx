@@ -28,16 +28,18 @@ export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogP
           Editar
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Analista</DialogTitle>
         </DialogHeader>
-        <AnalystForm 
-          analyst={analyst} 
-          onSave={onSave}
-          cells={cells}
-          onSuccess={() => setOpen(false)}
-        />
+        <div className="py-2">
+          <AnalystForm 
+            analyst={analyst} 
+            onSave={onSave}
+            cells={cells}
+            onSuccess={() => setOpen(false)}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

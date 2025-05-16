@@ -110,79 +110,85 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="skills">Competencias</TabsTrigger>
-          <TabsTrigger value="certs">Certificaciones</TabsTrigger>
+          <TabsTrigger value="info" className="text-xs py-1">Información</TabsTrigger>
+          <TabsTrigger value="skills" className="text-xs py-1">Competencias</TabsTrigger>
+          <TabsTrigger value="certs" className="text-xs py-1">Certificaciones</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre del analista"
-              required
-            />
-          </div>
+        <TabsContent value="info" className="space-y-3 pt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="name" className="text-xs">Nombre</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nombre del analista"
+                required
+                className="h-8 text-sm"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email del analista"
-              required
-            />
+            <div className="space-y-1">
+              <Label htmlFor="email" className="text-xs">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email del analista"
+                required
+                className="h-8 text-sm"
+              />
+            </div>
           </div>      
 
-          <div className="space-y-2">
-            <Label htmlFor="cells">Células</Label>
-            <select
-              id="cells"
-              multiple
-              value={cellIds}
-              onChange={(e) => {
-                const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                setCellIds(selectedOptions);
-              }}
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              required
-            >
-              {cells.map((cell) => (
-                <option key={cell.id} value={cell.id}>
-                  {cell.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-gray-500">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples células</p>
-          </div>      
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="cells" className="text-xs">Células</Label>
+              <select
+                id="cells"
+                multiple
+                value={cellIds}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                  setCellIds(selectedOptions);
+                }}
+                className="flex min-h-[70px] w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
+                {cells.map((cell) => (
+                  <option key={cell.id} value={cell.id}>
+                    {cell.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">Ctrl/Cmd para múltiples</p>
+            </div>      
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Rol</Label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              required
-            >
-              <option value="">Seleccionar rol</option>
-              <option value="Senior">Senior</option>
-              <option value="Semi Senior">Semi Senior</option>
-              <option value="Junior">Junior</option>
-            </select>
+            <div className="space-y-1">
+              <Label htmlFor="role" className="text-xs">Rol</Label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                required
+              >
+                <option value="">Seleccionar rol</option>
+                <option value="Senior">Senior</option>
+                <option value="Semi Senior">Semi Senior</option>
+                <option value="Junior">Junior</option>
+              </select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="availability">Disponibilidad</Label>
-            <div className="flex items-center space-x-2">
+          <div className="space-y-1">
+            <Label htmlFor="availability" className="text-xs">Disponibilidad</Label>
+            <div className="flex items-center space-x-2 h-8">
               <Input 
                 id="availability"
                 type="range"
@@ -191,37 +197,37 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
                 step="5"
                 value={availability}
                 onChange={(e) => setAvailability(parseInt(e.target.value))}
-                className="flex-1"
+                className="flex-1 h-2"
               />
-              <div className="w-12 text-right font-medium">{availability}%</div>
+              <div className="w-10 text-right text-xs font-medium">{availability}%</div>
             </div>
-            <p className="text-sm text-gray-500">Disponibilidad actual del analista para nuevos proyectos</p>
+            <p className="text-xs text-gray-500">Disponibilidad actual para nuevos proyectos</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="color">Color identificativo</Label>
-            <div className="flex items-center gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="color" className="text-xs">Color identificativo</Label>
+            <div className="flex items-center gap-2 h-8">
               <input
                 id="color"
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-10 min-w-[50px] rounded-md border border-input"
+                className="h-8 min-w-[40px] rounded-md border border-input"
               />
               <Input 
                 value={color} 
                 onChange={(e) => setColor(e.target.value)}
                 placeholder="#RRGGBB" 
-                className="flex-1"
+                className="flex-1 h-8 text-xs"
               />
             </div>
-            <p className="text-sm text-gray-500">Este color se utilizará para identificar al analista en la vista de calendario</p>
+            <p className="text-xs text-gray-500">Color para identificar al analista en el calendario</p>
           </div>
         </TabsContent>
 
-        <TabsContent value="skills" className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="specialties">Especialidades</Label>
+        <TabsContent value="skills" className="space-y-3 pt-2">
+          <div className="space-y-1">
+            <Label htmlFor="specialties" className="text-xs">Especialidades</Label>
             <select
               id="specialties"
               multiple
@@ -230,7 +236,7 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
                 const selected = Array.from(e.target.selectedOptions, option => option.value);
                 setSpecialties(selected);
               }}
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[70px] w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="Frontend">Frontend</option>
               <option value="Backend">Backend</option>
@@ -241,24 +247,24 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
               <option value="Performance">Performance</option>
               <option value="Seguridad">Seguridad</option>
             </select>
-            <p className="text-sm text-gray-500">Áreas de especialización técnica</p>
+            <p className="text-xs text-gray-500">Áreas de especialización técnica</p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="skills">Habilidades técnicas</Label>
+          <div className="space-y-1">
+            <Label htmlFor="skills" className="text-xs">Habilidades técnicas</Label>
             <SkillsManager skills={skills} onChange={setSkills} />
           </div>
         </TabsContent>
 
-        <TabsContent value="certs" className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label htmlFor="certifications">Certificaciones</Label>
+        <TabsContent value="certs" className="space-y-3 pt-2">
+          <div className="space-y-1">
+            <Label htmlFor="certifications" className="text-xs">Certificaciones</Label>
             <CertificationsManager certifications={certifications} onChange={setCertifications} />
           </div>
         </TabsContent>
       </Tabs>
 
-      <Button type="submit" className="w-full">
+      <Button type="submit" className="w-full h-8 text-sm mt-2">
         {analyst ? 'Guardar Cambios' : 'Crear Analista'}
       </Button>
     </form>
