@@ -213,11 +213,15 @@ export default function ProjectTable() {
                 error: 'Error al eliminar el proyecto'
             }
         );
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    };    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
+        
+        // Verificar que idJira no sea nulo para ediciones
+        if (editingProject && (!newProject.idJira || !editingProject.idJira)) {
+            toast.error('Error: No se encontró el ID de Jira para actualizar el proyecto');
+            return;
+        }
 
         const promise = editingProject
             ? fetch('/api/projects', {
@@ -250,9 +254,7 @@ export default function ProjectTable() {
     const resetForm = () => {
         setNewProject({});
         setErrors({});
-    };
-
-    const sortData = (data: Project[]) => {
+    };    const sortData = (data: Project[]) => {
         if (!sortConfig.key) return data;
 
         return [...data].sort((a, b) => {
@@ -260,6 +262,22 @@ export default function ProjectTable() {
                 const dateA = a[sortConfig.key] ? new Date(a[sortConfig.key]!).getTime() : 0;
                 const dateB = b[sortConfig.key] ? new Date(b[sortConfig.key]!).getTime() : 0;
                 return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+            } else if (sortConfig.key) {
+                // Manejo seguro para otras propiedades
+                const valA = a[sortConfig.key] || '';
+                const valB = b[sortConfig.key] || '';
+                
+                // Si son strings, hacer comparación de strings
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return sortConfig.direction === 'asc' 
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
+                
+                // Para otros tipos, comparación genérica
+                return sortConfig.direction === 'asc'
+                    ? valA < valB ? -1 : valA > valB ? 1 : 0
+                    : valA > valB ? -1 : valA < valB ? 1 : 0;
             }
             return 0;
         });
@@ -289,9 +307,9 @@ export default function ProjectTable() {
             day: '2-digit',
             timeZone: 'UTC'
         });
-    };
-
-    const renderJiraId = (idJira: string) => {
+    };    const renderJiraId = (idJira: string | null | undefined) => {
+        if (!idJira) return '';  // Manejar caso donde idJira sea nulo o indefinido
+        
         const jiraUrl = getJiraUrl(idJira);
         if (!jiraUrl) return idJira;
 
@@ -305,27 +323,22 @@ export default function ProjectTable() {
                 {idJira}
             </a>
         );
-    };
-
-    const filteredProjects = sortData(projects.filter(project => {
+    };    const filteredProjects = sortData(projects.filter(project => {
+        // Comprobar que las propiedades existan antes de acceder a ellas
         const matchesSearch =
-            project.idJira.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.proyecto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.equipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            project.analistaProducto.toLowerCase().includes(searchTerm.toLowerCase());
+            (project.idJira?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (project.proyecto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (project.equipo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (project.analistaProducto?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
         const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
-        const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
-
-        // Filtrar por fecha
-        const projectDate = new Date(project.fechaEntrega);
-        const matchesDate = projectDate >= startDate && (!endDate || projectDate <= endDate);
+        const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;        // Filtrar por fecha (verificar si la fecha existe)
+        const projectDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
+        const matchesDate = projectDate ? (projectDate >= startDate && (!endDate || projectDate <= endDate)) : false;
 
         return matchesSearch && matchesEquipo && matchesAnalista && matchesDate;
-    }));
-
-    const equipos = Array.from(new Set(projects.map(p => p.equipo)));
-    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto)));
+    }));    const equipos = Array.from(new Set(projects.map(p => p.equipo || '').filter(Boolean)));
+    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));
 
     return (
         <div className="space-y-4">
@@ -772,15 +785,14 @@ export default function ProjectTable() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredProjects.map((project, index) => (
-                                <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
+                                <tr key={index} className="hover:bg-gray-50 transition-colors">                                    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
                                         {renderJiraId(project.idJira)}
                                     </td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
                                         {project.fechaEntrega && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -805,13 +817,15 @@ export default function ProjectTable() {
                                                 {formatDate(project.fechaCertificacion)}
                                             </span>
                                         )}
-                                    </td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo}</td>
-                                    <td className="px-4 py-2 text-sm whitespace-nowrap">
-                                        <button
+                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td>
+                                    <td className="px-4 py-2 text-sm whitespace-nowrap">                                        <button
                                             onClick={() => {
+                                                if (!project.idJira) {
+                                                    toast.error('No se puede editar un proyecto sin ID de Jira');
+                                                    return;
+                                                }
                                                 setEditingProject(project);
                                                 setNewProject(project);
                                                 setShowForm(true);
@@ -819,8 +833,11 @@ export default function ProjectTable() {
                                             className="text-blue-600 hover:text-blue-800 mr-2"
                                         >
                                             Editar
-                                        </button>                                        <button
-                                            onClick={() => {
+                                        </button>                                        <button                                            onClick={() => {
+                                                if (!project.idJira) {
+                                                    toast.error('No se puede eliminar un proyecto sin ID de Jira');
+                                                    return;
+                                                }
                                                 toast.info('¿Estás seguro?', {
                                                     action: {
                                                         label: 'Eliminar',

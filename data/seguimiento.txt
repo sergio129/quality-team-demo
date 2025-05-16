@@ -266,20 +266,6 @@
     "planTrabajo": ""
   },
   {
-    "idJira": "SBSF-1838",
-    "proyecto": "Pruebas unitarias Desarrollo Multitenant",
-    "equipo": "Otro",
-    "celula": "Comdata",
-    "horas": 30,
-    "dias": 3.33,
-    "fechaEntrega": "2025-05-06T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-07T00:00:00.000Z",
-    "diasRetraso": null,
-    "analistaProducto": "Leidy Iral",
-    "planTrabajo": "https://docs.google.com/spreadsheets/d/11gT64sI7wI08hnJd64uTRPK1Dii8UL5f0lDz_FwC-sA/edit?gid=2109915917#gid=2109915917"
-  },
-  {
     "idJira": "BCBH-528",
     "proyecto": "Ajuste Informe Portal SI",
     "equipo": "CRM Bancolombia",
@@ -296,16 +282,16 @@
   {
     "idJira": "BCCR-1460",
     "proyecto": "Sufi Cobranza - Creación campaña en Nexus",
-    "equipo": "TechBridge",
-    "celula": "SV",
+    "equipo": "Comdata",
+    "celula": "Comdata",
     "horas": 38,
-    "dias": 4.22,
+    "dias": 5,
     "fechaEntrega": "2025-05-08T00:00:00.000Z",
     "fechaRealEntrega": null,
     "fechaCertificacion": "2025-05-14T00:00:00.000Z",
     "diasRetraso": -45128,
     "analistaProducto": "Leidy Iral",
-    "planTrabajo": "https://docs.google.com/spreadsheets/d/1yHr0QSUHUw1ZwlJw4oSmlnNdBDIWoZ7VLNWPgaWlwLA/edit?gid=2109915917#gid=2109915917"
+    "planTrabajo": "actualizancion"
   },
   {
     "idJira": "BCGT-1080",

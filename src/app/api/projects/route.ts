@@ -16,8 +16,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-    const { idJira, project } = await req.json();
-    const success = await projectService.updateProject(idJira, project);
+    const updatedProject = await req.json();
+    
+    if (!updatedProject || !updatedProject.idJira) {
+        return NextResponse.json(
+            { message: 'Error: Se requiere un ID de Jira válido para actualizar un proyecto' }, 
+            { status: 400 }
+        );
+    }
+    
+    const success = await projectService.updateProject(updatedProject.idJira, updatedProject);
     if (success) {
         return NextResponse.json({ message: 'Project updated successfully' });
     }
@@ -26,6 +34,14 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
     const { idJira } = await req.json();
+    
+    if (!idJira) {
+        return NextResponse.json(
+            { message: 'Error: Se requiere un ID de Jira válido para eliminar un proyecto' },
+            { status: 400 }
+        );
+    }
+    
     const success = await projectService.deleteProject(idJira);
     if (success) {
         return NextResponse.json({ message: 'Project deleted successfully' });

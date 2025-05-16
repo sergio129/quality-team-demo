@@ -104,6 +104,22 @@ export function MetricsDashboard({ incidents }: MetricsProps) {
         filterIncidents();
     }, [timeFilter, incidents, selectedTeam, selectedCell, teams, cells]);
 
+    useEffect(() => {
+        // Debug logging to help troubleshoot team/cell mapping issues
+        if (teams.length > 0 && cells.length > 0) {
+            console.log('Teams loaded:', teams.length);
+            console.log('Cells loaded:', cells.length);
+            // Check for incidents with cells that don't match any of the cells in the system
+            const allCellNames = cells.map(c => c.name);
+            const unmatchedCells = incidents
+                .filter(inc => !allCellNames.includes(inc.celula))
+                .map(inc => inc.celula);
+            if (unmatchedCells.length > 0) {
+                console.warn('Found incidents with unmatched cells:', [...new Set(unmatchedCells)]);
+            }
+        }
+    }, [teams, cells, incidents]);
+
     const filterIncidents = () => {
         let filtered = [...incidents];
         
@@ -166,12 +182,11 @@ export function MetricsDashboard({ incidents }: MetricsProps) {
             name,
             value
         })));        // Distribución por equipo/célula
-        const distribution = filtered.reduce((acc: any, incident) => {
-            // Only attempt to map to teams if teams and cells data is available
+        const distribution = filtered.reduce((acc: any, incident) => {            // Only attempt to map to teams if teams and cells data is available
             const key = groupBy === 'equipo' 
                 ? (teams.length > 0 && cells.length > 0)
                   ? teams.find(t => 
-                      cells.find(c => c.name === incident.celula)?.teamId === t.id
+                      cells.find(c => c.name.trim() === incident.celula.trim())?.teamId === t.id
                     )?.name || 'Sin equipo'
                   : incident.celula // If teams or cells data isn't loaded yet, use celula instead
                 : incident.celula;

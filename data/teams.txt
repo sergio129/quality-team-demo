@@ -18,5 +18,10 @@
     "name": "IVR",
     "description": "",
     "id": "6f971aac-ed29-44fc-9da0-8db0b29f1133"
+  },
+  {
+    "name": "Comdata",
+    "description": "",
+    "id": "c8d6550c-486e-4aef-9248-4bf43d6b9189"
   }
 ]

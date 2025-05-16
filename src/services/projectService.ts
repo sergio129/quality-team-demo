@@ -25,10 +25,13 @@ export const projectService = {
             console.error('Error saving project:', error);
             return false;
         }
-    },
-
-    async updateProject(idJira: string, updatedProject: Project): Promise<boolean> {
+    },    async updateProject(idJira: string, updatedProject: Project): Promise<boolean> {
         try {
+            if (!idJira) {
+                console.error('Error updating project: No idJira provided');
+                return false;
+            }
+            
             const projects = await this.getAllProjects();
             const index = projects.findIndex(p => p.idJira === idJira);
             if (index !== -1) {
@@ -41,10 +44,13 @@ export const projectService = {
             console.error('Error updating project:', error);
             return false;
         }
-    },
-
-    async deleteProject(idJira: string): Promise<boolean> {
+    },    async deleteProject(idJira: string): Promise<boolean> {
         try {
+            if (!idJira) {
+                console.error('Error deleting project: No idJira provided');
+                return false;
+            }
+            
             const projects = await this.getAllProjects();
             const filteredProjects = projects.filter(p => p.idJira !== idJira);
             await fs.writeFile(FILE_PATH, JSON.stringify(filteredProjects, null, 2));
