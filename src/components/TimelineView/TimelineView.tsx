@@ -367,18 +367,17 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                                                             <a
                                                                 href={jiraUrl}
                                                                 target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                title={renderProjectTooltip(project)}
-                                                                className={`mx-1 text-xs p-1 rounded shadow-sm transition-colors
-                                                                    ${getProjectColor(project)} cursor-pointer block`}
+                                                                rel="noopener noreferrer"                                                                title={renderProjectTooltip(project)}
+                                                                className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block"
+                                                                style={getProjectStyle(project)}
                                                             >
                                                                 {project.idJira}
                                                             </a>
                                                         ) : (
                                                             <span
                                                                 title={renderProjectTooltip(project)}
-                                                                className={`mx-1 text-xs p-1 rounded shadow-sm
-                                                                    ${getProjectColor(project)} block`}
+                                                                className="mx-1 text-xs p-1 rounded shadow-sm block"
+                                                                style={getProjectStyle(project)}
                                                             >
                                                                 {project.idJira}
                                                             </span>
