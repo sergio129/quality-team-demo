@@ -150,28 +150,55 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         ));
 
         return compareDate >= startDateUTC && compareDate <= endDateUTC;
-    };
-
-    const getProjectColor = (project: Project) => {
+    };    // Esta función ahora retorna un objeto de estilo en lugar de clases CSS
+    const getProjectStyle = (project: Project) => {
         const today = new Date();
+        
+        // Buscar al analista asignado para usar su color como base
+        const assignedAnalyst = filteredAnalysts.find(a => a.name === project.analistaProducto);
+        const analystColor = assignedAnalyst?.color || '#3B82F6'; // Azul como color por defecto
+        
+        // Estilos por defecto
+        const style: React.CSSProperties = {
+            backgroundColor: `${analystColor}30`,
+            borderWidth: '2px',
+            borderColor: analystColor
+        };
         
         if (project.fechaCertificacion) {
             // Proyecto certificado/finalizado
             const isDelayed = project.diasRetraso > 0;
-            return isDelayed 
-                ? 'bg-red-200 hover:bg-red-300 border-red-400' // Finalizado con retraso
-                : 'bg-green-200 hover:bg-green-300 border-green-400'; // Finalizado a tiempo
+            if (isDelayed) {
+                return {
+                    backgroundColor: '#FEE2E2', // bg-red-200
+                    borderColor: '#F87171', // red-400
+                    borderWidth: '2px'
+                };
+            }
+            return {
+                ...style,
+                opacity: 0.7
+            };
         }
         
         // Proyecto no certificado aún
         const fechaEntrega = new Date(project.fechaEntrega);
         if (fechaEntrega < today) {
             // Ha pasado la fecha de entrega y no está certificado
-            return 'bg-orange-200 hover:bg-orange-300 border-orange-400';
+            return {
+                backgroundColor: '#FFEDD5', // bg-orange-200
+                borderColor: '#FB923C', // orange-400
+                borderWidth: '2px'
+            };
         }
 
-        // Proyecto en curso dentro del plazo
-        return 'bg-blue-200 hover:bg-blue-300 border-blue-400';
+        // Proyecto en curso dentro del plazo usando el color del analista
+        return style;
+    };
+    
+    // Para mantener la compatibilidad con el código existente que espera una clase CSS
+    const getProjectColor = () => {
+        return ''; // Ya no necesitamos clases, usamos estilos en línea
     };
 
     const renderProjectTooltip = (project: Project) => {
@@ -314,9 +341,14 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                     {filteredAnalysts.map(analyst => {
                         const analystProjects = getProjectsForAnalyst(analyst.name);
 
-                        return (
-                            <div key={analyst.id} className="flex border-b hover:bg-gray-50">
-                                <div className="w-40 flex-shrink-0 p-2 border-r">
+                        return (                            <div key={analyst.id} className="flex border-b hover:bg-gray-50">
+                                <div 
+                                    className="w-40 flex-shrink-0 p-2 border-r" 
+                                    style={{ 
+                                        backgroundColor: analyst.color ? `${analyst.color}20` : undefined,
+                                        borderLeft: analyst.color ? `4px solid ${analyst.color}` : undefined 
+                                    }}
+                                >
                                     {analyst.name}
                                 </div>
                                 <div className="flex relative min-h-[50px]">

@@ -21,11 +21,11 @@ interface AnalystFormProps {
 }
 
 export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }: AnalystFormProps) {
-  const router = useRouter();
-  const [name, setName] = useState(analyst?.name || '');
+  const router = useRouter();  const [name, setName] = useState(analyst?.name || '');
   const [email, setEmail] = useState(analyst?.email || '');
   const [cellIds, setCellIds] = useState<string[]>(analyst?.cellIds || []);
   const [role, setRole] = useState(analyst?.role || '');
+  const [color, setColor] = useState(analyst?.color || '#3B82F6'); // Color predeterminado: azul
   const [cells, setCells] = useState<CellInfo[]>(initialCells || []);
 
   useEffect(() => {
@@ -43,12 +43,11 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const promise = async () => {
-      const url = '/api/analysts';
+    const promise = async () => {      const url = '/api/analysts';
       const method = analyst ? 'PUT' : 'POST';
       const body = analyst 
-        ? JSON.stringify({ id: analyst.id, name, email, cellIds, role })
-        : JSON.stringify({ name, email, cellIds, role });
+        ? JSON.stringify({ id: analyst.id, name, email, cellIds, role, color })
+        : JSON.stringify({ name, email, cellIds, role, color });
 
       const response = await fetch(url, {
         method,
@@ -123,8 +122,7 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
           ))}
         </select>
         <p className="text-sm text-gray-500">Mantén presionado Ctrl (Cmd en Mac) para seleccionar múltiples células</p>
-      </div>
-      <div className="space-y-2">
+      </div>      <div className="space-y-2">
         <Label htmlFor="role">Rol</Label>
         <select
           id="role"
@@ -138,6 +136,25 @@ export function AnalystForm({ analyst, onSave, onSuccess, cells: initialCells }:
           <option value="Semi Senior">Semi Senior</option>
           <option value="Junior">Junior</option>
         </select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="color">Color identificativo</Label>
+        <div className="flex items-center gap-2">
+          <input
+            id="color"
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-10 min-w-[50px] rounded-md border border-input"
+          />
+          <Input 
+            value={color} 
+            onChange={(e) => setColor(e.target.value)}
+            placeholder="#RRGGBB" 
+            className="flex-1"
+          />
+        </div>
+        <p className="text-sm text-gray-500">Este color se utilizará para identificar al analista en la vista de calendario</p>
       </div>
       <Button type="submit">
         {analyst ? 'Guardar Cambios' : 'Crear Analista'}

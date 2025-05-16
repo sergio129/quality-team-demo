@@ -6,10 +6,12 @@
       "18cec5e1-b822-491a-86af-c22264f0e307",
       "ed17c938-0bf2-4a55-99ba-18b195712c23",
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27",
-      "7ef92e37-abc4-4960-a59e-449ee7fc4fd3"
+      "7ef92e37-abc4-4960-a59e-449ee7fc4fd3",
+      "1eee65a6-7a36-4c55-bbe3-a116186eb837"
     ],
     "role": "Senior",
-    "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a"
+    "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a",
+    "color": "#3B82F6"
   },
   {
     "name": "Yoarlis Carrillo\t",
@@ -19,7 +21,8 @@
       "ed17c938-0bf2-4a55-99ba-18b195712c23"
     ],
     "role": "Senior",
-    "id": "8947b61d-d634-4844-8b30-9100b632d236"
+    "id": "8947b61d-d634-4844-8b30-9100b632d236",
+    "color": "#3bf7bf"
   },
   {
     "name": "Yulieth Paola\t",
@@ -30,7 +33,8 @@
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
     ],
     "role": "Senior",
-    "id": "04367fee-2e91-4a58-ac24-24274222991e"
+    "id": "04367fee-2e91-4a58-ac24-24274222991e",
+    "color": "#cef73b"
   },
   {
     "name": "Leidy Iral",
@@ -41,6 +45,7 @@
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
     ],
     "role": "Semi Senior",
-    "id": "e3e7ba88-3675-4de0-be02-8caec0b76ff8"
+    "id": "e3e7ba88-3675-4de0-be02-8caec0b76ff8",
+    "color": "#757b84"
   }
 ]
