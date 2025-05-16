@@ -20,20 +20,21 @@ interface IncidentFormProps {
     incident?: Incident;
 }
 
-export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFormProps) {
-    const [formData, setFormData] = useState<Partial<Incident>>({
+export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFormProps) {    const [formData, setFormData] = useState<Partial<Incident>>({
         celula: '',
         estado: 'Abierto',
         prioridad: 'Media',
         descripcion: '',
         fechaCreacion: new Date(),
+        fechaReporte: new Date(), // Inicializamos la fecha de reporte por defecto con la fecha actual
         informadoPor: '',
         asignadoA: '',
         diasAbierto: 0,
         esErroneo: false,
         aplica: false,
         cliente: '',
-        idJira: '',        tipoBug: undefined,
+        idJira: '',
+        tipoBug: undefined,
         areaAfectada: undefined,
         etiquetas: [],
         historialEstados: []
@@ -58,11 +59,9 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                 console.error('Error loading analysts:', error);
                 setError('Error al cargar la lista de analistas');
             });
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    }, []);    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.celula || !formData.asignadoA || !formData.descripcion || !formData.cliente || !formData.prioridad) {
+        if (!formData.celula || !formData.asignadoA || !formData.descripcion || !formData.cliente || !formData.prioridad || !formData.fechaReporte) {
             setError('Por favor completa todos los campos requeridos');
             return;
         }
@@ -70,6 +69,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         await onSubmit({
             ...formData,
             fechaCreacion: formData.fechaCreacion || new Date(),
+            fechaReporte: formData.fechaReporte || new Date(),
             diasAbierto: formData.diasAbierto || 0
         });
         onClose();
@@ -218,6 +218,26 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                         required
                                         className="w-full mt-1"
                                     />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <Label htmlFor="fechaReporte" className="text-sm font-medium text-gray-600 mb-2">
+                                        Fecha de Reporte *
+                                    </Label>
+                                    <Input
+                                        type="date"
+                                        id="fechaReporte"
+                                        name="fechaReporte"
+                                        value={formData.fechaReporte ? new Date(formData.fechaReporte).toISOString().split('T')[0] : ''}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full mt-1"
+                                    />
+                                </div>
+                                <div>
+                                    {/* Espacio para balancear la grid */}
                                 </div>
                             </div>
 

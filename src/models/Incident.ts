@@ -14,6 +14,7 @@ export interface Incident {
     prioridad: string;
     descripcion: string;
     fechaCreacion: Date;
+    fechaReporte: Date;    // Nueva fecha de reporte obligatoria
     fechaSolucion?: Date;
     informadoPor: string;
     asignadoA: string;
