@@ -197,60 +197,60 @@ export default function ProjectTable() {
         return Object.keys(newErrors).length === 0;
     };
 
-    async function handleSave(project: Project) {
-        if (!validateForm()) {
-            toast.error('Por favor, corrija los errores en el formulario');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const url = '/api/projects';
-            const method = editingProject ? 'PUT' : 'POST';
-            const body = editingProject ?
-                JSON.stringify({ idJira: project.idJira, project }) :
-                JSON.stringify(project);
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al guardar el proyecto');
-            }
-
-            await loadProjects();
-            setEditingProject(null);
-            setShowForm(false);
-            setNewProject({});
-            setErrors({});
-            toast.success(editingProject ? 'Proyecto actualizado correctamente' : 'Proyecto creado correctamente');
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Error al guardar el proyecto');
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    async function handleDelete(idJira: string) {
-        if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
-            const response = await fetch('/api/projects', {
+    const handleDelete = async (idJira: string) => {
+        toast.promise(
+            fetch('/api/projects', {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ idJira })
+            }).then(async (response) => {
+                if (!response.ok) throw new Error('Error al eliminar el proyecto');
+                await loadProjects();
+            }),
+            {
+                loading: 'Eliminando proyecto...',
+                success: 'Proyecto eliminado correctamente',
+                error: 'Error al eliminar el proyecto'
+            }
+        );
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+
+        const promise = editingProject
+            ? fetch('/api/projects', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newProject)
+            })
+            : fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newProject)
             });
 
-            if (response.ok) {
+        toast.promise(
+            promise.then(async (response) => {
+                if (!response.ok) throw new Error('Error al guardar el proyecto');
                 await loadProjects();
+                setShowForm(false);
+                setEditingProject(null);
+                resetForm();
+            }),
+            {
+                loading: editingProject ? 'Actualizando proyecto...' : 'Creando proyecto...',
+                success: editingProject ? 'Proyecto actualizado correctamente' : 'Proyecto creado correctamente',
+                error: 'Error al guardar el proyecto'
             }
-        }
-    }
+        );
+    };
+
+    const resetForm = () => {
+        setNewProject({});
+        setErrors({});
+    };
 
     const sortData = (data: Project[]) => {
         if (!sortConfig.key) return data;
@@ -433,10 +433,7 @@ export default function ProjectTable() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
                     <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSave(newProject as Project);
-                        }} className="space-y-4">
+                        <form onSubmit={handleSubmit} className="space-y-4">
                             {/* ID Jira */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
@@ -684,8 +681,7 @@ export default function ProjectTable() {
                                     onClick={() => {
                                         setShowForm(false);
                                         setEditingProject(null);
-                                        setNewProject({});
-                                        setErrors({});
+                                        resetForm();
                                     }}
                                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
                                     disabled={isLoading}
@@ -823,9 +819,19 @@ export default function ProjectTable() {
                                             className="text-blue-600 hover:text-blue-800 mr-2"
                                         >
                                             Editar
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(project.idJira)}
+                                        </button>                                        <button
+                                            onClick={() => {
+                                                toast.info('¿Estás seguro?', {
+                                                    action: {
+                                                        label: 'Eliminar',
+                                                        onClick: () => handleDelete(project.idJira)
+                                                    },
+                                                    description: 'Esta acción no se puede deshacer',
+                                                    cancel: {
+                                                        label: 'Cancelar'
+                                                    }
+                                                });
+                                            }}
                                             className="text-red-600 hover:text-red-800"
                                         >
                                             Eliminar
