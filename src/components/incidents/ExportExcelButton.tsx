@@ -184,14 +184,13 @@ export function ExportExcelButton({ className }: ExportExcelButtonProps) {
       setIsLoading(false);
     }
   };
-
   return (
     <>      <Button 
         onClick={() => setIsOpen(true)} 
-        className={className}
-        variant="secondary"
+        className={`${className} bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 border border-green-200`}
+        variant="outline"
       >
-        <FileDown className="mr-2 h-4 w-4" /> Exportar a Excel
+        <FileDown className="mr-2 h-5 w-5" /> Exportar a Excel
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
