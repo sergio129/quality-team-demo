@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { EditCellDialog } from './EditCellDialog';
+import { CellProjectsDialog } from './CellProjectsDialog';
 import { toast } from 'sonner';
 import { useCells, useTeams, deleteCell, TeamInfo } from '@/hooks/useCells';
+import { useProjects } from '@/hooks/useProjects';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Cell, 'name' | 'description'> | 'team';
@@ -22,6 +24,8 @@ type SortDirection = 'asc' | 'desc';
 
 export function DataTable() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
+  const [isProjectsDialogOpen, setIsProjectsDialogOpen] = useState(false);
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,6 +38,7 @@ export function DataTable() {
   // Usar SWR para obtener datos
   const { cells, isLoading: cellsLoading, isError: cellsError } = useCells();
   const { teams, isLoading: teamsLoading } = useTeams();
+  const { projects } = useProjects();
 
   const isLoading = cellsLoading || teamsLoading;
   const isError = cellsError;
@@ -135,8 +140,41 @@ export function DataTable() {
       : <span className="text-blue-600 ml-1">↓</span>;
   }, [sortField, sortDirection]);
 
+  // Función para abrir el diálogo de proyectos para una célula
+  const handleViewProjects = useCallback((cell: Cell) => {
+    setSelectedCell(cell);
+    setIsProjectsDialogOpen(true);
+  }, []);
+
+  // Función para cerrar el diálogo de proyectos
+  const handleCloseProjectsDialog = useCallback(() => {
+    setIsProjectsDialogOpen(false);
+    setSelectedCell(null);
+  }, []);
+
+  // Contar proyectos por célula
+  const projectsCountByCell = useMemo(() => {
+    const counts: Record<string, number> = {};
+    
+    projects.forEach(project => {
+      const cellName = project.celula?.toLowerCase();
+      if (cellName) {
+        counts[cellName] = (counts[cellName] || 0) + 1;
+      }
+    });
+    
+    return counts;
+  }, [projects]);
   return (
     <div>
+      {selectedCell && (
+        <CellProjectsDialog
+          cell={selectedCell}
+          isOpen={isProjectsDialogOpen}
+          onClose={handleCloseProjectsDialog}
+        />
+      )}
+      
       <div className="flex items-center py-4">
         <Input
           placeholder="Buscar células..."
@@ -204,11 +242,11 @@ export function DataTable() {
                   <TableHead 
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('description')}
-                  >
-                    <div className="flex items-center">
+                  >                    <div className="flex items-center">
                       Descripción {renderSortIcon('description')}
                     </div>
                   </TableHead>
+                  <TableHead>Proyectos</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -218,16 +256,44 @@ export function DataTable() {
                     <TableCell className="font-medium">{cell.name}</TableCell>
                     <TableCell>{getTeamName(cell.teamId)}</TableCell>
                     <TableCell>{cell.description}</TableCell>
+                    <TableCell>
+                      {projectsCountByCell[cell.name.toLowerCase()] ? (
+                        <div className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                          {projectsCountByCell[cell.name.toLowerCase()]} proyectos
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Sin proyectos</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <EditCellDialog cell={cell} teams={teams} />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(cell.id)}
-                        className="ml-2"
-                      >
-                        Eliminar
-                      </Button>
+                      <div className="flex justify-end items-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewProjects(cell)}
+                          className="mr-2"
+                          disabled={!projectsCountByCell[cell.name.toLowerCase()]}
+                        >
+                          Ver Proyectos
+                        </Button>
+                        <EditCellDialog cell={cell} teams={teams} />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(cell.id)}
+                          className="ml-2"
+                        >
+                          Eliminar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewProjects(cell)}
+                          className="ml-2"
+                        >
+                          Ver Proyectos
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -291,6 +357,7 @@ export function DataTable() {
               </div>
             </div>
           )}
+            {/* Diálogo de proyectos por célula ya está incluido al inicio del componente */}
         </>
       )}
     </div>

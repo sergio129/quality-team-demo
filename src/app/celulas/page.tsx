@@ -55,15 +55,29 @@ export default function CellsPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-green-50 rounded-lg shadow-sm border border-green-100 p-4">
-              <h3 className="font-medium text-green-800 mb-2">Próximas funcionalidades</h3>
-              <ul className="text-sm text-green-700 space-y-1">
-                <li>• Asignación de analistas a células</li>
-                <li>• Métricas de rendimiento por célula</li>
-                <li>• Visualización de proyectos por célula</li>
-              </ul>
+            </div>            <div className="bg-green-50 rounded-lg shadow-sm border border-green-100 p-4">
+              <h3 className="font-medium text-green-800 mb-2">Funcionalidades</h3>
+              <div className="text-sm space-y-3">
+                <div>
+                  <div className="font-medium text-green-700 flex items-center">
+                    <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                    </svg>
+                    Visualización de proyectos por célula
+                  </div>
+                  <p className="text-gray-600 text-xs pl-5 mt-1">
+                    Revise todos los proyectos asignados a cada célula
+                  </p>
+                </div>
+                
+                <div className="text-green-700 space-y-1 pt-2 border-t border-green-200">
+                  <h4 className="font-medium">Próximamente:</h4>
+                  <ul className="space-y-1">
+                    <li>• Asignación de analistas a células</li>
+                    <li>• Métricas de rendimiento por célula</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
