@@ -88,23 +88,41 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     activeProjects,
     completedProjects,
     totalHoursAssigned
-  } = useMemo(() => {
-    // Determinar el estado real de cada proyecto
+  } = useMemo(() => {    // Determinar el estado real de cada proyecto
     const updatedProjects = projects.map(p => {
       // Copiar el proyecto para no mutar el original
       const updatedProject = { ...p };
       
-      // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
-      if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
-        updatedProject.estadoCalculado = 'Certificado';
+      // Si ya tiene un estado definido en la base de datos, usarlo
+      if (p.estado) {
+        // Normalizar el estado para usar nuestros estados estándar
+        if (p.estado.toLowerCase().includes('progreso')) {
+          updatedProject.estadoCalculado = 'En Progreso';
+        } else if (p.estado.toLowerCase().includes('certificado') || 
+                  p.estado.toLowerCase().includes('completado') || 
+                  p.estado.toLowerCase().includes('terminado')) {
+          updatedProject.estadoCalculado = 'Certificado';
+        } else if (p.estado.toLowerCase().includes('iniciar')) {
+          updatedProject.estadoCalculado = 'Por Iniciar';
+        } else {
+          // Estado desconocido, usar el estado original
+          updatedProject.estadoCalculado = p.estado;
+        }
       }
-      // Si la fecha de entrega es en el futuro, está "Por Iniciar"
-      else if (new Date(p.fechaEntrega) > today) {
-        updatedProject.estadoCalculado = 'Por Iniciar';
-      }
-      // De lo contrario, está "En Progreso"
+      // Si no tiene estado definido, calcularlo automáticamente
       else {
-        updatedProject.estadoCalculado = 'En Progreso';
+        // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
+        if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
+          updatedProject.estadoCalculado = 'Certificado';
+        }
+        // Si la fecha de entrega es en el futuro, está "Por Iniciar"
+        else if (new Date(p.fechaEntrega) > today) {
+          updatedProject.estadoCalculado = 'Por Iniciar';
+        }
+        // De lo contrario, está "En Progreso"
+        else {
+          updatedProject.estadoCalculado = 'En Progreso';
+        }
       }
       
       return updatedProject;
@@ -261,8 +279,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                       <span className="flex items-center gap-1">
                         <span className="text-gray-500">Horas:</span> {project.horasEstimadas || project.horas || 'N/A'}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <span className="text-gray-500">Estado:</span>
+                      <span className="flex items-center gap-1">                        <span className="text-gray-500">Estado:</span>
                         <span 
                           className={`px-1.5 py-0.5 rounded-full text-[10px] ${
                             project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' :
@@ -271,7 +288,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                             'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {project.estadoCalculado}                        </span>
+                          {project.estado || project.estadoCalculado}
+                        </span>
                       </span>
                     </div>
                   </div>
