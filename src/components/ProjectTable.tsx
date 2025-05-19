@@ -804,11 +804,9 @@ export default function ProjectTable() {
                     analysts={analysts}
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}
-                />
-            ) : (                <div className="overflow-x-auto bg-white rounded-lg shadow">
-                    <table className="min-w-full">
-                        <thead>
-                            <tr>
+                />            ) : (
+                <div className="overflow-x-auto bg-white rounded-lg shadow">
+                    <table className="min-w-full"><thead><tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Id Jira</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Proyecto</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th>
@@ -859,12 +857,8 @@ export default function ProjectTable() {
                                     <div className="flex items-center">
                                         <span className="mr-1">Estado</span>
                                         {getSortIcon('estadoCalculado')}
-                                    </div>
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
-                            </tr>
-                        </thead>            <tbody className="bg-white divide-y divide-gray-200">
+                                    </div>                                </th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
+                            </tr></thead><tbody className="bg-white divide-y divide-gray-200">
                             {filteredProjects.filter(project => project && project.idJira).map((project, index) => (
                                 <tr key={index} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
@@ -962,13 +956,10 @@ export default function ProjectTable() {
                                             }}
                                             className="text-red-600 hover:text-red-800"
                                         >
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
+                                            Eliminar                                        </button>
+                                    </td></tr>
                             ))}
-                        </tbody>
-                    </table>
+                        </tbody></table>
                 </div>
             )}
         </div>
