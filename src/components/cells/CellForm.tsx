@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from "react";
 import { Cell } from "@/models/Cell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +7,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTeams, createCell, updateCell, TeamInfo } from "@/hooks/useCells";
 
-interface TeamInfo {
-  id: string;
-  name: string;
-}
+// Definir el esquema de validación con zod
+const cellSchema = z.object({
+  name: z.string()
+    .min(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+    .max(50, { message: 'El nombre no puede exceder 50 caracteres' }),
+  teamId: z.string()
+    .min(1, { message: 'Debe seleccionar un equipo' }),
+  description: z.string()
+    .max(500, { message: 'La descripción no puede exceder 500 caracteres' })
+    .optional()
+    .nullable()
+});
+
+// Tipo inferido desde el esquema zod
+type CellFormData = z.infer<typeof cellSchema>;
 
 interface CellFormProps {
   cell?: Cell;
@@ -23,44 +37,47 @@ interface CellFormProps {
 
 export function CellForm({ cell, onSave, onSuccess, teams: initialTeams }: CellFormProps) {
   const router = useRouter();
-  const [name, setName] = useState(cell?.name || '');
-  const [teamId, setTeamId] = useState(cell?.teamId || '');
-  const [description, setDescription] = useState(cell?.description || '');
-  const [teams, setTeams] = useState<TeamInfo[]>(initialTeams || []);
-
-  useEffect(() => {
-    if (!initialTeams) {
-      fetchTeams();
+  
+  // Usar el hook para obtener equipos si no se proporcionaron
+  const { teams: fetchedTeams, isLoading } = useTeams();
+  const teams = initialTeams || fetchedTeams;
+  
+  // Configurar react-hook-form con zod
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors, isSubmitting },
+    reset
+  } = useForm<CellFormData>({
+    resolver: zodResolver(cellSchema),
+    defaultValues: {
+      name: cell?.name || '',
+      teamId: cell?.teamId || '',
+      description: cell?.description || ''
     }
-  }, [initialTeams]);
-
-  const fetchTeams = async () => {
-    const response = await fetch('/api/teams');
-    const data = await response.json();
-    setTeams(data);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const promise = async () => {
-      const url = '/api/cells';
-      const method = cell ? 'PUT' : 'POST';
-      const body = cell 
-        ? JSON.stringify({ id: cell.id, name, teamId, description })
-        : JSON.stringify({ name, teamId, description });
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Error al guardar la célula');
+  });
+  
+  const onSubmit = async (data: CellFormData) => {
+    try {
+      if (cell) {
+        // Asegurarnos que los tipos coincidan para updateCell
+        await updateCell(cell.id, {
+          name: data.name,
+          teamId: data.teamId,
+          description: data.description === null ? undefined : data.description
+        });
+      } else {
+        // Asegurarnos que los tipos coincidan para createCell
+        await createCell({
+          name: data.name,
+          teamId: data.teamId,
+          description: data.description === null ? undefined : data.description
+        });
+        // Resetear el formulario después de un envío exitoso (solo para nuevas células)
+        reset();
       }
-
+      
+      // Callback adicional si es necesario
       if (onSave) {
         onSave();
       } else {
@@ -71,55 +88,68 @@ export function CellForm({ cell, onSave, onSuccess, teams: initialTeams }: CellF
       if (onSuccess) {
         onSuccess();
       }
-    };
-
-    toast.promise(promise, {
-      loading: cell ? 'Actualizando célula...' : 'Creando célula...',
-      success: cell ? 'Célula actualizada exitosamente' : 'Célula creada exitosamente',
-      error: (err) => err.message
-    });
+    } catch (error) {
+      console.error("Error al guardar la célula:", error);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
+        <Label htmlFor="name" className={errors.name ? 'text-destructive' : ''}>
+          Nombre <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
           placeholder="Nombre de la célula"
-          required
+          {...register('name')}
+          className={errors.name ? 'border-destructive' : ''}
         />
+        {errors.name && (
+          <p className="text-sm text-destructive">{errors.name.message}</p>
+        )}
       </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="teamId">Equipo</Label>
+        <Label htmlFor="teamId" className={errors.teamId ? 'text-destructive' : ''}>
+          Equipo <span className="text-destructive">*</span>
+        </Label>
         <select
           id="teamId"
-          value={teamId}
-          onChange={(e) => setTeamId(e.target.value)}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          required
+          {...register('teamId')}
+          className={`flex h-10 w-full rounded-md border ${errors.teamId ? 'border-destructive' : 'border-input'} bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50`}
         >
           <option value="">Seleccionar equipo</option>
-          {teams.map((team) => (
+          {isLoading ? (
+            <option disabled>Cargando equipos...</option>
+          ) : teams.map((team) => (
             <option key={team.id} value={team.id}>
               {team.name}
             </option>
           ))}
         </select>
+        {errors.teamId && (
+          <p className="text-sm text-destructive">{errors.teamId.message}</p>
+        )}
       </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="description">Descripción</Label>
+        <Label htmlFor="description" className={errors.description ? 'text-destructive' : ''}>
+          Descripción
+        </Label>
         <Textarea
           id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
           placeholder="Descripción de la célula"
+          {...register('description')}
+          className={errors.description ? 'border-destructive' : ''}
         />
+        {errors.description && (
+          <p className="text-sm text-destructive">{errors.description.message}</p>
+        )}
       </div>
-      <Button type="submit">
-        {cell ? 'Guardar Cambios' : 'Crear Célula'}
+      
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Guardando...' : cell ? 'Guardar Cambios' : 'Crear Célula'}
       </Button>
     </form>
   );

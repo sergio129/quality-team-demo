@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { CellForm } from "./CellForm";
+import { TeamInfo } from "@/hooks/useCells";
 
 interface EditCellDialogProps {
   cell: Cell;
-  onSave: () => void;
-  teams: { id: string; name: string; }[];
+  onSave?: () => void; // Ahora es opcional porque SWR se encargará de revalidar
+  teams: TeamInfo[];
 }
 
 export function EditCellDialog({ cell, onSave, teams }: EditCellDialogProps) {
