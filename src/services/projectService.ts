@@ -33,7 +33,7 @@ export const projectService = {    async getAllProjects(): Promise<Project[]> {
             console.error('Error saving project:', error);
             return false;
         }
-    },    async updateProject(idJira: string, updatedProject: Project): Promise<boolean> {
+    },    async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
         try {
             if (!idJira) {
                 console.error('Error updating project: No idJira provided');
@@ -43,7 +43,13 @@ export const projectService = {    async getAllProjects(): Promise<Project[]> {
             const projects = await this.getAllProjects();
             const index = projects.findIndex(p => p.idJira === idJira);
             if (index !== -1) {
-                projects[index] = updatedProject;
+                // En lugar de reemplazar todo el proyecto, solo actualizamos los campos proporcionados
+                projects[index] = { 
+                    ...projects[index], 
+                    ...updatedProject,
+                    idJira: idJira // Aseguramos que el idJira no cambie
+                };
+                console.log('Proyecto actualizado:', projects[index]);
                 await fs.writeFile(FILE_PATH, JSON.stringify(projects, null, 2));
                 return true;
             }
@@ -52,7 +58,7 @@ export const projectService = {    async getAllProjects(): Promise<Project[]> {
             console.error('Error updating project:', error);
             return false;
         }
-    },    async deleteProject(idJira: string): Promise<boolean> {
+    },async deleteProject(idJira: string): Promise<boolean> {
         try {
             if (!idJira) {
                 console.error('Error deleting project: No idJira provided');

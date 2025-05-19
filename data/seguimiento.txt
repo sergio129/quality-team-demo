@@ -381,7 +381,8 @@
     "fechaCertificacion": "2025-05-22T00:00:00.000Z",
     "diasRetraso": -45140,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": ""
+    "planTrabajo": "",
+    "estadoCalculado": "En Progreso"
   },
   {
     "idJira": "SRSS-139",
@@ -666,6 +667,6 @@
     "fechaCertificacion": "2025-05-30T00:00:00.000Z",
     "estadoCalculado": "Por Iniciar",
     "analistaProducto": "Leidy Iral",
-    "planTrabajo": "En curso"
+    "planTrabajo": "en progreso"
   }
 ]

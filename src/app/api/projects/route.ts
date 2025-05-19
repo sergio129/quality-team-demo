@@ -80,18 +80,41 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-    const updatedProject = await req.json();
+    const data = await req.json();
     
-    if (!updatedProject || !updatedProject.idJira) {
+    // Verificamos si la solicitud viene en el formato nuevo (con idJira separado) 
+    // o en el formato antiguo (idJira dentro del proyecto)
+    const idJira = data.idJira || (data.project && data.project.idJira);
+    
+    if (!idJira) {
         return NextResponse.json(
             { message: 'Error: Se requiere un ID de Jira válido para actualizar un proyecto' }, 
             { status: 400 }
         );
     }
     
-    const success = await projectService.updateProject(updatedProject.idJira, updatedProject);
+    // Si tenemos un objeto project anidado, usamos esa estructura
+    const projectToUpdate = data.project ? { ...data.project } : data;
+    
+    console.log(`Actualizando proyecto con idJira: ${idJira}`, projectToUpdate);
+    
+    // Obtenemos el proyecto existente antes de actualizarlo
+    const existingProjects = await projectService.getAllProjects();
+    const existingProject = existingProjects.find(p => p.idJira === idJira);
+    
+    if (!existingProject) {
+        return NextResponse.json(
+            { message: `Error: No se encontró un proyecto con idJira: ${idJira}` }, 
+            { status: 404 }
+        );
+    }
+    
+    const success = await projectService.updateProject(idJira, projectToUpdate);
     if (success) {
-        return NextResponse.json({ message: 'Project updated successfully' });
+        // Obtener el proyecto actualizado para devolverlo en la respuesta
+        const updatedProjects = await projectService.getAllProjects();
+        const updatedProject = updatedProjects.find(p => p.idJira === idJira);
+        return NextResponse.json(updatedProject || { message: 'Project updated successfully' });
     }
     return NextResponse.json({ message: 'Error updating project' }, { status: 500 });
 }

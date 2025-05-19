@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Project } from '@/models/Project';
+import { changeProjectStatus } from '@/hooks/useProjects';
 
 interface ChangeProjectStatusDialogProps {
   project: Project;
-  onStatusChange: (projectId: string, newStatus: string) => Promise<boolean>;
+  onClose: () => void;
+  isOpen: boolean;
 }
 
-export function ChangeProjectStatusDialog({ project, onStatusChange }: ChangeProjectStatusDialogProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function ChangeProjectStatusDialog({ project, onClose, isOpen }: ChangeProjectStatusDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(project.estadoCalculado || 'Por Iniciar');
   
@@ -21,18 +22,23 @@ export function ChangeProjectStatusDialog({ project, onStatusChange }: ChangePro
   // Opciones de estado disponibles (excluyendo el estado actual)
   const availableStatuses = ['Por Iniciar', 'En Progreso', 'Certificado'].filter(
     status => status !== currentStatus
-  );
-
-  const handleStatusChange = async (newStatus: string) => {
+  );  const handleStatusChange = async (newStatus: string) => {
     if (isCertified) return; // No permitir cambios si ya está certificado
     
-    setIsLoading(true);
+    setIsLoading(true);    
     try {
-      const success = await onStatusChange(project.id || project.idJira, newStatus);
-      if (success) {
-        setCurrentStatus(newStatus);
-        setIsOpen(false);
+      // Asegurémonos de que tenemos un idJira válido
+      if (!project.idJira) {
+        throw new Error('No se encontró el ID de Jira del proyecto');
       }
+      
+      console.log(`Cambiando estado del proyecto ${project.idJira} a ${newStatus}`);
+      
+      // Pasamos tanto el ID como el idJira para asegurar que la API pueda identificar el proyecto
+      await changeProjectStatus(project.id || '', newStatus, project.idJira);
+      
+      // Cerrar el diálogo
+      onClose();
     } catch (error) {
       console.error('Error al cambiar el estado:', error);
     } finally {
@@ -41,17 +47,7 @@ export function ChangeProjectStatusDialog({ project, onStatusChange }: ChangePro
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          disabled={isCertified}
-          className={`px-2 py-1 text-xs ${isCertified ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          Cambiar Estado
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Cambiar Estado del Proyecto</DialogTitle>
@@ -76,13 +72,27 @@ export function ChangeProjectStatusDialog({ project, onStatusChange }: ChangePro
                         'bg-green-50 hover:bg-green-100 text-green-800 border-green-200'}
                     `}
                   >
-                    {status}
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Actualizando...
+                      </>
+                    ) : status}
                   </Button>
                 ))}
               </div>
             </div>
           </div>
         </div>
+        
+        <DialogFooter className="sm:justify-end">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancelar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

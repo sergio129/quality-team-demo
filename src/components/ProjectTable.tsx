@@ -2,12 +2,13 @@
 
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
+import { useProjects, useProjectStats, createProject, updateProject, deleteProject, changeProjectStatus } from '@/hooks/useProjects';
 
 const HOURS_PER_DAY = 9;
 
@@ -15,14 +16,15 @@ interface FormErrors {
     [key: string]: string;
 }
 
-export default function ProjectTable() {
-    const [projects, setProjects] = useState<Project[]>([]);
+export default function ProjectTable() {    // Usar hook personalizado SWR para proyectos
+    const { projects, isLoading: isLoadingProjects, isError: isErrorProjects } = useProjects();
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [newProject, setNewProject] = useState<Partial<Project>>({});
     const [errors, setErrors] = useState<FormErrors>({});
-    const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
     const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
@@ -34,15 +36,16 @@ export default function ProjectTable() {
     }>({ key: null, direction: 'asc' });
     const [filterEquipo, setFilterEquipo] = useState<string>('');
     const [filterAnalista, setFilterAnalista] = useState<string>('');
+    // Estados para el cambio de estado del proyecto
+    const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+    const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
     const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'year' | 'custom'>('month');
     const [startDate, setStartDate] = useState(() => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth(), 1);
     });
-    const [endDate, setEndDate] = useState<Date | null>(null);
-
-    useEffect(() => {
-        loadProjects();
+    const [endDate, setEndDate] = useState<Date | null>(null);    useEffect(() => {
+        // Ya no necesitamos cargar los proyectos manualmente
         fetchTeams();
         fetchCells();
         fetchAnalysts();
@@ -110,30 +113,7 @@ export default function ProjectTable() {
 
         setStartDate(start);
         setEndDate(end);
-    }, [selectedDateFilter]);  
-
-    async function loadProjects() {
-        const response = await fetch('/api/projects');
-        const data = await response.json();
-        
-        // Calcular automáticamente el estado de cada proyecto basado en sus fechas
-        const today = new Date();
-        const projectsWithStatus = data.map((project: Project) => {
-            // Determinar estado automáticamente según las fechas
-            // Solo se marca como certificado si tiene fecha de certificación y esa fecha ya pasó
-            if (project.fechaCertificacion && new Date(project.fechaCertificacion) <= today) {
-                return { ...project, estadoCalculado: 'Certificado' };
-            } else if (project.fechaEntrega && new Date(project.fechaEntrega) > today) {
-                // Si la fecha de entrega es futura, está por iniciar
-                return { ...project, estadoCalculado: 'Por Iniciar' };
-            } else {
-                // Si la fecha de entrega ya pasó pero no está certificado, está en progreso
-                return { ...project, estadoCalculado: 'En Progreso' };
-            }
-        });
-        
-        setProjects(projectsWithStatus);
-    }
+    }, [selectedDateFilter]);      // La función loadProjects ya no es necesaria porque usamos el hook useProjects
 
     const fetchTeams = async () => {
         try {
@@ -213,54 +193,14 @@ export default function ProjectTable() {
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    };
-
-    const handleDelete = async (idJira: string) => {
-        toast.promise(
-            fetch('/api/projects', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idJira })
-            }).then(async (response) => {
-                if (!response.ok) throw new Error('Error al eliminar el proyecto');
-                await loadProjects();
-            }),
-            {
-                loading: 'Eliminando proyecto...',
-                success: 'Proyecto eliminado correctamente',
-                error: 'Error al eliminar el proyecto'
-            }
-        );
-    };
-    
-    // Función para manejar el cambio de estado de un proyecto
-    const handleStatusChange = async (projectId: string, newStatus: string) => {
+    };    const handleDelete = async (idJira: string) => {
         try {
-            const response = await fetch('/api/projects/status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ projectId, newStatus }),
-            });
-            
-            if (response.ok) {
-                toast.success(`Estado cambiado a: ${newStatus}`);
-                // Recargar la lista de proyectos para reflejar el cambio
-                await loadProjects();
-                return true;
-            } else {
-                toast.error('Error al cambiar el estado del proyecto');
-                return false;
-            }
+            // Utilizamos la función del hook que incluye todas las notificaciones
+            await deleteProject(idJira);
         } catch (error) {
-            console.error('Error al procesar la solicitud:', error);
-            toast.error('Error al procesar la solicitud');
-            return false;
+            console.error('Error al eliminar el proyecto:', error);
         }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    };    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
         
@@ -270,65 +210,65 @@ export default function ProjectTable() {
             return;
         }
 
-        const promise = editingProject
-            ? fetch('/api/projects', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newProject)
-            })
-            : fetch('/api/projects', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newProject)
-            });
-
-        toast.promise(
-            promise.then(async (response) => {
-                if (!response.ok) throw new Error('Error al guardar el proyecto');
-                await loadProjects();
-                setShowForm(false);
-                setEditingProject(null);
-                resetForm();
-            }),
-            {
-                loading: editingProject ? 'Actualizando proyecto...' : 'Creando proyecto...',
-                success: editingProject ? 'Proyecto actualizado correctamente' : 'Proyecto creado correctamente',
-                error: 'Error al guardar el proyecto'
+        try {
+            setIsSubmitting(true);
+            
+            if (editingProject && editingProject.id) {
+                // Actualizar proyecto existente
+                await updateProject(editingProject.id, newProject);
+            } else {
+                // Crear nuevo proyecto
+                await createProject(newProject);
             }
-        );
+            
+            // Cerrar el formulario y resetear
+            setShowForm(false);
+            setEditingProject(null);
+            resetForm();
+        } catch (error) {
+            console.error('Error al guardar el proyecto:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const resetForm = () => {
         setNewProject({});
         setErrors({});
     };
-    
-    const sortData = (data: Project[]) => {
+      const sortData = (data: Project[]) => {
         if (!sortConfig.key) return data;
 
         return [...data].sort((a, b) => {
-            if (sortConfig.key === 'fechaEntrega' || sortConfig.key === 'fechaRealEntrega' || sortConfig.key === 'fechaCertificacion') {
-                const dateA = a[sortConfig.key] ? new Date(a[sortConfig.key]!).getTime() : 0;
-                const dateB = b[sortConfig.key] ? new Date(b[sortConfig.key]!).getTime() : 0;
-                return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
-            } else if (sortConfig.key) {
-                // Manejo seguro para otras propiedades
-                const valA = a[sortConfig.key] || '';
-                const valB = b[sortConfig.key] || '';
-                
-                // Si son strings, hacer comparación de strings
-                if (typeof valA === 'string' && typeof valB === 'string') {
-                    return sortConfig.direction === 'asc' 
-                        ? valA.localeCompare(valB)
-                        : valB.localeCompare(valA);
-                }
-                
-                // Para otros tipos, comparación genérica
+            // Añadir lógica para manejar el botón de cambio de estado
+            if (!a || !b) return 0;
+            
+            const key = sortConfig.key as keyof Project;
+            
+            // Obtener valores seguros (usando nullish coalescing)
+            const valA = a[key] ?? '';
+            const valB = b[key] ?? '';
+            
+            // Lógica especial para fechas
+            if (key === 'fechaEntrega' || key === 'fechaRealEntrega' || key === 'fechaCertificacion') {
+                const dateA = valA ? new Date(valA as string).getTime() : 0;
+                const dateB = valB ? new Date(valB as string).getTime() : 0;
                 return sortConfig.direction === 'asc'
-                    ? valA < valB ? -1 : valA > valB ? 1 : 0
-                    : valA > valB ? -1 : valA < valB ? 1 : 0;
+                    ? dateA - dateB
+                    : dateB - dateA;
+            } 
+            
+            // Si son strings, hacer comparación de strings
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                return sortConfig.direction === 'asc' 
+                    ? valA.localeCompare(valB)
+                    : valB.localeCompare(valA);
             }
-            return 0;
+            
+            // Para otros tipos, comparación genérica
+            return sortConfig.direction === 'asc'
+                ? (valA < valB ? -1 : valA > valB ? 1 : 0)
+                : (valA > valB ? -1 : valA < valB ? 1 : 0);
         });
     };
 
@@ -376,6 +316,17 @@ export default function ProjectTable() {
         );
     };
     
+    // Funciones para manejar el diálogo de cambio de estado
+    const openStatusDialog = (project: Project) => {
+        setProjectToChangeStatus(project);
+        setStatusDialogOpen(true);
+    };
+    
+    const closeStatusDialog = () => {
+        setStatusDialogOpen(false);
+        setProjectToChangeStatus(null);
+    };
+
     const filteredProjects = sortData(projects.filter(project => {
         // Comprobar que las propiedades existan antes de acceder a ellas
         const matchesSearch =
@@ -776,8 +727,7 @@ export default function ProjectTable() {
                                 {errors.planTrabajo && <p className="text-red-500 text-sm">{errors.planTrabajo}</p>}
                             </div>
 
-                            <div className="flex justify-end space-x-2">
-                                <button
+                            <div className="flex justify-end space-x-2">                                <button
                                     type="button"
                                     onClick={() => {
                                         setShowForm(false);
@@ -785,16 +735,16 @@ export default function ProjectTable() {
                                         resetForm();
                                     }}
                                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                                    disabled={isLoading}
+                                    disabled={isSubmitting}
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
                                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center"
-                                    disabled={isLoading}
+                                    disabled={isSubmitting}
                                 >
-                                    {isLoading ? (
+                                    {isSubmitting ? (
                                         <>
                                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -810,9 +760,27 @@ export default function ProjectTable() {
                         </form>
                     </div>
                 </div>
-            )}
-
-            {activeView === 'timeline' ? (
+            )}            {isLoadingProjects ? (
+                <div className="flex justify-center items-center p-8">
+                    <div className="flex flex-col items-center">
+                        <svg className="animate-spin h-8 w-8 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-gray-600">Cargando proyectos...</p>
+                    </div>
+                </div>
+            ) : isErrorProjects ? (
+                <div className="flex justify-center items-center p-8 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex flex-col items-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p className="text-red-800 font-medium">Error al cargar los proyectos</p>
+                        <p className="text-red-600 mt-1">Por favor, intente nuevamente más tarde</p>
+                    </div>
+                </div>
+            ) : activeView === 'timeline' ? (
                 <TimelineView
                     projects={filteredProjects}
                     analysts={analysts}
@@ -824,12 +792,51 @@ export default function ProjectTable() {
                     <table className="min-w-full">
 <thead><tr><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Id Jira</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Proyecto</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Equipo</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Celula</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Horas</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Días</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]" onClick={() => requestSort('fechaEntrega')}><div className="flex items-center"><span className="mr-1">Fecha Entrega</span>{getSortIcon('fechaEntrega')}</div></th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]" onClick={() => requestSort('fechaRealEntrega')}><div className="flex items-center"><span className="mr-1">Fecha Real</span>{getSortIcon('fechaRealEntrega')}</div></th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]" onClick={() => requestSort('fechaCertificacion')}><div className="flex items-center"><span className="mr-1">Certificación</span>{getSortIcon('fechaCertificacion')}</div></th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]" onClick={() => requestSort('diasRetraso')}><div className="flex items-center"><span className="mr-1">Días Retraso</span>{getSortIcon('diasRetraso')}</div></th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]" onClick={() => requestSort('estadoCalculado')}><div className="flex items-center"><span className="mr-1">Estado</span>{getSortIcon('estadoCalculado')}</div></th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th><th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th></tr></thead>
 <tbody className="bg-white divide-y divide-gray-200">
-{filteredProjects.filter(project => project && project.idJira).map((project, index) => (
-<tr key={index} className="hover:bg-gray-50 transition-colors"><td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaEntrega && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{formatDate(project.fechaEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaCertificacion && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{formatDate(project.fechaCertificacion)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td><td className="px-4 py-2 text-sm text-gray-900"><div className="flex flex-col items-start">{project.estadoCalculado ? (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.estadoCalculado === 'Por Iniciar' ? 'bg-amber-100 text-amber-800' : project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>{project.estadoCalculado}</span>) : (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Sin estado</span>)}<div className="mt-1"><ChangeProjectStatusDialog project={project} onStatusChange={handleStatusChange}/></div></div></td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {if (!project.idJira) {toast.error('No se puede editar un proyecto sin ID de Jira');return;}setEditingProject(project);setNewProject(project);setShowForm(true);}} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar'}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
+{filteredProjects.length === 0 ? (
+    <tr>
+        <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
+            <p className="text-lg font-medium mb-2">No hay proyectos que coincidan con los criterios de búsqueda</p>
+            <p className="text-sm">Intenta ajustar los filtros o crear un nuevo proyecto</p>
+        </td>
+    </tr>
+) : filteredProjects.filter(project => project && project.idJira).map((project, index) => (
+<tr key={index} className="hover:bg-gray-50 transition-colors"><td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaEntrega && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{formatDate(project.fechaEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaCertificacion && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{formatDate(project.fechaCertificacion)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td><td className="px-4 py-2 text-sm text-gray-900">
+    <div className="flex flex-col items-start">
+        {project.estadoCalculado ? (
+            <span 
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
+                    project.estadoCalculado === 'Por Iniciar' 
+                        ? 'bg-amber-100 text-amber-800' 
+                        : project.estadoCalculado === 'En Progreso' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                }`}
+                onClick={() => openStatusDialog(project)}
+            >
+                {project.estadoCalculado}
+            </span>
+        ) : (
+            <span 
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 cursor-pointer hover:opacity-80"
+                onClick={() => openStatusDialog(project)}
+            >
+                Sin estado
+            </span>
+        )}
+    </div>
+</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {if (!project.idJira) {toast.error('No se puede editar un proyecto sin ID de Jira');return;}setEditingProject(project);setNewProject(project);setShowForm(true);}} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar'}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
 ))}
 </tbody>
                     </table>
                 </div>
+            )}
+              {/* Diálogo de cambio de estado */}
+            {statusDialogOpen && projectToChangeStatus && (
+                <ChangeProjectStatusDialog
+                    project={projectToChangeStatus}
+                    isOpen={statusDialogOpen}
+                    onClose={closeStatusDialog}
+                />
             )}
         </div>
     );
