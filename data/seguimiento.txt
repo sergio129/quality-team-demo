@@ -631,7 +631,8 @@
     "fechaEntrega": "2025-05-21T00:00:00.000Z",
     "fechaCertificacion": "2025-05-21T00:00:00.000Z",
     "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "en Desarrollo"
+    "planTrabajo": "en Desarrollo",
+    "estadoCalculado": "En Progreso"
   },
   {
     "idJira": "SRCA-6548",
@@ -684,5 +685,20 @@
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "finalizado",
     "estadoCalculado": "Certificado"
+  },
+  {
+    "idJira": "SRCA-6556",
+    "equipo": "TechBridge",
+    "celula": "Suramericana",
+    "proyecto": "Reestructuración Parametrización \"Prefijos\"",
+    "horas": 4,
+    "dias": 1,
+    "fechaEntrega": "2025-05-21T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-21T00:00:00.000Z",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "en Desarrollo",
+    "estadoCalculado": "En Progreso",
+    "fechaRealEntrega": "2025-05-19T00:00:00.000Z",
+    "diasRetraso": 0
   }
 ]

@@ -185,9 +185,9 @@ export function DataTable() {
           )}
         </div>
       ) : (
-        <>
-          <div className="rounded-md border">
-            <Table>              <TableHeader>
+        <>          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
                   <TableHead 
                     className="cursor-pointer hover:bg-gray-50"
