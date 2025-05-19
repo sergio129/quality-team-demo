@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { createTeam, updateTeam, TeamFormData as TeamData } from "@/hooks/useTeams";
+import { toast } from "sonner";
 
 // Definir el esquema de validación con zod
 const teamSchema = z.object({
@@ -49,29 +50,24 @@ export function TeamForm({ team, onSave, onSuccess }: TeamFormProps) {
   });
   
   const onSubmit = async (data: TeamFormData) => {
-    const promise = async () => {
-      const url = '/api/teams';
-      const method = team ? 'PUT' : 'POST';
-      const body = team 
-        ? JSON.stringify({ id: team.id, ...data })
-        : JSON.stringify(data);
-
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Error al guardar el equipo');
-      }
-      
-      // Resetear el formulario después de un envío exitoso (solo para nuevos equipos)
-      if (!team) {
+    try {
+      if (team) {
+        // Asegurarnos que los tipos coincidan para updateTeam
+        await updateTeam(team.id, {
+          name: data.name,
+          description: data.description === null ? undefined : data.description
+        });
+      } else {
+        // Asegurarnos que los tipos coincidan para createTeam
+        await createTeam({
+          name: data.name,
+          description: data.description === null ? undefined : data.description
+        });
+        // Resetear el formulario después de un envío exitoso (solo para nuevos equipos)
         reset();
       }
       
+      // Callback adicional si es necesario
       if (onSave) {
         onSave();
       } else {
@@ -82,13 +78,10 @@ export function TeamForm({ team, onSave, onSuccess }: TeamFormProps) {
       if (onSuccess) {
         onSuccess();
       }
-    };
-
-    toast.promise(promise, {
-      loading: team ? 'Actualizando equipo...' : 'Creando equipo...',
-      success: team ? 'Equipo actualizado exitosamente' : 'Equipo creado exitosamente',
-      error: (err) => `Error: ${err.message}`
-    });
+    } catch (error) {
+      console.error("Error al guardar el equipo:", error);
+      toast.error("Ha ocurrido un error al guardar el equipo");
+    }
   };
 
   return (

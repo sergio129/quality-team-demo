@@ -14,7 +14,7 @@ import { useState } from "react";
 
 interface EditTeamDialogProps {
   team: Team;
-  onSave: () => void;
+  onSave?: () => void; // Ahora es opcional porque SWR se encargará de revalidar
 }
 
 export function EditTeamDialog({ team, onSave }: EditTeamDialogProps) {
