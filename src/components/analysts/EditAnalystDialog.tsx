@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { AnalystForm } from "@/components/analysts/AnalystForm";
+import { CellInfo } from "@/hooks/useAnalysts";
 
 interface EditAnalystDialogProps {
   analyst: QAAnalyst;
-  onSave: () => void;
-  cells: { id: string; name: string; }[];
+  cells: CellInfo[];
 }
 
-export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogProps) {
+export function EditAnalystDialog({ analyst, cells }: EditAnalystDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -27,14 +27,14 @@ export function EditAnalystDialog({ analyst, onSave, cells }: EditAnalystDialogP
         <Button variant="outline" size="sm">
           Editar
         </Button>
-      </DialogTrigger>      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-base">Editar Analista</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystForm 
             analyst={analyst} 
-            onSave={onSave}
             cells={cells}
             onSuccess={() => setOpen(false)}
           />
