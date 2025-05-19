@@ -6,6 +6,7 @@ import { Project } from '@/models/Project';
 import { Card } from '@/components/ui/card';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from '@/components/projects/ChangeProjectStatusDialog';
+import { changeProjectStatus } from '@/hooks/useProjects'; // Importar la función del hook useProjects
 
 interface AnalystWorkloadProps {
   analystId: string;
@@ -125,49 +126,39 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   };
     const availabilityPercentage = calculateAvailability(totalHoursAssigned);
   
-  // Función para actualizar el estado de un proyecto
+  // Función para actualizar el estado de un proyecto utilizando el hook useProjects
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
-      const response = await fetch('/api/projects/status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ projectId, newStatus }),
+      // Usamos la función del hook que incluye todas las notificaciones y revalidaciones
+      await changeProjectStatus(projectId, newStatus);
+      
+      // Actualizar el estado localmente para evitar tener que recargar
+      const updatedList = updatedProjects.map(p => {
+        if ((p.id && p.id === projectId) || p.idJira === projectId) {
+          return {
+            ...p,
+            estado: newStatus,
+            estadoCalculado: newStatus,
+            // Si se certificó, agregar la fecha de certificación
+            ...(newStatus === 'Certificado' && { fechaCertificacion: new Date().toISOString() })
+          };
+        }
+        return p;
       });
       
-      if (response.ok) {
-        // Actualizar el estado localmente para evitar tener que recargar
-        const updatedList = updatedProjects.map(p => {
-          if ((p.id && p.id === projectId) || p.idJira === projectId) {
-            return {
-              ...p,
-              estado: newStatus,
-              estadoCalculado: newStatus,
-              // Si se certificó, agregar la fecha de certificación
-              ...(newStatus === 'Certificado' && { fechaCertificacion: new Date().toISOString() })
-            };
-          }
-          return p;
-        });
-        
-        // Recalcular los proyectos activos y completados
-        const newActiveProjects = updatedList.filter(p => 
-          p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
-        );
-        
-        const newCompletedProjects = updatedList.filter(p => 
-          p.estadoCalculado === 'Certificado'
-        );
-        
-        // Actualizar el estado
-        setProjects(updatedList);
-        
-        return true;
-      } else {
-        console.error('Error al cambiar el estado del proyecto');
-        return false;
-      }
+      // Recalcular los proyectos activos y completados
+      const newActiveProjects = updatedList.filter(p => 
+        p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
+      );
+      
+      const newCompletedProjects = updatedList.filter(p => 
+        p.estadoCalculado === 'Certificado'
+      );
+      
+      // Actualizar el estado
+      setProjects(updatedList);
+      
+      return true;
     } catch (error) {
       console.error('Error al procesar la solicitud:', error);
       return false;

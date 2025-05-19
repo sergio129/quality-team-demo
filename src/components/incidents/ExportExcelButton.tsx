@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { Incident } from '@/models/Incident';
 import { FileDown } from 'lucide-react';
+import { useIncidents } from '@/hooks/useIncidents'; // Importamos el hook
 
 interface ExportExcelButtonProps {
   className?: string;
@@ -41,14 +42,15 @@ export function ExportExcelButton({ className }: ExportExcelButtonProps) {
     { value: "10", label: "Noviembre" },
     { value: "11", label: "Diciembre" }
   ];
+  // Usar el hook useIncidents al nivel del componente (no dentro de una función)
+  const { incidents: allIncidents } = useIncidents();
 
   const handleExport = async () => {
     setIsLoading(true);
     try {
-      // Obtener todos los incidentes
-      const response = await fetch('/api/incidents');
-      const incidents = await response.json() as Incident[];      // Filtrar por mes, año y estado según la selección
-      const filteredIncidents = incidents.filter(incident => {
+      // Usamos los incidentes ya obtenidos por el hook
+        // Filtrar por mes, año y estado según la selección
+      const filteredIncidents = allIncidents.filter(incident => {
         const incidentDate = new Date(incident.fechaReporte || incident.fechaCreacion);
         
         // Filtro por fecha
@@ -61,9 +63,11 @@ export function ExportExcelButton({ className }: ExportExcelButtonProps) {
             incidentDate.getMonth().toString() === month
           );
         }
-        
-        // Filtro por estado
-        const matchesStatusFilter = !isFilteredByStatus || incident.estado === statusFilter;
+          // Filtro por estado
+        let matchesStatusFilter = true;
+        if (isFilteredByStatus) {
+          matchesStatusFilter = incident.estado === statusFilter;
+        }
         
         return matchesDateFilter && matchesStatusFilter;
       });// Crear encabezados y propiedades para el Excel
