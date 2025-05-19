@@ -245,9 +245,8 @@ export function DataTable() {
                   >                    <div className="flex items-center">
                       Descripción {renderSortIcon('description')}
                     </div>
-                  </TableHead>
-                  <TableHead>Proyectos</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  </TableHead>                  <TableHead>Proyectos</TableHead>
+                  <TableHead className="text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -255,43 +254,35 @@ export function DataTable() {
                   <TableRow key={cell.id}>
                     <TableCell className="font-medium">{cell.name}</TableCell>
                     <TableCell>{getTeamName(cell.teamId)}</TableCell>
-                    <TableCell>{cell.description}</TableCell>
-                    <TableCell>
-                      {projectsCountByCell[cell.name.toLowerCase()] ? (
-                        <div className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                          {projectsCountByCell[cell.name.toLowerCase()]} proyectos
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-xs">Sin proyectos</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end items-center">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewProjects(cell)}
-                          className="mr-2"
-                          disabled={!projectsCountByCell[cell.name.toLowerCase()]}
-                        >
-                          Ver Proyectos
-                        </Button>
+                    <TableCell>{cell.description}</TableCell>                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {projectsCountByCell[cell.name.toLowerCase()] ? (
+                          <>
+                            <div className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                              {projectsCountByCell[cell.name.toLowerCase()]} proyectos
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewProjects(cell)}
+                              className="ml-2 text-xs"
+                            >
+                              Ver
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-xs">Sin proyectos</span>
+                        )}
+                      </div>
+                    </TableCell>                    <TableCell className="text-center">
+                      <div className="flex justify-center items-center space-x-2">
                         <EditCellDialog cell={cell} teams={teams} />
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => handleDelete(cell.id)}
-                          className="ml-2"
                         >
                           Eliminar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewProjects(cell)}
-                          className="ml-2"
-                        >
-                          Ver Proyectos
                         </Button>
                       </div>
                     </TableCell>
