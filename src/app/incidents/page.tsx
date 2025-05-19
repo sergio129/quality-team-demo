@@ -1,5 +1,4 @@
 import { IncidentTable } from '@/components/incidents/IncidentTable';
-import { ExportExcelButton } from '@/components/incidents/ExportExcelButton';
 
 export default function IncidentsPage() {
     return (
@@ -7,9 +6,6 @@ export default function IncidentsPage() {
                 <div>
                     <h1 className="text-2xl font-bold mb-2">Sistema de Seguimiento de Incidentes</h1>
                     <p className="text-gray-600">Gestión y seguimiento de incidencias y defectos</p>
-                </div>
-                <div className="flex gap-2">
-                    <ExportExcelButton className="shadow-sm hover:shadow-md transition-shadow" />
                 </div>
             </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

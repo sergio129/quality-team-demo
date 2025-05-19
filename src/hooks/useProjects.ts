@@ -172,7 +172,7 @@ export async function deleteProject(id: string) {
       const response = await fetch(PROJECTS_API, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ idJira: id }),
       });
 
       if (!response.ok) {

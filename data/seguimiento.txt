@@ -622,19 +622,6 @@
     "planTrabajo": "no se ha definido"
   },
   {
-    "idJira": "SRCA-6556",
-    "equipo": "TechBridge",
-    "celula": "Suramericana",
-    "proyecto": "Reestructuración Parametrización \"Prefijos\"",
-    "horas": 4,
-    "dias": 1,
-    "fechaEntrega": "2025-05-21T00:00:00.000Z",
-    "fechaCertificacion": "2025-05-21T00:00:00.000Z",
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "en Desarrollo",
-    "estadoCalculado": "En Progreso"
-  },
-  {
     "idJira": "SRCA-6548",
     "proyecto": "Revisión funcionalidades actuales SARA-Revisión documentación Migración GC sura",
     "equipo": "TechBridge",
@@ -688,17 +675,17 @@
   },
   {
     "idJira": "SRCA-6556",
+    "proyecto": "Reestructuración Parametrización \"Prefijos\"",
     "equipo": "TechBridge",
     "celula": "Suramericana",
-    "proyecto": "Reestructuración Parametrización \"Prefijos\"",
     "horas": 4,
     "dias": 1,
-    "fechaEntrega": "2025-05-21T00:00:00.000Z",
-    "fechaCertificacion": "2025-05-21T00:00:00.000Z",
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "en Desarrollo",
-    "estadoCalculado": "En Progreso",
+    "fechaEntrega": "2025-05-19T00:00:00.000Z",
     "fechaRealEntrega": "2025-05-19T00:00:00.000Z",
-    "diasRetraso": 0
+    "diasRetraso": 0,
+    "fechaCertificacion": "2025-05-20T00:00:00.000Z",
+    "estadoCalculado": "En Progreso",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "en desarrollo"
   }
 ]

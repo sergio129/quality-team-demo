@@ -213,9 +213,9 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         try {
             setIsSubmitting(true);
             
-            if (editingProject && editingProject.id) {
-                // Actualizar proyecto existente
-                await updateProject(editingProject.id, newProject);
+            if (editingProject && editingProject.idJira) {
+                // Actualizar proyecto existente usando idJira como identificador único
+                await updateProject(editingProject.idJira, newProject);
             } else {
                 // Crear nuevo proyecto
                 await createProject(newProject);
