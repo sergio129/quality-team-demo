@@ -24,12 +24,15 @@ export class TeamService {
         teams.push(team);
         await fs.writeFile(teamsFilePath, JSON.stringify(teams, null, 2));
         return team;
-    }
-
-    async updateTeam(id: string, team: Team): Promise<Team | null> {
+    }    async updateTeam(id: string, team: Team): Promise<Team | null> {
         const teams = await this.getAllTeams();
         const index = teams.findIndex(t => t.id === id);
         if (index === -1) return null;
+        
+        // Mantener miembros si existen pero no están en la actualización
+        if (teams[index].members && !team.members) {
+            team.members = teams[index].members;
+        }
         
         teams[index] = { ...teams[index], ...team };
         await fs.writeFile(teamsFilePath, JSON.stringify(teams, null, 2));

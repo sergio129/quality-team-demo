@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
 import { EditTeamDialog } from './EditTeamDialog';
+import { TeamMembersDialog } from './TeamMembersDialog';
 import { toast } from 'sonner';
 import { useTeams, deleteTeam } from '@/hooks/useTeams';
+import { useAnalysts } from '@/hooks/useAnalysts';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Team, 'name' | 'description'>;
@@ -22,6 +24,8 @@ type SortDirection = 'asc' | 'desc';
 
 export function DataTable() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +37,7 @@ export function DataTable() {
 
   // Usar SWR para obtener datos
   const { teams, isLoading, isError, error } = useTeams();
+  const { analysts } = useAnalysts();
 
   useEffect(() => {
     // Resetear a la primera página cuando cambia el término de búsqueda
@@ -114,8 +119,26 @@ export function DataTable() {
       : <span className="text-blue-600 ml-1">↓</span>;
   }, [sortField, sortDirection]);
 
+  const handleOpenMembersDialog = useCallback((team: Team) => {
+    setSelectedTeam(team);
+    setIsMembersDialogOpen(true);
+  }, []);
+
+  const handleCloseMembersDialog = useCallback(() => {
+    setIsMembersDialogOpen(false);
+    setSelectedTeam(null);
+  }, []);
+
   return (
     <div>
+      {selectedTeam && (
+        <TeamMembersDialog
+          team={selectedTeam}
+          isOpen={isMembersDialogOpen}
+          onClose={handleCloseMembersDialog}
+        />
+      )}
+
       <div className="flex items-center py-4">
         <Input
           placeholder="Buscar equipos..."
@@ -164,8 +187,7 @@ export function DataTable() {
       ) : (
         <>
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+            <Table>              <TableHeader>
                 <TableRow>
                   <TableHead 
                     className="cursor-pointer hover:bg-gray-50"
@@ -183,6 +205,7 @@ export function DataTable() {
                       Descripción {renderSortIcon('description')}
                     </div>
                   </TableHead>
+                  <TableHead>Miembros</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -191,7 +214,41 @@ export function DataTable() {
                   <TableRow key={team.id}>
                     <TableCell className="font-medium">{team.name}</TableCell>
                     <TableCell>{team.description}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {team.members && team.members.length > 0 ? (
+                          <>
+                            {team.members.slice(0, 3).map(memberId => {
+                              const analyst = analysts.find(a => a.id === memberId);
+                              return (
+                                <span 
+                                  key={memberId}
+                                  className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                                  title={analyst?.name || "Analista"}
+                                >
+                                  {analyst?.name?.split(' ')[0] || "Analista"}
+                                </span>
+                              );
+                            })}
+                            {team.members.length > 3 && (
+                              <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                                +{team.members.length - 3}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-sm">Sin miembros</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => handleOpenMembersDialog(team)}
+                      >
+                        Asignar Miembros
+                      </Button>
                       <EditTeamDialog team={team} />
                       <Button
                         variant="destructive"

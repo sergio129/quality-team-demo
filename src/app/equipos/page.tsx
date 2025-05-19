@@ -55,15 +55,29 @@ export default function TeamsPage() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-100 p-4">
-              <h3 className="font-medium text-blue-800 mb-2">Próximas funcionalidades</h3>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Asignación de miembros a equipos</li>
-                <li>• Visualización de carga de trabajo por equipo</li>
-                <li>• Métricas de rendimiento por equipo</li>
-              </ul>
+            </div>            <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-100 p-4">
+              <h3 className="font-medium text-blue-800 mb-2">Funcionalidades</h3>
+              <div className="text-sm space-y-3">
+                <div>
+                  <div className="font-medium text-green-700 flex items-center">
+                    <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                    </svg>
+                    Asignación de miembros a equipos
+                  </div>
+                  <p className="text-gray-600 text-xs pl-5 mt-1">
+                    Gestione qué analistas forman parte de cada equipo
+                  </p>
+                </div>
+                
+                <div className="text-blue-700 space-y-1 pt-2 border-t border-blue-200">
+                  <h4 className="font-medium">Próximamente:</h4>
+                  <ul className="space-y-1">
+                    <li>• Visualización de carga de trabajo por equipo</li>
+                    <li>• Métricas de rendimiento por equipo</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
