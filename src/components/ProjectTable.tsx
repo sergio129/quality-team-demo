@@ -842,8 +842,7 @@ export default function ProjectTable() {
                                         <span className="mr-1">Certificación</span>
                                         {getSortIcon('fechaCertificacion')}
                                     </div>
-                                </th>
-                                <th
+                                </th>                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('diasRetraso')}
                                 >
@@ -851,15 +850,8 @@ export default function ProjectTable() {
                                         <span className="mr-1">Días Retraso</span>
                                         {getSortIcon('diasRetraso')}
                                     </div>
-                                </th>                                <th 
-                                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
-                                    onClick={() => requestSort('estadoCalculado')}
-                                >
-                                    <div className="flex items-center">
-                                        <span className="mr-1">Estado</span>
-                                        {getSortIcon('estadoCalculado')}
-                                    </div>
-                                </th>                                <th
+                                </th>                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
+                                <th 
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('estadoCalculado')}
                                 >
@@ -868,7 +860,6 @@ export default function ProjectTable() {
                                         {getSortIcon('estadoCalculado')}
                                     </div>
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
                             </tr>
@@ -906,31 +897,32 @@ export default function ProjectTable() {
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 {formatDate(project.fechaCertificacion)}
                                             </span>                                        )}
-                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
-                                        {project.estadoCalculado ? (
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                project.estadoCalculado === 'Por Iniciar' 
-                                                    ? 'bg-amber-100 text-amber-800' 
-                                                    : project.estadoCalculado === 'En Progreso'
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-green-100 text-green-800'
-                                            }`}>
-                                                {project.estadoCalculado}
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                Sin estado
-                                            </span>
-                                        )}
-                                        <div className="mt-1">
-                                            <ChangeProjectStatusDialog
-                                                project={project}
-                                                onStatusChange={handleStatusChange}
-                                            />
+                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900">
+                                        <div className="flex flex-col items-start">
+                                            {project.estadoCalculado ? (
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    project.estadoCalculado === 'Por Iniciar' 
+                                                        ? 'bg-amber-100 text-amber-800' 
+                                                        : project.estadoCalculado === 'En Progreso'
+                                                            ? 'bg-blue-100 text-blue-800'
+                                                            : 'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {project.estadoCalculado}
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    Sin estado
+                                                </span>
+                                            )}
+                                            <div className="mt-1">
+                                                <ChangeProjectStatusDialog
+                                                    project={project}
+                                                    onStatusChange={handleStatusChange}
+                                                />
+                                            </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td>
                                     <td className="px-4 py-2 text-sm whitespace-nowrap">                                        <button
                                             onClick={() => {

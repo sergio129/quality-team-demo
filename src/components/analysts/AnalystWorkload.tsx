@@ -11,7 +11,8 @@ interface AnalystWorkloadProps {
   analystId: string;
 }
 
-export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {  const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
+export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
+  const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   

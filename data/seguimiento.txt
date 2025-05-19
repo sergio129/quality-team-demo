@@ -654,5 +654,18 @@
     "fechaCertificacion": "2025-05-23T00:00:00.000Z",
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "En desarrollo"
+  },
+  {
+    "idJira": "SBSF-1824",
+    "proyecto": "Pruebas funcionales Apps Servidor LAN 172.16.5.46 & DMZ 172.16.5.201",
+    "equipo": "Comdata",
+    "celula": "Comdata",
+    "horas": 74,
+    "dias": 9,
+    "fechaEntrega": "2025-05-20T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-30T00:00:00.000Z",
+    "estadoCalculado": "Por Iniciar",
+    "analistaProducto": "Leidy Iral",
+    "planTrabajo": "En curso"
   }
 ]
