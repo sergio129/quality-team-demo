@@ -209,8 +209,7 @@ export function IncidentTable() {
         const clientSet = new Set(incidents.map(i => i.cliente).filter(Boolean));
         return Array.from(clientSet);
     }, [incidents]);    return (
-        <div>
-            <div className="flex justify-between items-center mb-4">
+        <div>            <div className="flex justify-between items-center mb-4">
                 <Button
                     data-test-id="new-incident-btn"
                     onClick={() => {
@@ -220,10 +219,6 @@ export function IncidentTable() {
                 >
                     Nuevo Incidente
                 </Button>
-                
-                <div className="flex items-center gap-2">
-                    <ExportExcelButton />
-                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">

@@ -8,7 +8,6 @@ import { Select } from '@/components/ui/select';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
-import { Incident } from '@/models/Incident';
 import { FileDown } from 'lucide-react';
 import { useIncidents } from '@/hooks/useIncidents'; // Importamos el hook
 
