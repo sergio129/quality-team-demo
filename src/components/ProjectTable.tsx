@@ -805,8 +805,7 @@ export default function ProjectTable() {
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}
                 />
-            ) : (
-                <div className="overflow-x-auto bg-white rounded-lg shadow">
+            ) : (                <div className="overflow-x-auto bg-white rounded-lg shadow">
                     <table className="min-w-full">
                         <thead>
                             <tr>
@@ -842,7 +841,8 @@ export default function ProjectTable() {
                                         <span className="mr-1">Certificación</span>
                                         {getSortIcon('fechaCertificacion')}
                                     </div>
-                                </th>                                <th
+                                </th>
+                                <th
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('diasRetraso')}
                                 >
@@ -850,7 +850,8 @@ export default function ProjectTable() {
                                         <span className="mr-1">Días Retraso</span>
                                         {getSortIcon('diasRetraso')}
                                     </div>
-                                </th>                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Analista QA</th>
                                 <th 
                                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 cursor-pointer hover:bg-gray-100 group min-w-[140px]"
                                     onClick={() => requestSort('estadoCalculado')}
@@ -863,9 +864,9 @@ export default function ProjectTable() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Plan de Trabajo</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Acciones</th>
                             </tr>
-                        </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredProjects.filter(project => project && project.idJira).map((project, index) => (<tr key={index} className="hover:bg-gray-50 transition-colors">
+                        </thead>            <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredProjects.filter(project => project && project.idJira).map((project, index) => (
+                                <tr key={index} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">
                                         {renderJiraId(project.idJira)}
                                     </td>
@@ -896,8 +897,11 @@ export default function ProjectTable() {
                                         {project.fechaCertificacion && (
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 {formatDate(project.fechaCertificacion)}
-                                            </span>                                        )}
-                                    </td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
+                                    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
                                     <td className="px-4 py-2 text-sm text-gray-900">
                                         <div className="flex flex-col items-start">
                                             {project.estadoCalculado ? (
@@ -924,7 +928,8 @@ export default function ProjectTable() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td>
-                                    <td className="px-4 py-2 text-sm whitespace-nowrap">                                        <button
+                                    <td className="px-4 py-2 text-sm whitespace-nowrap">
+                                        <button
                                             onClick={() => {
                                                 if (!project.idJira) {
                                                     toast.error('No se puede editar un proyecto sin ID de Jira');
@@ -937,7 +942,9 @@ export default function ProjectTable() {
                                             className="text-blue-600 hover:text-blue-800 mr-2"
                                         >
                                             Editar
-                                        </button>                                        <button                                            onClick={() => {
+                                        </button>
+                                        <button
+                                            onClick={() => {
                                                 if (!project.idJira) {
                                                     toast.error('No se puede eliminar un proyecto sin ID de Jira');
                                                     return;
