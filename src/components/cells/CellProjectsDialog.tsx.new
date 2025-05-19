@@ -1,0 +1,277 @@
+'use client';
+
+import { useState, useMemo } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Cell } from '@/models/Cell';
+import { useProjects } from '@/hooks/useProjects';
+import { getJiraUrl } from '@/utils/jiraUtils';
+
+interface CellProjectsDialogProps {
+  cell: Cell;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialogProps) {
+  const { projects, isLoading } = useProjects();
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; // Mostrar 10 proyectos por página
+
+  // Filtrar proyectos por la célula actual
+  const cellProjects = useMemo(() => {
+    return projects.filter(project => 
+      project.celula?.toLowerCase() === cell.name.toLowerCase()
+    );
+  }, [projects, cell.name]);
+
+  // Filtrar proyectos por término de búsqueda
+  const filteredProjects = useMemo(() => {
+    if (!searchTerm.trim()) return cellProjects;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return cellProjects.filter(project => 
+      project.proyecto.toLowerCase().includes(searchLower) ||
+      project.idJira.toLowerCase().includes(searchLower) ||
+      project.descripcion?.toLowerCase().includes(searchLower) ||
+      project.estado?.toLowerCase().includes(searchLower)
+    );
+  }, [cellProjects, searchTerm]);
+  
+  // Calcular proyectos para la página actual
+  const currentProjects = useMemo(() => {
+    const indexOfLastProject = currentPage * itemsPerPage;
+    const indexOfFirstProject = indexOfLastProject - itemsPerPage;
+    return filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  }, [filteredProjects, currentPage, itemsPerPage]);
+  
+  // Calcular número total de páginas
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+
+  // Obtener estado en formato legible y su clase CSS
+  const getStatusInfo = (project: any) => {
+    const estado = project.estado || project.estadoCalculado || 'Por Iniciar';
+    
+    let statusClass = 'bg-gray-100 text-gray-800';
+    if (estado.includes('Progreso') || estado === 'En Progreso') {
+      statusClass = 'bg-blue-100 text-blue-800';
+    } else if (estado.includes('Certificado') || estado === 'Completado' || estado === 'Terminado') {
+      statusClass = 'bg-green-100 text-green-800';
+    } else if (estado.includes('Iniciar') || estado === 'Por Iniciar') {
+      statusClass = 'bg-yellow-100 text-yellow-800';
+    }
+    
+    return { text: estado, className: statusClass };
+  };
+
+  // Formatear fecha para visualización
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+  
+  // Al cambiar el término de búsqueda, resetear a la primera página
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>Proyectos de célula: {cell.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="py-4">
+          <div className="flex items-center justify-between pb-4">
+            <Input
+              placeholder="Buscar proyectos..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="max-w-sm"
+            />
+            <div className="text-sm text-muted-foreground">
+              Total: {filteredProjects.length} proyecto{filteredProjects.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+              <p className="mt-2">Cargando proyectos...</p>
+            </div>
+          ) : filteredProjects.length === 0 ? (
+            <div className="text-center py-8 border rounded-md">
+              <p className="text-gray-500">No hay proyectos asignados a esta célula</p>
+            </div>
+          ) : (
+            <div className="border rounded-md">
+              <div className="max-h-[50vh] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky top-0 bg-white z-10">ID Jira</TableHead>
+                      <TableHead className="sticky top-0 bg-white z-10">Proyecto</TableHead>
+                      <TableHead className="sticky top-0 bg-white z-10">Estado</TableHead>
+                      <TableHead className="sticky top-0 bg-white z-10">Fecha Entrega</TableHead>
+                      <TableHead className="sticky top-0 bg-white z-10">Analista</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentProjects.map((project, index) => {
+                      const status = getStatusInfo(project);
+                      
+                      return (
+                        <TableRow key={`${project.id || project.idJira}-${index}`}>
+                          <TableCell>
+                            <a 
+                              href={getJiraUrl(project.idJira)} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {project.idJira}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{project.proyecto}</div>
+                              {project.descripcion && (
+                                <div className="text-xs text-gray-500 truncate max-w-xs">
+                                  {project.descripcion}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
+                              {status.text}
+                            </span>
+                          </TableCell>
+                          <TableCell>{formatDate(project.fechaEntrega)}</TableCell>
+                          <TableCell>{project.analista || project.analistaProducto || '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Controles de paginación */}
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center p-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Mostrando {Math.min(itemsPerPage, filteredProjects.length)} de {filteredProjects.length}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    >
+                      Anterior
+                    </Button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {totalPages <= 5 ? (
+                        // Si hay 5 o menos páginas, mostrar todas
+                        [...Array(totalPages)].map((_, idx) => (
+                          <Button 
+                            key={idx}
+                            variant={currentPage === idx + 1 ? "default" : "outline"}
+                            size="sm"
+                            className="w-8"
+                            onClick={() => setCurrentPage(idx + 1)}
+                          >
+                            {idx + 1}
+                          </Button>
+                        ))
+                      ) : (
+                        // Si hay más de 5 páginas, mostrar un subconjunto centrado en la página actual
+                        <>
+                          {currentPage > 2 && (
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              className="w-8"
+                              onClick={() => setCurrentPage(1)}
+                            >
+                              1
+                            </Button>
+                          )}
+                          
+                          {currentPage > 3 && <span className="px-1">...</span>}
+                          
+                          {[...Array(3)].map((_, idx) => {
+                            let pageNum;
+                            if (currentPage === 1) {
+                              pageNum = currentPage + idx;
+                            } else if (currentPage === totalPages) {
+                              pageNum = currentPage - 2 + idx;
+                            } else {
+                              pageNum = currentPage - 1 + idx;
+                            }
+                            
+                            // Solo mostrar números de página válidos
+                            if (pageNum > 0 && pageNum <= totalPages) {
+                              return (
+                                <Button 
+                                  key={idx}
+                                  variant={currentPage === pageNum ? "default" : "outline"}
+                                  size="sm"
+                                  className="w-8"
+                                  onClick={() => setCurrentPage(pageNum)}
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })}
+                          
+                          {currentPage < totalPages - 2 && <span className="px-1">...</span>}
+                          
+                          {currentPage < totalPages - 1 && (
+                            <Button 
+                              variant="outline"
+                              size="sm"
+                              className="w-8"
+                              onClick={() => setCurrentPage(totalPages)}
+                            >
+                              {totalPages}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    >
+                      Siguiente
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

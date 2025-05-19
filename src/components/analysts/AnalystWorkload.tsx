@@ -24,27 +24,42 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const today = new Date("2025-05-16"); // Fecha simulada para desarrollo
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
-  
-  // Filtrar proyectos del analista usando useMemo para optimizar rendimiento
-  const projects = useMemo(() => {
+  // Filtrar todos los proyectos asignados al analista (independiente de la fecha)
+  const allAnalystProjects = useMemo(() => {
     if (!analystId || !allProjects?.length) return [];
     
-    // Filtrar por analista y fecha
     return allProjects.filter(project => {
-      // Verificar si el proyecto está asignado al analista (por ID o nombre)
+      // Verificar si el proyecto está asignado al analista de cualquier forma posible
       const isAssignedToAnalyst = 
-        project.analista === analystId ||
-        (analyst && project.analista === analyst.name);
+        // Por ID en el campo analista (si existe)
+        (project.analista && project.analista === analystId) ||
+        // Por nombre en el campo analista (si existe)
+        (analyst && project.analista && project.analista === analyst.name) ||
+        // Por nombre de analista en el campo analistaProducto
+        (analyst && project.analistaProducto && project.analistaProducto === analyst.name) ||
+        // Por ID de analista en un array de analistas (si existe)
+        (project.analistas && Array.isArray(project.analistas) && project.analistas.includes(analystId));
       
-      // Verificar mes y año del proyecto
-      const projectDate = new Date(project.fechaEntrega);
-      const matchesDate = 
-        projectDate.getMonth() === currentMonth && 
-        projectDate.getFullYear() === currentYear;
-      
-      return isAssignedToAnalyst && matchesDate;
+      return isAssignedToAnalyst;
     });
-  }, [analystId, allProjects, analyst, currentMonth, currentYear]);
+  }, [analystId, allProjects, analyst]);
+  
+  // Filtrar solo los proyectos del mes actual para cálculos de carga y visualización
+  const projects = useMemo(() => {
+    return allAnalystProjects.filter(project => {
+      // Verificar si el proyecto está en el mes actual
+      if (project.fechaEntrega) {
+        const entregaDate = new Date(project.fechaEntrega);
+        
+        // Proyecto pertenece al mes actual si su fecha de entrega está en el mes actual
+        return (
+          entregaDate.getMonth() === currentMonth && 
+          entregaDate.getFullYear() === currentYear
+        );
+      }
+      return false;
+    });
+  }, [allAnalystProjects, currentMonth, currentYear]);
   
   // Obtener datos del analista
   useEffect(() => {
@@ -129,14 +144,17 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   };
 
   const workload = getWorkloadLevel(totalHoursAssigned);
-  
-  // Calcular la disponibilidad en función de las horas asignadas
+    // Calcular la disponibilidad en función de las horas asignadas
   const calculateAvailability = (hoursAssigned: number) => {
-    const usedCapacity = Math.min(hoursAssigned / MAX_MONTHLY_HOURS, 1); // No superar 100%
+    // Asegurar que no sea negativo incluso si se sobrepasan las horas
+    const usedCapacity = Math.min(hoursAssigned / MAX_MONTHLY_HOURS, 1); // No superar el 100% de uso
+    // Redondear a un número entero para mostrar un porcentaje limpio
     const availabilityPercentage = Math.max(0, Math.round((1 - usedCapacity) * 100)); // No menor que 0%
     return availabilityPercentage;
   };
-    const availabilityPercentage = calculateAvailability(totalHoursAssigned);
+
+  // Calcular disponibilidad basada en horas del mes actual
+  const availabilityPercentage = calculateAvailability(totalHoursAssigned);
     // Función para actualizar el estado de un proyecto utilizando el hook useProjects
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
@@ -176,26 +194,34 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   if (!analyst) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
   }
-  
-  // Mostrar mensaje si no hay proyectos
+    // Mostrar mensaje si no hay proyectos en el mes actual
   if (projects.length === 0) {
-    return <div className="py-4 text-center">No hay proyectos asignados a este analista en el periodo actual</div>;
+    if (allAnalystProjects.length > 0) {
+      return (
+        <div className="py-4 text-center">
+          <p className="text-gray-600 mb-2">No hay proyectos asignados a este analista en el mes actual</p>
+          <p className="text-sm text-gray-500">
+            (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en otros períodos)
+          </p>
+        </div>
+      );
+    } else {
+      return <div className="py-4 text-center">No hay proyectos asignados a este analista</div>;
+    }
   }
   
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 justify-center">
-        <div className={`${workload.color.replace('bg-', 'bg-').replace('text-', 'text-')} p-3 rounded-lg text-center w-32`}>
+      <div className="flex flex-wrap gap-3 justify-center">        <div className={`${workload.color} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
-          <p className="text-xs font-medium">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
+          <p className="text-xs font-medium font-mono">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
         </div>
         <div className="bg-blue-50 p-3 rounded-lg text-center w-32">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
           <p className="text-xl font-bold text-blue-600">{activeProjects.length}</p>
           <p className="text-xs text-gray-500">en curso</p>
-        </div>
-        <div className={`p-3 rounded-lg text-center w-32 ${
+        </div>        <div className={`p-3 rounded-lg text-center w-32 ${
           availabilityPercentage > 70 ? 'bg-green-50' : 
           availabilityPercentage > 30 ? 'bg-yellow-50' :
           'bg-red-50'
@@ -205,13 +231,18 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
             availabilityPercentage > 70 ? 'text-green-600' : 
             availabilityPercentage > 30 ? 'text-yellow-600' :
             'text-red-600'
-          }`}>{availabilityPercentage}%</p>          <p className="text-xs text-gray-500">para proyectos</p>
+          }`}>{availabilityPercentage}%</p>
+          <p className="text-xs text-gray-500">para proyectos</p>
         </div>
       </div>
 
-      {/* Lista de proyectos activos */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium border-b pb-1">Proyectos Asignados</h3>
+      {/* Lista de proyectos activos */}      <div className="space-y-3">
+        <h3 className="text-sm font-medium border-b pb-1">
+          Proyectos Asignados 
+          <span className="text-gray-500 ml-2 text-xs">
+            {new Date(currentYear, currentMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+          </span>
+        </h3>
         
         {activeProjects.length > 0 ? (
           <div className="space-y-2">
@@ -269,11 +300,15 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           </div>
         )}
       </div>
-      
-      {/* Proyectos completados (certificados) */}
+        {/* Proyectos completados (certificados) */}
       {completedProjects.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium border-b pb-1">Proyectos Certificados</h3>
+          <h3 className="text-sm font-medium border-b pb-1">
+            Proyectos Certificados
+            <span className="text-gray-500 ml-2 text-xs">
+              {new Date(currentYear, currentMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+            </span>
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {completedProjects.map((project) => (
               <div
