@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { Project } from '@/models/Project';
 import { Card } from '@/components/ui/card';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from '@/components/projects/ChangeProjectStatusDialog';
-import { changeProjectStatus } from '@/hooks/useProjects'; // Importar la función del hook useProjects
+import { useProjects, changeProjectStatus } from '@/hooks/useProjects'; // Importamos el hook completo y la función
 
 interface AnalystWorkloadProps {
   analystId: string;
@@ -14,96 +14,108 @@ interface AnalystWorkloadProps {
 
 export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
+  // Usar el hook para obtener todos los proyectos
+  const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useProjects();
+  
+  // Fecha simulada para desarrollo (o fecha actual para producción)
+  // NOTA: En ambiente de producción, usar: const today = new Date();
+  const today = new Date("2025-05-16"); // Fecha simulada para desarrollo
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  // Filtrar proyectos del analista usando useMemo para optimizar rendimiento
+  const projects = useMemo(() => {
+    if (!analystId || !allProjects?.length) return [];
+    
+    // Filtrar por analista y fecha
+    return allProjects.filter(project => {
+      // Verificar si el proyecto está asignado al analista (por ID o nombre)
+      const isAssignedToAnalyst = 
+        project.analista === analystId ||
+        (analyst && project.analista === analyst.name);
+      
+      // Verificar mes y año del proyecto
+      const projectDate = new Date(project.fechaEntrega);
+      const matchesDate = 
+        projectDate.getMonth() === currentMonth && 
+        projectDate.getFullYear() === currentYear;
+      
+      return isAssignedToAnalyst && matchesDate;
+    });
+  }, [analystId, allProjects, analyst, currentMonth, currentYear]);
+  
+  // Obtener datos del analista
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAnalyst = async () => {
       setLoading(true);
       try {
-        // NOTA: En este ambiente de desarrollo usamos una fecha simulada 
-        // Para producción, descomentar la línea de abajo y comentar la siguiente
-        // const today = new Date(); 
-        const today = new Date("2025-05-16"); // Fecha simulada para desarrollo
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-
-        console.log(`Fetching projects for month: ${currentMonth}, year: ${currentYear}`);
-
-        // Obtener datos del analista
         const analystResponse = await fetch(`/api/analysts/${analystId}`);
         if (analystResponse.ok) {
           const analystData = await analystResponse.json();
           setAnalyst(analystData);
-          
-          // Obtener proyectos asignados al analista del mes actual (usando ID, nombre y filtro de fecha)
-          const projectsUrl = `/api/projects?analystId=${analystId}&analystName=${encodeURIComponent(analystData.name)}&month=${currentMonth}&year=${currentYear}`;
-          console.log(`Fetching from: ${projectsUrl}`);
-          const projectsResponse = await fetch(projectsUrl);
-          if (projectsResponse.ok) {
-            const projectsData = await projectsResponse.json();
-            console.log(`Received ${projectsData.length} projects:`, projectsData);
-            setProjects(projectsData);
-          }
-        } else {
-          // Si no se puede obtener el analista, intentar con solo el ID
-          const projectsUrl = `/api/projects?analystId=${analystId}&month=${currentMonth}&year=${currentYear}`;
-          console.log(`Fallback fetching from: ${projectsUrl}`);
-          const projectsResponse = await fetch(projectsUrl);
-          if (projectsResponse.ok) {
-            const projectsData = await projectsResponse.json();
-            console.log(`Received ${projectsData.length} projects:`, projectsData);
-            setProjects(projectsData);
-          }
         }
       } catch (error) {
-        console.error('Error fetching analyst workload:', error);
+        console.error('Error fetching analyst data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     if (analystId) {
-      fetchData();
+      fetchAnalyst();
     }
-  }, [analystId]);
-  // Calcular estadísticas de carga de trabajo
-  const totalHoursAssigned = projects.reduce((total, project) => {
-    return total + (project.horasEstimadas || project.horas || 0);
-  }, 0);
-  // Determinar el estado real de cada proyecto y actualizar la lista
-  const today = new Date(); // Usar la fecha actual para comparaciones
-  
-  // Determinar el estado real de cada proyecto
-  const updatedProjects = projects.map(p => {
-    // Copiar el proyecto para no mutar el original
-    const updatedProject = { ...p };
+  }, [analystId]);  // Usar useMemo para el cálculo de estados y proyectos filtrados
+  // Esto mejora el rendimiento al evitar cálculos innecesarios en cada renderizado
+  const { 
+    updatedProjects,
+    activeProjects,
+    completedProjects,
+    totalHoursAssigned
+  } = useMemo(() => {
+    // Determinar el estado real de cada proyecto
+    const updatedProjects = projects.map(p => {
+      // Copiar el proyecto para no mutar el original
+      const updatedProject = { ...p };
+      
+      // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
+      if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
+        updatedProject.estadoCalculado = 'Certificado';
+      }
+      // Si la fecha de entrega es en el futuro, está "Por Iniciar"
+      else if (new Date(p.fechaEntrega) > today) {
+        updatedProject.estadoCalculado = 'Por Iniciar';
+      }
+      // De lo contrario, está "En Progreso"
+      else {
+        updatedProject.estadoCalculado = 'En Progreso';
+      }
+      
+      return updatedProject;
+    });
     
-    // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
-    if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
-      updatedProject.estadoCalculado = 'Certificado';
-    }
-    // Si la fecha de entrega es en el futuro, está "Por Iniciar"
-    else if (new Date(p.fechaEntrega) > today) {
-      updatedProject.estadoCalculado = 'Por Iniciar';
-    }
-    // De lo contrario, está "En Progreso"
-    else {
-      updatedProject.estadoCalculado = 'En Progreso';
-    }
+    // Filtrar los proyectos activos y completados
+    const activeProjects = updatedProjects.filter(p => 
+      p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
+    );
     
-    return updatedProject;
-  });
-  
-  // Filtrar los proyectos activos: Por Iniciar o En Progreso
-  const activeProjects = updatedProjects.filter(p => 
-    p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
-  );
-
-  // Filtrar los proyectos completados (certificados)
-  const completedProjects = updatedProjects.filter(p => 
-    p.estadoCalculado === 'Certificado'
-  );
+    const completedProjects = updatedProjects.filter(p => 
+      p.estadoCalculado === 'Certificado'
+    );
+    
+    // Calcular horas asignadas
+    const totalHoursAssigned = updatedProjects.reduce((total, project) => {
+      return total + (project.horasEstimadas || project.horas || 0);
+    }, 0);
+    
+    return { 
+      updatedProjects, 
+      activeProjects, 
+      completedProjects, 
+      totalHoursAssigned 
+    };
+  }, [projects, today]);
   // Capacidad máxima de horas mensuales
   const MAX_MONTHLY_HOURS = 180;
 
@@ -125,38 +137,24 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     return availabilityPercentage;
   };
     const availabilityPercentage = calculateAvailability(totalHoursAssigned);
-  
-  // Función para actualizar el estado de un proyecto utilizando el hook useProjects
+    // Función para actualizar el estado de un proyecto utilizando el hook useProjects
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
-      // Usamos la función del hook que incluye todas las notificaciones y revalidaciones
-      await changeProjectStatus(projectId, newStatus);
+      // Identificar si necesitamos usar el id o idJira para actualizar el proyecto
+      const project = projects.find(p => p.id === projectId || p.idJira === projectId);
       
-      // Actualizar el estado localmente para evitar tener que recargar
-      const updatedList = updatedProjects.map(p => {
-        if ((p.id && p.id === projectId) || p.idJira === projectId) {
-          return {
-            ...p,
-            estado: newStatus,
-            estadoCalculado: newStatus,
-            // Si se certificó, agregar la fecha de certificación
-            ...(newStatus === 'Certificado' && { fechaCertificacion: new Date().toISOString() })
-          };
-        }
-        return p;
-      });
+      if (!project) {
+        console.error('Proyecto no encontrado:', projectId);
+        return false;
+      }
       
-      // Recalcular los proyectos activos y completados
-      const newActiveProjects = updatedList.filter(p => 
-        p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
+      // Usar la función del hook que incluye notificaciones, revalidaciones y manejo de errores
+      // El hook se encargará de actualizar el estado global y SWR revalidará los datos automáticamente
+      await changeProjectStatus(
+        project.id || projectId, 
+        newStatus,
+        project.idJira // Pasar el idJira como tercer parámetro
       );
-      
-      const newCompletedProjects = updatedList.filter(p => 
-        p.estadoCalculado === 'Certificado'
-      );
-      
-      // Actualizar el estado
-      setProjects(updatedList);
       
       return true;
     } catch (error) {
@@ -164,12 +162,24 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       return false;
     }
   };
-
-  if (loading) {
+  // Mostrar mensaje de carga mientras se obtienen los datos
+  if (loading || isLoadingProjects) {
     return <div className="py-4 text-center">Cargando datos...</div>;
   }
+  
+  // Mostrar mensaje de error si hay algún problema
+  if (isProjectsError) {
+    return <div className="py-4 text-center text-red-500">Error al cargar los proyectos</div>;
+  }
+  
+  // Mostrar mensaje si no se encuentra el analista
   if (!analyst) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
+  }
+  
+  // Mostrar mensaje si no hay proyectos
+  if (projects.length === 0) {
+    return <div className="py-4 text-center">No hay proyectos asignados a este analista en el periodo actual</div>;
   }
   
   return (
