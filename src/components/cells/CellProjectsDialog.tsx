@@ -89,11 +89,10 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
           ) : filteredProjects.length === 0 ? (
             <div className="text-center py-8 border rounded-md">
               <p className="text-gray-500">No hay proyectos asignados a esta célula</p>
-            </div>
-          ) : (
-            <div className="border rounded-md">
+            </div>          ) : (
+            <div className="border rounded-md max-h-[60vh] overflow-auto">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow>
                     <TableHead>ID Jira</TableHead>
                     <TableHead>Proyecto</TableHead>
@@ -103,11 +102,11 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProjects.map((project) => {
+                  {filteredProjects.map((project, index) => {
                     const status = getStatusInfo(project);
                     
                     return (
-                      <TableRow key={project.id || project.idJira}>
+                      <TableRow key={`${project.id || project.idJira}-${index}`}>
                         <TableCell>
                           <a 
                             href={getJiraUrl(project.idJira)} 
