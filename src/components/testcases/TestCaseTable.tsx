@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import TestCaseForm from './TestCaseForm';
 import TestCaseDetailsDialog from './TestCaseDetailsDialog';
 import { toast } from 'sonner';
@@ -90,7 +91,6 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
   const projectName = projectId && projects ? 
     projects.find(p => p.id === projectId || p.idJira === projectId)?.proyecto || 'Proyecto no encontrado' :
     'Todos los proyectos';
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -99,12 +99,16 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
           <p className="text-gray-500">{projectName}</p>
         </div>
         
-        <Button onClick={() => {
-          setEditingTestCase(null);
-          setIsFormOpen(true);
-        }}>
-          Nuevo Caso de Prueba
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => {
+              setEditingTestCase(null);
+              setIsFormOpen(true);
+            }}
+          >
+            Nuevo Caso de Prueba
+          </Button>
+        </div>
       </div>
       
       {/* Filtros */}
@@ -190,17 +194,16 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
                   <TableCell className="font-medium">{testCase.codeRef}</TableCell>
                   <TableCell>{testCase.userStoryId}</TableCell>
                   <TableCell>{testCase.name}</TableCell>
-                  <TableCell>{testCase.testType}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      testCase.status === 'Exitoso' ? 'bg-green-100 text-green-800' :
-                      testCase.status === 'Fallido' ? 'bg-red-100 text-red-800' :
-                      testCase.status === 'Bloqueado' ? 'bg-orange-100 text-orange-800' :
-                      testCase.status === 'En progreso' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                  <TableCell>{testCase.testType}</TableCell>                  <TableCell>
+                    <Badge variant={
+                      testCase.status === 'Exitoso' ? 'success' :
+                      testCase.status === 'Fallido' ? 'destructive' :
+                      testCase.status === 'Bloqueado' ? 'warning' :
+                      testCase.status === 'En progreso' ? 'default' :
+                      'outline'
+                    }>
                       {testCase.status}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell>{testCase.cycle}</TableCell>
                   <TableCell>{testCase.defects?.length || 0}</TableCell>

@@ -94,16 +94,12 @@ export default function TestCasesPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-8 px-4">      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Sistema de Gestión de Casos de Prueba</h1>
           <p className="text-gray-600">Crea y gestiona tus casos de prueba y planes de calidad</p>
         </div>
-        
-        <Button onClick={() => setIsCreatingPlan(true)}>
-          Nuevo Plan de Pruebas
-        </Button>      </div>
+      </div>
       
       <div className="mb-8">
         <div className="max-w-md">
@@ -121,8 +117,7 @@ export default function TestCasesPage() {
           </Select>
         </div>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">        <div className="flex justify-between items-center">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">        <div className="flex justify-between items-center">
           <TabsList>
             <TabsTrigger value="cases">Casos de Prueba</TabsTrigger>
             <TabsTrigger value="stats">Estadísticas</TabsTrigger>
@@ -132,9 +127,11 @@ export default function TestCasesPage() {
           
           <div className="flex space-x-2">
             <ExcelTestCaseImportExport projectId={selectedProjectId} />
-            <Button onClick={() => setIsCreatingPlan(true)}>
-              Nuevo Plan de Pruebas
-            </Button>
+            {activeTab !== 'cases' && (
+              <Button onClick={() => setIsCreatingPlan(true)}>
+                Nuevo Plan de Pruebas
+              </Button>
+            )}
           </div>
         </div>
         

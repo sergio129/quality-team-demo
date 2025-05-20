@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "projectId": "SRCA-6556",
+    "projectName": "Reestructuración Parametrización \"Prefijos\"",
+    "codeReference": "SRCA-6556",
+    "startDate": "2025-05-20",
+    "endDate": "2025-05-20",
+    "estimatedHours": 4,
+    "estimatedDays": 1,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "933cb9e6-15ab-490f-a0a6-3fe0c834882a",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
+    "createdAt": "2025-05-20T16:02:28.759Z",
+    "updatedAt": "2025-05-20T16:02:28.759Z"
+  }
+]

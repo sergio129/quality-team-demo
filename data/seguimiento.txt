@@ -224,21 +224,6 @@
     "planTrabajo": ""
   },
   {
-    "idJira": "SRCA-6516",
-    "proyecto": "Modificación Reporte Monitoreo Proveedor",
-    "equipo": "TechBridge",
-    "celula": "SV",
-    "horas": 12,
-    "dias": 1.33,
-    "fechaEntrega": "2025-05-05T00:00:00.000Z",
-    "fechaRealEntrega": null,
-    "fechaCertificacion": "2025-05-07T00:00:00.000Z",
-    "diasRetraso": -45125,
-    "analistaProducto": "Leonardo Beltran",
-    "planTrabajo": "",
-    "estadoCalculado": "Certificado"
-  },
-  {
     "idJira": "BCGT-1106",
     "proyecto": "Ajustes Informe Informe de Gestión Bancolombia PCRC",
     "equipo": "CRM Bancolombia",
@@ -657,21 +642,6 @@
     "estadoCalculado": "Por Iniciar",
     "analistaProducto": "Leidy Iral",
     "planTrabajo": "en progreso"
-  },
-  {
-    "idJira": "SRCA-6516",
-    "proyecto": "Modificación Reporte Monitoreo Proveedor",
-    "equipo": "TechBridge",
-    "celula": "Suramericana",
-    "horas": 12,
-    "dias": 2,
-    "fechaEntrega": "2025-05-05T00:00:00.000Z",
-    "fechaRealEntrega": "2025-05-05T00:00:00.000Z",
-    "fechaCertificacion": "2025-05-07T00:00:00.000Z",
-    "diasRetraso": 0,
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "finalizado",
-    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "SRCA-6556",
