@@ -263,13 +263,84 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       doc.setFontSize(14); // Reducir tamaño de fuente para título
       doc.setTextColor(0, 51, 102); // Color azul corporativo
       doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 15);
+        // Configuramos un estilo más moderno para la información del proyecto
+      const primaryColor = [41, 98, 255]; // Azul más moderno
+      const secondaryColor = [45, 55, 72]; // Azul oscuro para texto
       
-      doc.setFontSize(10); // Reducir tamaño para información de proyecto
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Proyecto: ${project?.proyecto || ''}`, 15, 22);
-      doc.text(`Código JIRA: ${project?.idJira || ''}`, 15, 27);
-      doc.text(`Fecha inicio: ${project?.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : ''}`, 15, 32);
-      doc.text(`Fecha fin: ${project?.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : ''}`, 115, 32);
+      // Añadimos un rectángulo redondeado como fondo para la información del proyecto
+      doc.setFillColor(248, 250, 252); // Fondo gris muy claro
+      doc.roundedRect(10, 20, 270, 15, 3, 3, 'F');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+        // Aseguramos que las fechas se formateen correctamente
+      let fechaInicio = '';
+      if (project?.fechaInicio) {
+        try {
+          // Verificamos si la fecha es un string o un objeto Date
+          const fechaObj = typeof project.fechaInicio === 'string' ? 
+            new Date(project.fechaInicio) : project.fechaInicio;
+          
+          // Formateamos la fecha manualmente para asegurar consistencia
+          fechaInicio = `${fechaObj.getDate().toString().padStart(2, '0')}/${
+            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
+            fechaObj.getFullYear()}`;
+        } catch (e) {
+          console.error('Error al formatear fecha inicio:', e);
+          fechaInicio = 'No disponible';
+        }
+      } else {
+        fechaInicio = 'No disponible';
+      }
+      
+      let fechaFin = '';
+      if (project?.fechaEntrega) {
+        try {
+          const fechaObj = typeof project.fechaEntrega === 'string' ? 
+            new Date(project.fechaEntrega) : project.fechaEntrega;
+          
+          fechaFin = `${fechaObj.getDate().toString().padStart(2, '0')}/${
+            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
+            fechaObj.getFullYear()}`;
+        } catch (e) {
+          console.error('Error al formatear fecha fin:', e);
+          fechaFin = 'No disponible';
+        }
+      } else {
+        fechaFin = 'No disponible';
+      }
+      
+      // Crear diseño moderno para la información del proyecto con iconos y colores
+      // Primero dibujamos un rectángulo redondeado con gradiente como fondo para las fechas
+      const gradientCoords = { x1: 140, y1: 20, x2: 280, y2: 32 };
+      doc.setFillColor(230, 240, 255);
+      doc.roundedRect(140, 20, 140, 15, 3, 3, 'F');
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Proyecto: ${project?.proyecto || ''}`, 15, 27);
+      doc.text(`Código JIRA: ${project?.idJira || ''}`, 15, 32);
+      
+      // Dibujar un icono de calendario más elegante en lugar de emoji
+      doc.setFillColor(41, 98, 255); // Color azul para los iconos
+      doc.circle(145, 27, 2, 'F'); // Círculo para "Fecha inicio"
+      doc.circle(145, 32, 2, 'F'); // Círculo para "Fecha fin"
+      
+      // Texto de las fechas con fuente más estilizada
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(60, 64, 80); // Color oscuro para textos importantes
+      doc.text(`Fecha inicio:`, 150, 27);
+      doc.text(`Fecha fin:`, 150, 32);
+      
+      // Los valores de fechas con otro color para destacar
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(41, 98, 255); // Azul para los valores de fecha
+      const xPosValueInicio = doc.getTextWidth(`Fecha inicio:`) + 153;
+      const xPosValueFin = doc.getTextWidth(`Fecha fin:`) + 153;
+      doc.text(fechaInicio, xPosValueInicio, 27);
+      doc.text(fechaFin, xPosValueFin, 32);
+      
+      // Restaurar color de texto para el resto del documento
+      doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
       
       // Calcular estadísticas por ciclo
       interface CycleStats {
@@ -324,20 +395,25 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           `${exitosoPercent}%`,
           `${incidentesPercent}%`
         ]);
-      }        // Añadir tabla de estadísticas
+      }      // Añadir tabla de estadísticas con estilo moderno
       autoTable(doc, {
         startY: 37, // Iniciar tabla más arriba
         head: [['Ciclo', 'Diseñados', 'Exitosos', 'No ejecutados', 'Defectos', '% Exitosos', '% Incidentes']],
         body: statsData,
-        theme: 'grid',
+        theme: 'striped', // Tabla con filas alternadas para mejor lectura
         headStyles: {
-          fillColor: [0, 102, 204],
+          fillColor: primaryColor,
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 8 // Fuente más pequeña
+          fontSize: 8, // Fuente más pequeña
+          halign: 'center' // Centrar encabezados
         },
         bodyStyles: {
-          fontSize: 8 // Fuente más pequeña para datos
+          fontSize: 8, // Fuente más pequeña para datos
+          halign: 'center' // Centrar contenido
+        },
+        alternateRowStyles: {
+          fillColor: [245, 250, 255] // Color para filas alternadas
         },
         columnStyles: {
           0: { cellWidth: 25 },
@@ -348,7 +424,12 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           5: { cellWidth: 20 },
           6: { cellWidth: 20 }
         },
-        margin: { top: 5, right: 5, bottom: 5, left: 5 } // Márgenes más pequeños
+        margin: { top: 5, right: 5, bottom: 5, left: 5 }, // Márgenes más pequeños
+        styles: {
+          cellPadding: 2,
+          lineWidth: 0.1,
+          lineColor: [220, 220, 220] // Líneas de tabla más sutiles
+        }
       });      // Obtener la posición Y después de la tabla de estadísticas
       const finalY = (doc as any).lastAutoTable?.finalY || 55;
       
@@ -366,11 +447,29 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         // Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
         calidad = Math.max(0, Math.min(100, 100 - (totalDefectos / totalCasosDisenados) * 100));
       }
+        // Añadir resumen de calidad con estilo moderno
+      // Crear un recuadro con estilo para la información de calidad
+      doc.setFillColor(230, 247, 235); // Fondo verde claro para calidad positiva
+      doc.roundedRect(10, finalY + 2, 120, 10, 3, 3, 'F');
       
-      // Añadir resumen de calidad
+      // Añadir un indicador visual de nivel de calidad (círculo de color)
+      const calidadColor = calidad > 80 ? [46, 160, 67] : // Verde para alta calidad
+                           calidad > 60 ? [255, 170, 0] : // Naranja para calidad media
+                           [220, 53, 69]; // Rojo para calidad baja
+      
+      doc.setFillColor(calidadColor[0], calidadColor[1], calidadColor[2]);
+      doc.circle(18, finalY + 7, 2.5, 'F');
+      
+      // Texto de calidad con estilo mejorado
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.text('Calidad del desarrollo:', 25, finalY + 7);
+      
+      // Destacar el porcentaje con color según el nivel de calidad
+      doc.setTextColor(calidadColor[0], calidadColor[1], calidadColor[2]);
       doc.setFontSize(10);
-      doc.setTextColor(0, 102, 0); // Color verde para calidad
-      doc.text(`Calidad del desarrollo: ${Math.round(calidad)}%`, 15, finalY + 8);
+      doc.text(`${Math.round(calidad)}%`, 85, finalY + 7);
         // Preparar datos para la tabla principal
       const tableData = testCases.map(tc => {
         // Acortar los pasos si son demasiado largos
@@ -388,64 +487,82 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           tc.defects?.length ? tc.defects.join(', ') : '', // Usar comas en lugar de saltos para ahorrar espacio
           tc.responsiblePerson || ''
         ];
-      });
-        // Añadir tabla principal con casos de prueba
+      });      // Añadir tabla principal con casos de prueba con diseño moderno
       autoTable(doc, {
-        startY: finalY + 12, // Reducir espacio
+        startY: finalY + 14, // Reducir espacio
         head: [['HU', 'ID', 'Nombre del caso', 'Pasos', 'Resultado esperado', 'Tipo', 'Estado', 'Defectos', 'Responsable']],
         body: tableData,
-        theme: 'grid',
+        theme: 'striped', // Tema con filas alternadas
         headStyles: {
-          fillColor: [0, 102, 204],
+          fillColor: primaryColor,
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 8 // Fuente más pequeña para encabezados
+          fontSize: 8, // Fuente más pequeña para encabezados
+          halign: 'center' // Centrar encabezados
         },
         bodyStyles: {
-          fontSize: 7 // Fuente más pequeña para contenido
+          fontSize: 7, // Fuente más pequeña para contenido
+          lineColor: [220, 220, 220] // Líneas más claras
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // Color suave para filas alternadas
         },
         columnStyles: {
-          0: { cellWidth: 15 }, // HU - más estrecho
-          1: { cellWidth: 15 }, // ID - más estrecho
+          0: { cellWidth: 15, halign: 'center' }, // HU - más estrecho y centrado
+          1: { cellWidth: 15, halign: 'center' }, // ID - más estrecho y centrado
           2: { cellWidth: 40 }, // Nombre - mantener ancho para legibilidad
-          3: { cellWidth: 55 }, // Pasos - espacio adecuado
-          4: { cellWidth: 40 }, // Resultado - reducido
-          5: { cellWidth: 20 }, // Tipo - más estrecho
-          6: { cellWidth: 20 }, // Estado - más estrecho
+          3: { cellWidth: 55, fontSize: 6 }, // Pasos - espacio adecuado y fuente más pequeña
+          4: { cellWidth: 40, fontSize: 6 }, // Resultado - reducido y fuente más pequeña
+          5: { cellWidth: 20, halign: 'center' }, // Tipo - más estrecho y centrado
+          6: { cellWidth: 20, halign: 'center' }, // Estado - más estrecho y centrado
           7: { cellWidth: 30 }, // Defectos - mantener para legibilidad
-          8: { cellWidth: 20 }  // Responsable - más estrecho
+          8: { cellWidth: 20, halign: 'center' }  // Responsable - más estrecho y centrado
         },
         styles: {
           overflow: 'linebreak',
-          cellPadding: 1 // Reducir el padding
+          cellPadding: 1, // Reducir el padding
+          lineWidth: 0.1, // Líneas más finas
+          valign: 'middle' // Alinear verticalmente al centro
         },        didDrawPage: (data) => {
-          // Añadir pie de página
+          // Añadir pie de página con diseño moderno
           const pageCount = doc.getNumberOfPages();
-          doc.setFontSize(8); // Fuente más pequeña para el pie de página
-          doc.setTextColor(150);
           const pageWidth = doc.internal.pageSize.width;
           const pageHeight = doc.internal.pageSize.height;
           
           // Guardar estado actual para restaurarlo después
           const oldFillColor = doc.getFillColor();
           
-          // Añadir un rectángulo gris claro como fondo del pie de página
-          doc.setFillColor(245, 245, 245);
-          doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+          // Añadir un fondo con gradiente sutil para el pie de página
+          doc.setFillColor(245, 248, 252); // Fondo claro con tono azulado
+          doc.roundedRect(0, pageHeight - 12, pageWidth, 12, 0, 0, 'F');
+          
+          // Añadir una línea sutil en la parte superior del pie de página
+          doc.setDrawColor(220, 230, 245);
+          doc.setLineWidth(0.5);
+          doc.line(0, pageHeight - 12, pageWidth, pageHeight - 12);
           
           // Restaurar el color de relleno original
           doc.setFillColor(oldFillColor);
           
-          // Añadir información en el pie de página
+          // Añadir información en el pie de página con diseño moderno
+          doc.setFontSize(7.5);
+          doc.setTextColor(100, 120, 150); // Color azul grisáceo para texto del pie
+          doc.setFont('helvetica', 'italic');
+          
+          // Añadir el número de página con estilo
           doc.text(
             `Página ${data.pageNumber} de ${pageCount}`, 
             pageWidth - 30, 
-            pageHeight - 6
+            pageHeight - 5
           );
+          
+          // Añadir fecha de generación con estilo
+          const fecha = new Date().toLocaleDateString();
+          const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
           doc.text(
-            `Generado: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+            `Generado: ${fecha} a las ${hora}`,
             15,
-            pageHeight - 6
+            pageHeight - 5
           );
           
           // Añadir encabezado en páginas subsiguientes si no es la primera página
@@ -453,18 +570,22 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
             // Guardar estado actual
             const oldFillColor = doc.getFillColor();
             
-            // Añadir un rectángulo azul como encabezado
-            doc.setFillColor(0, 51, 102);
-            doc.rect(0, 0, pageWidth, 12, 'F');
+            // Añadir un rectángulo con el color primario como encabezado
+            doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+            doc.roundedRect(0, 0, pageWidth, 14, 0, 0, 'F');
             
             // Restaurar el color de relleno
             doc.setFillColor(oldFillColor);
             
-            // Añadir texto del encabezado
+            // Añadir texto del encabezado con estilo 
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
-            doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 8);
-            doc.text(`Proyecto: ${project?.proyecto || ''}`, pageWidth - 100, 8);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 9);
+            
+            // Añadir información del proyecto
+            doc.setFontSize(8);
+            doc.text(`Proyecto: ${project?.proyecto || ''} (${project?.idJira || ''})`, pageWidth - 100, 9);
             
             // Restaurar colores para el contenido
             doc.setTextColor(0, 0, 0);
