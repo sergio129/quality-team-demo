@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTestCases, deleteTestCase } from '@/hooks/useTestCases';
-import { TestCase } from '@/models/TestCase';
+import { useTestCases, deleteTestCase, useTestPlans } from '@/hooks/useTestCases';
+import { TestCase, TestPlan } from '@/models/TestCase';
 import {
   Table,
   TableBody,
@@ -26,6 +26,7 @@ interface TestCaseTableProps {
 
 export default function TestCaseTable({ projectId }: TestCaseTableProps) {
   const { testCases, isLoading, isError } = useTestCases(projectId);
+  const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
   const { projects } = useProjects();
   
   const [filters, setFilters] = useState({
@@ -92,22 +93,35 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
     projects.find(p => p.id === projectId || p.idJira === projectId)?.proyecto || 'Proyecto no encontrado' :
     'Todos los proyectos';
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4">      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Casos de Prueba</h2>
           <p className="text-gray-500">{projectName}</p>
         </div>
         
         <div className="flex space-x-2">
-          <Button 
-            onClick={() => {
-              setEditingTestCase(null);
-              setIsFormOpen(true);
-            }}
-          >
-            Nuevo Caso de Prueba
-          </Button>
+          {isLoadingPlans ? (
+            <Button disabled>
+              Cargando planes...
+            </Button>
+          ) : testPlans?.length > 0 ? (
+            <Button 
+              onClick={() => {
+                setEditingTestCase(null);
+                setIsFormOpen(true);
+              }}
+            >
+              Nuevo Caso de Prueba
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              disabled
+              title="Debe crear un plan de pruebas primero"
+            >
+              Necesita un plan de pruebas
+            </Button>
+          )}
         </div>
       </div>
       
@@ -172,10 +186,10 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
         <div className="border rounded-md overflow-auto max-h-[65vh]">
           <Table>
             <TableHeader className="sticky top-0 bg-white">
-              <TableRow>
-                <TableHead>Código</TableHead>
+              <TableRow>                <TableHead>Código</TableHead>
                 <TableHead>HU</TableHead>
                 <TableHead>Nombre del Caso</TableHead>
+                <TableHead>Plan Pruebas</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Ciclo</TableHead>
@@ -190,11 +204,17 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
                   key={testCase.id} 
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() => handleViewDetails(testCase)}
-                >
-                  <TableCell className="font-medium">{testCase.codeRef}</TableCell>
+                >                  <TableCell className="font-medium">{testCase.codeRef}</TableCell>
                   <TableCell>{testCase.userStoryId}</TableCell>
                   <TableCell>{testCase.name}</TableCell>
-                  <TableCell>{testCase.testType}</TableCell>                  <TableCell>
+                  <TableCell>
+                    {testCase.testPlanId && (
+                      <Badge variant="secondary">
+                        {testPlans?.find(plan => plan.id === testCase.testPlanId)?.codeReference || 'Plan ' + testCase.testPlanId.slice(0, 6)}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{testCase.testType}</TableCell><TableCell>
                     <Badge variant={
                       testCase.status === 'Exitoso' ? 'success' :
                       testCase.status === 'Fallido' ? 'destructive' :

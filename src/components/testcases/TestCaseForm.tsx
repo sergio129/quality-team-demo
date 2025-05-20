@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TestCase, TestStep } from '@/models/TestCase';
+import { TestCase, TestStep, TestPlan } from '@/models/TestCase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { createTestCase, updateTestCase } from '@/hooks/useTestCases';
+import { createTestCase, updateTestCase, useTestPlans } from '@/hooks/useTestCases';
 import { v4 as uuidv4 } from 'uuid';
 import { useProjects } from '@/hooks/useProjects';
 import { PlusCircle, X, Trash2 } from 'lucide-react';
@@ -21,6 +21,7 @@ interface TestCaseFormProps {
 
 export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: TestCaseFormProps) {
   const { projects } = useProjects();
+  const { testPlans } = useTestPlans(projectId);
   
   const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
     id: '',
@@ -36,7 +37,8 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
     evidences: [],
     cycle: 1,
     responsiblePerson: '',
-    priority: 'Media'
+    priority: 'Media',
+    testPlanId: '' // Nuevo campo para asociar con un plan de pruebas
   });
   
   const [steps, setSteps] = useState<TestStep[]>([]);
@@ -56,13 +58,13 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
         setSteps([...testCase.steps]);
       } else {
         setSteps([]);
-      }
-    } else {
+      }    } else {
       setNewTestCase({
         id: '',
         userStoryId: '',
         name: '',
         projectId: projectId || '',
+        testPlanId: '',
         codeRef: '',
         steps: [],
         expectedResult: '',
@@ -154,6 +156,23 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
                 {projects.map((project) => (
                   <option key={project.id || project.idJira} value={project.idJira}>
                     {project.proyecto}
+                  </option>
+                ))}              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="testPlanId">Plan de Pruebas</Label>
+              <Select
+                id="testPlanId"
+                name="testPlanId"
+                value={newTestCase.testPlanId || ''}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Seleccionar plan de pruebas</option>
+                {testPlans?.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.codeReference} - {plan.projectName}
                   </option>
                 ))}
               </Select>

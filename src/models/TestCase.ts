@@ -31,6 +31,7 @@ export interface TestCase {
   userStoryId: string; // HU
   name: string;
   projectId: string;
+  testPlanId: string; // ID del plan de pruebas asociado
   codeRef: string; // Código de referencia (ej: HU1-T001)
   steps: TestStep[];
   expectedResult: string;
