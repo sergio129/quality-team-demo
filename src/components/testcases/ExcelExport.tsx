@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileDown } from 'lucide-react';
+import { FileDown, Search } from 'lucide-react';
 import { TestCase } from '@/models/TestCase';
 import { useProjects } from '@/hooks/useProjects';
+import { TestPlan } from '@/hooks/useTestPlans';
 
 interface ExcelExportProps {
   projectId?: string;
@@ -20,8 +21,80 @@ interface ExcelExportProps {
 export default function ExcelExport({ projectId, testCases = [] }: ExcelExportProps) {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPlans, setLoadingPlans] = useState(false);
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [projectsWithPlans, setProjectsWithPlans] = useState<any[]>([]);
+  const searchRef = useRef<HTMLDivElement>(null);
+  // Efecto para manejar clics fuera del dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Cargar planes de prueba al abrir el diálogo
+  useEffect(() => {
+    if (isExportDialogOpen && !projectId) {
+      fetchTestPlans();
+    }
+  }, [isExportDialogOpen, projectId]);
+  
+  // Filtrar proyectos cuando cambia el término de búsqueda
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredProjects(projectsWithPlans);
+    } else {
+      const term = searchTerm.toLowerCase();
+      const filtered = projectsWithPlans.filter(
+        project => 
+          project.proyecto?.toLowerCase().includes(term) || 
+          project.idJira?.toLowerCase().includes(term)
+      );
+      setFilteredProjects(filtered);
+    }
+  }, [searchTerm, projectsWithPlans]);
+
+  // Función para obtener planes de prueba
+  const fetchTestPlans = async () => {
+    setLoadingPlans(true);
+    try {
+      const response = await fetch('/api/test-plans');
+      const plans: TestPlan[] = await response.json();
+      
+      // Obtener los IDs únicos de proyectos que tienen planes
+      const projectIdsWithPlans = [...new Set(plans.map(plan => plan.projectId))];
+      
+      // Filtrar la lista de proyectos para incluir solo aquellos con planes
+      const filteredProjects = projects.filter(
+        project => projectIdsWithPlans.includes(project.id || '') || projectIdsWithPlans.includes(project.idJira || '')
+      );
+      
+      setProjectsWithPlans(filteredProjects);
+      setFilteredProjects(filteredProjects);
+    } catch (error) {
+      console.error('Error loading test plans:', error);
+      toast.error('Error al cargar los planes de prueba');
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  const handleProjectSelect = (project: any) => {
+    setSelectedProjectId(project.idJira || project.id || '');
+    setSearchTerm(project.proyecto || '');
+    setShowDropdown(false);
+  };
 
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -176,22 +249,63 @@ export default function ExcelExport({ projectId, testCases = [] }: ExcelExportPr
               <p className="text-sm text-gray-600">
                 Se exportarán {testCases.length} casos de prueba al formato estándar de Excel.
               </p>
-              
-              {!projectId && (
-                <div className="space-y-2">
+                {!projectId && (
+                <div className="space-y-2" ref={searchRef}>
                   <Label htmlFor="exportProject">Proyecto</Label>
-                  <Select
-                    id="exportProject"
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                  >
-                    <option value="">Seleccionar proyecto</option>
-                    {projects.map((project) => (
-                      <option key={project.id || project.idJira} value={project.idJira}>
-                        {project.proyecto}
-                      </option>
-                    ))}
-                  </Select>
+                  <div className="relative">
+                    <div className="flex items-center border rounded-md">
+                      <Input
+                        id="exportProject"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          if (!showDropdown) setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        placeholder="Buscar por código Jira o nombre del proyecto"
+                        className="border-0"
+                      />
+                      <div className="px-3 py-2 text-gray-400">
+                        <Search size={18} />
+                      </div>
+                    </div>
+                    
+                    {showDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border max-h-60 overflow-auto">
+                        <div className="p-2 border-b text-sm text-gray-500">
+                          {loadingPlans ? (
+                            'Cargando proyectos...'
+                          ) : filteredProjects.length > 0 ? (
+                            `${filteredProjects.length} proyecto(s) encontrado(s)`
+                          ) : (
+                            'No se encontraron proyectos con planes de prueba'
+                          )}
+                        </div>
+                        
+                        {!loadingPlans && (
+                          <ul>
+                            {filteredProjects.map((project) => (
+                              <li
+                                key={project.id || project.idJira}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => handleProjectSelect(project)}
+                              >
+                                <div className="font-medium">{project.proyecto}</div>
+                                {project.idJira && (
+                                  <div className="text-xs text-gray-500">ID Jira: {project.idJira}</div>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {selectedProjectId && (
+                    <div className="text-xs text-blue-600 mt-1">
+                      Proyecto seleccionado: {searchTerm}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
