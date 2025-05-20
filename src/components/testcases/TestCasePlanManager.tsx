@@ -28,7 +28,7 @@ interface TestCasePlanManagerProps {
 export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanManagerProps) {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const { projects } = useProjects();
-  const { testPlans, isLoading } = useTestPlans(selectedProjectId);
+  const { testPlans, isLoading } = useTestPlans();
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [newTestPlan, setNewTestPlan] = useState<Partial<TestPlan>>({
     projectId: '',
@@ -42,6 +42,20 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
     cycles: [{ id: uuidv4(), number: 1, designed: 0, successful: 0, notExecuted: 0, defects: 0 }],
     testQuality: 100
   });
+
+  // Filtrar y ordenar proyectos que tienen planes de prueba
+  const projectsWithPlans = projects
+    .filter(project => testPlans?.some(plan => plan.projectId === project.idJira))
+    .sort((a, b) => {
+      // Primero ordenar por fecha de entrega (próximos primero)
+      const dateA = a.fechaEntrega ? new Date(a.fechaEntrega).getTime() : Infinity;
+      const dateB = b.fechaEntrega ? new Date(b.fechaEntrega).getTime() : Infinity;
+      
+      if (dateA !== dateB) return dateA - dateB;
+      
+      // Si las fechas son iguales, ordenar por nombre del proyecto
+      return (a.proyecto || '').localeCompare(b.proyecto || '');
+    });
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProjectId(e.target.value);
@@ -105,19 +119,34 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       </div>
 
       <div className="mb-4">
-        <Label>Seleccionar Proyecto</Label>
+        <Label>Proyecto</Label>
         <Select 
           value={selectedProjectId} 
           onChange={handleProjectChange}
           className="max-w-md"
         >
           <option value="">Seleccionar proyecto</option>
-          {projects.map((project) => (
-            <option key={project.id || project.idJira} value={project.idJira}>
-              {project.proyecto}
-            </option>
-          ))}
+          {projectsWithPlans.map((project) => {
+            const planCount = testPlans?.filter(p => p.projectId === project.idJira).length || 0;
+            const isUrgent = project.fechaEntrega && 
+              (new Date(project.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 30;
+            
+            return (
+              <option 
+                key={project.idJira} 
+                value={project.idJira}
+                className={isUrgent ? 'text-red-600 font-medium' : ''}
+              >
+                {project.proyecto} ({planCount} {planCount === 1 ? 'plan' : 'planes'})
+              </option>
+            );
+          })}
         </Select>
+        {!isLoading && projectsWithPlans.length === 0 && (
+          <p className="text-sm text-amber-600 mt-1">
+            No hay proyectos con planes de prueba. Crea un nuevo plan para comenzar.
+          </p>
+        )}
       </div>
 
       {isLoading ? (
