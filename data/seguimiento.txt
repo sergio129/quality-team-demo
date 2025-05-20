@@ -654,7 +654,7 @@
     "fechaRealEntrega": "2025-05-19T00:00:00.000Z",
     "diasRetraso": 0,
     "fechaCertificacion": "2025-05-20T00:00:00.000Z",
-    "estadoCalculado": "En Progreso",
+    "estadoCalculado": "Certificado",
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "en desarrollo"
   },

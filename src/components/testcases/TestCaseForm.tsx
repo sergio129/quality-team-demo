@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { createTestCase, updateTestCase, useTestPlans } from '@/hooks/useTestCases';
+import { useQAAnalysts } from '@/hooks/useQAAnalysts';
 import { v4 as uuidv4 } from 'uuid';
 import { useProjects } from '@/hooks/useProjects';
 import { PlusCircle, X, Trash2 } from 'lucide-react';
@@ -22,6 +23,7 @@ interface TestCaseFormProps {
 
 export default function TestCaseForm({ isOpen, onClose, testCase, projectId, testPlanId }: TestCaseFormProps) {
   const { testPlans } = useTestPlans(projectId);
+  const { analysts, isLoading: loadingAnalysts } = useQAAnalysts();
   const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
     id: '',
     testPlanId: testPlanId || '',  // Priorizamos el plan de pruebas
@@ -274,13 +276,25 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
 
             <div className="space-y-2">
               <Label htmlFor="responsiblePerson">Responsable</Label>
-              <Input
+              <Select
                 id="responsiblePerson"
                 name="responsiblePerson"
-                placeholder="Nombre del responsable"
                 value={newTestCase.responsiblePerson || ''}
                 onChange={handleInputChange}
-              />
+                required
+              >
+                <option value="">Seleccionar responsable</option>
+                {analysts?.map((analyst) => (
+                  <option key={analyst.id} value={analyst.name}>
+                    {analyst.name} ({analyst.role})
+                  </option>
+                ))}
+              </Select>
+              {loadingAnalysts ? (
+                <p className="text-xs text-gray-500 mt-1">Cargando analistas...</p>
+              ) : analysts.length === 0 ? (
+                <p className="text-xs text-red-500 mt-1">No hay analistas disponibles</p>
+              ) : null}
             </div>
 
             <div className="space-y-2 md:col-span-2">
