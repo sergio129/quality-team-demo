@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search } from 'lucide-react'; // Importamos el icono de búsqueda
+import { Search } from 'lucide-react';
 
 export default function TestCasesPage() {
   const { projects } = useProjects();
@@ -43,10 +43,8 @@ export default function TestCasesPage() {
     testQuality: 100
   });
 
-  // Referencia para el dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // Efecto para cerrar el dropdown cuando se hace clic fuera de él
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -60,7 +58,6 @@ export default function TestCasesPage() {
     };
   }, []);
 
-  // Función para filtrar proyectos por término de búsqueda
   const filteredProjects = projects.filter((project) => {
     const searchTermLower = projectSearchTerm.toLowerCase();
     return (
@@ -69,25 +66,22 @@ export default function TestCasesPage() {
     );
   });
 
-  // Función para filtrar proyectos activos (con fecha de entrega desde hoy en adelante)
   const getActiveProjects = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     return projects.filter(project => {
-      // Filtrar por fecha de entrega (desde hoy en adelante)
       const entregaDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
-      const isActive = entregaDate ? entregaDate >= today : true;
+      const isActive = entregaDate ? entregaDate >= today : false;
       
-      // Filtrar por término de búsqueda en el diálogo
-      const matchesSearch = projectSearchInDialog.trim() === '' ||
-        project.proyecto?.toLowerCase().includes(projectSearchInDialog.toLowerCase()) ||
-        project.idJira?.toLowerCase().includes(projectSearchInDialog.toLowerCase()) ||
-        project.equipo?.toLowerCase().includes(projectSearchInDialog.toLowerCase());
+      const searchLower = projectSearchInDialog.toLowerCase().trim();
+      const matchesSearch = searchLower === '' ||
+        project.proyecto?.toLowerCase().includes(searchLower) ||
+        project.idJira?.toLowerCase().includes(searchLower) ||
+        project.equipo?.toLowerCase().includes(searchLower);
       
       return isActive && matchesSearch;
     }).sort((a, b) => {
-      // Ordenar por fecha de entrega (más cercanas primero)
       const dateA = a.fechaEntrega ? new Date(a.fechaEntrega) : new Date(9999, 11, 31);
       const dateB = b.fechaEntrega ? new Date(b.fechaEntrega) : new Date(9999, 11, 31);
       return dateA.getTime() - dateB.getTime();
@@ -97,7 +91,6 @@ export default function TestCasesPage() {
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProjectId(e.target.value);
     
-    // Si hay un proyecto seleccionado, pre-llenar algunos datos del plan
     if (e.target.value) {
       const selectedProject = projects.find(p => p.id === e.target.value || p.idJira === e.target.value);
       if (selectedProject) {
@@ -150,13 +143,11 @@ export default function TestCasesPage() {
     }
   };
 
-  // Función para seleccionar un proyecto de la lista filtrada
   const selectProject = (project: any) => {
     setSelectedProjectId(project.idJira || '');
     setProjectSearchTerm(project.proyecto || '');
     setShowProjectDropdown(false);
     
-    // Si hay un proyecto seleccionado, pre-llenar algunos datos del plan
     if (project) {
       setNewTestPlan(prev => ({
         ...prev,
@@ -166,29 +157,29 @@ export default function TestCasesPage() {
       }));
     }
     
-    // Resetear el plan de pruebas seleccionado
     setSelectedTestPlanId('');
   };
 
-  // Reset proyecto seleccionado
   const clearProjectSelection = () => {
     setSelectedProjectId('');
     setSelectedTestPlanId('');
     setProjectSearchTerm('');
   };
 
-  // Función para limpiar la búsqueda en el diálogo
   const clearSearchInDialog = () => {
     setProjectSearchInDialog('');
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Sistema de Gestión de Casos de Prueba</h1>
           <p className="text-gray-600">Crea y gestiona tus casos de prueba y planes de calidad</p>
         </div>
-      </div>      <div className="mb-8">
+      </div>
+
+      <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Buscar/Seleccionar Proyecto</label>
@@ -269,7 +260,9 @@ export default function TestCasesPage() {
           </div>
         </div>
       </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">        <div className="flex justify-between items-center">
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <div className="flex justify-between items-center">
           <TabsList>
             <TabsTrigger value="cases">Casos de Prueba</TabsTrigger>
             <TabsTrigger value="stats">Estadísticas</TabsTrigger>
@@ -286,7 +279,8 @@ export default function TestCasesPage() {
             )}
           </div>
         </div>
-          <TabsContent value="cases" className="mt-6">
+
+        <TabsContent value="cases" className="mt-6">
           <TestCaseTable 
             projectId={selectedProjectId}
             testPlanId={selectedTestPlanId} 
@@ -322,23 +316,46 @@ export default function TestCasesPage() {
               <DialogTitle>Nuevo Plan de Pruebas</DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-4 py-4">              <div className="space-y-2">
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
                 <Label htmlFor="projectId">Proyecto</Label>
                 <div className="flex flex-col gap-2">
-                  <Input
-                    id="projectSearch"
-                    placeholder="Buscar proyecto..."
-                    value={projectSearchInDialog}
-                    onChange={(e) => setProjectSearchInDialog(e.target.value)}
-                    className="mb-2"
-                  />
-                  <div className="border rounded-md overflow-y-auto max-h-[200px]">
-                    {getActiveProjects()
-                      .map((project) => (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Search className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <Input
+                      id="projectSearch"
+                      placeholder="Buscar por nombre, ID o equipo..."
+                      value={projectSearchInDialog}
+                      onChange={(e) => setProjectSearchInDialog(e.target.value)}
+                      className="pl-10 mb-2"
+                    />
+                    {projectSearchInDialog && (
+                      <button 
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                        onClick={clearSearchInDialog}
+                        title="Limpiar búsqueda"
+                      >
+                        <span className="text-gray-400 hover:text-gray-600">×</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="border rounded-md overflow-hidden">
+                    <div className="bg-gray-50 p-2 border-b text-xs font-medium text-gray-500 flex justify-between items-center">
+                      <span>Proyectos Activos</span>
+                      <span className="text-blue-600">
+                        {getActiveProjects().length} proyectos disponibles
+                      </span>
+                    </div>
+                    
+                    <div className="overflow-y-auto max-h-[200px]">
+                      {getActiveProjects().map((project) => (
                         <div
                           key={project.id || project.idJira}
                           className={`p-3 cursor-pointer hover:bg-gray-100 ${
-                            newTestPlan.projectId === project.idJira ? "bg-blue-50" : ""
+                            newTestPlan.projectId === project.idJira ? "bg-blue-50 border-l-4 border-blue-500" : ""
                           }`}
                           onClick={() => {
                             setNewTestPlan(prev => ({
@@ -350,17 +367,34 @@ export default function TestCasesPage() {
                           }}
                         >
                           <div className="font-medium">{project.proyecto}</div>
-                          <div className="flex justify-between text-sm text-gray-500">
-                            <span>{project.idJira}</span>
-                            <span>{project.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : 'Sin fecha'}</span>
+                          <div className="flex justify-between text-sm text-gray-500 mt-1">
+                            <div className="flex flex-col">
+                              <span>ID: {project.idJira}</span>
+                              {project.equipo && <span>Equipo: {project.equipo}</span>}
+                            </div>
+                            <div className="flex items-center text-xs">
+                              <span className="bg-amber-100 text-amber-800 py-1 px-2 rounded-full">
+                                Entrega: {project.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : 'Sin fecha'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       ))}
-                    {getActiveProjects().length === 0 && (
-                      <div className="p-3 text-center text-gray-500">
-                        No se encontraron proyectos activos que coincidan con la búsqueda
-                      </div>
-                    )}
+                      {getActiveProjects().length === 0 && (
+                        <div className="p-6 text-center text-gray-500 flex flex-col items-center">
+                          <svg className="w-10 h-10 text-gray-300 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p>No se encontraron proyectos activos que coincidan con la búsqueda</p>
+                          <button 
+                            className="text-blue-500 hover:text-blue-700 mt-2 text-sm"
+                            onClick={clearSearchInDialog}
+                          >
+                            Limpiar búsqueda
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
