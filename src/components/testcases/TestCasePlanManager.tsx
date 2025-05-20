@@ -160,7 +160,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
   };
 
   return (
-    <div className="space-y-4">      <div className="mb-4">
+    <div className="space-y-4">      
+      <div className="mb-4">
         <h2 className="text-2xl font-bold">Planes de Prueba</h2>
         <p className="text-gray-500">Gestiona los planes de prueba del proyecto</p>
       </div>
