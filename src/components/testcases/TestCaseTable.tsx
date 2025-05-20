@@ -22,9 +22,10 @@ import { useProjects } from '@/hooks/useProjects';
 
 interface TestCaseTableProps {
   projectId?: string;
+  testPlanId?: string;
 }
 
-export default function TestCaseTable({ projectId }: TestCaseTableProps) {
+export default function TestCaseTable({ projectId, testPlanId }: TestCaseTableProps) {
   const { testCases, isLoading, isError } = useTestCases(projectId);
   const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
   const { projects } = useProjects();
@@ -43,25 +44,26 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
 
   // Recopilar todas las historias de usuario únicas
   const uniqueUserStories = [...new Set(testCases?.map(tc => tc.userStoryId) || [])].filter(Boolean);
-
   // Filtrar casos de prueba según los filtros
   const filteredTestCases = testCases.filter((tc) => {
+    // Filtro por plan de pruebas
+    const planMatch = !testPlanId || tc.testPlanId === testPlanId;
+    
     // Filtro de búsqueda por texto (nombre o descripción)
     const searchMatch = 
       filters.search === '' || 
       tc.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
       tc.expectedResult?.toLowerCase().includes(filters.search.toLowerCase());
-      
+    
     // Filtro por estado
     const statusMatch = filters.status === '' || tc.status === filters.status;
     
     // Filtro por tipo de prueba
     const typeMatch = filters.testType === '' || tc.testType === filters.testType;
-    
-    // Filtro por historia de usuario
+      // Filtro por historia de usuario
     const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;
     
-    return searchMatch && statusMatch && typeMatch && userStoryMatch;
+    return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
   });
 
   // Manejo de edición
@@ -99,8 +101,7 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
           <p className="text-gray-500">{projectName}</p>
         </div>
         
-        <div className="flex space-x-2">
-          {isLoadingPlans ? (
+        <div className="flex space-x-2">          {isLoadingPlans ? (
             <Button disabled>
               Cargando planes...
             </Button>
@@ -242,8 +243,7 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
           </Table>
         </div>
       )}
-      
-      {isFormOpen && (
+        {isFormOpen && (
         <TestCaseForm
           isOpen={isFormOpen}
           onClose={() => {
@@ -252,6 +252,7 @@ export default function TestCaseTable({ projectId }: TestCaseTableProps) {
           }}
           testCase={editingTestCase}
           projectId={projectId}
+          testPlanId={testPlanId}
         />
       )}
       

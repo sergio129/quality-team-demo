@@ -21,9 +21,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export default function TestCasesPage() {
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedTestPlanId, setSelectedTestPlanId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('cases');
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const { testCases } = useTestCases(selectedProjectId);
+  const { testPlans } = useTestPlans(selectedProjectId);
   const [newTestPlan, setNewTestPlan] = useState<Partial<TestPlan>>({
     projectId: '',
     projectName: '',
@@ -100,21 +102,41 @@ export default function TestCasesPage() {
           <p className="text-gray-600">Crea y gestiona tus casos de prueba y planes de calidad</p>
         </div>
       </div>
-      
-      <div className="mb-8">
-        <div className="max-w-md">
-          <label className="block text-sm font-medium mb-2">Seleccionar Proyecto</label>
-          <Select
-            value={selectedProjectId}
-            onChange={handleProjectChange}
-          >
-            <option value="">Todos los proyectos</option>
-            {projects.map((project) => (
-              <option key={project.id || project.idJira} value={project.idJira}>
-                {project.proyecto}
-              </option>
-            ))}
-          </Select>
+        <div className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Seleccionar Proyecto</label>
+            <Select
+              value={selectedProjectId}
+              onChange={handleProjectChange}
+            >
+              <option value="">Todos los proyectos</option>
+              {projects.map((project) => (
+                <option key={project.id || project.idJira} value={project.idJira}>
+                  {project.proyecto}
+                </option>
+              ))}
+            </Select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Plan de Pruebas</label>
+            <Select
+              value={selectedTestPlanId}
+              onChange={(e) => setSelectedTestPlanId(e.target.value)}
+              disabled={!selectedProjectId || testPlans.length === 0}
+            >
+              <option value="">Todos los planes</option>
+              {testPlans.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.codeReference} - Ciclo {Math.max(...plan.cycles.map(c => c.number))}
+                </option>
+              ))}
+            </Select>
+            {selectedProjectId && testPlans.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">No hay planes de prueba para este proyecto</p>
+            )}
+          </div>
         </div>
       </div>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">        <div className="flex justify-between items-center">
@@ -134,21 +156,32 @@ export default function TestCasesPage() {
             )}
           </div>
         </div>
-        
-        <TabsContent value="cases" className="mt-6">
-          <TestCaseTable projectId={selectedProjectId} />
+          <TabsContent value="cases" className="mt-6">
+          <TestCaseTable 
+            projectId={selectedProjectId}
+            testPlanId={selectedTestPlanId} 
+          />
         </TabsContent>
         
         <TabsContent value="stats" className="mt-6">
-          <TestCaseStats projectId={selectedProjectId} />
+          <TestCaseStats 
+            projectId={selectedProjectId}
+            testPlanId={selectedTestPlanId}
+          />
         </TabsContent>
         
         <TabsContent value="advanced" className="mt-6">
-          <TestCaseAdvancedStats projectId={selectedProjectId} />
+          <TestCaseAdvancedStats 
+            projectId={selectedProjectId}
+            testPlanId={selectedTestPlanId}
+          />
         </TabsContent>
         
         <TabsContent value="defects" className="mt-6">
-          <TestCaseDefectTracker projectId={selectedProjectId} />
+          <TestCaseDefectTracker 
+            projectId={selectedProjectId}
+            testPlanId={selectedTestPlanId}
+          />
         </TabsContent>
       </Tabs>
       

@@ -52,6 +52,19 @@ export function useTestPlans(projectId?: string) {
 }
 
 /**
+ * Hook para obtener un plan de prueba específico
+ */
+export function useTestPlan(id: string) {
+  const { data, error, isLoading } = useSWR<TestPlan>(id ? `${TEST_PLANS_API}/${id}` : null, fetcher);
+
+  return {
+    testPlan: data,
+    isLoading,
+    isError: error,
+  };
+}
+
+/**
  * Hook para obtener estadísticas de casos de prueba por proyecto
  */
 export function useTestCaseStats(projectId: string) {

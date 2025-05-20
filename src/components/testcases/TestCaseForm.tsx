@@ -17,17 +17,18 @@ interface TestCaseFormProps {
   onClose: () => void;
   testCase?: TestCase | null;
   projectId?: string;
+  testPlanId?: string;
 }
 
-export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: TestCaseFormProps) {
+export default function TestCaseForm({ isOpen, onClose, testCase, projectId, testPlanId }: TestCaseFormProps) {
   const { projects } = useProjects();
   const { testPlans } = useTestPlans(projectId);
-  
-  const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
+    const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
     id: '',
     userStoryId: '',
     name: '',
     projectId: projectId || '',
+    testPlanId: testPlanId || '',
     codeRef: '',
     steps: [],
     expectedResult: '',
@@ -58,13 +59,12 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
         setSteps([...testCase.steps]);
       } else {
         setSteps([]);
-      }    } else {
-      setNewTestCase({
+      }    } else {      setNewTestCase({
         id: '',
         userStoryId: '',
         name: '',
         projectId: projectId || '',
-        testPlanId: '',
+        testPlanId: testPlanId || '',
         codeRef: '',
         steps: [],
         expectedResult: '',
@@ -74,11 +74,32 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
         evidences: [],
         cycle: 1,
         responsiblePerson: '',
-        priority: 'Media'
-      });
+        priority: 'Media'      });
       setSteps([]);
     }
-  }, [testCase, projectId]);
+  }, [testCase, projectId, testPlanId]);
+  
+  // Efecto para actualizar el ciclo cuando cambia el plan de pruebas
+  useEffect(() => {
+    if (newTestCase.testPlanId) {
+      // Buscar el plan de pruebas seleccionado
+      const selectedPlan = testPlans?.find(p => p.id === newTestCase.testPlanId);
+      
+      if (selectedPlan) {
+        // Encontrar el último ciclo disponible
+        const lastCycle = selectedPlan.cycles?.length ? 
+          Math.max(...selectedPlan.cycles.map(c => c.number)) : 1;
+        
+        // Actualizar el ciclo del caso de prueba
+        setNewTestCase(prev => ({
+          ...prev,
+          cycle: lastCycle,
+          // También podemos preestablecer un prefijo para el código de referencia
+          codeRef: prev.codeRef || `${selectedPlan.codeReference}-T` 
+        }));
+      }
+    }
+  }, [newTestCase.testPlanId, testPlans]);
   
   // Manejar cambios en los inputs
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -159,8 +180,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
                   </option>
                 ))}              </Select>
             </div>
-            
-            <div className="space-y-2">
+              <div className="space-y-2">
               <Label htmlFor="testPlanId">Plan de Pruebas</Label>
               <Select
                 id="testPlanId"
@@ -170,12 +190,19 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId }: T
                 required
               >
                 <option value="">Seleccionar plan de pruebas</option>
-                {testPlans?.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.codeReference} - {plan.projectName}
-                  </option>
-                ))}
+                {testPlans?.length ? (
+                  testPlans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.codeReference} - {plan.projectName}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No hay planes de prueba disponibles</option>
+                )}
               </Select>
+              {!testPlans?.length && (
+                <p className="text-xs text-red-500 mt-1">Debe crear un plan de pruebas primero para este proyecto</p>
+              )}
             </div>
             
             <div className="space-y-2">
