@@ -11,6 +11,8 @@ import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { mutate } from 'swr';
+import UpdateQualityButton from './UpdateQualityButton';
+import QualityInfoButton from './QualityInfoButton';
 import {
   Table,
   TableBody,
@@ -194,7 +196,20 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
           <p className="text-sm text-amber-600 mt-1">
             No hay proyectos con planes de prueba. Crea un nuevo plan para comenzar.
           </p>
-        )}
+        )}      </div>
+      
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium">Lista de Planes</h3>
+        <div className="flex gap-2">
+          <UpdateQualityButton />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setIsCreatingPlan(true)}
+          >
+            Nuevo Plan
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -205,25 +220,26 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         <div className="border rounded-md">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Referencia</TableHead>
+              <TableRow>                <TableHead>Referencia</TableHead>
                 <TableHead>Proyecto</TableHead>
                 <TableHead>Fecha Inicio</TableHead>
                 <TableHead>Fecha Fin</TableHead>
                 <TableHead>Casos Totales</TableHead>
-                <TableHead>Calidad</TableHead>
+                <TableHead className="flex items-center gap-1">
+                  Calidad
+                  <QualityInfoButton />
+                </TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {testPlans.map((plan) => (
-                <TableRow key={plan.id}>
-                  <TableCell>{plan.codeReference}</TableCell>
+                <TableRow key={plan.id}>                  <TableCell>{plan.codeReference}</TableCell>
                   <TableCell>{plan.projectName}</TableCell>
                   <TableCell>{format(new Date(plan.startDate), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{plan.endDate ? format(new Date(plan.endDate), 'dd/MM/yyyy') : '-'}</TableCell>
                   <TableCell>{plan.totalCases}</TableCell>
-                  <TableCell>{plan.testQuality}%</TableCell>
+                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button

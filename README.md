@@ -1,4 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quality Teams
+
+Sistema de gestión de calidad para equipos de pruebas de software.
+
+## Características principales
+
+- Gestión de proyectos y planes de prueba
+- Seguimiento de casos de prueba
+- Cálculo de métricas de calidad
+- Exportación a Excel y PDF
+- Gestión de equipos y analistas
+
+## Cálculo de Calidad
+
+El sistema utiliza dos métodos diferentes para calcular la calidad:
+
+### Interfaz (86.33%)
+Método complejo con 4 factores ponderados:
+- Cobertura de ejecución (35%)
+- Efectividad (35%) 
+- Densidad de defectos (20%)
+- Diversidad de tipos de prueba (10%)
+
+### PDF (67%)
+Método simplificado basado solo en defectos:
+```
+Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
+```
+
+Para más detalles, vea el documento completo en [docs/calculo-calidad.md](docs/calculo-calidad.md).
 
 ## Getting Started
 

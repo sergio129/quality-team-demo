@@ -170,20 +170,61 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           '', '', cycle, String(stats.disenados), String(stats.exitosos), String(stats.noEjecutados), 
           String(stats.defectos), `${exitosoPercent}%`, `${incidentesPercent}%`
         ]);
-      }
-        // Calcular la calidad del desarrollo basada en defectos
-      let totalDefectos = 0;
+      }      // Calcular la calidad del desarrollo usando el mismo algoritmo que la API
       let totalCasosDisenados = 0;
+      let ejecutados = 0;
+      let exitosos = 0;
+      let totalDefectos = 0;
+      let tiposPrueba = new Set();
       
       for (const cycle in cycleStats) {
-        totalDefectos += cycleStats[cycle].defectos;
         totalCasosDisenados += cycleStats[cycle].disenados;
+        ejecutados += (cycleStats[cycle].disenados - cycleStats[cycle].noEjecutados);
+        exitosos += cycleStats[cycle].exitosos;
+        totalDefectos += cycleStats[cycle].defectos;
       }
       
+      // Recolectar tipos únicos de prueba
+      testCases.forEach(tc => {
+        if (tc.testType) {
+          tiposPrueba.add(tc.testType);
+        }
+      });
+      
       let calidad = 100;
+      
       if (totalCasosDisenados > 0) {
-        // Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
-        calidad = Math.max(0, Math.min(100, 100 - (totalDefectos / totalCasosDisenados) * 100));
+        // 1. Cobertura de ejecución: porcentaje de casos ejecutados vs. diseñados
+        const coverageScore = (ejecutados / totalCasosDisenados) * 100;
+        
+        // 2. Eficacia: porcentaje de casos exitosos vs. ejecutados
+        const effectivenessScore = ejecutados > 0 ? (exitosos / ejecutados) * 100 : 100;
+        
+        // 3. Densidad de defectos: defectos por caso de prueba (invertido)
+        const defectDensity = totalDefectos / totalCasosDisenados;
+        // Usar función exponencial para penalizar más fuertemente densidades altas
+        const defectScore = 100 * Math.exp(-defectDensity);
+        
+        // 4. Diversidad de tipos de prueba
+        const uniqueTestTypes = tiposPrueba.size;
+        const testTypeScore = Math.min(uniqueTestTypes * 20, 100); // 20 puntos por cada tipo, máximo 100
+        
+        // Ponderación de factores (igual que en la API)
+        const weightCoverage = 0.35; // 35%
+        const weightEffectiveness = 0.35; // 35%
+        const weightDefects = 0.20; // 20%
+        const weightTestTypes = 0.10; // 10%
+        
+        // Cálculo del puntaje final
+        calidad = (
+          (coverageScore * weightCoverage) +
+          (effectivenessScore * weightEffectiveness) +
+          (defectScore * weightDefects) +
+          (testTypeScore * weightTestTypes)
+        );
+        
+        // Redondear a 2 decimales
+        calidad = Math.round(calidad * 100) / 100;
       }
       
       mainData.push([''], [''], ['Calidad del desarrollo', '', '', '', '', '', '', '', '', '', '', '', '', `${Math.round(calidad)}%`]);
@@ -432,28 +473,69 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         }
       });      // Obtener la posición Y después de la tabla de estadísticas
       const finalY = (doc as any).lastAutoTable?.finalY || 55;
-      
-      // Calcular la calidad del desarrollo basada en defectos
-      let totalDefectos = 0;
+        // Calcular la calidad del desarrollo usando el mismo algoritmo que la API
       let totalCasosDisenados = 0;
+      let ejecutados = 0;
+      let exitosos = 0;
+      let totalDefectos = 0;
+      let tiposPrueba = new Set();
       
       for (const cycle in cycleStats) {
-        totalDefectos += cycleStats[cycle].defectos;
         totalCasosDisenados += cycleStats[cycle].disenados;
+        ejecutados += (cycleStats[cycle].disenados - cycleStats[cycle].noEjecutados);
+        exitosos += cycleStats[cycle].exitosos;
+        totalDefectos += cycleStats[cycle].defectos;
       }
       
-      let calidad = 100;
+      // Recolectar tipos únicos de prueba
+      testCases.forEach(tc => {
+        if (tc.testType) {
+          tiposPrueba.add(tc.testType);
+        }
+      });
+      
+      let calidad = -1; // Valor predeterminado N/A
+      
       if (totalCasosDisenados > 0) {
-        // Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
-        calidad = Math.max(0, Math.min(100, 100 - (totalDefectos / totalCasosDisenados) * 100));
+        // 1. Cobertura de ejecución: porcentaje de casos ejecutados vs. diseñados
+        const coverageScore = (ejecutados / totalCasosDisenados) * 100;
+        
+        // 2. Eficacia: porcentaje de casos exitosos vs. ejecutados
+        const effectivenessScore = ejecutados > 0 ? (exitosos / ejecutados) * 100 : 100;
+        
+        // 3. Densidad de defectos: defectos por caso de prueba (invertido)
+        const defectDensity = totalDefectos / totalCasosDisenados;
+        // Usar función exponencial para penalizar más fuertemente densidades altas
+        const defectScore = 100 * Math.exp(-defectDensity);
+        
+        // 4. Diversidad de tipos de prueba
+        const uniqueTestTypes = tiposPrueba.size;
+        const testTypeScore = Math.min(uniqueTestTypes * 20, 100); // 20 puntos por cada tipo, máximo 100
+        
+        // Ponderación de factores (igual que en la API)
+        const weightCoverage = 0.35; // 35%
+        const weightEffectiveness = 0.35; // 35%
+        const weightDefects = 0.20; // 20%
+        const weightTestTypes = 0.10; // 10%
+        
+        // Cálculo del puntaje final
+        calidad = (
+          (coverageScore * weightCoverage) +
+          (effectivenessScore * weightEffectiveness) +
+          (defectScore * weightDefects) +
+          (testTypeScore * weightTestTypes)
+        );
+        
+        // Redondear a 2 decimales
+        calidad = Math.round(calidad * 100) / 100;
       }
         // Añadir resumen de calidad con estilo moderno
       // Crear un recuadro con estilo para la información de calidad
       doc.setFillColor(230, 247, 235); // Fondo verde claro para calidad positiva
       doc.roundedRect(10, finalY + 2, 120, 10, 3, 3, 'F');
-      
-      // Añadir un indicador visual de nivel de calidad (círculo de color)
-      const calidadColor = calidad > 80 ? [46, 160, 67] : // Verde para alta calidad
+        // Añadir un indicador visual de nivel de calidad (círculo de color)
+      const calidadColor = calidad === -1 ? [128, 128, 128] : // Gris para N/A
+                           calidad > 80 ? [46, 160, 67] : // Verde para alta calidad
                            calidad > 60 ? [255, 170, 0] : // Naranja para calidad media
                            [220, 53, 69]; // Rojo para calidad baja
       
@@ -465,11 +547,10 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       doc.setFontSize(9);
       doc.setTextColor(60, 60, 60);
       doc.text('Calidad del desarrollo:', 25, finalY + 7);
-      
-      // Destacar el porcentaje con color según el nivel de calidad
+        // Destacar el porcentaje con color según el nivel de calidad
       doc.setTextColor(calidadColor[0], calidadColor[1], calidadColor[2]);
       doc.setFontSize(10);
-      doc.text(`${Math.round(calidad)}%`, 85, finalY + 7);
+      doc.text(calidad === -1 ? 'N/A' : `${Math.round(calidad)}%`, 85, finalY + 7);
         // Preparar datos para la tabla principal
       const tableData = testCases.map(tc => {
         // Acortar los pasos si son demasiado largos

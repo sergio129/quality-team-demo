@@ -50,9 +50,14 @@ export async function GET(request: Request) {
 
 // Función para calcular la calidad de las pruebas
 function calculateTestQuality(testPlan, testCases) {
+  // Si no hay casos de prueba asociados, devolver -1 (que se interpretará como N/A en la interfaz)
+  if (!testCases || testCases.length === 0) {
+    return -1;
+  }
+  
   // Factores que afectan la calidad de las pruebas
   const currentCycle = testPlan.cycles[testPlan.cycles.length - 1];
-  if (!currentCycle) return 100; // Si no hay ciclos, calidad perfecta
+  if (!currentCycle) return -1; // Si no hay ciclos, no podemos calcular
   
   // Filtrar casos del último ciclo
   const casesInCurrentCycle = testCases.filter(tc => tc.cycle === currentCycle.number);

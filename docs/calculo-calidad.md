@@ -28,28 +28,35 @@ const qualityScore = (
 );
 ```
 
-## 2. Calidad en el PDF (67%)
+## 2. Calidad en el PDF (86.33%)
 
-El PDF utiliza un cálculo más simple basado únicamente en defectos:
+**Actualización:** Ahora el PDF utiliza el mismo algoritmo complejo que la interfaz:
 
 ```typescript
-// Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
-calidad = 100 - (totalDefectos / totalCasosDisenados) * 100;
+// Cálculo del puntaje final usando los mismos factores y ponderaciones
+const qualityScore = (
+  (coverageScore * weightCoverage) +
+  (effectivenessScore * weightEffectiveness) +
+  (defectScore * weightDefects) +
+  (testTypeScore * weightTestTypes)
+);
 ```
 
 Para SRCA-6556:
 - Casos: 3
+- Casos exitosos: 2
+- Casos fallidos: 1
 - Defectos: 1
-- Cálculo: 100 - (1/3)*100 = 66.67%, que redondeado es 67%
+- Tipos de prueba: 1 o más
 
-## ¿Por qué hay diferencia?
+## Consistencia entre interfaz y PDF
 
-La diferencia se debe a que:
+Hemos unificado ambos métodos de cálculo para asegurar la consistencia:
 
-1. La interfaz usa un algoritmo más completo que considera múltiples factores.
-2. El PDF usa una fórmula simplificada que solo considera defectos.
-3. Los diferentes pesos y factores llevan a resultados distintos.
+1. Tanto la interfaz como el PDF usan ahora el mismo algoritmo completo.
+2. Los resultados serán idénticos en ambas visualizaciones.
+3. Los factores ponderados proporcionan una medición más precisa de la calidad real.
 
-## Recomendaciones
+## Notas adicionales
 
-Se recomienda unificar los métodos de cálculo para evitar confusiones, o clarificar en la interfaz qué está midiendo cada método.
+El algoritmo unificado proporciona una medida más holística de la calidad, considerando no solo los defectos sino también la cobertura de ejecución y la diversidad de tipos de prueba.
