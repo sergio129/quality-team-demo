@@ -687,5 +687,30 @@
     "estadoCalculado": "En Progreso",
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "en desarrollo"
+  },
+  {
+    "proyecto": "Solicitud de requerimiento técnico – Integración Yalo y Genesys Cloud",
+    "idJira": "ALPN-887",
+    "equipo": "TechBridge",
+    "celula": "Servicio Virtuales",
+    "horas": 33,
+    "dias": 4,
+    "fechaEntrega": "2025-07-24T00:00:00.000Z",
+    "fechaCertificacion": "2025-07-31T00:00:00.000Z",
+    "estadoCalculado": "Por Iniciar",
+    "analistaProducto": "Yulieth Paola\t",
+    "planTrabajo": "Construir plan de pruebas\t4\nEjecutar plan de pruebas\t27\nAceptación de solución\t2\n"
+  },
+  {
+    "idJira": "BCRP-64",
+    "proyecto": "Aplicar Flujo Recomendado Aprobar en Pyme",
+    "equipo": "CRM Bancolombia",
+    "celula": "KCRM",
+    "horas": 7,
+    "dias": 1,
+    "fechaEntrega": "2025-05-26T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-27T00:00:00.000Z",
+    "analistaProducto": "Yoarlis Carrillo\t",
+    "planTrabajo": "En desarrollo"
   }
 ]

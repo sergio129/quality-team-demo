@@ -102,5 +102,24 @@
     ],
     "id": "INC-20250516-003",
     "fechaSolucion": "2025-04-16T00:00:00.000Z"
+  },
+  {
+    "celula": "Suramericana",
+    "estado": "Abierto",
+    "prioridad": "Media",
+    "descripcion": "Cuando se edita, la parametrizacion y  se quiere quitar uno de los registros se quitan los demas seleccionados",
+    "fechaReporte": "2025-05-20T13:47:17.038Z",
+    "informadoPor": "Sergio Anaya",
+    "asignadoA": "Juan David Vargas",
+    "cliente": "Suramericana",
+    "idJira": "SRCA-6556",
+    "fechaCreacion": "2025-05-20T13:47:17.038Z",
+    "tipoBug": "Funcional",
+    "areaAfectada": "Frontend",
+    "etiquetas": [],
+    "esErroneo": false,
+    "aplica": false,
+    "id": "INC-20250520-001",
+    "diasAbierto": 1
   }
 ]
