@@ -330,92 +330,115 @@ export default function TestCasesPage() {
       {isCreatingPlan && (
         <Dialog open={isCreatingPlan} onOpenChange={setIsCreatingPlan}>
           <DialogContent className="sm:max-w-[450px]">
-            <DialogHeader className="pb-2">
+            <DialogHeader>
               <DialogTitle>Nuevo Plan de Pruebas</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-4">
-              <div>
+              <div className="space-y-2">
                 <Label>Proyecto</Label>
-                <div className="mt-1.5">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input
-                      placeholder="Buscar por nombre, ID o equipo..."
-                      value={projectSearchInDialog}
-                      onChange={(e) => setProjectSearchInDialog(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                  
-                  <div className="mt-1 max-h-[180px] overflow-y-auto rounded-md border bg-white shadow-sm">
-                    <div className="p-2 text-sm text-gray-500">
-                      Proyectos Activos
-                      <span className="float-right text-blue-600">{getActiveProjects().length} proyectos disponibles</span>
-                    </div>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Buscar por nombre, ID o equipo..."
+                    value={projectSearchInDialog}
+                    onChange={(e) => setProjectSearchInDialog(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+
+                {projectSearchInDialog.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-md border bg-white shadow-lg">
                     {getActiveProjects().map((project) => (
                       <div
-                        key={project.id || project.idJira}
-                        className="cursor-pointer border-t p-2 hover:bg-gray-50"
-                        onClick={() => {
+                        key={project.idJira}
+                        className="cursor-pointer p-2 hover:bg-gray-50 border-b last:border-b-0"                        onClick={() => {
+                          // Usar fecha de entrega como fecha de inicio y fecha de certificación como fecha fin
+                          const startDate = project.fechaEntrega ? new Date(project.fechaEntrega).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                          const endDate = project.fechaCertificacion ? new Date(project.fechaCertificacion).toISOString().split('T')[0] : '';
+                          
+                          // Calcular días estimados entre fecha de entrega y certificación
+                          let daysEstimated = 0;
+                          if (project.fechaEntrega && project.fechaCertificacion) {
+                            const entregaDate = new Date(project.fechaEntrega);
+                            const certDate = new Date(project.fechaCertificacion);
+                            const diffTime = Math.abs(certDate.getTime() - entregaDate.getTime());
+                            daysEstimated = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          }
+
+                          // Calcular horas estimadas (8 horas por día laborable)
+                          const hoursEstimated = daysEstimated * 8;
+
                           setSelectedProjectId(project.idJira || '');
                           setProjectSearchInDialog('');
                           setNewTestPlan(prev => ({
                             ...prev,
-                            projectId: project.idJira,
+                            projectId: project.idJira || '',
                             projectName: project.proyecto || '',
-                            codeReference: project.idJira || ''
+                            codeReference: project.idJira || '',
+                            startDate,
+                            endDate,
+                            estimatedDays: daysEstimated,
+                            estimatedHours: hoursEstimated
                           }));
                         }}
                       >
                         <div className="font-medium">{project.proyecto}</div>
-                        <div className="flex justify-between text-sm text-gray-500">
-                          <span>ID: {project.idJira}</span>
-                          {project.equipo && <span>Equipo: {project.equipo}</span>}
-                        </div>
+                        <div className="text-sm text-gray-500">ID: {project.idJira}</div>
+                        {project.fechaEntrega && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Entrega: {new Date(project.fechaEntrega).toLocaleDateString()}
+                            {project.fechaCertificacion && (
+                              <span className="ml-2">
+                                Certificación: {new Date(project.fechaCertificacion).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
+                    {getActiveProjects().length === 0 && (
+                      <div className="p-2 text-sm text-gray-500 text-center">
+                        No se encontraron proyectos activos
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label>Código de Referencia</Label>
                 <Input
-                  value={newTestPlan.codeReference || ''}
-                  onChange={(e) => setNewTestPlan(prev => ({ ...prev, codeReference: e.target.value }))
-                  }
-                  className="mt-1.5"
-                  placeholder="SRCA-XXXX"
+                  value={newTestPlan.codeReference}
+                  readOnly
+                  className="bg-gray-50"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label>Fecha Inicio</Label>
                   <Input
                     type="date"
                     name="startDate"
                     value={newTestPlan.startDate}
                     onChange={handleTestPlanInputChange}
-                    className="mt-1.5"
                   />
                 </div>
                 
-                <div>
+                <div className="space-y-2">
                   <Label>Fecha Fin</Label>
                   <Input
                     type="date"
                     name="endDate"
                     value={newTestPlan.endDate}
                     onChange={handleTestPlanInputChange}
-                    className="mt-1.5"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label>Horas Est.</Label>
                   <Input
                     type="number"
@@ -423,11 +446,10 @@ export default function TestCasesPage() {
                     min="0"
                     value={newTestPlan.estimatedHours}
                     onChange={handleTestPlanInputChange}
-                    className="mt-1.5"
                   />
                 </div>
                 
-                <div>
+                <div className="space-y-2">
                   <Label>Días Est.</Label>
                   <Input
                     type="number"
@@ -436,7 +458,6 @@ export default function TestCasesPage() {
                     step="0.5"
                     value={newTestPlan.estimatedDays}
                     onChange={handleTestPlanInputChange}
-                    className="mt-1.5"
                   />
                 </div>
               </div>
