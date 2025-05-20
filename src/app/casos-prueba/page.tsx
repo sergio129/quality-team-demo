@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search } from 'lucide-react'; // Importamos el icono de búsqueda
 
 export default function TestCasesPage() {
   const { projects } = useProjects();
@@ -25,6 +26,7 @@ export default function TestCasesPage() {
   const [activeTab, setActiveTab] = useState<string>('cases');
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState<string>('');
+  const [projectSearchInDialog, setProjectSearchInDialog] = useState<string>('');
   const [showProjectDropdown, setShowProjectDropdown] = useState<boolean>(false);
   const { testCases } = useTestCases(selectedProjectId);
   const { testPlans } = useTestPlans(selectedProjectId);
@@ -66,6 +68,31 @@ export default function TestCasesPage() {
       project.idJira?.toLowerCase().includes(searchTermLower)
     );
   });
+
+  // Función para filtrar proyectos activos (con fecha de entrega desde hoy en adelante)
+  const getActiveProjects = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return projects.filter(project => {
+      // Filtrar por fecha de entrega (desde hoy en adelante)
+      const entregaDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
+      const isActive = entregaDate ? entregaDate >= today : true;
+      
+      // Filtrar por término de búsqueda en el diálogo
+      const matchesSearch = projectSearchInDialog.trim() === '' ||
+        project.proyecto?.toLowerCase().includes(projectSearchInDialog.toLowerCase()) ||
+        project.idJira?.toLowerCase().includes(projectSearchInDialog.toLowerCase()) ||
+        project.equipo?.toLowerCase().includes(projectSearchInDialog.toLowerCase());
+      
+      return isActive && matchesSearch;
+    }).sort((a, b) => {
+      // Ordenar por fecha de entrega (más cercanas primero)
+      const dateA = a.fechaEntrega ? new Date(a.fechaEntrega) : new Date(9999, 11, 31);
+      const dateB = b.fechaEntrega ? new Date(b.fechaEntrega) : new Date(9999, 11, 31);
+      return dateA.getTime() - dateB.getTime();
+    });
+  };
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProjectId(e.target.value);
@@ -148,6 +175,11 @@ export default function TestCasesPage() {
     setSelectedProjectId('');
     setSelectedTestPlanId('');
     setProjectSearchTerm('');
+  };
+
+  // Función para limpiar la búsqueda en el diálogo
+  const clearSearchInDialog = () => {
+    setProjectSearchInDialog('');
   };
 
   return (
@@ -290,31 +322,47 @@ export default function TestCasesPage() {
               <DialogTitle>Nuevo Plan de Pruebas</DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
+            <div className="space-y-4 py-4">              <div className="space-y-2">
                 <Label htmlFor="projectId">Proyecto</Label>
-                <Select
-                  id="projectId"
-                  name="projectId"
-                  value={newTestPlan.projectId}
-                  onChange={(e) => {
-                    const selectedProject = projects.find(p => p.id === e.target.value || p.idJira === e.target.value);
-                    setNewTestPlan(prev => ({
-                      ...prev,
-                      projectId: e.target.value,
-                      projectName: selectedProject?.proyecto || '',
-                      codeReference: selectedProject?.idJira || ''
-                    }));
-                  }}
-                  disabled={!!selectedProjectId}
-                >
-                  <option value="">Seleccionar proyecto</option>
-                  {projects.map((project) => (
-                    <option key={project.id || project.idJira} value={project.idJira}>
-                      {project.proyecto}
-                    </option>
-                  ))}
-                </Select>
+                <div className="flex flex-col gap-2">
+                  <Input
+                    id="projectSearch"
+                    placeholder="Buscar proyecto..."
+                    value={projectSearchInDialog}
+                    onChange={(e) => setProjectSearchInDialog(e.target.value)}
+                    className="mb-2"
+                  />
+                  <div className="border rounded-md overflow-y-auto max-h-[200px]">
+                    {getActiveProjects()
+                      .map((project) => (
+                        <div
+                          key={project.id || project.idJira}
+                          className={`p-3 cursor-pointer hover:bg-gray-100 ${
+                            newTestPlan.projectId === project.idJira ? "bg-blue-50" : ""
+                          }`}
+                          onClick={() => {
+                            setNewTestPlan(prev => ({
+                              ...prev,
+                              projectId: project.idJira,
+                              projectName: project.proyecto || '',
+                              codeReference: project.idJira || ''
+                            }));
+                          }}
+                        >
+                          <div className="font-medium">{project.proyecto}</div>
+                          <div className="flex justify-between text-sm text-gray-500">
+                            <span>{project.idJira}</span>
+                            <span>{project.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : 'Sin fecha'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    {getActiveProjects().length === 0 && (
+                      <div className="p-3 text-center text-gray-500">
+                        No se encontraron proyectos activos que coincidan con la búsqueda
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">

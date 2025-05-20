@@ -22,5 +22,29 @@
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
     "updatedAt": "2025-05-20T16:02:28.759Z"
+  },
+  {
+    "projectId": "SRSS-143",
+    "projectName": "Modificación WS Consulta Hada SURA",
+    "codeReference": "SRSS-143",
+    "startDate": "2025-05-20",
+    "endDate": "",
+    "estimatedHours": 0,
+    "estimatedDays": 0,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "b69cbf4d-fe19-4223-8ed9-19094552a9a0",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
+    "createdAt": "2025-05-20T18:12:41.882Z",
+    "updatedAt": "2025-05-20T18:12:41.882Z"
   }
 ]

@@ -30,10 +30,8 @@
     ],
     "expectedResult": " El sistema debe permitir seleccionar múltiples servicios en el campo y guardar el registro correctamente.",
     "testType": "Funcional",
-    "status": "Fallido",
-    "defects": [
-      "INC-20250520-001"
-    ],
+    "status": "No ejecutado",
+    "defects": [],
     "evidences": [
       {
         "id": "aca2be39-0f09-4364-b8b6-56a041efa23c",
@@ -54,7 +52,7 @@
     "responsiblePerson": "Sergio anaya",
     "priority": "Media",
     "createdAt": "2025-05-20T16:29:42.519Z",
-    "updatedAt": "2025-05-20T17:28:15.549Z"
+    "updatedAt": "2025-05-20T17:31:13.667Z"
   },
   {
     "id": "68ff8936-17bf-442a-91a6-7dee4e59f8bc",
@@ -88,13 +86,15 @@
     "expectedResult": "El sistema debe permitir editar un registro seleccionando múltiples servicios desde el campo correspondiente",
     "testType": "Funcional",
     "status": "No ejecutado",
-    "defects": [],
+    "defects": [
+      "INC-20250520-001"
+    ],
     "evidences": [],
     "cycle": 1,
     "responsiblePerson": "Sergio anaya",
     "priority": "Media",
     "createdAt": "2025-05-20T16:31:23.957Z",
-    "updatedAt": "2025-05-20T17:24:26.790Z"
+    "updatedAt": "2025-05-20T17:31:24.940Z"
   },
   {
     "id": "401647f2-55c4-4954-b863-9b0c6d1a9be9",
