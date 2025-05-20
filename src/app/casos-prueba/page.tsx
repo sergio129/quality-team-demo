@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TestCaseTable from '@/components/testcases/TestCaseTable';
 import TestCaseStats from '@/components/testcases/TestCaseStats';
 import TestCaseAdvancedStats from '@/components/testcases/TestCaseAdvancedStats';
@@ -24,6 +24,8 @@ export default function TestCasesPage() {
   const [selectedTestPlanId, setSelectedTestPlanId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('cases');
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [projectSearchTerm, setProjectSearchTerm] = useState<string>('');
+  const [showProjectDropdown, setShowProjectDropdown] = useState<boolean>(false);
   const { testCases } = useTestCases(selectedProjectId);
   const { testPlans } = useTestPlans(selectedProjectId);
   const [newTestPlan, setNewTestPlan] = useState<Partial<TestPlan>>({
@@ -37,6 +39,32 @@ export default function TestCasesPage() {
     totalCases: 0,
     cycles: [{ id: uuidv4(), number: 1, designed: 0, successful: 0, notExecuted: 0, defects: 0 }],
     testQuality: 100
+  });
+
+  // Referencia para el dropdown
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Efecto para cerrar el dropdown cuando se hace clic fuera de él
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowProjectDropdown(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Función para filtrar proyectos por término de búsqueda
+  const filteredProjects = projects.filter((project) => {
+    const searchTermLower = projectSearchTerm.toLowerCase();
+    return (
+      project.proyecto?.toLowerCase().includes(searchTermLower) || 
+      project.idJira?.toLowerCase().includes(searchTermLower)
+    );
   });
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -95,28 +123,98 @@ export default function TestCasesPage() {
     }
   };
 
+  // Función para seleccionar un proyecto de la lista filtrada
+  const selectProject = (project: any) => {
+    setSelectedProjectId(project.idJira || '');
+    setProjectSearchTerm(project.proyecto || '');
+    setShowProjectDropdown(false);
+    
+    // Si hay un proyecto seleccionado, pre-llenar algunos datos del plan
+    if (project) {
+      setNewTestPlan(prev => ({
+        ...prev,
+        projectId: project.idJira || '',
+        projectName: project.proyecto || '',
+        codeReference: project.idJira || ''
+      }));
+    }
+    
+    // Resetear el plan de pruebas seleccionado
+    setSelectedTestPlanId('');
+  };
+
+  // Reset proyecto seleccionado
+  const clearProjectSelection = () => {
+    setSelectedProjectId('');
+    setSelectedTestPlanId('');
+    setProjectSearchTerm('');
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Sistema de Gestión de Casos de Prueba</h1>
           <p className="text-gray-600">Crea y gestiona tus casos de prueba y planes de calidad</p>
         </div>
-      </div>
-        <div className="mb-8">
+      </div>      <div className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Seleccionar Proyecto</label>
-            <Select
-              value={selectedProjectId}
-              onChange={handleProjectChange}
-            >
-              <option value="">Todos los proyectos</option>
-              {projects.map((project) => (
-                <option key={project.id || project.idJira} value={project.idJira}>
-                  {project.proyecto}
-                </option>
-              ))}
-            </Select>
+            <label className="block text-sm font-medium mb-2">Buscar/Seleccionar Proyecto</label>
+            <div className="relative">
+              <div className="flex">
+                <Input
+                  type="text"
+                  placeholder="Buscar por nombre o código Jira..."
+                  value={projectSearchTerm}
+                  onChange={(e) => {
+                    setProjectSearchTerm(e.target.value);
+                    setShowProjectDropdown(true);
+                  }}
+                  onClick={() => setShowProjectDropdown(true)}
+                  className="flex-grow"
+                />
+                {selectedProjectId && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="ml-2" 
+                    onClick={clearProjectSelection}
+                    title="Limpiar selección"
+                  >
+                    <span>×</span>
+                  </Button>
+                )}
+              </div>
+              
+              {showProjectDropdown && (
+                <div ref={dropdownRef} className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md border max-h-60 overflow-auto">
+                  <div className="p-2 border-b text-sm text-gray-500">
+                    {filteredProjects.length > 0 
+                      ? `${filteredProjects.length} proyecto(s) encontrado(s)` 
+                      : 'No se encontraron proyectos'}
+                  </div>
+                  
+                  <ul>
+                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {
+                      clearProjectSelection();
+                      setShowProjectDropdown(false);
+                    }}>
+                      <div className="font-medium">Todos los proyectos</div>
+                    </li>
+                    {filteredProjects.map((project) => (
+                      <li 
+                        key={project.id || project.idJira} 
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => selectProject(project)}
+                      >
+                        <div className="font-medium">{project.proyecto}</div>
+                        {project.idJira && <div className="text-xs text-gray-500">ID Jira: {project.idJira}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
           
           <div>
