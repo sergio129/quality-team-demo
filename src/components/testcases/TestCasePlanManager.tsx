@@ -30,6 +30,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
   const { projects } = useProjects();
   const { testPlans, isLoading } = useTestPlans();
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
+  const [isEditingPlan, setIsEditingPlan] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<TestPlan | null>(null);
   const [newTestPlan, setNewTestPlan] = useState<Partial<TestPlan>>({
     projectId: '',
     projectName: '',
@@ -112,6 +114,50 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
     }
   };
 
+  const handleEditPlan = (plan: TestPlan) => {
+    setEditingPlan(plan);
+    setNewTestPlan({
+      ...plan,
+      startDate: new Date(plan.startDate).toISOString().split('T')[0],
+      endDate: plan.endDate ? new Date(plan.endDate).toISOString().split('T')[0] : ''
+    });
+    setIsEditingPlan(true);
+  };
+
+  const handleUpdatePlan = async () => {
+    try {
+      if (!editingPlan) return;
+
+      const updatedPlan = {
+        ...editingPlan,
+        ...newTestPlan,
+        updatedAt: new Date().toISOString()
+      };
+
+      const response = await fetch(`/api/test-plans/${editingPlan.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedPlan)
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el plan de pruebas');
+      }
+
+      setIsEditingPlan(false);
+      setEditingPlan(null);
+      toast.success('Plan de pruebas actualizado correctamente');
+      
+      // Revalidar la caché de planes
+      mutate('/api/test-plans');
+      if (selectedProjectId) {
+        mutate(`/api/test-plans?projectId=${selectedProjectId}`);
+      }
+    } catch (error) {
+      toast.error('Error al actualizar el plan de pruebas');
+    }
+  };
+
   return (
     <div className="space-y-4">      <div className="mb-4">
         <h2 className="text-2xl font-bold">Planes de Prueba</h2>
@@ -177,12 +223,22 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                   <TableCell>{plan.totalCases}</TableCell>
                   <TableCell>{plan.testQuality}%</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      onClick={() => onPlanSelected(plan.id)}
-                    >
-                      Gestionar Casos
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPlanSelected(plan.id)}
+                      >
+                        Gestionar Casos
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditPlan(plan)}
+                      >
+                        Editar
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -278,6 +334,87 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
             </Button>
             <Button type="button" onClick={handleCreateTestPlan}>
               Crear Plan de Pruebas
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditingPlan} onOpenChange={setIsEditingPlan}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Editar Plan de Pruebas</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Proyecto</Label>
+              <Input
+                value={newTestPlan.projectName}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editStartDate">Fecha de Inicio</Label>
+                <Input
+                  id="editStartDate"
+                  name="startDate"
+                  type="date"
+                  value={newTestPlan.startDate}
+                  onChange={handleTestPlanInputChange}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="editEndDate">Fecha de Fin (opcional)</Label>
+                <Input
+                  id="editEndDate"
+                  name="endDate"
+                  type="date"
+                  value={newTestPlan.endDate || ''}
+                  onChange={handleTestPlanInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="editEstimatedHours">Horas Estimadas</Label>
+                <Input
+                  id="editEstimatedHours"
+                  name="estimatedHours"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={newTestPlan.estimatedHours}
+                  onChange={handleTestPlanInputChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="editEstimatedDays">Días Estimados</Label>
+                <Input
+                  id="editEstimatedDays"
+                  name="estimatedDays"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={newTestPlan.estimatedDays}
+                  onChange={handleTestPlanInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingPlan(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdatePlan}>
+              Guardar Cambios
             </Button>
           </DialogFooter>
         </DialogContent>

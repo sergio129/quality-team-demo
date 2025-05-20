@@ -46,5 +46,29 @@
     "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "createdAt": "2025-05-20T18:12:41.882Z",
     "updatedAt": "2025-05-20T18:12:41.882Z"
+  },
+  {
+    "projectId": "SBSF-1824",
+    "projectName": "Pruebas funcionales Apps Servidor LAN 172.16.5.46 & DMZ 172.16.5.201",
+    "codeReference": "SBSF-1824",
+    "startDate": "2025-05-21",
+    "endDate": "2025-05-30",
+    "estimatedHours": 72,
+    "estimatedDays": 9,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "f419445d-1a54-4c75-bbb9-f32bbe743523",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
+    "createdAt": "2025-05-20T20:40:18.804Z",
+    "updatedAt": "2025-05-20T20:40:18.804Z"
   }
 ]
