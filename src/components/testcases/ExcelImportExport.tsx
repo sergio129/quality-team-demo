@@ -3,16 +3,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileDown, FileUp, FileText } from 'lucide-react';
-import { createTestCase } from '@/hooks/useTestCases';
-import { TestCase, TestStep } from '@/models/TestCase';
-import { v4 as uuidv4 } from 'uuid';
+import { FileDown } from 'lucide-react';
+import { TestCase } from '@/models/TestCase';
 import { useProjects } from '@/hooks/useProjects';
 
 interface ExcelImportExportProps {
@@ -21,67 +18,10 @@ interface ExcelImportExportProps {
 }
 
 export default function ExcelImportExport({ projectId, testCases = [] }: ExcelImportExportProps) {
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
-  const [cycle, setCycle] = useState<number>(1);
-
-  const handleDownloadTemplate = () => {
-    try {
-      const mainData = [
-        ['FORMATO DE CONSTRUCCION CASOS DE PRUEBAS EQUIPO QUALITY TEAMS', '', '', '', '', '', '', '', '', '', '', '', '', 'version 1.0'],
-        [''],
-        ['Codigo Peticion', ''],
-        ['Nombre del proyecto', ''],
-        ['Fecha Inicio producto', ''],
-        ['Fecha Fin Producto', ''],
-        [''],
-        ['Total estimacion en Horas', '', '', 'Total estimacion en Dias', ''],
-        [''],
-        ['ESTADÍSTICAS'],
-        ['', '', '', 'Diseñados', 'Exitosos', 'No ejecutados', 'Defectos', '% casos exitoso', '% incidentes'],
-        ['', '', 'Ciclo 1', '', '', '', '', '', ''],
-        [''],
-        ['Calidad del desarrollo', '', '', '', '', '', '', '', '', '', '', '', '', '100%'],
-        [''],
-        [
-          'HU', 'ID', 'Nombre del caso de prueba', 'Pasos', 'Resultado esperado', 'Tipo de Prueba', 'Estado', 
-          'Defectos C1', 'Defectos C2', 'Defectos C3', 'Categoría de Incidencia', 'Evidencia Del caso', 'Observacion', 'Responsable'
-        ],
-        [
-          'HU-01', 
-          'TEST-001', 
-          'Ejemplo: Validar inicio de sesión correcto',
-          '1. Ingresar al sistema\n2. Ingresar credenciales válidas\n3. Hacer clic en Ingresar',
-          'El usuario debe ingresar exitosamente al sistema',
-          'Funcional',
-          'No ejecutado',
-          '', '', '', '', 'No', '', ''
-        ]
-      ];
-
-      const ws = XLSX.utils.aoa_to_sheet(mainData);
-      if (!ws['!merges']) ws['!merges'] = [];
-      ws['!merges'].push(
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 13 } },
-        { s: { r: 13, c: 0 }, e: { r: 13, c: 13 } }
-      );
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Plantilla');
-      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(data, 'plantilla_casos_prueba.xlsx');
-
-      toast.success('Plantilla descargada exitosamente');
-    } catch (error) {
-      console.error('Error al generar plantilla:', error);
-      toast.error('Error al descargar la plantilla');
-    }
-  };
-
   const handleExportToExcel = () => {
     setIsLoading(true);
     
@@ -101,9 +41,19 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
         ['Total estimacion en Horas', '', '', 'Total estimacion en Dias', ''],
         ['']
       ];
+        // Estadísticas de ciclos
+      interface CycleStats {
+        disenados: number;
+        exitosos: number;
+        noEjecutados: number;
+        defectos: number;
+      }
       
-      // Estadísticas de ciclos
-      const cycleStats = {
+      interface CycleStatsMap {
+        [key: string]: CycleStats;
+      }
+      
+      const cycleStats: CycleStatsMap = {
         'Ciclo 1': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 },
         'Ciclo 2': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 },
         'Ciclo 3': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 }
