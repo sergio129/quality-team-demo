@@ -20,7 +20,30 @@ interface ExcelTestCaseImportExportProps {
   testCases?: TestCase[];
 }
 
-export default function ExcelTestCaseImportExport({ projectId, testCases = [] }: ExcelTestCaseImportExportProps) {
+'use client';
+
+import React from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { FileDown, FileUp, FileText } from 'lucide-react';
+import { createTestCase } from '@/hooks/useTestCases';
+import { TestCase, TestStep } from '@/models/TestCase';
+import { v4 as uuidv4 } from 'uuid';
+import { useProjects } from '@/hooks/useProjects';
+
+interface ExcelTestCaseImportExportProps {
+  projectId?: string;
+  testCases?: TestCase[];
+}
+
+const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseImportExportProps): JSX.Element => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -278,18 +301,17 @@ export default function ExcelTestCaseImportExport({ projectId, testCases = [] }:
     const lowerStatus = status.toLowerCase();
     
     if (lowerStatus.includes('exit')) return 'Exitoso';
-    if (lowerStatus.includes('fall')) return 'Fallido';
-    if (lowerStatus.includes('bloq')) return 'Bloqueado';
+    if (lowerStatus.includes('fall')) return 'Fallido';    if (lowerStatus.includes('bloq')) return 'Bloqueado';
     if (lowerStatus.includes('progres')) return 'En progreso';
-    
-    return 'No ejecutado'; // Valor por defecto
-  };
+      return 'No ejecutado'; // Valor por defecto
+  }
 
-  return (
-    <>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
+  const renderContent = (): JSX.Element => {
+    return (
+      <div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
           onClick={() => setIsImportDialogOpen(true)}
           className="flex items-center gap-2"
         >
@@ -305,9 +327,12 @@ export default function ExcelTestCaseImportExport({ projectId, testCases = [] }:
           <FileDown size={16} /> Exportar a Excel
         </Button>
       </div>
-      
-      {/* Diálogo de Importación */}
-      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+
+      {isImportDialogOpen && (
+        <Dialog 
+          open={true}
+          onOpenChange={setIsImportDialogOpen}
+        >
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>Importar Casos de Prueba desde Excel</DialogTitle>
@@ -343,28 +368,68 @@ export default function ExcelTestCaseImportExport({ projectId, testCases = [] }:
                 <option value="3">Ciclo 3</option>
               </Select>
             </div>
-            
-            <div className="space-y-2">
+              <div className="space-y-2">
               <Label htmlFor="fileUpload">Archivo Excel</Label>
-              <div className="border-2 border-dashed rounded-md p-6 text-center">
-                <FileText size={40} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-600 mb-2">Seleccione o arrastre un archivo Excel</p>
-                <p className="text-xs text-gray-500 mb-4">El archivo debe seguir el formato estándar de casos de prueba</p>
-                
-                <Input
-                  id="fileUpload"
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileUpload}
-                  disabled={isLoading || !selectedProjectId}
-                  className="hidden"
-                />
-                <label htmlFor="fileUpload">
-                  <Button
-                    type="button" 
-                    variant="outline"
-                    disabled={isLoading || !selectedProjectId}
-                    className="cursor-pointer"
+              <div 
+                className={`border-2 border-dashed rounded-md p-6 text-center transition-colors duration-200 ${
+                  isLoading ? 'bg-gray-50' : 'hover:border-primary hover:bg-gray-50'
+                } ${!selectedProjectId ? 'opacity-50' : 'cursor-pointer'}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!selectedProjectId || isLoading) return;
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!selectedProjectId || isLoading) return;
+                  
+                  const file = e.dataTransfer.files[0];
+                  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                    const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    handleFileUpload(event);
+                  } else {
+                    toast.error('Solo se permiten archivos Excel (.xlsx, .xls)');
+                  }
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+                    <p className="text-sm text-gray-600">Procesando archivo...</p>
+                  </>
+                ) : (
+                  <>
+                    <FileText size={40} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600 mb-2">
+                      {selectedProjectId ? 'Seleccione o arrastre un archivo Excel' : 'Seleccione un proyecto primero'}
+                    </p>
+                    <p className="text-xs text-gray-500 mb-4">El archivo debe seguir el formato estándar de casos de prueba</p>
+                    
+                    <Input
+                      id="fileUpload"
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleFileUpload}
+                      disabled={isLoading || !selectedProjectId}
+                      className="hidden"
+                    />
+                    <div className="space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDownloadTemplate}
+                        disabled={isLoading}
+                        className="mb-2"
+                      >
+                        <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla
+                      </Button>
+                      <label htmlFor="fileUpload">
+                        <Button
+                          type="button" 
+                          variant="outline"
+                          disabled={isLoading || !selectedProjectId}
+                          className="cursor-pointer"
                   >
                     Seleccionar archivo
                   </Button>
@@ -381,11 +446,9 @@ export default function ExcelTestCaseImportExport({ projectId, testCases = [] }:
             >
               Cancelar
             </Button>
-          </DialogFooter>
-        </DialogContent>
+          </DialogFooter>      </DialogContent>
       </Dialog>
-      
-      {/* Diálogo de Exportación */}
+
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
@@ -432,7 +495,11 @@ export default function ExcelTestCaseImportExport({ projectId, testCases = [] }:
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </>
-  );
+      </Dialog>      </div>
+    );
+  }
+
+  return renderContent();
 }
+
+export default ExcelTestCaseImportExport;

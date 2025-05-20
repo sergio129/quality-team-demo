@@ -5,7 +5,7 @@ import TestCaseTable from '@/components/testcases/TestCaseTable';
 import TestCaseStats from '@/components/testcases/TestCaseStats';
 import TestCaseDefectTracker from '@/components/testcases/TestCaseDefectTracker';
 import TestCasePlanManager from '@/components/testcases/TestCasePlanManager';
-import ExcelTestCaseImportExport from '@/components/testcases/ExcelTestCaseImportExport';
+import ExcelImportExport from '@/components/testcases/ExcelImportExport';
 import { useProjects } from '@/hooks/useProjects';
 import { useTestCases, useTestPlans, createTestPlan } from '@/hooks/useTestCases';
 import { Select } from '@/components/ui/select';
@@ -271,7 +271,7 @@ export default function TestCasesPage() {
           </TabsList>
           
           <div className="flex space-x-2">
-            <ExcelTestCaseImportExport projectId={selectedProjectId} />
+            <ExcelImportExport projectId={selectedProjectId} testCases={testCases} />
             {activeTab !== 'cases' && (
               <Button onClick={() => setIsCreatingPlan(true)}>
                 Nuevo Plan de Pruebas
