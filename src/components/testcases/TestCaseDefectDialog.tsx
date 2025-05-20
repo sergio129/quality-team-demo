@@ -122,43 +122,69 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
       setIsLoading(false);
     }
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Gestionar Defectos</DialogTitle>
+      <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader className="pb-2 border-b">
+          <DialogTitle className="text-lg flex items-center gap-2">
+            <span className="text-red-500">•</span>
+            Gestionar Defectos
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Caso de Prueba</Label>
-            <div className="p-2 bg-gray-50 rounded border">
-              <span className="font-medium">{testCase.codeRef}</span> - {testCase.name}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium text-gray-500">Caso de Prueba</Label>
+            <div className="p-3 bg-gray-50 rounded-md border shadow-sm">
+              <div className="font-semibold text-base">{testCase.codeRef}</div>
+              <div className="text-sm text-gray-700 mt-1">{testCase.name}</div>
             </div>
           </div>
-          
-          {/* Defectos seleccionados */}
+            {/* Defectos seleccionados */}
           <div className="space-y-2">
-            <Label>Defectos Vinculados ({selectedDefects.length})</Label>
+            <div className="flex justify-between items-center">
+              <Label className="text-sm font-medium text-gray-500">Defectos Vinculados</Label>
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100">
+                {selectedDefects.length} {selectedDefects.length === 1 ? 'defecto' : 'defectos'}
+              </span>
+            </div>
+            
             {selectedDefects.length === 0 ? (
-              <div className="text-sm text-gray-500 italic">No hay defectos vinculados</div>
+              <div className="flex items-center justify-center p-6 bg-gray-50 border border-dashed border-gray-300 rounded-md text-gray-500 italic">
+                No hay defectos vinculados
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                 {selectedDefects.map(defectId => {
                   const incident = incidents.find(inc => inc.id === defectId);
                   return (
-                    <div key={defectId} className="flex items-center justify-between p-2 bg-red-50 border border-red-200 rounded">
-                      <div>
-                        <span className="font-medium">{defectId}</span>
+                    <div 
+                      key={defectId} 
+                      className={`flex items-center justify-between p-3 rounded-md border shadow-sm ${
+                        incident?.prioridad === 'Alta' ? 'bg-red-50 border-red-200' :
+                        incident?.prioridad === 'Media' ? 'bg-yellow-50 border-yellow-200' :
+                        'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="font-medium">{defectId}</div>
                         {incident && (
-                          <span className="ml-2 text-sm text-gray-700">
-                            {incident.descripcion.substring(0, 60)}
-                            {incident.descripcion.length > 60 ? '...' : ''}
-                          </span>
+                          <div className="text-sm text-gray-700 truncate max-w-[450px]">
+                            {incident.descripcion}
+                          </div>
+                        )}
+                        {incident?.idJira && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Jira: {incident.idJira}
+                          </div>
                         )}
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeDefect(defectId)}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="ml-2 h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-600"
+                        onClick={() => removeDefect(defectId)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -167,18 +193,25 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
               </div>
             )}
           </div>
-          
-          {/* Añadir defecto manualmente */}
-          <div className="space-y-2">
-            <Label>Añadir ID de Defecto Manualmente</Label>
-            <div className="flex space-x-2">
-              <Input
-                placeholder="Ej: INC-20250511-001, SRCA-1234"
-                value={newDefect}
-                onChange={(e) => setNewDefect(e.target.value)}
-              />
-              <Button type="button" onClick={handleAddCustomDefect}>
-                <PlusCircle className="h-4 w-4 mr-1" />
+            {/* Añadir defecto manualmente */}
+          <div className="space-y-2 mt-6">
+            <Label className="text-sm font-medium text-gray-500">Añadir ID de Defecto Manualmente</Label>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Input
+                  className="pl-3 pr-3 py-2 h-10 text-base"
+                  placeholder="Ej: INC-20250511-001, SRCA-1234"
+                  value={newDefect}
+                  onChange={(e) => setNewDefect(e.target.value)}
+                />
+              </div>
+              <Button 
+                type="button" 
+                onClick={handleAddCustomDefect} 
+                disabled={!newDefect.trim()}
+                className="gap-2 h-10"
+              >
+                <PlusCircle className="h-4 w-4" />
                 Añadir
               </Button>
             </div>
