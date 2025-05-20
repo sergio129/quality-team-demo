@@ -21,14 +21,12 @@ interface TestCaseFormProps {
 }
 
 export default function TestCaseForm({ isOpen, onClose, testCase, projectId, testPlanId }: TestCaseFormProps) {
-  const { projects } = useProjects();
   const { testPlans } = useTestPlans(projectId);
-    const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
+  const [newTestCase, setNewTestCase] = useState<Partial<TestCase>>({
     id: '',
+    testPlanId: testPlanId || '',  // Priorizamos el plan de pruebas
     userStoryId: '',
     name: '',
-    projectId: projectId || '',
-    testPlanId: testPlanId || '',
     codeRef: '',
     steps: [],
     expectedResult: '',
@@ -39,7 +37,6 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
     cycle: 1,
     responsiblePerson: '',
     priority: 'Media',
-    testPlanId: '' // Nuevo campo para asociar con un plan de pruebas
   });
   
   const [steps, setSteps] = useState<TestStep[]>([]);
@@ -59,12 +56,13 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
         setSteps([...testCase.steps]);
       } else {
         setSteps([]);
-      }    } else {      setNewTestCase({
+      }
+    } else {
+      setNewTestCase({
         id: '',
+        testPlanId: testPlanId || '',
         userStoryId: '',
         name: '',
-        projectId: projectId || '',
-        testPlanId: testPlanId || '',
         codeRef: '',
         steps: [],
         expectedResult: '',
@@ -74,26 +72,25 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
         evidences: [],
         cycle: 1,
         responsiblePerson: '',
-        priority: 'Media'      });
+        priority: 'Media'
+      });
       setSteps([]);
     }
   }, [testCase, projectId, testPlanId]);
-  
-  // Efecto para actualizar el ciclo cuando cambia el plan de pruebas
+
+  // Efecto para actualizar campos dependientes cuando cambia el plan de pruebas
   useEffect(() => {
     if (newTestCase.testPlanId) {
-      // Buscar el plan de pruebas seleccionado
       const selectedPlan = testPlans?.find(p => p.id === newTestCase.testPlanId);
       
       if (selectedPlan) {
-        // Encontrar el último ciclo disponible
         const lastCycle = selectedPlan.cycles?.length ? 
           Math.max(...selectedPlan.cycles.map(c => c.number)) : 1;
-          // Actualizar el ciclo del caso de prueba
+
         setNewTestCase(prev => ({
           ...prev,
+          projectId: selectedPlan.projectId, // Inferir el projectId del plan
           cycle: lastCycle,
-          // Establecemos solo el prefijo para el código de referencia, el backend añadirá el número único
           codeRef: prev.codeRef || `${selectedPlan.codeReference}-T`
         }));
       }
@@ -162,24 +159,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
         
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="projectId">Proyecto</Label>
-              <Select
-                id="projectId"
-                name="projectId"
-                value={newTestCase.projectId}
-                onChange={handleInputChange}
-                required
-                disabled={!!projectId}
-              >
-                <option value="">Seleccionar proyecto</option>
-                {projects.map((project) => (
-                  <option key={project.id || project.idJira} value={project.idJira}>
-                    {project.proyecto}
-                  </option>
-                ))}              </Select>
-            </div>
-              <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="testPlanId">Plan de Pruebas</Label>
               <Select
                 id="testPlanId"
@@ -200,10 +180,22 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 )}
               </Select>
               {!testPlans?.length && (
-                <p className="text-xs text-red-500 mt-1">Debe crear un plan de pruebas primero para este proyecto</p>
+                <p className="text-xs text-red-500 mt-1">Debe crear un plan de pruebas primero</p>
               )}
             </div>
-            
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="name">Nombre del Caso de Prueba</Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Validar selección múltiple en el campo 'Seleccionar servicio'"
+                value={newTestCase.name || ''}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="userStoryId">Historia de Usuario (HU)</Label>
               <Input
@@ -215,19 +207,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 required
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="codeRef">Código de Referencia</Label>
-              <Input
-                id="codeRef"
-                name="codeRef"
-                placeholder="HU1-T001"
-                value={newTestCase.codeRef || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="cycle">Ciclo</Label>
               <Input
@@ -240,19 +220,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 required
               />
             </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="name">Nombre del Caso de Prueba</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Validar selección múltiple en el campo 'Seleccionar servicio'"
-                value={newTestCase.name || ''}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="testType">Tipo de Prueba</Label>
               <Select
@@ -271,7 +239,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 <option value="Seguridad">Seguridad</option>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
               <Select
@@ -288,7 +256,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 <option value="En progreso">En progreso</option>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="priority">Prioridad</Label>
               <Select
@@ -303,7 +271,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 <option value="Baja">Baja</option>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="responsiblePerson">Responsable</Label>
               <Input
@@ -314,7 +282,7 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
                 onChange={handleInputChange}
               />
             </div>
-            
+
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="expectedResult">Resultado Esperado</Label>
               <textarea

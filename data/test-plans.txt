@@ -18,10 +18,10 @@
         "defects": 0
       }
     ],
-    "testQuality": 100,
+    "testQuality": 86.33,
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
-    "updatedAt": "2025-05-20T16:02:28.759Z"
+    "updatedAt": "2025-05-20T18:43:02.983Z"
   },
   {
     "projectId": "SRSS-143",

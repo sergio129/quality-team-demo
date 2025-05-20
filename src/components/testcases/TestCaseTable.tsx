@@ -34,7 +34,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
     search: '',
     status: '',
     testType: '',
-    userStory: ''
+    userStory: '',
+    testPlanId: testPlanId || ''
   });
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,10 +45,11 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
 
   // Recopilar todas las historias de usuario únicas
   const uniqueUserStories = [...new Set(testCases?.map(tc => tc.userStoryId) || [])].filter(Boolean);
+
   // Filtrar casos de prueba según los filtros
   const filteredTestCases = testCases.filter((tc) => {
     // Filtro por plan de pruebas
-    const planMatch = !testPlanId || tc.testPlanId === testPlanId;
+    const planMatch = !filters.testPlanId || tc.testPlanId === filters.testPlanId;
     
     // Filtro de búsqueda por texto (nombre o descripción)
     const searchMatch = 
@@ -60,19 +62,19 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
     
     // Filtro por tipo de prueba
     const typeMatch = filters.testType === '' || tc.testType === filters.testType;
-      // Filtro por historia de usuario
+    
+    // Filtro por historia de usuario
     const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;
     
     return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
   });
 
-  // Manejo de edición
+  // Manejo de edición y eliminación
   const handleEdit = (testCase: TestCase) => {
     setEditingTestCase(testCase);
     setIsFormOpen(true);
   };
-  
-  // Manejo de eliminación
+
   const handleDelete = async (id: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este caso de prueba?')) {
       try {
@@ -83,25 +85,27 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
       }
     }
   };
-  
-  // Ver detalles
+
   const handleViewDetails = (testCase: TestCase) => {
     setSelectedTestCase(testCase);
     setIsDetailsDialogOpen(true);
   };
-  
+
   // Encontrar el nombre del proyecto si existe
   const projectName = projectId && projects ? 
     projects.find(p => p.id === projectId || p.idJira === projectId)?.proyecto || 'Proyecto no encontrado' :
     'Todos los proyectos';
+
   return (
-    <div className="space-y-4">      <div className="flex justify-between items-center">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Casos de Prueba</h2>
           <p className="text-gray-500">{projectName}</p>
         </div>
         
-        <div className="flex space-x-2">          {isLoadingPlans ? (
+        <div className="flex space-x-2">
+          {isLoadingPlans ? (
             <Button disabled>
               Cargando planes...
             </Button>
@@ -125,9 +129,21 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           )}
         </div>
       </div>
-      
+
       {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Select
+          value={filters.testPlanId}
+          onChange={e => setFilters(prev => ({ ...prev, testPlanId: e.target.value }))}
+        >
+          <option value="">Todos los planes</option>
+          {testPlans?.map((plan) => (
+            <option key={plan.id} value={plan.id}>
+              {plan.codeReference} - {plan.projectName}
+            </option>
+          ))}
+        </Select>
+
         <Input
           placeholder="Buscar..."
           value={filters.search}
@@ -159,7 +175,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           <option value="Rendimiento">Rendimiento</option>
           <option value="Seguridad">Seguridad</option>
         </Select>
-        
+
         <Select
           value={filters.userStory}
           onChange={e => setFilters(prev => ({ ...prev, userStory: e.target.value }))}
