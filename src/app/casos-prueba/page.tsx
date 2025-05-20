@@ -329,163 +329,128 @@ export default function TestCasesPage() {
       
       {isCreatingPlan && (
         <Dialog open={isCreatingPlan} onOpenChange={setIsCreatingPlan}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
+          <DialogContent className="sm:max-w-[450px]">
+            <DialogHeader className="pb-2">
               <DialogTitle>Nuevo Plan de Pruebas</DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="projectId">Proyecto</Label>
-                <div className="flex flex-col gap-2">
+            <div className="space-y-4">
+              <div>
+                <Label>Proyecto</Label>
+                <div className="mt-1.5">
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Search className="w-4 h-4 text-gray-500" />
-                    </div>
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
-                      id="projectSearch"
                       placeholder="Buscar por nombre, ID o equipo..."
                       value={projectSearchInDialog}
                       onChange={(e) => setProjectSearchInDialog(e.target.value)}
-                      className="pl-10 mb-2"
+                      className="pl-8"
                     />
-                    {projectSearchInDialog && (
-                      <button 
-                        className="absolute inset-y-0 right-0 flex items-center pr-3"
-                        onClick={clearSearchInDialog}
-                        title="Limpiar búsqueda"
-                      >
-                        <span className="text-gray-400 hover:text-gray-600">×</span>
-                      </button>
-                    )}
                   </div>
                   
-                  <div className="border rounded-md overflow-hidden">
-                    <div className="bg-gray-50 p-2 border-b text-xs font-medium text-gray-500 flex justify-between items-center">
-                      <span>Proyectos Activos</span>
-                      <span className="text-blue-600">
-                        {getActiveProjects().length} proyectos disponibles
-                      </span>
+                  <div className="mt-1 max-h-[180px] overflow-y-auto rounded-md border bg-white shadow-sm">
+                    <div className="p-2 text-sm text-gray-500">
+                      Proyectos Activos
+                      <span className="float-right text-blue-600">{getActiveProjects().length} proyectos disponibles</span>
                     </div>
-                    
-                    <div className="overflow-y-auto max-h-[200px]">
-                      {getActiveProjects().map((project) => (
-                        <div
-                          key={project.id || project.idJira}
-                          className={`p-3 cursor-pointer hover:bg-gray-100 ${
-                            newTestPlan.projectId === project.idJira ? "bg-blue-50 border-l-4 border-blue-500" : ""
-                          }`}
-                          onClick={() => {
-                            setNewTestPlan(prev => ({
-                              ...prev,
-                              projectId: project.idJira,
-                              projectName: project.proyecto || '',
-                              codeReference: project.idJira || ''
-                            }));
-                          }}
-                        >
-                          <div className="font-medium">{project.proyecto}</div>
-                          <div className="flex justify-between text-sm text-gray-500 mt-1">
-                            <div className="flex flex-col">
-                              <span>ID: {project.idJira}</span>
-                              {project.equipo && <span>Equipo: {project.equipo}</span>}
-                            </div>
-                            <div className="flex items-center text-xs">
-                              <span className="bg-amber-100 text-amber-800 py-1 px-2 rounded-full">
-                                Entrega: {project.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : 'Sin fecha'}
-                              </span>
-                            </div>
-                          </div>
+                    {getActiveProjects().map((project) => (
+                      <div
+                        key={project.id || project.idJira}
+                        className="cursor-pointer border-t p-2 hover:bg-gray-50"
+                        onClick={() => {
+                          setSelectedProjectId(project.idJira || '');
+                          setProjectSearchInDialog('');
+                          setNewTestPlan(prev => ({
+                            ...prev,
+                            projectId: project.idJira,
+                            projectName: project.proyecto || '',
+                            codeReference: project.idJira || ''
+                          }));
+                        }}
+                      >
+                        <div className="font-medium">{project.proyecto}</div>
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span>ID: {project.idJira}</span>
+                          {project.equipo && <span>Equipo: {project.equipo}</span>}
                         </div>
-                      ))}
-                      {getActiveProjects().length === 0 && (
-                        <div className="p-6 text-center text-gray-500 flex flex-col items-center">
-                          <svg className="w-10 h-10 text-gray-300 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p>No se encontraron proyectos activos que coincidan con la búsqueda</p>
-                          <button 
-                            className="text-blue-500 hover:text-blue-700 mt-2 text-sm"
-                            onClick={clearSearchInDialog}
-                          >
-                            Limpiar búsqueda
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="codeReference">Código de Referencia</Label>
+
+              <div>
+                <Label>Código de Referencia</Label>
                 <Input
-                  id="codeReference"
-                  name="codeReference"
                   value={newTestPlan.codeReference || ''}
-                  onChange={handleTestPlanInputChange}
+                  onChange={(e) => setNewTestPlan(prev => ({ ...prev, codeReference: e.target.value }))
+                  }
+                  className="mt-1.5"
                   placeholder="SRCA-XXXX"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Fecha Inicio</Label>
+                <div>
+                  <Label>Fecha Inicio</Label>
                   <Input
-                    id="startDate"
-                    name="startDate"
                     type="date"
+                    name="startDate"
                     value={newTestPlan.startDate}
                     onChange={handleTestPlanInputChange}
+                    className="mt-1.5"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">Fecha Fin</Label>
+                <div>
+                  <Label>Fecha Fin</Label>
                   <Input
-                    id="endDate"
-                    name="endDate"
                     type="date"
-                    value={newTestPlan.endDate || ''}
+                    name="endDate"
+                    value={newTestPlan.endDate}
                     onChange={handleTestPlanInputChange}
+                    className="mt-1.5"
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedHours">Horas Estimadas</Label>
+                <div>
+                  <Label>Horas Est.</Label>
                   <Input
-                    id="estimatedHours"
-                    name="estimatedHours"
                     type="number"
+                    name="estimatedHours"
                     min="0"
-                    step="0.5"
                     value={newTestPlan.estimatedHours}
                     onChange={handleTestPlanInputChange}
+                    className="mt-1.5"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedDays">Días Estimados</Label>
+                <div>
+                  <Label>Días Est.</Label>
                   <Input
-                    id="estimatedDays"
-                    name="estimatedDays"
                     type="number"
+                    name="estimatedDays"
                     min="0"
                     step="0.5"
                     value={newTestPlan.estimatedDays}
                     onChange={handleTestPlanInputChange}
+                    className="mt-1.5"
                   />
                 </div>
               </div>
             </div>
-            
-            <DialogFooter>
+
+            <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setIsCreatingPlan(false)}>
                 Cancelar
               </Button>
-              <Button type="button" onClick={handleCreateTestPlan}>
+              <Button 
+                type="button" 
+                onClick={handleCreateTestPlan}
+                disabled={!selectedProjectId}
+              >
                 Crear Plan de Pruebas
               </Button>
             </DialogFooter>
