@@ -68,6 +68,15 @@ export const testCaseService = {
       const testCases = await this.getAllTestCases();
       testCases.push(testCase);
       await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(testCases, null, 2));
+      
+      // Si el caso tiene un plan de pruebas asociado, actualizar su contador
+      if (testCase.testPlanId) {
+        const testPlan = await this.getTestPlan(testCase.testPlanId);
+        if (testPlan && testPlan.projectId) {
+          await this.updateTestPlanCaseCount(testPlan.projectId);
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error('Error saving test case:', error);
@@ -80,8 +89,29 @@ export const testCaseService = {
       const testCases = await this.getAllTestCases();
       const index = testCases.findIndex(tc => tc.id === id);
       if (index !== -1) {
+        const originalTestPlanId = testCases[index].testPlanId;
+        const newTestPlanId = updatedTestCase.testPlanId;
+        
         testCases[index] = { ...testCases[index], ...updatedTestCase, updatedAt: new Date().toISOString() };
         await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(testCases, null, 2));
+        
+        // Si cambió el plan de pruebas, actualizar ambos planes
+        if (originalTestPlanId && (!newTestPlanId || originalTestPlanId !== newTestPlanId)) {
+          // Buscar plan original y actualizar
+          const originalTestPlan = await this.getTestPlan(originalTestPlanId);
+          if (originalTestPlan && originalTestPlan.projectId) {
+            await this.updateTestPlanCaseCount(originalTestPlan.projectId);
+          }
+        }
+        
+        // Actualizar el nuevo plan de pruebas (si existe)
+        if (newTestPlanId) {
+          const newTestPlan = await this.getTestPlan(newTestPlanId);
+          if (newTestPlan && newTestPlan.projectId) {
+            await this.updateTestPlanCaseCount(newTestPlan.projectId);
+          }
+        }
+        
         return true;
       }
       return false;
@@ -94,8 +124,20 @@ export const testCaseService = {
   async deleteTestCase(id: string): Promise<boolean> {
     try {
       const testCases = await this.getAllTestCases();
+      const caseToDelete = testCases.find(tc => tc.id === id);
+      const testPlanId = caseToDelete?.testPlanId;
+      
       const filteredTestCases = testCases.filter(tc => tc.id !== id);
       await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(filteredTestCases, null, 2));
+      
+      // Si el caso tenía un plan asociado, actualizar el contador del plan
+      if (testPlanId) {
+        const testPlan = await this.getTestPlan(testPlanId);
+        if (testPlan && testPlan.projectId) {
+          await this.updateTestPlanCaseCount(testPlan.projectId);
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error(`Error deleting test case ${id}:`, error);
@@ -178,6 +220,31 @@ export const testCaseService = {
       return false;
     }
   },
+  
+  // Actualizar automáticamente el contador de casos totales en un plan de prueba
+  async updateTestPlanCaseCount(projectId: string): Promise<boolean> {
+    try {
+      // Obtener todos los planes de prueba del proyecto
+      const testPlans = await this.getTestPlansByProject(projectId);
+      
+      // Para cada plan, contar cuántos casos de prueba están asociados
+      for (const plan of testPlans) {
+        const testCases = await this.getAllTestCases();
+        const casesForThisPlan = testCases.filter(tc => tc.testPlanId === plan.id);
+        const totalCases = casesForThisPlan.length;
+        
+        // Actualizar el plan solo si el contador de casos ha cambiado
+        if (plan.totalCases !== totalCases) {
+          await this.updateTestPlan(plan.id, { totalCases });
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`Error updating test plan case count for project ${projectId}:`, error);
+      return false;
+    }
+  },
 
   // Estadísticas
   async getTestCaseStatsByProject(projectId: string): Promise<any> {
@@ -198,6 +265,9 @@ export const testCaseService = {
           statusStats[tc.status]++;
         }
       });
+      
+      // Actualizar automáticamente el contador de casos totales en el plan de prueba
+      await this.updateTestPlanCaseCount(projectId);
       
       // Estadísticas por ciclo
       const cycleStats = {};

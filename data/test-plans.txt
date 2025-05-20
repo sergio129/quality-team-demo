@@ -7,7 +7,7 @@
     "endDate": "2025-05-20",
     "estimatedHours": 4,
     "estimatedDays": 1,
-    "totalCases": 0,
+    "totalCases": 3,
     "cycles": [
       {
         "id": "933cb9e6-15ab-490f-a0a6-3fe0c834882a",
