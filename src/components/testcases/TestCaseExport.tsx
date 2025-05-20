@@ -171,8 +171,22 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           String(stats.defectos), `${exitosoPercent}%`, `${incidentesPercent}%`
         ]);
       }
+        // Calcular la calidad del desarrollo basada en defectos
+      let totalDefectos = 0;
+      let totalCasosDisenados = 0;
       
-      mainData.push([''], [''], ['Calidad del desarrollo', '', '', '', '', '', '', '', '', '', '', '', '', '100%']);
+      for (const cycle in cycleStats) {
+        totalDefectos += cycleStats[cycle].defectos;
+        totalCasosDisenados += cycleStats[cycle].disenados;
+      }
+      
+      let calidad = 100;
+      if (totalCasosDisenados > 0) {
+        // Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
+        calidad = Math.max(0, Math.min(100, 100 - (totalDefectos / totalCasosDisenados) * 100));
+      }
+      
+      mainData.push([''], [''], ['Calidad del desarrollo', '', '', '', '', '', '', '', '', '', '', '', '', `${Math.round(calidad)}%`]);
       
       // Encabezados de la tabla de casos
       mainData.push([
@@ -238,25 +252,24 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
     
     try {
       const project = projects.find(p => p.id === selectedProjectId || p.idJira === selectedProjectId);
-      const projectName = project ? project.proyecto : 'casos_prueba';
-        // Crear un nuevo documento PDF
+      const projectName = project ? project.proyecto : 'casos_prueba';      // Crear un nuevo documento PDF
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true // Activar compresión para reducir tamaño del archivo
       });
-      
-      // Añadir cabecera con información del proyecto
-      doc.setFontSize(16);
+        // Añadir cabecera con información del proyecto
+      doc.setFontSize(14); // Reducir tamaño de fuente para título
       doc.setTextColor(0, 51, 102); // Color azul corporativo
-      doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 20);
+      doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 15);
       
-      doc.setFontSize(11);
+      doc.setFontSize(10); // Reducir tamaño para información de proyecto
       doc.setTextColor(0, 0, 0);
-      doc.text(`Proyecto: ${project?.proyecto || ''}`, 15, 30);
-      doc.text(`Código JIRA: ${project?.idJira || ''}`, 15, 35);
-      doc.text(`Fecha inicio: ${project?.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : ''}`, 15, 40);
-      doc.text(`Fecha fin: ${project?.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : ''}`, 115, 40);
+      doc.text(`Proyecto: ${project?.proyecto || ''}`, 15, 22);
+      doc.text(`Código JIRA: ${project?.idJira || ''}`, 15, 27);
+      doc.text(`Fecha inicio: ${project?.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : ''}`, 15, 32);
+      doc.text(`Fecha fin: ${project?.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : ''}`, 115, 32);
       
       // Calcular estadísticas por ciclo
       interface CycleStats {
@@ -311,88 +324,151 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           `${exitosoPercent}%`,
           `${incidentesPercent}%`
         ]);
-      }
-        // Añadir tabla de estadísticas
+      }        // Añadir tabla de estadísticas
       autoTable(doc, {
-        startY: 45,
+        startY: 37, // Iniciar tabla más arriba
         head: [['Ciclo', 'Diseñados', 'Exitosos', 'No ejecutados', 'Defectos', '% Exitosos', '% Incidentes']],
         body: statsData,
         theme: 'grid',
         headStyles: {
           fillColor: [0, 102, 204],
           textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          fontSize: 8 // Fuente más pequeña
+        },
+        bodyStyles: {
+          fontSize: 8 // Fuente más pequeña para datos
         },
         columnStyles: {
-          0: { cellWidth: 30 },
-          5: { cellWidth: 30 },
-          6: { cellWidth: 30 }
-        }
-      });
-        // Obtener la posición Y después de la tabla de estadísticas
-      const finalY = (doc as any).lastAutoTable?.finalY || 70;
+          0: { cellWidth: 25 },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 }
+        },
+        margin: { top: 5, right: 5, bottom: 5, left: 5 } // Márgenes más pequeños
+      });      // Obtener la posición Y después de la tabla de estadísticas
+      const finalY = (doc as any).lastAutoTable?.finalY || 55;
+      
+      // Calcular la calidad del desarrollo basada en defectos
+      let totalDefectos = 0;
+      let totalCasosDisenados = 0;
+      
+      for (const cycle in cycleStats) {
+        totalDefectos += cycleStats[cycle].defectos;
+        totalCasosDisenados += cycleStats[cycle].disenados;
+      }
+      
+      let calidad = 100;
+      if (totalCasosDisenados > 0) {
+        // Calculamos la calidad como 100% menos el porcentaje de defectos sobre casos diseñados
+        calidad = Math.max(0, Math.min(100, 100 - (totalDefectos / totalCasosDisenados) * 100));
+      }
       
       // Añadir resumen de calidad
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setTextColor(0, 102, 0); // Color verde para calidad
-      doc.text(`Calidad del desarrollo: 100%`, 15, finalY + 10);
-      
-      // Preparar datos para la tabla principal
-      const tableData = testCases.map(tc => [
-        tc.userStoryId || '',
-        tc.codeRef || '',
-        tc.name || '',
-        tc.steps?.map(step => step.description).join('\n') || '',
-        tc.expectedResult || '',
-        tc.testType || '',
-        tc.status || '',
-        tc.defects?.length ? tc.defects.join('\n') : '',
-        tc.responsiblePerson || ''
-      ]);
-      
-      // Añadir tabla principal con casos de prueba
+      doc.text(`Calidad del desarrollo: ${Math.round(calidad)}%`, 15, finalY + 8);
+        // Preparar datos para la tabla principal
+      const tableData = testCases.map(tc => {
+        // Acortar los pasos si son demasiado largos
+        const pasos = tc.steps?.map(step => step.description).join('\n') || '';
+        const pasosOptimizados = pasos.length > 300 ? pasos.substring(0, 297) + '...' : pasos;
+        
+        return [
+          tc.userStoryId || '',
+          tc.codeRef || '',
+          tc.name || '',
+          pasosOptimizados,
+          tc.expectedResult || '',
+          tc.testType || '',
+          tc.status || '',
+          tc.defects?.length ? tc.defects.join(', ') : '', // Usar comas en lugar de saltos para ahorrar espacio
+          tc.responsiblePerson || ''
+        ];
+      });
+        // Añadir tabla principal con casos de prueba
       autoTable(doc, {
-        startY: finalY + 15,
+        startY: finalY + 12, // Reducir espacio
         head: [['HU', 'ID', 'Nombre del caso', 'Pasos', 'Resultado esperado', 'Tipo', 'Estado', 'Defectos', 'Responsable']],
         body: tableData,
         theme: 'grid',
         headStyles: {
           fillColor: [0, 102, 204],
           textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          fontSize: 8 // Fuente más pequeña para encabezados
+        },
+        bodyStyles: {
+          fontSize: 7 // Fuente más pequeña para contenido
         },
         columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 40 },
-          3: { cellWidth: 60 },
-          4: { cellWidth: 50 },
-          5: { cellWidth: 25 },
-          6: { cellWidth: 25 },
-          7: { cellWidth: 30 },
-          8: { cellWidth: 30 }
-        },        styles: {
-          overflow: 'linebreak',
-          cellPadding: 2
+          0: { cellWidth: 15 }, // HU - más estrecho
+          1: { cellWidth: 15 }, // ID - más estrecho
+          2: { cellWidth: 40 }, // Nombre - mantener ancho para legibilidad
+          3: { cellWidth: 55 }, // Pasos - espacio adecuado
+          4: { cellWidth: 40 }, // Resultado - reducido
+          5: { cellWidth: 20 }, // Tipo - más estrecho
+          6: { cellWidth: 20 }, // Estado - más estrecho
+          7: { cellWidth: 30 }, // Defectos - mantener para legibilidad
+          8: { cellWidth: 20 }  // Responsable - más estrecho
         },
-        didDrawPage: (data) => {
+        styles: {
+          overflow: 'linebreak',
+          cellPadding: 1 // Reducir el padding
+        },        didDrawPage: (data) => {
           // Añadir pie de página
           const pageCount = doc.getNumberOfPages();
-          doc.setFontSize(9);
+          doc.setFontSize(8); // Fuente más pequeña para el pie de página
           doc.setTextColor(150);
           const pageWidth = doc.internal.pageSize.width;
           const pageHeight = doc.internal.pageSize.height;
           
+          // Guardar estado actual para restaurarlo después
+          const oldFillColor = doc.getFillColor();
+          
+          // Añadir un rectángulo gris claro como fondo del pie de página
+          doc.setFillColor(245, 245, 245);
+          doc.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+          
+          // Restaurar el color de relleno original
+          doc.setFillColor(oldFillColor);
+          
+          // Añadir información en el pie de página
           doc.text(
             `Página ${data.pageNumber} de ${pageCount}`, 
-            pageWidth - 40, 
-            pageHeight - 10
+            pageWidth - 30, 
+            pageHeight - 6
           );
           doc.text(
             `Generado: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
             15,
-            pageHeight - 10
+            pageHeight - 6
           );
+          
+          // Añadir encabezado en páginas subsiguientes si no es la primera página
+          if (data.pageNumber > 1) {
+            // Guardar estado actual
+            const oldFillColor = doc.getFillColor();
+            
+            // Añadir un rectángulo azul como encabezado
+            doc.setFillColor(0, 51, 102);
+            doc.rect(0, 0, pageWidth, 12, 'F');
+            
+            // Restaurar el color de relleno
+            doc.setFillColor(oldFillColor);
+            
+            // Añadir texto del encabezado
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.text('CASOS DE PRUEBA - QUALITY TEAMS', 15, 8);
+            doc.text(`Proyecto: ${project?.proyecto || ''}`, pageWidth - 100, 8);
+            
+            // Restaurar colores para el contenido
+            doc.setTextColor(0, 0, 0);
+          }
         }
       });
       
