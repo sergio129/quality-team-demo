@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import TestCaseTable from '@/components/testcases/TestCaseTable';
 import TestCaseStats from '@/components/testcases/TestCaseStats';
-import TestCaseAdvancedStats from '@/components/testcases/TestCaseAdvancedStats';
 import TestCaseDefectTracker from '@/components/testcases/TestCaseDefectTracker';
+import TestCasePlanManager from '@/components/testcases/TestCasePlanManager';
 import ExcelTestCaseImportExport from '@/components/testcases/ExcelTestCaseImportExport';
 import { useProjects } from '@/hooks/useProjects';
 import { useTestCases, useTestPlans, createTestPlan } from '@/hooks/useTestCases';
@@ -23,7 +23,7 @@ export default function TestCasesPage() {
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTestPlanId, setSelectedTestPlanId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>('cases');
+  const [activeTab, setActiveTab] = useState<string>('plans');
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState<string>('');
   const [projectSearchInDialog, setProjectSearchInDialog] = useState<string>('');
@@ -264,9 +264,9 @@ export default function TestCasesPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex justify-between items-center">
           <TabsList>
+            <TabsTrigger value="plans">Planes de Prueba</TabsTrigger>
             <TabsTrigger value="cases">Casos de Prueba</TabsTrigger>
             <TabsTrigger value="stats">Estadísticas</TabsTrigger>
-            <TabsTrigger value="advanced">Métricas Avanzadas</TabsTrigger>
             <TabsTrigger value="defects">Defectos</TabsTrigger>
           </TabsList>
           
@@ -280,7 +280,32 @@ export default function TestCasesPage() {
           </div>
         </div>
 
+        <TabsContent value="plans">
+          <TestCasePlanManager
+            onPlanSelected={(planId) => {
+              setSelectedTestPlanId(planId);
+              setSelectedProjectId(testPlans.find(p => p.id === planId)?.projectId || '');
+              setActiveTab('cases');
+            }}
+          />
+        </TabsContent>
+
         <TabsContent value="cases" className="mt-6">
+          <div className="mb-4">
+            {selectedTestPlanId ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <p className="text-sm text-blue-700">
+                  Plan de pruebas seleccionado: {testPlans.find(p => p.id === selectedTestPlanId)?.codeReference || 'No encontrado'}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                <p className="text-sm text-yellow-700">
+                  Selecciona un plan de pruebas en la pestaña "Planes de Prueba" para comenzar a crear casos de prueba
+                </p>
+              </div>
+            )}
+          </div>
           <TestCaseTable 
             projectId={selectedProjectId}
             testPlanId={selectedTestPlanId} 
@@ -289,13 +314,6 @@ export default function TestCasesPage() {
         
         <TabsContent value="stats" className="mt-6">
           <TestCaseStats 
-            projectId={selectedProjectId}
-            testPlanId={selectedTestPlanId}
-          />
-        </TabsContent>
-        
-        <TabsContent value="advanced" className="mt-6">
-          <TestCaseAdvancedStats 
             projectId={selectedProjectId}
             testPlanId={selectedTestPlanId}
           />

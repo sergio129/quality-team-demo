@@ -105,7 +105,7 @@
   },
   {
     "celula": "Suramericana",
-    "estado": "Abierto",
+    "estado": "Resuelto",
     "prioridad": "Media",
     "descripcion": "Cuando se edita, la parametrizacion y  se quiere quitar uno de los registros se quitan los demas seleccionados",
     "fechaReporte": "2025-05-20T13:47:17.038Z",
