@@ -23,6 +23,24 @@ export async function POST(req: NextRequest) {
         testCaseData.id = uuidv4();
     }
     
+    // Generar código de referencia único si tiene un plan de pruebas o proyecto seleccionado
+    if (testCaseData.codeRef) {
+        // Si el código ya tiene un número al final, lo mantenemos
+        if (!testCaseData.codeRef.match(/[0-9]+$/)) {
+            // Si no tiene un número al final, generamos uno único
+            const prefix = testCaseData.codeRef;
+            testCaseData.codeRef = await testCaseService.generateUniqueCodeRef(prefix);
+        }
+    } else if (testCaseData.testPlanId) {
+        // Si no hay un código de referencia pero hay un plan de pruebas
+        const plans = await testCaseService.getAllTestPlans();
+        const plan = plans.find(p => p.id === testCaseData.testPlanId);
+        if (plan) {
+            const prefix = `${plan.codeReference}-T`;
+            testCaseData.codeRef = await testCaseService.generateUniqueCodeRef(prefix);
+        }
+    }
+    
     // Añadir fechas
     const now = new Date().toISOString();
     testCaseData.createdAt = now;

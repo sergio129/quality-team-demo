@@ -354,5 +354,38 @@ export const testCaseService = {
         defectsByCycle: []
       };
     }
-  }
+  },
+
+  async generateUniqueCodeRef(prefix: string): Promise<string> {
+    try {
+      const testCases = await this.getAllTestCases();
+      // Filtramos los casos que empiezan con el mismo prefijo
+      const casesWithPrefix = testCases.filter(tc => tc.codeRef && tc.codeRef.startsWith(prefix));
+      
+      // Si no hay casos con este prefijo, empezamos con el número 1
+      if (casesWithPrefix.length === 0) {
+        return `${prefix}001`;
+      }
+      
+      // Extraemos los números del final de los códigos existentes
+      const numbers = casesWithPrefix
+        .map(tc => {
+          // Extraer el número del final del código (después del último guion)
+          const match = tc.codeRef.match(/[0-9]+$/);
+          return match ? parseInt(match[0], 10) : 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      // Encontramos el número más alto y le sumamos 1
+      const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+      
+      // Formateamos el número para que tenga al menos 3 dígitos
+      const formattedNumber = String(nextNumber).padStart(3, '0');
+      return `${prefix}${formattedNumber}`;
+    } catch (error) {
+      console.error('Error generating unique code ref:', error);
+      // Si ocurre un error, generamos un código basado en la marca de tiempo
+      return `${prefix}${Date.now().toString().slice(-5)}`;
+    }
+  },
 }

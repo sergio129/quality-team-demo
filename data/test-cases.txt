@@ -1,1 +1,82 @@
-[]
+[
+  {
+    "id": "8f1ea45e-2a52-4c3b-8ce2-5c5964db0ebb",
+    "userStoryId": "HU-01",
+    "name": "Validar selección múltiple en el campo \"Seleccionar servicio\" en la creación de registros en la parametrización \"Prefijos\"",
+    "projectId": "SRCA-6556",
+    "testPlanId": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
+    "codeRef": "SRCA-6556-T",
+    "steps": [
+      {
+        "id": "abe5c341-6460-4213-8810-bf01df4027ee",
+        "description": "Ingresar al módulo de parametrización \"Prefijos\".",
+        "expected": ""
+      },
+      {
+        "id": "8321271f-1f2c-443f-b547-1e1409c055ef",
+        "description": "Hacer clic en \"Nuevo registro\".",
+        "expected": ""
+      },
+      {
+        "id": "6180ff08-2d63-4168-b7bc-ff948cf76df4",
+        "description": "Ubicar el campo \"Seleccionar servicio\".",
+        "expected": ""
+      },
+      {
+        "id": "4d094259-5a62-439a-88d4-27f234ce027d",
+        "description": " Verificar que el campo permita seleccionar más de un servicio.",
+        "expected": ""
+      }
+    ],
+    "expectedResult": " El sistema debe permitir seleccionar múltiples servicios en el campo y guardar el registro correctamente.",
+    "testType": "Funcional",
+    "status": "No ejecutado",
+    "defects": [],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "Sergio anaya",
+    "priority": "Media",
+    "createdAt": "2025-05-20T16:29:42.519Z",
+    "updatedAt": "2025-05-20T16:29:42.519Z"
+  },
+  {
+    "id": "68ff8936-17bf-442a-91a6-7dee4e59f8bc",
+    "userStoryId": "HU-02",
+    "name": "Validar selección múltiple en el campo \"Seleccionar servicio\" al editar un registro desde la columna \"Acciones\" del tablero de búsqueda.",
+    "projectId": "SRCA-6556",
+    "testPlanId": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
+    "codeRef": "SRCA-6556-T",
+    "steps": [
+      {
+        "id": "654c2f7c-1ead-4fdc-97c0-69e1fedab1a8",
+        "description": "Ingresar al tablero de búsqueda de la parametrización \"Prefijos\".",
+        "expected": ""
+      },
+      {
+        "id": "1e655672-a916-4f03-be67-e4f4ba7a2bb4",
+        "description": "Ubicar un registro existente.",
+        "expected": ""
+      },
+      {
+        "id": "f3eb8f85-4a05-4062-9832-1045f0ea985d",
+        "description": "Hacer clic en el botón \"Editar\" de la columna \"Acciones\".",
+        "expected": ""
+      },
+      {
+        "id": "aeefc6e7-e348-49f1-90fb-1015ab481ffa",
+        "description": "Verificar que el campo \"Seleccionar servicio\" permita seleccionar más de un servicio.",
+        "expected": ""
+      }
+    ],
+    "expectedResult": "El sistema debe permitir editar un registro seleccionando múltiples servicios desde el campo correspondiente",
+    "testType": "Funcional",
+    "status": "No ejecutado",
+    "defects": [],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "Sergio anaya",
+    "priority": "Media",
+    "createdAt": "2025-05-20T16:31:23.957Z",
+    "updatedAt": "2025-05-20T16:31:23.957Z"
+  }
+]

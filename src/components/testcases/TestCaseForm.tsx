@@ -89,13 +89,12 @@ export default function TestCaseForm({ isOpen, onClose, testCase, projectId, tes
         // Encontrar el último ciclo disponible
         const lastCycle = selectedPlan.cycles?.length ? 
           Math.max(...selectedPlan.cycles.map(c => c.number)) : 1;
-        
-        // Actualizar el ciclo del caso de prueba
+          // Actualizar el ciclo del caso de prueba
         setNewTestCase(prev => ({
           ...prev,
           cycle: lastCycle,
-          // También podemos preestablecer un prefijo para el código de referencia
-          codeRef: prev.codeRef || `${selectedPlan.codeReference}-T` 
+          // Establecemos solo el prefijo para el código de referencia, el backend añadirá el número único
+          codeRef: prev.codeRef || `${selectedPlan.codeReference}-T`
         }));
       }
     }
