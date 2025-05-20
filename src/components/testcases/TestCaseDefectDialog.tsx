@@ -97,14 +97,12 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
       setNewDefect('');
     }
   };
-
   const handleSave = async () => {
     try {
       setIsLoading(true);
       
-      // Actualizar el caso de prueba con los defectos
-      const updatedTestCase = {
-        ...testCase,
+      // Preparar los datos de actualización (solo los campos que vamos a cambiar)
+      const testCaseUpdate = {
         defects: selectedDefects,
         // Si hay defectos y el estado es "Exitoso", cambiarlo a "Fallido"
         status: selectedDefects.length > 0 && testCase.status === 'Exitoso' 
@@ -112,7 +110,8 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
           : testCase.status
       };
       
-      await updateTestCase(updatedTestCase);
+      // Llamar a updateTestCase con el id como primer parámetro y los datos a actualizar como segundo parámetro
+      await updateTestCase(testCase.id, testCaseUpdate);
       toast.success('Defectos vinculados correctamente');
       onClose();
     } catch (error) {

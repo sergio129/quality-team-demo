@@ -5,7 +5,7 @@
     "name": "Validar selección múltiple en el campo \"Seleccionar servicio\" en la creación de registros en la parametrización \"Prefijos\"",
     "projectId": "SRCA-6556",
     "testPlanId": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
-    "codeRef": "SRCA-6556-T",
+    "codeRef": "SRCA-6556-T-1",
     "steps": [
       {
         "id": "abe5c341-6460-4213-8810-bf01df4027ee",
@@ -30,14 +30,31 @@
     ],
     "expectedResult": " El sistema debe permitir seleccionar múltiples servicios en el campo y guardar el registro correctamente.",
     "testType": "Funcional",
-    "status": "No ejecutado",
-    "defects": [],
-    "evidences": [],
+    "status": "Fallido",
+    "defects": [
+      "INC-20250520-001"
+    ],
+    "evidences": [
+      {
+        "id": "aca2be39-0f09-4364-b8b6-56a041efa23c",
+        "date": "2025-05-20",
+        "tester": "",
+        "precondition": "",
+        "steps": [
+          ""
+        ],
+        "screenshots": [
+          "sample-evidence-0.jpg"
+        ],
+        "result": "Exitoso",
+        "comments": ""
+      }
+    ],
     "cycle": 1,
     "responsiblePerson": "Sergio anaya",
     "priority": "Media",
     "createdAt": "2025-05-20T16:29:42.519Z",
-    "updatedAt": "2025-05-20T16:29:42.519Z"
+    "updatedAt": "2025-05-20T17:28:15.549Z"
   },
   {
     "id": "68ff8936-17bf-442a-91a6-7dee4e59f8bc",
@@ -45,7 +62,7 @@
     "name": "Validar selección múltiple en el campo \"Seleccionar servicio\" al editar un registro desde la columna \"Acciones\" del tablero de búsqueda.",
     "projectId": "SRCA-6556",
     "testPlanId": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
-    "codeRef": "SRCA-6556-T",
+    "codeRef": "SRCA-6556-T002",
     "steps": [
       {
         "id": "654c2f7c-1ead-4fdc-97c0-69e1fedab1a8",
@@ -77,6 +94,46 @@
     "responsiblePerson": "Sergio anaya",
     "priority": "Media",
     "createdAt": "2025-05-20T16:31:23.957Z",
-    "updatedAt": "2025-05-20T16:31:23.957Z"
+    "updatedAt": "2025-05-20T17:24:26.790Z"
+  },
+  {
+    "id": "401647f2-55c4-4954-b863-9b0c6d1a9be9",
+    "userStoryId": "HU-03",
+    "name": "Validar selección múltiple en el filtro de búsqueda del campo \"Seleccionar servicio\" en la parametrización \"Prefijos\".",
+    "projectId": "SRCA-6556",
+    "testPlanId": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
+    "codeRef": "SRCA-6556-T003",
+    "steps": [
+      {
+        "id": "b31051ea-aed7-41cb-ba08-9ad9cf8ede20",
+        "description": "Ingresar al tablero de búsqueda de la parametrización \"Prefijos\".",
+        "expected": ""
+      },
+      {
+        "id": "6775c0a5-146b-4ba8-bc93-3ef8595c2c78",
+        "description": "Ubicar el filtro de búsqueda \"Seleccionar servicio\".",
+        "expected": ""
+      },
+      {
+        "id": "874d16ac-c2dc-465f-9c4b-f2b98ee06f0b",
+        "description": "Verificar que el filtro permita la selección de múltiples servicios.",
+        "expected": ""
+      },
+      {
+        "id": "061de740-3118-4554-8ccb-cae9a7193399",
+        "description": "Seleccionar varios servicios.",
+        "expected": ""
+      }
+    ],
+    "expectedResult": "El sistema debe listar los registros que coincidan con cualquiera de los servicios seleccionados.",
+    "testType": "Funcional",
+    "status": "No ejecutado",
+    "defects": [],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "",
+    "priority": "Media",
+    "createdAt": "2025-05-20T17:30:08.407Z",
+    "updatedAt": "2025-05-20T17:30:08.407Z"
   }
 ]
