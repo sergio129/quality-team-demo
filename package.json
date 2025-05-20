@@ -22,6 +22,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "file-saver": "^2.0.5",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.510.0",
     "next": "15.3.2",
     "react": "^19.0.0",
