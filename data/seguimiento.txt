@@ -235,7 +235,8 @@
     "fechaCertificacion": "2025-05-08T00:00:00.000Z",
     "diasRetraso": -45126,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": ""
+    "planTrabajo": "",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCGT-1102",
@@ -249,7 +250,8 @@
     "fechaCertificacion": "2025-05-08T00:00:00.000Z",
     "diasRetraso": -45126,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": ""
+    "planTrabajo": "",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCBH-528",
@@ -263,7 +265,8 @@
     "fechaCertificacion": "2025-05-09T00:00:00.000Z",
     "diasRetraso": -45128,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": ""
+    "planTrabajo": "",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCCR-1460",
@@ -277,7 +280,8 @@
     "fechaCertificacion": "2025-05-14T00:00:00.000Z",
     "diasRetraso": -45128,
     "analistaProducto": "Leidy Iral",
-    "planTrabajo": "actualizancion"
+    "planTrabajo": "actualizancion",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCGT-1080",
@@ -291,7 +295,8 @@
     "fechaCertificacion": "2025-05-14T00:00:00.000Z",
     "diasRetraso": 0,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": "finalizado"
+    "planTrabajo": "finalizado",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCGL-176",
@@ -305,7 +310,8 @@
     "fechaCertificacion": "2025-05-16T00:00:00.000Z",
     "diasRetraso": 0,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": "finalizado"
+    "planTrabajo": "finalizado",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "KOIN-261",
