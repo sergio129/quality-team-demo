@@ -101,7 +101,6 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
     setSearchTerm(project.proyecto || '');
     setShowDropdown(false);
   };
-
   // Función para exportar a Excel
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -109,6 +108,9 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
     try {
       const project = projects.find(p => p.id === selectedProjectId || p.idJira === selectedProjectId);
       const projectName = project ? project.proyecto : 'casos_prueba';
+      
+      // Filtrar solo los casos de prueba que pertenecen al proyecto seleccionado
+      const filteredTestCases = testCases.filter(tc => tc.projectId === selectedProjectId);
       
       // Formatear datos para el Excel
       const mainData = [
@@ -142,7 +144,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       };
       
       // Calcular estadísticas por ciclo
-      testCases.forEach(tc => {
+      filteredTestCases.forEach(tc => {
         const cycleName = `Ciclo ${tc.cycle || 1}`;
         if (cycleStats[cycleName]) {
           cycleStats[cycleName].disenados++;
@@ -185,7 +187,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       }
       
       // Recolectar tipos únicos de prueba
-      testCases.forEach(tc => {
+      filteredTestCases.forEach(tc => {
         if (tc.testType) {
           tiposPrueba.add(tc.testType);
         }
@@ -236,7 +238,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       ]);
       
       // Datos de los casos
-      testCases.forEach(tc => {
+      filteredTestCases.forEach(tc => {
         const pasos = tc.steps?.map(step => step.description).join('\n') || '';
         
         mainData.push([
@@ -293,7 +295,12 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
     
     try {
       const project = projects.find(p => p.id === selectedProjectId || p.idJira === selectedProjectId);
-      const projectName = project ? project.proyecto : 'casos_prueba';      // Crear un nuevo documento PDF
+      const projectName = project ? project.proyecto : 'casos_prueba';   
+      
+      // Filtrar solo los casos de prueba que pertenecen al proyecto seleccionado
+      const filteredTestCases = testCases.filter(tc => tc.projectId === selectedProjectId);
+      
+      // Crear un nuevo documento PDF
       const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'mm',
@@ -402,7 +409,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       };
       
       // Calcular estadísticas por ciclo
-      testCases.forEach(tc => {
+      filteredTestCases.forEach(tc => {
         const cycleName = `Ciclo ${tc.cycle || 1}`;
         if (cycleStats[cycleName]) {
           cycleStats[cycleName].disenados++;
@@ -443,7 +450,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         body: statsData,
         theme: 'striped', // Tabla con filas alternadas para mejor lectura
         headStyles: {
-          fillColor: primaryColor,
+          fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 8, // Fuente más pequeña
@@ -473,7 +480,8 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         }
       });      // Obtener la posición Y después de la tabla de estadísticas
       const finalY = (doc as any).lastAutoTable?.finalY || 55;
-        // Calcular la calidad del desarrollo usando el mismo algoritmo que la API
+      
+      // Calcular la calidad del desarrollo usando el mismo algoritmo que la API
       let totalCasosDisenados = 0;
       let ejecutados = 0;
       let exitosos = 0;
@@ -488,7 +496,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       }
       
       // Recolectar tipos únicos de prueba
-      testCases.forEach(tc => {
+      filteredTestCases.forEach(tc => {
         if (tc.testType) {
           tiposPrueba.add(tc.testType);
         }
@@ -552,7 +560,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       doc.setFontSize(10);
       doc.text(calidad === -1 ? 'N/A' : `${Math.round(calidad)}%`, 85, finalY + 7);
         // Preparar datos para la tabla principal
-      const tableData = testCases.map(tc => {
+      const tableData = filteredTestCases.map(tc => {
         // Acortar los pasos si son demasiado largos
         const pasos = tc.steps?.map(step => step.description).join('\n') || '';
         const pasosOptimizados = pasos.length > 300 ? pasos.substring(0, 297) + '...' : pasos;
