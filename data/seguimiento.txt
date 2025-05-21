@@ -337,7 +337,7 @@
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "pruebas",
     "estado": "En Progreso",
-    "estadoCalculado": "En Progreso"
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCUT-233",
@@ -353,7 +353,7 @@
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "finzado",
     "estado": "En Progreso",
-    "estadoCalculado": "En Progreso"
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCCR-1504",
@@ -361,13 +361,13 @@
     "equipo": "TechBridge",
     "celula": "Cobranzas",
     "horas": 7,
-    "dias": 0.78,
+    "dias": 1,
     "fechaEntrega": "2025-05-20T00:00:00.000Z",
-    "fechaRealEntrega": null,
+    "fechaRealEntrega": "2025-05-20T00:00:00.000Z",
     "fechaCertificacion": "2025-05-22T00:00:00.000Z",
-    "diasRetraso": -45140,
+    "diasRetraso": 0,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": "",
+    "planTrabajo": "En proceso",
     "estadoCalculado": "En Progreso"
   },
   {
@@ -382,7 +382,8 @@
     "fechaCertificacion": "2025-05-26T00:00:00.000Z",
     "diasRetraso": -45142,
     "analistaProducto": "Yulieth Paola\t",
-    "planTrabajo": "no se ha definido"
+    "planTrabajo": "no se ha definido",
+    "estadoCalculado": "En Progreso"
   },
   {
     "idJira": "BCUT-243",
