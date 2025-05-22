@@ -25,7 +25,9 @@
     "fechaCertificacion": "2025-03-19T00:00:00.000Z",
     "diasRetraso": -45072,
     "analistaProducto": "Leidy Iral",
-    "planTrabajo": "https://docs.google.com/spreadsheets/d/1O9ZVaEn3-En_ryorbhHok1joTsHMr7TOXDdKMHDZbK4/edit?gid=2109915917#gid=2109915917"
+    "planTrabajo": "https://docs.google.com/spreadsheets/d/1O9ZVaEn3-En_ryorbhHok1joTsHMr7TOXDdKMHDZbK4/edit?gid=2109915917#gid=2109915917",
+    "estado": "Certificado",
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "SRCA-6450",
@@ -342,7 +344,7 @@
     "diasRetraso": 0,
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "pruebas",
-    "estado": "En Progreso",
+    "estado": "Certificado",
     "estadoCalculado": "Certificado"
   },
   {
