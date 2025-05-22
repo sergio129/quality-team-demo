@@ -155,5 +155,23 @@
     "aplica": true,
     "id": "INC-20250522-002",
     "diasAbierto": 1
+  },
+  {
+    "celula": "18cec5e1-b822-491a-86af-c22264f0e307",
+    "estado": "Resuelto",
+    "prioridad": "Media",
+    "descripcion": "Error no se observa boton de filtro para la opcion de busqueda que indica la HU, aunque si se tiene en las opciones de cada campo que se muestra en la nformacion de los registros, es decir en los encabezados.",
+    "fechaCreacion": "2025-05-22T20:28:48.592Z",
+    "fechaReporte": "2025-05-21T00:00:00.000Z",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Lazaro",
+    "cliente": "Koin",
+    "idJira": "KOIN-261-T007",
+    "areaAfectada": "Frontend",
+    "tipoBug": "Funcional",
+    "aplica": true,
+    "esErroneo": false,
+    "id": "INC-20250522-003",
+    "diasAbierto": 1
   }
 ]
