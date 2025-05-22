@@ -339,14 +339,16 @@
     "steps": [],
     "expectedResult": "Muestra un recuadro que indica \"Ingrese una observación para la activación del cliente corporativo\", adicionalmente muestra una restricción en la que indica que debe ingresar mínimo 40 caracteres y máximo 10.000,  la observación se guarda en la columna observación del control de cambios",
     "testType": "Funcional",
-    "status": "Exitoso",
-    "defects": [],
+    "status": "Fallido",
+    "defects": [
+      "INC-20250522-001"
+    ],
     "evidences": [],
     "cycle": 1,
     "responsiblePerson": "Leidy Iral",
     "priority": "Media",
     "projectId": "KOIN-261",
     "createdAt": "2025-05-22T18:11:54.255Z",
-    "updatedAt": "2025-05-22T18:11:54.255Z"
+    "updatedAt": "2025-05-22T18:56:43.706Z"
   }
 ]

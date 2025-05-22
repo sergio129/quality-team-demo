@@ -120,6 +120,22 @@
     "esErroneo": false,
     "aplica": false,
     "id": "INC-20250520-001",
+    "diasAbierto": 3
+  },
+  {
+    "celula": "18cec5e1-b822-491a-86af-c22264f0e307",
+    "estado": "Abierto",
+    "prioridad": "Media",
+    "descripcion": "Error el mensaje no sale literalmente como se indica en la HU 38-2,  \"Ingrese una observación para la activación del cliente corporativo\" aunque si cumple con la condición de obligatoriedad del observación.\nAdicional la observación no se esta guardando en la opcion de control de cambios",
+    "fechaCreacion": "2025-05-22T18:55:34.233Z",
+    "fechaReporte": "2025-05-21T00:00:00.000Z",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Lazaro",
+    "cliente": "Koin",
+    "idJira": "KOIN-261-T002",
+    "esErroneo": false,
+    "aplica": true,
+    "id": "INC-20250522-001",
     "diasAbierto": 1
   }
 ]
