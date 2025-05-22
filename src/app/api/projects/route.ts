@@ -167,8 +167,7 @@ export async function PUT(req: NextRequest) {
             { status: 400 }
         );
     }
-    
-    // Si tenemos un objeto project anidado, usamos esa estructura
+      // Si tenemos un objeto project anidado, usamos esa estructura
     const projectToUpdate = data.project ? { ...data.project } : data;
     
     console.log(`Actualizando proyecto con idJira: ${idJira}`, projectToUpdate);
@@ -182,6 +181,14 @@ export async function PUT(req: NextRequest) {
             { message: `Error: No se encontró un proyecto con idJira: ${idJira}` }, 
             { status: 404 }
         );
+    }
+    
+    // Si se está actualizando el estado, asegurarnos de que ambos campos estado y estadoCalculado
+    // se actualicen para mantener la consistencia
+    if (projectToUpdate.estado) {
+        projectToUpdate.estadoCalculado = projectToUpdate.estado;
+    } else if (projectToUpdate.estadoCalculado) {
+        projectToUpdate.estado = projectToUpdate.estadoCalculado;
     }
     
     const success = await projectService.updateProject(idJira, projectToUpdate);

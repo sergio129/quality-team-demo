@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { mutate } from 'swr';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { Project } from '@/models/Project';
 import { Card } from '@/components/ui/card';
 import { getJiraUrl } from '@/utils/jiraUtils';
-import { ChangeProjectStatusDialog } from '@/components/projects/ChangeProjectStatusDialog';
+import { ProjectStatusButton } from '@/components/analysts/ProjectStatusButton';
 import { useProjects, changeProjectStatus } from '@/hooks/useProjects'; // Importamos el hook completo y la función
 
 interface AnalystWorkloadProps {
@@ -172,8 +173,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   };
 
   // Calcular disponibilidad basada en horas del mes actual
-  const availabilityPercentage = calculateAvailability(totalHoursAssigned);
-    // Función para actualizar el estado de un proyecto utilizando el hook useProjects
+  const availabilityPercentage = calculateAvailability(totalHoursAssigned);  // Función para actualizar el estado de un proyecto utilizando el hook useProjects
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
       // Identificar si necesitamos usar el id o idJira para actualizar el proyecto
@@ -184,17 +184,42 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
         return false;
       }
       
+      // Actualización optimista de la UI
+      // Creamos una copia localizada del proyecto con el nuevo estado para mostrar cambios inmediatos
+      const optimisticProject = { ...project, estadoCalculado: newStatus, estado: newStatus };
+      
       // Usar la función del hook que incluye notificaciones, revalidaciones y manejo de errores
-      // El hook se encargará de actualizar el estado global y SWR revalidará los datos automáticamente
       await changeProjectStatus(
         project.id || projectId, 
         newStatus,
         project.idJira // Pasar el idJira como tercer parámetro
       );
       
+      // Forzar revalidación inmediata y completa de los datos
+      await mutate('/api/projects');
+      
+      // Forzar una recarga completa de datos después de actualizar el estado
+      if (analystId) {
+        setLoading(true);
+        // Refrescar los datos del analista para obtener los proyectos actualizados
+        try {
+          const analystResponse = await fetch(`/api/analysts/${analystId}`);
+          if (analystResponse.ok) {
+            const analystData = await analystResponse.json();
+            setAnalyst(analystData);
+          }
+        } catch (error) {
+          console.error('Error al actualizar datos del analista:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error('Error al procesar la solicitud:', error);
+      // Revertir la actualización optimista en caso de error
+      await mutate('/api/projects');
       return false;
     }
   };
@@ -279,11 +304,10 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="text-gray-500">Horas:</span> {project.horasEstimadas || project.horas || 'N/A'}
-                      </span>
-                      <span className="flex items-center gap-1">
+                      </span>                      <span className="flex items-center gap-1">
                         <span className="text-gray-500">Estado:</span>
                         <span 
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                             project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' :
                             project.estadoCalculado === 'Por Iniciar' ? 'bg-amber-100 text-amber-800' :
                             project.estadoCalculado === 'Certificado' ? 'bg-green-100 text-green-800' :
@@ -296,8 +320,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-1">
-                    {project.idJira && (
+                  <div className="flex items-center gap-1">                    {project.idJira && (
                       <a
                         href={getJiraUrl(project.idJira)}
                         target="_blank"
@@ -306,7 +329,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                       >
                         {project.idJira}
                       </a>
-                    )}                    <ChangeProjectStatusDialog 
+                    )}
+                    <ProjectStatusButton 
                       project={project} 
                       onStatusChange={handleStatusChange} 
                     />

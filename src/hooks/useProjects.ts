@@ -141,6 +141,28 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
   
   return toast.promise(
     async () => {
+      // Optimistic update - actualiza inmediatamente la caché SWR antes de enviar la solicitud
+      const currentData = await fetcher(PROJECTS_API);
+      
+      // Aplicamos una actualización optimista a la caché
+      if (currentData && Array.isArray(currentData)) {
+        const optimisticData = currentData.map(project => {
+          // Si este es el proyecto que estamos actualizando, cambiamos su estado
+          if (project.idJira === projectIdJira || project.id === id) {
+            return {
+              ...project,
+              estado: nuevoEstado,
+              estadoCalculado: nuevoEstado
+            };
+          }
+          return project;
+        });
+        
+        // Actualiza inmediatamente la caché con nuestros datos optimistas
+        mutate(PROJECTS_API, optimisticData, false);
+      }
+      
+      // Enviar la solicitud real al servidor
       const response = await fetch(PROJECTS_API, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -148,6 +170,7 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
           id,
           idJira: projectIdJira, // Aseguramos que siempre se envíe un idJira
           project: { 
+            estado: nuevoEstado, // Guardar también en el campo estado principal
             estadoCalculado: nuevoEstado,
             idJira: projectIdJira // Incluimos idJira en el objeto project también
           } 
@@ -161,7 +184,7 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
 
       const updatedProject = await response.json();
       
-      // Revalidar la caché
+      // Revalidar la caché con los datos reales del servidor
       mutate(PROJECTS_API);
       mutate(`${PROJECTS_API}/${id}`);
       mutate(PROJECTS_STATUS_API);

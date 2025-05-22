@@ -326,7 +326,7 @@
     "diasRetraso": 0,
     "analistaProducto": "Leidy Iral",
     "planTrabajo": "finalizado",
-    "estado": "En Progreso",
+    "estado": "Certificado",
     "estadoCalculado": "Certificado"
   },
   {
@@ -626,7 +626,8 @@
     "planTrabajo": "en Desarrollo",
     "fechaRealEntrega": "2025-05-22T00:00:00.000Z",
     "diasRetraso": 0,
-    "estadoCalculado": "En Progreso"
+    "estadoCalculado": "Certificado",
+    "estado": "Certificado"
   },
   {
     "idJira": "SRCA-6565",
