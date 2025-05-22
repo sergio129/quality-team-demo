@@ -349,6 +349,27 @@
     "priority": "Media",
     "projectId": "KOIN-261",
     "createdAt": "2025-05-22T18:11:54.255Z",
-    "updatedAt": "2025-05-22T18:56:43.706Z"
+    "updatedAt": "2025-05-22T20:06:32.743Z"
+  },
+  {
+    "id": "32eb05f3-5895-44be-8850-2bad49965267",
+    "testPlanId": "cf9a189a-dc25-413c-ba60-ed057f32095e",
+    "userStoryId": "HU38",
+    "name": "Botón \"Guardar Observación\"",
+    "codeRef": "KOIN-261-T003",
+    "steps": [],
+    "expectedResult": "Muestra un mensaje de confirmación de la activación de cliente corporativo. Todas las observaciones van al control de cambios, en el módulo maestro, submódulo centros de costos y botón control de cambios. Al habilitar el cliente corporativo dejará de aparecer en la sección de clientes inactivos.",
+    "testType": "Funcional",
+    "status": "Fallido",
+    "defects": [
+      "INC-20250522-002"
+    ],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "Leidy Iral",
+    "priority": "Media",
+    "projectId": "KOIN-261",
+    "createdAt": "2025-05-22T20:05:35.987Z",
+    "updatedAt": "2025-05-22T20:06:10.428Z"
   }
 ]

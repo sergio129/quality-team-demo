@@ -124,7 +124,7 @@
   },
   {
     "celula": "18cec5e1-b822-491a-86af-c22264f0e307",
-    "estado": "Abierto",
+    "estado": "Resuelto",
     "prioridad": "Media",
     "descripcion": "Error el mensaje no sale literalmente como se indica en la HU 38-2,  \"Ingrese una observación para la activación del cliente corporativo\" aunque si cumple con la condición de obligatoriedad del observación.\nAdicional la observación no se esta guardando en la opcion de control de cambios",
     "fechaCreacion": "2025-05-22T18:55:34.233Z",
@@ -136,6 +136,24 @@
     "esErroneo": false,
     "aplica": true,
     "id": "INC-20250522-001",
+    "diasAbierto": 1
+  },
+  {
+    "celula": "18cec5e1-b822-491a-86af-c22264f0e307",
+    "estado": "Resuelto",
+    "prioridad": "Alta",
+    "descripcion": "Error No se estan viendo reflejados los cambios en el modulo control de cambios, cuando se activa un cliente, se probo con los otros modulos y tampoco se estan reflajando cuando se hacen inactivaciones de centro de costos operativo, administrativo  y/o clientes",
+    "fechaCreacion": "2025-05-22T20:05:39.016Z",
+    "fechaReporte": "2025-05-21T00:00:00.000Z",
+    "informadoPor": "Leidy Iral",
+    "asignadoA": "Andres Lazaro",
+    "cliente": "Koin",
+    "idJira": "KOIN-261-T003",
+    "tipoBug": "Funcional",
+    "areaAfectada": "Frontend",
+    "esErroneo": false,
+    "aplica": true,
+    "id": "INC-20250522-002",
     "diasAbierto": 1
   }
 ]
