@@ -694,29 +694,16 @@
     "planTrabajo": "En desarrollo"
   },
   {
-    "proyecto": "Arquetipos Ventas digitales",
     "idJira": "BCIC-509",
     "equipo": "CRM Bancolombia",
     "celula": "KCRM",
-    "horas": 5,
+    "horas": 2,
     "dias": 1,
     "fechaEntrega": "2025-05-28T00:00:00.000Z",
     "fechaCertificacion": "2025-05-30T00:00:00.000Z",
-    "estadoCalculado": "En Progreso",
+    "estadoCalculado": "Por Iniciar",
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": "en desarrolllo"
-  },
-  {
-    "idJira": "PRUEBAS-123",
-    "proyecto": "prueba",
-    "equipo": "CRM Bancolombia",
-    "celula": "KCRM",
-    "horas": 19,
-    "dias": 3,
-    "fechaEntrega": "2025-05-22T00:00:00.000Z",
-    "fechaCertificacion": "2025-05-22T00:00:00.000Z",
-    "estadoCalculado": "En Progreso",
-    "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "pruebas"
+    "planTrabajo": "en desarrollo",
+    "proyecto": "Arquetipos Ventas digitales"
   }
 ]
