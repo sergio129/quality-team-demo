@@ -25,6 +25,16 @@ import {
 import { format } from 'date-fns';
 import { TestPlan } from '@/models/TestCase';
 
+// Función para formatear fechas evitando problemas de zona horaria
+function formatDateWithoutTimezone(dateString: string): string {
+  // Separar la fecha YYYY-MM-DD
+  const parts = dateString.split('-');
+  if (parts.length !== 3) return dateString;
+  
+  // Formatear como DD/MM/YYYY
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 interface TestCasePlanManagerProps {
   onPlanSelected: (planId: string) => void;
 }
@@ -155,13 +165,13 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       toast.error('Error al crear el plan de pruebas');
     }
   };
-
   const handleEditPlan = (plan: TestPlan) => {
     setEditingPlan(plan);
+    // Usar las fechas directamente sin conversión para evitar problemas de zona horaria
     setNewTestPlan({
       ...plan,
-      startDate: new Date(plan.startDate).toISOString().split('T')[0],
-      endDate: plan.endDate ? new Date(plan.endDate).toISOString().split('T')[0] : ''
+      startDate: plan.startDate,
+      endDate: plan.endDate || ''
     });
     setIsEditingPlan(true);
   };
@@ -306,10 +316,9 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
             </TableHeader>
             <TableBody>
               {testPlans.map((plan) => (
-                <TableRow key={plan.id}>                  <TableCell>{plan.codeReference}</TableCell>
-                  <TableCell>{plan.projectName}</TableCell>
-                  <TableCell>{format(new Date(plan.startDate), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>{plan.endDate ? format(new Date(plan.endDate), 'dd/MM/yyyy') : '-'}</TableCell>
+                <TableRow key={plan.id}>                  <TableCell>{plan.codeReference}</TableCell>                  <TableCell>{plan.projectName}</TableCell>
+                  <TableCell>{formatDateWithoutTimezone(plan.startDate)}</TableCell>
+                  <TableCell>{plan.endDate ? formatDateWithoutTimezone(plan.endDate) : '-'}</TableCell>
                   <TableCell>{plan.totalCases}</TableCell>
                   <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>                  <TableCell>
                     <div className="flex items-center gap-2">

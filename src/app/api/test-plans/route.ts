@@ -22,14 +22,45 @@ export async function POST(req: NextRequest) {
     if (!testPlanData.id) {
         testPlanData.id = uuidv4();
     }
-    
-    // Asegurar que las fechas se formateen correctamente
-    if (testPlanData.startDate && testPlanData.startDate.includes('T')) {
-        testPlanData.startDate = testPlanData.startDate.split('T')[0];
+      // Asegurar que las fechas se formateen correctamente
+    if (testPlanData.startDate) {
+        // Comprobar si la fecha tiene formato ISO o solo YYYY-MM-DD
+        if (testPlanData.startDate.includes('T')) {
+            // Si es formato ISO, extraer solo la parte de la fecha
+            testPlanData.startDate = testPlanData.startDate.split('T')[0];
+        }
+        // Validar el formato de fecha: YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(testPlanData.startDate)) {
+            // Intentar convertir y formatear correctamente
+            try {
+                const date = new Date(testPlanData.startDate);
+                testPlanData.startDate = `${date.getFullYear()}-${
+                    (date.getMonth() + 1).toString().padStart(2, '0')}-${
+                    date.getDate().toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error("Error formatting startDate:", error);
+            }
+        }
     }
     
-    if (testPlanData.endDate && testPlanData.endDate.includes('T')) {
-        testPlanData.endDate = testPlanData.endDate.split('T')[0];
+    if (testPlanData.endDate) {
+        // Comprobar si la fecha tiene formato ISO o solo YYYY-MM-DD
+        if (testPlanData.endDate.includes('T')) {
+            // Si es formato ISO, extraer solo la parte de la fecha
+            testPlanData.endDate = testPlanData.endDate.split('T')[0];
+        }
+        // Validar el formato de fecha: YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(testPlanData.endDate)) {
+            // Intentar convertir y formatear correctamente
+            try {
+                const date = new Date(testPlanData.endDate);
+                testPlanData.endDate = `${date.getFullYear()}-${
+                    (date.getMonth() + 1).toString().padStart(2, '0')}-${
+                    date.getDate().toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error("Error formatting endDate:", error);
+            }
+        }
     }
     
     // Calcular días/horas si solo se proporcionó uno de los valores

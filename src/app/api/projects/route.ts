@@ -86,15 +86,28 @@ export async function POST(req: NextRequest) {
             const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
             const currentYear = now.getFullYear();
             const formattedDate = `${currentYear}-${currentMonth}-${currentDate}`;
-            
-            // Calcular horas estimadas según el proyecto
+              // Calcular horas estimadas según el proyecto
             let estimatedHours = 0;
-            if (project.horasestimadas) {
-                estimatedHours = parseFloat(project.horasestimadas) || 0;
+            if (project.horas) {
+                estimatedHours = parseFloat(project.horas) || 0;
             }
             
             // Calcular días estimados (1 día = 9 horas)
             const estimatedDays = estimatedHours > 0 ? Math.round((estimatedHours / 9) * 10) / 10 : 0;
+              // Formatear fecha de entrega adecuadamente, si existe
+            let formattedEndDate = '';
+            if (project.fechaEntrega) {
+                if (typeof project.fechaEntrega === 'string') {
+                    // Si es un string, eliminar cualquier parte de tiempo si existe
+                    formattedEndDate = project.fechaEntrega.split('T')[0];
+                } else {
+                    // Si es un objeto Date, formatear correctamente
+                    const entregaDate = new Date(project.fechaEntrega);
+                    formattedEndDate = `${entregaDate.getFullYear()}-${
+                        (entregaDate.getMonth() + 1).toString().padStart(2, '0')}-${
+                        entregaDate.getDate().toString().padStart(2, '0')}`;
+                }
+            }
             
             const testPlan = {
                 id: uuidv4(),
@@ -102,7 +115,7 @@ export async function POST(req: NextRequest) {
                 projectName: project.proyecto || 'Proyecto sin nombre',
                 codeReference: project.idJira,
                 startDate: formattedDate,
-                endDate: project.fechaEntrega || '',
+                endDate: formattedEndDate,
                 estimatedHours: estimatedHours,
                 estimatedDays: estimatedDays,
                 totalCases: 0,

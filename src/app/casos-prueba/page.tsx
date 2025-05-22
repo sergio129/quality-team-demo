@@ -356,18 +356,17 @@ export default function TestCasesPage() {
                           // Usar fecha de entrega como fecha de inicio y fecha de certificación como fecha fin
                           const startDate = project.fechaEntrega ? new Date(project.fechaEntrega).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
                           const endDate = project.fechaCertificacion ? new Date(project.fechaCertificacion).toISOString().split('T')[0] : '';
-                          
-                          // Calcular días estimados entre fecha de entrega y certificación
+                            // Calcular días estimados entre fecha de entrega y certificación, o fecha actual y fecha de entrega
                           let daysEstimated = 0;
-                          if (project.fechaEntrega && project.fechaCertificacion) {
+                          if (project.fechaEntrega) {
+                            const today = new Date();
                             const entregaDate = new Date(project.fechaEntrega);
-                            const certDate = new Date(project.fechaCertificacion);
-                            const diffTime = Math.abs(certDate.getTime() - entregaDate.getTime());
+                            // Si hay certificación, usar esa fecha para el cálculo
+                            const targetDate = project.fechaCertificacion ? new Date(project.fechaCertificacion) : entregaDate;
+                            const diffTime = Math.abs(targetDate.getTime() - today.getTime());
                             daysEstimated = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                          }
-
-                          // Calcular horas estimadas (8 horas por día laborable)
-                          const hoursEstimated = daysEstimated * 8;
+                          }// Calcular horas estimadas (9 horas por día laborable)
+                          const hoursEstimated = daysEstimated * 9;
 
                           setSelectedProjectId(project.idJira || '');
                           setProjectSearchInDialog('');

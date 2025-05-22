@@ -708,14 +708,14 @@
   },
   {
     "idJira": "PRUEBAS-123",
-    "proyecto": "pruebas",
-    "equipo": "TechBridge",
-    "celula": "Cobranzas",
-    "horas": 9,
-    "dias": 1,
+    "proyecto": "prueba",
+    "equipo": "CRM Bancolombia",
+    "celula": "KCRM",
+    "horas": 19,
+    "dias": 3,
     "fechaEntrega": "2025-05-22T00:00:00.000Z",
     "fechaCertificacion": "2025-05-22T00:00:00.000Z",
-    "estadoCalculado": "Por Iniciar",
+    "estadoCalculado": "En Progreso",
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "pruebas"
   }

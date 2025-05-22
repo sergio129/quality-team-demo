@@ -19,13 +19,24 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     
     // Actualizar fecha de última modificación
     testPlanData.updatedAt = new Date().toISOString();
-    
-    // Asegurar que las fechas se guarden correctamente sin ajustes de zona horaria
+      // Asegurar que las fechas se guarden correctamente sin ajustes de zona horaria
     if (testPlanData.startDate) {
         // Comprobar si la fecha tiene formato ISO o solo YYYY-MM-DD
         if (testPlanData.startDate.includes('T')) {
             // Si es formato ISO, extraer solo la parte de la fecha
             testPlanData.startDate = testPlanData.startDate.split('T')[0];
+        }
+        // Validar el formato de fecha: YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(testPlanData.startDate)) {
+            // Intentar convertir y formatear correctamente
+            try {
+                const date = new Date(testPlanData.startDate);
+                testPlanData.startDate = `${date.getFullYear()}-${
+                    (date.getMonth() + 1).toString().padStart(2, '0')}-${
+                    date.getDate().toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error("Error formatting startDate:", error);
+            }
         }
     }
     
@@ -34,6 +45,18 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         if (testPlanData.endDate.includes('T')) {
             // Si es formato ISO, extraer solo la parte de la fecha
             testPlanData.endDate = testPlanData.endDate.split('T')[0];
+        }
+        // Validar el formato de fecha: YYYY-MM-DD
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(testPlanData.endDate)) {
+            // Intentar convertir y formatear correctamente
+            try {
+                const date = new Date(testPlanData.endDate);
+                testPlanData.endDate = `${date.getFullYear()}-${
+                    (date.getMonth() + 1).toString().padStart(2, '0')}-${
+                    date.getDate().toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error("Error formatting endDate:", error);
+            }
         }
     }
     

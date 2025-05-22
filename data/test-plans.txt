@@ -21,7 +21,7 @@
     "testQuality": 66.67,
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
-    "updatedAt": "2025-05-22T19:55:15.443Z"
+    "updatedAt": "2025-05-22T20:01:18.105Z"
   },
   {
     "projectId": "SRSS-143",
@@ -45,7 +45,7 @@
     "testQuality": -1,
     "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "createdAt": "2025-05-20T18:12:41.882Z",
-    "updatedAt": "2025-05-22T19:55:15.449Z"
+    "updatedAt": "2025-05-22T20:01:18.112Z"
   },
   {
     "projectId": "SBSF-1824",
@@ -69,7 +69,7 @@
     "testQuality": -1,
     "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
     "createdAt": "2025-05-20T20:40:18.804Z",
-    "updatedAt": "2025-05-22T19:55:15.454Z"
+    "updatedAt": "2025-05-22T20:01:18.119Z"
   },
   {
     "projectId": "SRCA-6548",
@@ -93,7 +93,7 @@
     "testQuality": 100,
     "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
     "createdAt": "2025-05-22T15:42:24.154Z",
-    "updatedAt": "2025-05-22T19:55:15.458Z"
+    "updatedAt": "2025-05-22T20:01:18.121Z"
   },
   {
     "projectId": "KOIN-261",
@@ -117,21 +117,21 @@
     "testQuality": 50,
     "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
     "createdAt": "2025-05-22T18:09:13.174Z",
-    "updatedAt": "2025-05-22T19:55:15.461Z"
+    "updatedAt": "2025-05-22T20:01:18.126Z"
   },
   {
-    "id": "967c0ed9-8467-473b-8c0d-0b89fb54275d",
+    "id": "eb2beb8f-ef15-40e3-b270-ae362d95bcf0",
     "projectId": "PRUEBAS-123",
-    "projectName": "pruebas",
+    "projectName": "prueba",
     "codeReference": "PRUEBAS-123",
     "startDate": "2025-05-22",
-    "endDate": "2025-05-22T00:00:00.000Z",
-    "estimatedHours": 0,
-    "estimatedDays": 0,
+    "endDate": "2025-05-22",
+    "estimatedHours": 19,
+    "estimatedDays": 2.1,
     "totalCases": 0,
     "cycles": [
       {
-        "id": "e6f22597-2b61-4b23-8a4a-620d1c9a5ef3",
+        "id": "37b570fe-42c9-4d17-ab2a-cdd210557e5f",
         "number": 1,
         "designed": 0,
         "successful": 0,
@@ -139,8 +139,8 @@
         "defects": 0
       }
     ],
-    "testQuality": -1,
-    "createdAt": "2025-05-22T19:51:38.366Z",
-    "updatedAt": "2025-05-22T19:55:15.464Z"
+    "testQuality": 100,
+    "createdAt": "2025-05-22T20:02:18.122Z",
+    "updatedAt": "2025-05-22T20:02:18.122Z"
   }
 ]
