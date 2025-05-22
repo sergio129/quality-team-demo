@@ -705,5 +705,18 @@
     "estadoCalculado": "En Progreso",
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "en desarrolllo"
+  },
+  {
+    "idJira": "PRUEBAS-123",
+    "proyecto": "pruebas",
+    "equipo": "TechBridge",
+    "celula": "Cobranzas",
+    "horas": 9,
+    "dias": 1,
+    "fechaEntrega": "2025-05-22T00:00:00.000Z",
+    "fechaCertificacion": "2025-05-22T00:00:00.000Z",
+    "estadoCalculado": "Por Iniciar",
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "pruebas"
   }
 ]

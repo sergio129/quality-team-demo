@@ -120,18 +120,18 @@
     "updatedAt": "2025-05-22T19:20:41.531Z"
   },
   {
-    "id": "7f7f16e9-ad7b-4587-9cc7-e4dd97ef6015",
-    "projectId": "PRUEBA-123",
-    "projectName": "Pruebas",
-    "codeReference": "PRUEBA-123",
+    "id": "967c0ed9-8467-473b-8c0d-0b89fb54275d",
+    "projectId": "PRUEBAS-123",
+    "projectName": "pruebas",
+    "codeReference": "PRUEBAS-123",
     "startDate": "2025-05-22",
-    "endDate": "2025-05-22",
+    "endDate": "2025-05-22T00:00:00.000Z",
     "estimatedHours": 0,
     "estimatedDays": 0,
     "totalCases": 0,
     "cycles": [
       {
-        "id": "5decc540-906b-4957-a39f-b56e4edf475c",
+        "id": "e6f22597-2b61-4b23-8a4a-620d1c9a5ef3",
         "number": 1,
         "designed": 0,
         "successful": 0,
@@ -140,7 +140,7 @@
       }
     ],
     "testQuality": 100,
-    "createdAt": "2025-05-22T19:32:31.780Z",
-    "updatedAt": "2025-05-22T19:42:53.964Z"
+    "createdAt": "2025-05-22T19:51:38.366Z",
+    "updatedAt": "2025-05-22T19:51:38.366Z"
   }
 ]

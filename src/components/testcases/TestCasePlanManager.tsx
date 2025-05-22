@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { mutate } from 'swr';
+import { Trash2 } from 'lucide-react';
 import UpdateQualityButton from './UpdateQualityButton';
 import QualityInfoButton from './QualityInfoButton';
 import {
@@ -34,6 +35,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
   const { testPlans, isLoading } = useTestPlans();
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isEditingPlan, setIsEditingPlan] = useState(false);
+  const [isDeletingPlan, setIsDeletingPlan] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<TestPlan | null>(null);
   const [editingPlan, setEditingPlan] = useState<TestPlan | null>(null);
   const [newTestPlan, setNewTestPlan] = useState<Partial<TestPlan>>({
     projectId: '',
@@ -162,7 +165,6 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
     });
     setIsEditingPlan(true);
   };
-
   const handleUpdatePlan = async () => {
     try {
       if (!editingPlan) return;
@@ -194,6 +196,40 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       }
     } catch (error) {
       toast.error('Error al actualizar el plan de pruebas');
+    }
+  };
+    // Preparar la eliminación mostrando el diálogo de confirmación
+  const prepareDeletePlan = (plan: TestPlan) => {
+    setPlanToDelete(plan);
+    setIsDeletingPlan(true);
+  };
+  
+  // Función para eliminar un plan de pruebas
+  const handleDeletePlan = async () => {
+    if (!planToDelete) return;
+    
+    try {
+      const response = await fetch(`/api/test-plans/${planToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar el plan de pruebas');
+      }
+
+      toast.success('Plan de pruebas eliminado correctamente');
+      
+      // Revalidar la caché de planes
+      mutate('/api/test-plans');
+      if (selectedProjectId) {
+        mutate(`/api/test-plans?projectId=${selectedProjectId}`);
+      }
+      
+      // Cerrar el diálogo y limpiar el estado
+      setIsDeletingPlan(false);
+      setPlanToDelete(null);
+    } catch (error) {
+      toast.error('Error al eliminar el plan de pruebas');
     }
   };
 
@@ -275,8 +311,7 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                   <TableCell>{format(new Date(plan.startDate), 'dd/MM/yyyy')}</TableCell>
                   <TableCell>{plan.endDate ? format(new Date(plan.endDate), 'dd/MM/yyyy') : '-'}</TableCell>
                   <TableCell>{plan.totalCases}</TableCell>
-                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>
-                  <TableCell>
+                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -291,6 +326,14 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                         onClick={() => handleEditPlan(plan)}
                       >
                         Editar
+                      </Button>                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                        onClick={() => prepareDeletePlan(plan)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Eliminar
                       </Button>
                     </div>
                   </TableCell>
@@ -469,6 +512,38 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
             </Button>
             <Button onClick={handleUpdatePlan}>
               Guardar Cambios
+            </Button>          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmación para eliminar plan */}
+      <Dialog open={isDeletingPlan} onOpenChange={setIsDeletingPlan}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Confirmar eliminación</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="mb-2">¿Estás seguro de que deseas eliminar el siguiente plan de pruebas?</p>
+            {planToDelete && (
+              <div className="border rounded-md p-4 bg-gray-50 mb-2">
+                <p><strong>Proyecto:</strong> {planToDelete.projectName}</p>
+                <p><strong>Referencia:</strong> {planToDelete.codeReference}</p>
+                <p><strong>Casos:</strong> {planToDelete.totalCases}</p>
+              </div>
+            )}
+            <p className="text-sm text-red-600">Esta acción eliminará permanentemente el plan de pruebas y no se puede deshacer.</p>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsDeletingPlan(false);
+              setPlanToDelete(null);
+            }}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePlan}>
+              Eliminar Plan
             </Button>
           </DialogFooter>
         </DialogContent>
