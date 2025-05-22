@@ -620,10 +620,13 @@
     "celula": "Suramericana",
     "horas": 12,
     "dias": 2,
-    "fechaEntrega": "2025-05-22T00:00:00.000Z",
+    "fechaEntrega": "2025-05-23T00:00:00.000Z",
     "fechaCertificacion": "2025-05-23T00:00:00.000Z",
     "analistaProducto": "Sergio Anaya",
-    "planTrabajo": "en Desarrollo"
+    "planTrabajo": "en Desarrollo",
+    "fechaRealEntrega": "2025-05-22T00:00:00.000Z",
+    "diasRetraso": 0,
+    "estadoCalculado": "En Progreso"
   },
   {
     "idJira": "SRCA-6565",
