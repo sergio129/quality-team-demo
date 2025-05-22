@@ -14,10 +14,11 @@ import { Bug, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface TestCaseDefectTrackerProps {
   projectId?: string;
+  testPlanId?: string;
 }
 
-export default function TestCaseDefectTracker({ projectId }: TestCaseDefectTrackerProps) {
-  const { testCases } = useTestCases(projectId);
+export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCaseDefectTrackerProps) {
+  const { testCases } = useTestCases(projectId, testPlanId);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [defects, setDefects] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState(false);

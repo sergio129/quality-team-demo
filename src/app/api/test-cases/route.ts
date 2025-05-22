@@ -5,9 +5,16 @@ import { v4 as uuidv4 } from 'uuid';
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const projectId = url.searchParams.get('projectId');
+    const testPlanId = url.searchParams.get('testPlanId');
     
     if (projectId) {
-        const testCases = await testCaseService.getTestCasesByProject(projectId);
+        let testCases = await testCaseService.getTestCasesByProject(projectId);
+        
+        // Filtrar por plan de prueba si se proporciona
+        if (testPlanId) {
+            testCases = testCases.filter(tc => tc.testPlanId === testPlanId);
+        }
+        
         return NextResponse.json(testCases);
     } else {
         const testCases = await testCaseService.getAllTestCases();

@@ -13,8 +13,12 @@ const TEST_CASE_STATS_API = '/api/test-cases/stats';
 /**
  * Hook para obtener casos de prueba
  */
-export function useTestCases(projectId?: string) {
-  const endpoint = projectId ? `${TEST_CASES_API}?projectId=${projectId}` : TEST_CASES_API;
+export function useTestCases(projectId?: string, testPlanId?: string) {
+  let endpoint = projectId ? `${TEST_CASES_API}?projectId=${projectId}` : TEST_CASES_API;
+  if (testPlanId) {
+    endpoint += `${endpoint.includes('?') ? '&' : '?'}testPlanId=${testPlanId}`;
+  }
+  
   const { data, error, isLoading } = useSWR<TestCase[]>(endpoint, fetcher);
 
   return {
@@ -67,11 +71,12 @@ export function useTestPlan(id: string) {
 /**
  * Hook para obtener estadísticas de casos de prueba por proyecto
  */
-export function useTestCaseStats(projectId: string) {
-  const { data, error, isLoading } = useSWR<any>(
-    projectId ? `${TEST_CASE_STATS_API}?projectId=${projectId}` : null,
-    fetcher
-  );
+export function useTestCaseStats(projectId: string, testPlanId?: string) {
+  const endpoint = projectId 
+    ? `${TEST_CASE_STATS_API}?projectId=${projectId}${testPlanId ? `&testPlanId=${testPlanId}` : ''}`
+    : null;
+    
+  const { data, error, isLoading } = useSWR<any>(endpoint, fetcher);
 
   return {
     stats: data || {

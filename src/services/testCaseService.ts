@@ -245,11 +245,16 @@ export const testCaseService = {
       return false;
     }
   },
-
   // Estadísticas
-  async getTestCaseStatsByProject(projectId: string): Promise<any> {
+  async getTestCaseStatsByProject(projectId: string, testPlanId?: string): Promise<any> {
     try {
-      const testCases = await this.getTestCasesByProject(projectId);
+      // Obtener casos de prueba por proyecto
+      let testCases = await this.getTestCasesByProject(projectId);
+      
+      // Filtrar por plan de prueba si se proporciona
+      if (testPlanId) {
+        testCases = testCases.filter(tc => tc.testPlanId === testPlanId);
+      }
       
       // Estadísticas por estado
       const statusStats = {

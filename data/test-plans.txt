@@ -21,7 +21,7 @@
     "testQuality": 66.67,
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
-    "updatedAt": "2025-05-22T20:29:35.814Z"
+    "updatedAt": "2025-05-22T20:32:04.019Z"
   },
   {
     "projectId": "SRSS-143",
@@ -45,7 +45,7 @@
     "testQuality": -1,
     "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "createdAt": "2025-05-20T18:12:41.882Z",
-    "updatedAt": "2025-05-22T20:29:35.818Z"
+    "updatedAt": "2025-05-22T20:32:04.021Z"
   },
   {
     "projectId": "SBSF-1824",
@@ -69,7 +69,7 @@
     "testQuality": -1,
     "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
     "createdAt": "2025-05-20T20:40:18.804Z",
-    "updatedAt": "2025-05-22T20:29:35.819Z"
+    "updatedAt": "2025-05-22T20:32:04.023Z"
   },
   {
     "projectId": "SRCA-6548",
@@ -93,7 +93,7 @@
     "testQuality": 100,
     "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
     "createdAt": "2025-05-22T15:42:24.154Z",
-    "updatedAt": "2025-05-22T20:29:35.821Z"
+    "updatedAt": "2025-05-22T20:32:04.026Z"
   },
   {
     "projectId": "KOIN-261",
@@ -114,10 +114,10 @@
         "defects": 0
       }
     ],
-    "testQuality": 57.14,
+    "testQuality": 70,
     "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
     "createdAt": "2025-05-22T18:09:13.174Z",
-    "updatedAt": "2025-05-22T20:31:31.259Z"
+    "updatedAt": "2025-05-22T20:32:04.028Z"
   },
   {
     "id": "5f753872-7b7d-4c11-be27-450591f7aa79",
@@ -141,6 +141,6 @@
     ],
     "testQuality": -1,
     "createdAt": "2025-05-22T20:04:10.222Z",
-    "updatedAt": "2025-05-22T20:29:35.826Z"
+    "updatedAt": "2025-05-22T20:32:04.031Z"
   }
 ]

@@ -7,17 +7,14 @@ import { Progress } from '@/components/ui/progress';
 
 interface TestCaseStatsProps {
   projectId: string;
+  testPlanId?: string;
 }
 
-export default function TestCaseStats({ projectId }: TestCaseStatsProps) {
-  const { stats, isLoading } = useTestCaseStats(projectId);
-  const [cycleStats, setCycleStats] = useState<any>({});
-  
-  useEffect(() => {
-    if (stats && stats.cycleStats) {
-      setCycleStats(stats.cycleStats);
-    }
-  }, [stats]);
+export default function TestCaseStats({ projectId, testPlanId }: TestCaseStatsProps) {
+  const { stats, isLoading } = useTestCaseStats(projectId, testPlanId);
+
+  // En lugar de usar useState y useEffect, usamos directamente stats.cycleStats
+  const cycleStats = stats?.cycleStats || {};
 
   if (isLoading) {
     return (
