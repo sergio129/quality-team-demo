@@ -2,6 +2,19 @@
 
 Este documento explica el método de cálculo de calidad utilizado en la aplicación Quality Teams.
 
+## Creación automática de planes de prueba (Mayo 2025)
+
+A partir de mayo de 2025, la aplicación crea automáticamente un plan de pruebas cada vez que se crea un nuevo proyecto. Esta mejora reduce el trabajo manual y asegura que todo proyecto tenga asociado un plan de pruebas desde su inicio.
+
+### Características de los planes creados automáticamente:
+
+- Se asigna el mismo ID de proyecto (JIRA ID) y nombre
+- Inicialmente sin casos de prueba y calidad del 100%
+- Se configura con un ciclo inicial vacío
+- Las fechas son configuradas automáticamente basadas en el proyecto
+- Las horas estimadas se toman directamente del proyecto
+- Los días estimados se calculan automáticamente (1 día = 9 horas de trabajo)
+
 ## Nuevo método de cálculo de calidad (Mayo 2025)
 
 Actualmente, la calidad de los planes de prueba se calcula mediante una fórmula simple y directa que se enfoca específicamente en la relación entre defectos encontrados y casos diseñados:

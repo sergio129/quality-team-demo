@@ -23,10 +23,30 @@ export async function POST(req: NextRequest) {
         testPlanData.id = uuidv4();
     }
     
+    // Asegurar que las fechas se formateen correctamente
+    if (testPlanData.startDate && testPlanData.startDate.includes('T')) {
+        testPlanData.startDate = testPlanData.startDate.split('T')[0];
+    }
+    
+    if (testPlanData.endDate && testPlanData.endDate.includes('T')) {
+        testPlanData.endDate = testPlanData.endDate.split('T')[0];
+    }
+    
+    // Calcular días/horas si solo se proporcionó uno de los valores
+    if (testPlanData.estimatedHours && (!testPlanData.estimatedDays || testPlanData.estimatedDays === 0)) {
+        // 1 día = 9 horas de trabajo
+        const hours = parseFloat(testPlanData.estimatedHours) || 0;
+        testPlanData.estimatedDays = hours > 0 ? Math.round((hours / 9) * 10) / 10 : 0;
+    } else if (testPlanData.estimatedDays && (!testPlanData.estimatedHours || testPlanData.estimatedHours === 0)) {
+        // 1 día = 9 horas de trabajo
+        const days = parseFloat(testPlanData.estimatedDays) || 0;
+        testPlanData.estimatedHours = days > 0 ? Math.round(days * 9) : 0;
+    }
+    
     // Añadir fechas
-    const now = new Date().toISOString();
-    testPlanData.createdAt = now;
-    testPlanData.updatedAt = now;
+    const now = new Date();
+    testPlanData.createdAt = now.toISOString();
+    testPlanData.updatedAt = now.toISOString();
     
     const success = await testCaseService.saveTestPlan(testPlanData);
     

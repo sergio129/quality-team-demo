@@ -125,7 +125,7 @@
     "projectName": "Pruebas",
     "codeReference": "PRUEBA-123",
     "startDate": "2025-05-22",
-    "endDate": "2025-05-22T00:00:00.000Z",
+    "endDate": "2025-05-22",
     "estimatedHours": 0,
     "estimatedDays": 0,
     "totalCases": 0,
@@ -141,6 +141,6 @@
     ],
     "testQuality": 100,
     "createdAt": "2025-05-22T19:32:31.780Z",
-    "updatedAt": "2025-05-22T19:32:31.780Z"
+    "updatedAt": "2025-05-22T19:42:53.964Z"
   }
 ]

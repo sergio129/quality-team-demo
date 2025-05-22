@@ -77,24 +77,60 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       }
     }
   };
-
   const handleTestPlanInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewTestPlan(prev => ({
-      ...prev,
-      [name]: name === 'estimatedHours' || name === 'estimatedDays' || name === 'testQuality' 
-        ? parseFloat(value) 
-        : value
-    }));
+    
+    // Actualizar el valor en el estado
+    setNewTestPlan(prev => {
+      const updatedPlan = {
+        ...prev,
+        [name]: name === 'estimatedHours' || name === 'estimatedDays' || name === 'testQuality' 
+          ? parseFloat(value) 
+          : value
+      };
+      
+      // Si se actualizan las horas estimadas, calcular automáticamente los días
+      if (name === 'estimatedHours') {
+        const hours = parseFloat(value) || 0;
+        // 1 día = 9 horas de trabajo
+        updatedPlan.estimatedDays = hours > 0 ? Math.round((hours / 9) * 10) / 10 : 0;
+      }
+      
+      // Si se actualizan los días estimados, calcular automáticamente las horas
+      if (name === 'estimatedDays') {
+        const days = parseFloat(value) || 0;
+        // 1 día = 9 horas de trabajo
+        updatedPlan.estimatedHours = days > 0 ? Math.round(days * 9) : 0;
+      }
+      
+      return updatedPlan;
+    });
   };
-
   const handleCreateTestPlan = async () => {
     try {
+      // Formatear fechas correctamente
+      const now = new Date();
+      const day = now.getDate().toString().padStart(2, '0');
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const year = now.getFullYear();
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      // Calcular días estimados si solo se proporcionaron horas
+      let { estimatedHours, estimatedDays } = newTestPlan;
+      if (estimatedHours && (!estimatedDays || estimatedDays === 0)) {
+        estimatedDays = Math.round((estimatedHours / 9) * 10) / 10;
+      } else if (estimatedDays && (!estimatedHours || estimatedHours === 0)) {
+        estimatedHours = Math.round(estimatedDays * 9);
+      }
+      
       await createTestPlan({
         ...newTestPlan,
         id: uuidv4(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        startDate: newTestPlan.startDate || formattedDate,
+        estimatedHours,
+        estimatedDays,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString()
       });
       
       setIsCreatingPlan(false);
@@ -102,7 +138,7 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         projectId: selectedProjectId,
         projectName: newTestPlan.projectName,
         codeReference: newTestPlan.codeReference,
-        startDate: new Date().toISOString().split('T')[0],
+        startDate: formattedDate,
         endDate: '',
         estimatedHours: 0,
         estimatedDays: 0,

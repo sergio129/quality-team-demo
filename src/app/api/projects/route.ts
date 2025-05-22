@@ -77,18 +77,34 @@ export async function POST(req: NextRequest) {
     const success = await projectService.saveProject(project);
     if (success) {
         // Crear automáticamente un plan de pruebas para el nuevo proyecto
-        try {
-            // Crear un plan de pruebas con valores predeterminados
+        try {            // Crear un plan de pruebas con valores predeterminados
             const now = new Date();
+            
+            // Corregir problema con fechas (garantizar que se use la fecha correcta)
+            // Formatear la fecha manualmente para evitar problemas con zonas horarias
+            const currentDate = now.getDate().toString().padStart(2, '0');
+            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+            const currentYear = now.getFullYear();
+            const formattedDate = `${currentYear}-${currentMonth}-${currentDate}`;
+            
+            // Calcular horas estimadas según el proyecto
+            let estimatedHours = 0;
+            if (project.horasestimadas) {
+                estimatedHours = parseFloat(project.horasestimadas) || 0;
+            }
+            
+            // Calcular días estimados (1 día = 9 horas)
+            const estimatedDays = estimatedHours > 0 ? Math.round((estimatedHours / 9) * 10) / 10 : 0;
+            
             const testPlan = {
                 id: uuidv4(),
                 projectId: project.idJira,
                 projectName: project.proyecto || 'Proyecto sin nombre',
                 codeReference: project.idJira,
-                startDate: now.toISOString().split('T')[0],
+                startDate: formattedDate,
                 endDate: project.fechaEntrega || '',
-                estimatedHours: 0,
-                estimatedDays: 0,
+                estimatedHours: estimatedHours,
+                estimatedDays: estimatedDays,
                 totalCases: 0,
                 cycles: [
                     {
