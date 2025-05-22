@@ -320,14 +320,14 @@
     "celula": "KCRM",
     "horas": 25,
     "dias": 3,
-    "fechaEntrega": "2025-05-13T00:00:00.000Z",
+    "fechaEntrega": "2025-05-17T00:00:00.000Z",
     "fechaRealEntrega": "2025-05-14T00:00:00.000Z",
     "fechaCertificacion": "2025-05-21T00:00:00.000Z",
-    "diasRetraso": 1,
+    "diasRetraso": 0,
     "analistaProducto": "Leidy Iral",
     "planTrabajo": "finalizado",
     "estado": "En Progreso",
-    "estadoCalculado": "En Progreso"
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "BCGT-1098",
@@ -620,7 +620,7 @@
     "celula": "Suramericana",
     "horas": 12,
     "dias": 2,
-    "fechaEntrega": "2025-05-23T00:00:00.000Z",
+    "fechaEntrega": "2025-05-22T00:00:00.000Z",
     "fechaCertificacion": "2025-05-23T00:00:00.000Z",
     "analistaProducto": "Sergio Anaya",
     "planTrabajo": "en Desarrollo",

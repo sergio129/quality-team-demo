@@ -289,5 +289,64 @@
     "projectId": "SRCA-6548",
     "createdAt": "2025-05-22T15:46:25.460Z",
     "updatedAt": "2025-05-22T15:46:25.460Z"
+  },
+  {
+    "id": "80403630-2f4f-43e0-8d04-cb9af0643085",
+    "testPlanId": "cf9a189a-dc25-413c-ba60-ed057f32095e",
+    "userStoryId": "HU38",
+    "name": "Crear selección cliente corporativo.",
+    "codeRef": "KOIN-261-T001",
+    "steps": [
+      {
+        "id": "12393cad-c027-40c9-a599-c1794558ab2b",
+        "description": " se ingresa a la url https://desarrollodbacklog.grupokonecta.local/koin/app/#/auth/login",
+        "expected": ""
+      },
+      {
+        "id": "db94374b-5372-490f-81ed-2a2c6270fab6",
+        "description": "se ingresa al modulo maestros - centro de costos ",
+        "expected": ""
+      },
+      {
+        "id": "6663ad35-acae-4660-91d4-df9ac79f3663",
+        "description": " se selecciona la opción de inactivos - clientes",
+        "expected": ""
+      },
+      {
+        "id": "99ff18bc-9137-49f4-9994-cc37750851a8",
+        "description": "se validan las condiciones indicadas en la HU",
+        "expected": ""
+      }
+    ],
+    "expectedResult": "Aparece una visual denominada \"Cliente Corporativo Inhabilitados\" con cuatro columnas: Habilitar (que contiene un botón para realizar la acción de habilitar el centro de costos), Código cliente, Nombre cliente, Sociedad (estos datos provienen de la creación del cliente corporativo)",
+    "testType": "Funcional",
+    "status": "Exitoso",
+    "defects": [],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "Leidy Iral",
+    "priority": "Media",
+    "projectId": "KOIN-261",
+    "createdAt": "2025-05-22T18:11:27.520Z",
+    "updatedAt": "2025-05-22T18:11:27.520Z"
+  },
+  {
+    "id": "814ab6bb-62fe-4001-a43e-afe4a90b0251",
+    "testPlanId": "cf9a189a-dc25-413c-ba60-ed057f32095e",
+    "userStoryId": "HU38",
+    "name": "Botón Habilitar",
+    "codeRef": "KOIN-261-T002",
+    "steps": [],
+    "expectedResult": "Muestra un recuadro que indica \"Ingrese una observación para la activación del cliente corporativo\", adicionalmente muestra una restricción en la que indica que debe ingresar mínimo 40 caracteres y máximo 10.000,  la observación se guarda en la columna observación del control de cambios",
+    "testType": "Funcional",
+    "status": "Exitoso",
+    "defects": [],
+    "evidences": [],
+    "cycle": 1,
+    "responsiblePerson": "Leidy Iral",
+    "priority": "Media",
+    "projectId": "KOIN-261",
+    "createdAt": "2025-05-22T18:11:54.255Z",
+    "updatedAt": "2025-05-22T18:11:54.255Z"
   }
 ]

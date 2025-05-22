@@ -21,7 +21,7 @@
     "testQuality": 86.33,
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
-    "updatedAt": "2025-05-22T15:47:22.983Z"
+    "updatedAt": "2025-05-22T18:10:06.396Z"
   },
   {
     "projectId": "SRSS-143",
@@ -45,7 +45,7 @@
     "testQuality": -1,
     "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "createdAt": "2025-05-20T18:12:41.882Z",
-    "updatedAt": "2025-05-22T15:47:22.985Z"
+    "updatedAt": "2025-05-22T18:10:06.397Z"
   },
   {
     "projectId": "SBSF-1824",
@@ -69,7 +69,7 @@
     "testQuality": -1,
     "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
     "createdAt": "2025-05-20T20:40:18.804Z",
-    "updatedAt": "2025-05-22T15:47:22.986Z"
+    "updatedAt": "2025-05-22T18:10:06.398Z"
   },
   {
     "projectId": "SRCA-6548",
@@ -93,6 +93,30 @@
     "testQuality": 92,
     "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
     "createdAt": "2025-05-22T15:42:24.154Z",
-    "updatedAt": "2025-05-22T15:47:22.989Z"
+    "updatedAt": "2025-05-22T18:10:06.399Z"
+  },
+  {
+    "projectId": "KOIN-261",
+    "projectName": "Koin Paquete 7 2025 KOIN-261",
+    "codeReference": "KOIN-261",
+    "startDate": "2025-05-23",
+    "endDate": "2025-05-21",
+    "estimatedHours": 25,
+    "estimatedDays": 2,
+    "totalCases": 2,
+    "cycles": [
+      {
+        "id": "c8195c57-24c5-44e0-b156-8a7c6e49dcd3",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": -1,
+    "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
+    "createdAt": "2025-05-22T18:09:13.174Z",
+    "updatedAt": "2025-05-22T18:11:54.258Z"
   }
 ]
