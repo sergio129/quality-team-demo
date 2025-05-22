@@ -21,14 +21,13 @@ interface TestCaseDefectDialogProps {
 
 export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: TestCaseDefectDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>([]);
   const [selectedDefects, setSelectedDefects] = useState<string[]>(testCase.defects || []);
   const [newDefect, setNewDefect] = useState('');
   const [isNewDefectFormOpen, setIsNewDefectFormOpen] = useState(false);
   const [analysts, setAnalysts] = useState<any[]>([]);
-  
+  const [cells, setCells] = useState<any[]>([]);
   const [newIncidentData, setNewIncidentData] = useState<Partial<Incident>>({
     celula: testCase.projectId || '',
     estado: 'Abierto',
@@ -45,9 +44,9 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
     if (isOpen) {
       fetchIncidents();
       fetchAnalysts();
+      fetchCells();
     }
   }, [isOpen]);
-
   // Filtrar los incidentes cuando cambia el término de búsqueda
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -65,6 +64,24 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
     }
   }, [searchTerm, incidents]);
 
+  // Resetear el estado del formulario de nuevo defecto cuando se cierra la modal
+  useEffect(() => {
+    if (!isOpen) {
+      setIsNewDefectFormOpen(false);
+      setNewIncidentData({
+        celula: testCase.projectId || '',
+        estado: 'Abierto',
+        prioridad: 'Media',
+        descripcion: '',
+        fechaCreacion: new Date(),
+        fechaReporte: new Date(),
+        informadoPor: '',
+        asignadoA: '',
+        cliente: '',
+        idJira: testCase.codeRef || '',
+      });
+    }
+  }, [isOpen, testCase]);
   const fetchAnalysts = async () => {
     try {
       const response = await fetch('/api/analysts');
@@ -73,6 +90,17 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
       setAnalysts(data);
     } catch (error) {
       console.error('Error loading analysts:', error);
+    }
+  };
+
+  const fetchCells = async () => {
+    try {
+      const response = await fetch('/api/cells');
+      if (!response.ok) throw new Error('Error al cargar células');
+      const data = await response.json();
+      setCells(data);
+    } catch (error) {
+      console.error('Error loading cells:', error);
     }
   };
 
@@ -122,13 +150,26 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
       setNewDefect('');
     }
   };
+  const formatDateForInput = (date: Date | undefined): string => {
+    if (!date) return new Date().toISOString().split('T')[0];
+    return date instanceof Date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  };
 
   const handleNewIncidentChange = (e: any) => {
     const { name, value, type, checked } = e.target;
-    setNewIncidentData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    if (name === 'fechaReporte' && type === 'date') {
+      // Convertir el string de fecha a un objeto Date para almacenarlo
+      setNewIncidentData(prev => ({
+        ...prev,
+        [name]: new Date(value)
+      }));
+    } else {
+      setNewIncidentData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
   const handleCreateNewIncident = async () => {
     // Campos requeridos
@@ -239,9 +280,10 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                   <path d="M18 6L6 18M6 6l12 12"></path>
                 </svg>
               </Button>
-            </div>
-              <div className="space-y-4 mt-2">
-              <p className="text-sm text-gray-500 mb-2">Los campos marcados con * son obligatorios</p>
+            </div>            <div className="space-y-4 mt-2">
+              <p className="text-sm text-gray-500 mb-4">
+                Los campos marcados con <span className="text-red-500">*</span> son obligatorios
+              </p>
               <div className="space-y-2">
                 <Label>ID de JIRA</Label>
                 <Input
@@ -253,25 +295,25 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
               </div>
               
               <div className="grid grid-cols-2 gap-4">                <div className="space-y-2">
-                  <Label htmlFor="celula">Célula *</Label>
+                  <Label htmlFor="celula">Célula <span className="text-red-500">*</span></Label>
                   <Select
                     id="celula"
                     name="celula"
-                    value={newIncidentData.celula}
+                    value={newIncidentData.celula || ''}
                     onChange={handleNewIncidentChange}
                     required
                   >
                     <option value="">Seleccionar célula...</option>
-                    {/* Asegurarse de que el proyecto actual esté seleccionado por defecto */}
-                    {testCase.projectId && 
-                      <option value={testCase.projectId}>{testCase.projectId}</option>
-                    }
-                    {/* Aquí podrías agregar otras opciones de células desde alguna API o configuración */}
+                    {cells.map(cell => (
+                      <option key={cell.id} value={cell.id}>
+                        {cell.name || cell.id}
+                      </option>
+                    ))}
                   </Select>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="cliente">Cliente *</Label>
+                  <Label htmlFor="cliente">Cliente <span className="text-red-500">*</span></Label>
                   <Input 
                     id="cliente"
                     name="cliente"
@@ -279,16 +321,13 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     onChange={handleNewIncidentChange}
                     required
                   />
-                </div>
-                    <div className="space-y-2">
-                <Label htmlFor="fechaReporte">Fecha de Reporte *</Label>
+                </div>              <div className="space-y-2">
+                <Label htmlFor="fechaReporte">Fecha de Reporte <span className="text-red-500">*</span></Label>
                 <Input 
                   id="fechaReporte"
                   name="fechaReporte"
                   type="date"
-                  value={(newIncidentData.fechaReporte instanceof Date) 
-                    ? newIncidentData.fechaReporte.toISOString().split('T')[0] 
-                    : new Date().toISOString().split('T')[0]}
+                  value={formatDateForInput(newIncidentData.fechaReporte)}
                   onChange={handleNewIncidentChange}
                   required
                 />
@@ -296,7 +335,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
               </div>
                 <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="informadoPor">Informado Por *</Label>
+                  <Label htmlFor="informadoPor">Informado Por <span className="text-red-500">*</span></Label>
                   <Select
                     id="informadoPor"
                     name="informadoPor"
@@ -314,7 +353,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="asignadoA">Asignado A *</Label>
+                  <Label htmlFor="asignadoA">Asignado A <span className="text-red-500">*</span></Label>
                   <Select
                     id="asignadoA"
                     name="asignadoA"
@@ -332,7 +371,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="estado">Estado *</Label>
+                  <Label htmlFor="estado">Estado <span className="text-red-500">*</span></Label>
                   <Select
                     id="estado"
                     name="estado"
