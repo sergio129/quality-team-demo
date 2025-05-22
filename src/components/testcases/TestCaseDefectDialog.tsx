@@ -349,23 +349,16 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     ))}
                   </Select>
                 </div>
-                
-                <div className="space-y-2">
+                  <div className="space-y-2">
                   <Label htmlFor="asignadoA">Asignado A <span className="text-red-500">*</span></Label>
-                  <Select
+                  <Input
                     id="asignadoA"
                     name="asignadoA"
                     value={newIncidentData.asignadoA}
                     onChange={handleNewIncidentChange}
+                    placeholder="Nombre del responsable"
                     required
-                  >
-                    <option value="">Seleccionar analista...</option>
-                    {analysts.map(analyst => (
-                      <option key={`assigned-${analyst.id}`} value={analyst.nombre}>
-                        {analyst.nombre}
-                      </option>
-                    ))}
-                  </Select>
+                  />
                 </div>
                 
                 <div className="space-y-2">
