@@ -14,13 +14,37 @@ interface TestCaseStatusChangerProps {
 export default function TestCaseStatusChanger({ testCase }: TestCaseStatusChangerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const statusOptions = [
-    { value: 'No ejecutado', label: 'No ejecutado', variant: 'outline' },
-    { value: 'Exitoso', label: 'Exitoso', variant: 'success' },
-    { value: 'Fallido', label: 'Fallido', variant: 'destructive' },
-    { value: 'Bloqueado', label: 'Bloqueado', variant: 'warning' },
-    { value: 'En progreso', label: 'En progreso', variant: 'default' }
+    { 
+      value: 'No ejecutado', 
+      label: 'No ejecutado', 
+      variant: 'outline',
+      className: 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300 font-medium'
+    },
+    { 
+      value: 'Exitoso', 
+      label: 'Exitoso', 
+      variant: 'custom',
+      className: 'bg-green-200 hover:bg-green-300 text-green-900 border border-green-400 font-medium'
+    },
+    { 
+      value: 'Fallido', 
+      label: 'Fallido', 
+      variant: 'custom',
+      className: 'bg-red-200 hover:bg-red-300 text-red-900 border border-red-400 font-medium'
+    },
+    { 
+      value: 'Bloqueado', 
+      label: 'Bloqueado', 
+      variant: 'custom',
+      className: 'bg-amber-200 hover:bg-amber-300 text-amber-900 border border-amber-400 font-medium'
+    },
+    { 
+      value: 'En progreso', 
+      label: 'En progreso', 
+      variant: 'custom',
+      className: 'bg-blue-200 hover:bg-blue-300 text-blue-900 border border-blue-400 font-medium'
+    }
   ];
 
   const handleStatusChange = async (newStatus: string) => {
@@ -42,24 +66,41 @@ export default function TestCaseStatusChanger({ testCase }: TestCaseStatusChange
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Función para obtener la variante correcta según el estado
-  const getVariant = (status: string) => {
+  };  // Función para obtener el estilo correcto según el estado
+  const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'Exitoso': return 'success';
-      case 'Fallido': return 'destructive';
-      case 'Bloqueado': return 'warning';
-      case 'En progreso': return 'default';
-      default: return 'outline';
+      case 'Exitoso': 
+        return {
+          variant: 'custom' as any,
+          className: 'bg-green-200 hover:bg-green-300 text-green-900 border border-green-400 font-medium'
+        };
+      case 'Fallido': 
+        return {
+          variant: 'custom' as any,
+          className: 'bg-red-200 hover:bg-red-300 text-red-900 border border-red-400 font-medium'
+        };
+      case 'Bloqueado': 
+        return {
+          variant: 'custom' as any,
+          className: 'bg-amber-200 hover:bg-amber-300 text-amber-900 border border-amber-400 font-medium'
+        };
+      case 'En progreso': 
+        return {
+          variant: 'custom' as any,
+          className: 'bg-blue-200 hover:bg-blue-300 text-blue-900 border border-blue-400 font-medium'
+        };
+      default: 
+        return {
+          variant: 'outline' as any,
+          className: 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300 font-medium'
+        };
     }
   };
 
   return (
-    <>
-      <Badge 
-        variant={getVariant(testCase.status || 'No ejecutado') as any}
-        className="cursor-pointer hover:opacity-80"
+    <>      <Badge 
+        variant={getStatusStyle(testCase.status || 'No ejecutado').variant}
+        className={`cursor-pointer hover:opacity-80 ${getStatusStyle(testCase.status || 'No ejecutado').className}`}
         onClick={(e) => {
           e.stopPropagation();
           setIsDialogOpen(true);
@@ -77,9 +118,11 @@ export default function TestCaseStatusChanger({ testCase }: TestCaseStatusChange
           <div className="py-4">
             <div className="mb-4">
               <p><strong>Caso:</strong> {testCase.name}</p>
-              <p><strong>Código:</strong> {testCase.codeRef}</p>
-              <p><strong>Estado actual:</strong> 
-                <Badge variant={getVariant(testCase.status || 'No ejecutado') as any} className="ml-2">
+              <p><strong>Código:</strong> {testCase.codeRef}</p>              <p><strong>Estado actual:</strong> 
+                <Badge 
+                  variant={getStatusStyle(testCase.status || 'No ejecutado').variant}
+                  className={`ml-2 ${getStatusStyle(testCase.status || 'No ejecutado').className}`}
+                >
                   {testCase.status || 'No ejecutado'}
                 </Badge>
               </p>
@@ -88,11 +131,10 @@ export default function TestCaseStatusChanger({ testCase }: TestCaseStatusChange
             <div className="space-y-2">
               <p className="text-sm font-medium">Selecciona el nuevo estado:</p>
               <div className="grid grid-cols-2 gap-2">
-                {statusOptions.map(status => (
-                  <Button
+                {statusOptions.map(status => (                  <Button
                     key={status.value}
                     variant={status.variant as any}
-                    className={`justify-start ${status.value === testCase.status ? 'ring-2 ring-primary' : ''}`}
+                    className={`justify-start text-left ${status.className} ${status.value === testCase.status ? 'ring-2 ring-primary' : ''}`}
                     disabled={isLoading}
                     onClick={() => handleStatusChange(status.value)}
                   >
