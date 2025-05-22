@@ -33,33 +33,23 @@ export default function QualityInfoButton() {
             <DialogDescription className="text-gray-500">
               Existen dos métodos diferentes para calcular la calidad en la aplicación
             </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
+          </DialogHeader>          <div className="space-y-4 pt-2">
             <div className="border rounded-md p-3 space-y-2">
-              <h3 className="font-medium">1. Método en la Interfaz (86.33%)</h3>
+              <h3 className="font-medium">Cálculo de Calidad (Fórmula Actualizada)</h3>
               <p className="text-sm text-gray-600">
-                Considera cuatro factores con distintos pesos:
-              </p>
-              <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
-                <li>Cobertura de ejecución (35%)</li>
-                <li>Efectividad (35%)</li>
-                <li>Densidad de defectos (20%)</li>
-                <li>Diversidad de tipos de prueba (10%)</li>
-              </ul>
-            </div>
-
-            <div className="border rounded-md p-3 space-y-2">
-              <h3 className="font-medium">2. Método en el PDF (67%)</h3>
-              <p className="text-sm text-gray-600">
-                Utiliza una fórmula más simple:
+                La calidad se calcula utilizando esta fórmula:
               </p>
               <div className="bg-gray-100 p-2 rounded text-sm my-1">
                 Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
               </div>
               <p className="text-sm text-gray-600">
-                Para un plan con 3 casos y 1 defecto: 100 - (1/3)*100 = 67%
+                Ejemplos:
               </p>
+              <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
+                <li>Para un plan con 3 casos y 1 defecto: 100 - (1/3)*100 = <strong>67%</strong></li>
+                <li>Para un plan con 10 casos y 0 defectos: 100 - (0/10)*100 = <strong>100%</strong></li>
+                <li>Para un plan con 5 casos y 3 defectos: 100 - (3/5)*100 = <strong>40%</strong></li>
+              </ul>
             </div>
 
             <div className="border rounded-md p-3 bg-gray-50">

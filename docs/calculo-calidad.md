@@ -1,45 +1,44 @@
 # Cálculo de Calidad en Quality Teams
 
-Este documento explica las diferencias entre los dos métodos de cálculo de calidad que se utilizan en la aplicación Quality Teams.
+Este documento explica el método de cálculo de calidad utilizado en la aplicación Quality Teams.
 
-## 1. Calidad en la Interfaz (86.33%)
+## Nuevo método de cálculo de calidad (Mayo 2025)
 
-La interfaz de usuario utiliza un algoritmo complejo que considera varios factores:
+Actualmente, la calidad de los planes de prueba se calcula mediante una fórmula simple y directa que se enfoca específicamente en la relación entre defectos encontrados y casos diseñados:
 
-- **Cobertura de ejecución (35%)**: Porcentaje de casos ejecutados vs. diseñados.
-- **Efectividad (35%)**: Porcentaje de casos exitosos vs. ejecutados.
-- **Densidad de defectos (20%)**: Defectos por caso de prueba.
-- **Diversidad de tipos de prueba (10%)**: Variedad de tipos de pruebas utilizados.
-
-**Código de cálculo:**
-```typescript
-// Ponderación de factores
-const weightCoverage = 0.35;     // 35%
-const weightEffectiveness = 0.35; // 35%
-const weightDefects = 0.20;       // 20%
-const weightTestTypes = 0.10;     // 10%
-
-// Cálculo del puntaje final
-const qualityScore = (
-  (coverageScore * weightCoverage) +
-  (effectivenessScore * weightEffectiveness) +
-  (defectScore * weightDefects) +
-  (testTypeScore * weightTestTypes)
-);
+```
+Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
 ```
 
-## 2. Calidad en el PDF (86.33%)
+Esta fórmula produce los siguientes resultados:
 
-**Actualización:** Ahora el PDF utiliza el mismo algoritmo complejo que la interfaz:
+- Cuando no hay defectos, la calidad es del 100%
+- Cuanto mayor sea el número de defectos en relación con los casos de prueba, menor será la calidad
+- Si hay más defectos que casos de prueba (lo que puede ocurrir si un caso tiene múltiples defectos), se establece un mínimo de 0%
+
+### Ejemplos:
+
+1. Un plan con 10 casos y 0 defectos: 100 - (0/10)*100 = **100%**
+2. Un plan con 5 casos y 1 defecto: 100 - (1/5)*100 = **80%**
+3. Un plan con 4 casos y 3 defectos: 100 - (3/4)*100 = **25%**
+
+### Implementación técnica:
 
 ```typescript
-// Cálculo del puntaje final usando los mismos factores y ponderaciones
-const qualityScore = (
-  (coverageScore * weightCoverage) +
-  (effectivenessScore * weightEffectiveness) +
-  (defectScore * weightDefects) +
-  (testTypeScore * weightTestTypes)
-);
+// Contar el total de defectos
+const totalDefects = casesToEvaluate.reduce((sum, tc) => sum + (tc.defects?.length || 0), 0);
+const totalCasosDisenados = casesToEvaluate.length;
+
+// Si no hay defectos, la calidad es 100%
+if (totalDefects === 0) {
+  return 100;
+}
+
+// Aplicar la fórmula: Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
+const qualityScore = 100 - (totalDefects / totalCasosDisenados) * 100;
+
+// Asegurarse de que la calidad no sea un número negativo
+const finalScore = Math.max(0, qualityScore);
 ```
 
 Para SRCA-6556:

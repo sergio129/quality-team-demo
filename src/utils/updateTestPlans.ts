@@ -42,50 +42,27 @@ async function updateTestPlans() {
         
         console.log(`  - Ciclo ${currentCycle.number} actualizado: ${currentCycle.designed} diseñados, ${currentCycle.successful} exitosos, ${currentCycle.defects} defectos`);
       }
-      
-      // Calcular la calidad correctamente
+        // Calcular la calidad correctamente
       let testQuality = -1; // Valor predeterminado para "No aplicable"
       
       if (casesForPlan.length > 0) {
-        // Usar el mismo algoritmo que en route.ts pero adaptado para este script
+        // NUEVO MÉTODO DE CÁLCULO DE CALIDAD
         const casesToEvaluate = casesForPlan;
         
-        // 1. Cobertura de ejecución
-        const executedCases = casesToEvaluate.filter(tc => tc.status !== 'No ejecutado').length;
-        const coverageScore = casesToEvaluate.length > 0 
-          ? (executedCases / casesToEvaluate.length) * 100 
-          : 0;
-        
-        // 2. Eficacia
-        const successfulCases = casesToEvaluate.filter(tc => tc.status === 'Exitoso').length;
-        const effectivenessScore = executedCases > 0 
-          ? (successfulCases / executedCases) * 100 
-          : 0;
-        
-        // 3. Densidad de defectos
+        // Contar el total de defectos
         const totalDefects = casesToEvaluate.reduce((sum, tc) => sum + (tc.defects?.length || 0), 0);
-        const defectDensity = casesToEvaluate.length > 0 
-          ? totalDefects / casesToEvaluate.length 
-          : 0;
-        const defectScore = 100 * Math.exp(-defectDensity);
+        const totalCasosDisenados = casesToEvaluate.length;
         
-        // 4. Diversidad de tipos de prueba
-        const uniqueTestTypes = new Set(casesToEvaluate.map(tc => tc.testType)).size;
-        const testTypeScore = Math.min(uniqueTestTypes * 20, 100);
-        
-        // Ponderación de factores
-        const weightCoverage = 0.35;
-        const weightEffectiveness = 0.35;
-        const weightDefects = 0.20;
-        const weightTestTypes = 0.10;
-        
-        // Cálculo final
-        testQuality = (
-          (coverageScore * weightCoverage) +
-          (effectivenessScore * weightEffectiveness) +
-          (defectScore * weightDefects) +
-          (testTypeScore * weightTestTypes)
-        );
+        // Si no hay defectos, la calidad es 100%
+        if (totalDefects === 0) {
+          testQuality = 100;
+        } else {
+          // Aplicar la fórmula: Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
+          testQuality = 100 - (totalDefects / totalCasosDisenados) * 100;
+          
+          // Asegurarse de que la calidad no sea un número negativo
+          testQuality = Math.max(0, testQuality);
+        }
         
         // Redondear a 2 decimales
         testQuality = Math.round(testQuality * 100) / 100;
