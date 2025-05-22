@@ -40,9 +40,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
     asignadoA: '',
     cliente: '',
     idJira: testCase.codeRef || '',
-  });
-
-  // Cargar incidentes cuando se abre el diálogo
+  });  // Cargar incidentes y analistas cuando se abre el diálogo
   useEffect(() => {
     if (isOpen) {
       fetchIncidents();
@@ -132,34 +130,56 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
   const handleCreateNewIncident = async () => {
-    if (!newIncidentData.descripcion || !newIncidentData.asignadoA || !newIncidentData.cliente) {
-      toast.error('Por favor completa todos los campos requeridos');
+    // Campos requeridos
+    const requiredFields = ['descripcion', 'asignadoA', 'informadoPor', 'cliente', 'celula'];
+    const missingFields = requiredFields.filter(field => !newIncidentData[field as keyof typeof newIncidentData]);
+    
+    if (missingFields.length > 0) {
+      toast.error(`Por favor completa los siguientes campos: ${missingFields.join(', ')}`);
       return;
     }
 
     try {
       setIsLoading(true);
       
+      // Asegurarse de que idJira y fechaReporte tengan valores por defecto
       const incidentToCreate = {
         ...newIncidentData,
         idJira: newIncidentData.idJira || testCase.codeRef || '',
         fechaReporte: newIncidentData.fechaReporte || new Date(),
+        // Asegurar que los valores booleanos estén definidos
+        esErroneo: newIncidentData.esErroneo || false,
+        aplica: newIncidentData.aplica !== undefined ? newIncidentData.aplica : true
       };
 
       // Crear el incidente
       const result = await createIncident(incidentToCreate as any);
       
-      // Obtener el resultado del incidente creado
-      const newIncident = await result.unwrap();
-      
       // Si la creación fue exitosa, añadir el nuevo ID a la lista de defectos seleccionados
-      if (newIncident && newIncident.id) {
-        addDefect(newIncident.id);
-        setIsNewDefectFormOpen(false);
-        await fetchIncidents(); // Refrescar la lista de incidentes
-        toast.success('Defecto creado y vinculado correctamente');
+      if (result) {
+        const newIncident = await result.unwrap();
+        
+        if (newIncident && newIncident.id) {
+          addDefect(newIncident.id);
+          setIsNewDefectFormOpen(false);
+          await fetchIncidents(); // Refrescar la lista de incidentes
+          toast.success('Defecto creado y vinculado correctamente');
+          
+          // Restablecer el formulario para futuras creaciones
+          setNewIncidentData({
+            celula: testCase.projectId || '',
+            estado: 'Abierto',
+            prioridad: 'Media',
+            descripcion: '',
+            fechaCreacion: new Date(),
+            fechaReporte: new Date(),
+            informadoPor: '',
+            asignadoA: '',
+            cliente: '',
+            idJira: testCase.codeRef || '',
+          });
+        }
       }
     } catch (error) {
       console.error('Error creating defect:', error);
@@ -202,12 +222,26 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
             <span className="text-red-500">•</span>
             Gestionar Defectos
           </DialogTitle>
-        </DialogHeader>
-          {isNewDefectFormOpen ? (
+        </DialogHeader>          {isNewDefectFormOpen ? (
           <div className="space-y-4 py-4">
-            <h3 className="text-lg font-medium">Nuevo Incidente</h3>
-            
-            <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <span className="text-green-500">•</span>
+                Nuevo Incidente
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-1" 
+                onClick={() => setIsNewDefectFormOpen(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+              </Button>
+            </div>
+              <div className="space-y-4 mt-2">
+              <p className="text-sm text-gray-500 mb-2">Los campos marcados con * son obligatorios</p>
               <div className="space-y-2">
                 <Label>ID de JIRA</Label>
                 <Input
@@ -218,8 +252,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">                <div className="space-y-2">
                   <Label htmlFor="celula">Célula *</Label>
                   <Select
                     id="celula"
@@ -229,7 +262,11 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     required
                   >
                     <option value="">Seleccionar célula...</option>
-                    <option value={testCase.projectId || ''}>{testCase.projectId}</option>
+                    {/* Asegurarse de que el proyecto actual esté seleccionado por defecto */}
+                    {testCase.projectId && 
+                      <option value={testCase.projectId}>{testCase.projectId}</option>
+                    }
+                    {/* Aquí podrías agregar otras opciones de células desde alguna API o configuración */}
                   </Select>
                 </div>
                 
@@ -243,21 +280,21 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     required
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="fechaReporte">Fecha de Reporte *</Label>
-                  <Input 
-                    id="fechaReporte"
-                    name="fechaReporte"
-                    type="date"
-                    value={newIncidentData.fechaReporte ? new Date(newIncidentData.fechaReporte).toISOString().split('T')[0] : ''}
-                    onChange={handleNewIncidentChange}
-                    required
-                  />
-                </div>
+                    <div className="space-y-2">
+                <Label htmlFor="fechaReporte">Fecha de Reporte *</Label>
+                <Input 
+                  id="fechaReporte"
+                  name="fechaReporte"
+                  type="date"
+                  value={(newIncidentData.fechaReporte instanceof Date) 
+                    ? newIncidentData.fechaReporte.toISOString().split('T')[0] 
+                    : new Date().toISOString().split('T')[0]}
+                  onChange={handleNewIncidentChange}
+                  required
+                />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+              </div>
+                <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="informadoPor">Informado Por *</Label>
                   <Select
@@ -407,13 +444,17 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
               </div>
             </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="button" onClick={handleCreateNewIncident} disabled={isLoading}>
-                {isLoading ? 'Guardando...' : 'Crear Incidente'}
+              <Button 
+                type="button" 
+                onClick={handleCreateNewIncident} 
+                disabled={isLoading}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isLoading ? 'Guardando...' : 'Crear y Vincular Defecto'}
               </Button>
             </div>
           </div>
