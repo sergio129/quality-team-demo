@@ -203,51 +203,68 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
             Gestionar Defectos
           </DialogTitle>
         </DialogHeader>
-        
-        {isNewDefectFormOpen ? (
+          {isNewDefectFormOpen ? (
           <div className="space-y-4 py-4">
-            <h3 className="text-lg font-medium">Nuevo Defecto</h3>
+            <h3 className="text-lg font-medium">Nuevo Incidente</h3>
+            
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>ID de JIRA</Label>
+                <Input
+                  value={newIncidentData.idJira || testCase.codeRef}
+                  name="idJira"
+                  onChange={handleNewIncidentChange}
+                  placeholder="Buscar ID de JIRA..."
+                />
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="celula">Célula *</Label>
+                  <Select
+                    id="celula"
+                    name="celula"
+                    value={newIncidentData.celula}
+                    onChange={handleNewIncidentChange}
+                    required
+                  >
+                    <option value="">Seleccionar célula...</option>
+                    <option value={testCase.projectId || ''}>{testCase.projectId}</option>
+                  </Select>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="cliente">Cliente *</Label>
                   <Input 
                     id="cliente"
                     name="cliente"
-                    value={newDefectData.cliente}
-                    onChange={handleNewDefectChange}
+                    value={newIncidentData.cliente}
+                    onChange={handleNewIncidentChange}
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="celula">Célula</Label>
+                  <Label htmlFor="fechaReporte">Fecha de Reporte *</Label>
                   <Input 
-                    id="celula"
-                    name="celula"
-                    value={newDefectData.celula}
-                    onChange={handleNewDefectChange}
+                    id="fechaReporte"
+                    name="fechaReporte"
+                    type="date"
+                    value={newIncidentData.fechaReporte ? new Date(newIncidentData.fechaReporte).toISOString().split('T')[0] : ''}
+                    onChange={handleNewIncidentChange}
+                    required
                   />
                 </div>
-                
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="informadoPor">Informado Por *</Label>
-                  <Input 
+                  <Select
                     id="informadoPor"
                     name="informadoPor"
-                    value={newDefectData.informadoPor}
-                    onChange={handleNewDefectChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="asignadoA">Asignado A *</Label>
-                  <Select
-                    id="asignadoA"
-                    name="asignadoA"
-                    value={newDefectData.asignadoA}
-                    onChange={handleNewDefectChange}
+                    value={newIncidentData.informadoPor}
+                    onChange={handleNewIncidentChange}
                     required
                   >
                     <option value="">Seleccionar analista...</option>
@@ -260,12 +277,45 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="asignadoA">Asignado A *</Label>
+                  <Select
+                    id="asignadoA"
+                    name="asignadoA"
+                    value={newIncidentData.asignadoA}
+                    onChange={handleNewIncidentChange}
+                    required
+                  >
+                    <option value="">Seleccionar analista...</option>
+                    {analysts.map(analyst => (
+                      <option key={`assigned-${analyst.id}`} value={analyst.nombre}>
+                        {analyst.nombre}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="estado">Estado *</Label>
+                  <Select
+                    id="estado"
+                    name="estado"
+                    value={newIncidentData.estado}
+                    onChange={handleNewIncidentChange}
+                    required
+                  >
+                    <option value="Abierto">Abierto</option>
+                    <option value="En Progreso">En Progreso</option>
+                    <option value="Resuelto">Resuelto</option>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="prioridad">Prioridad *</Label>
                   <Select
                     id="prioridad"
                     name="prioridad"
-                    value={newDefectData.prioridad}
-                    onChange={handleNewDefectChange}
+                    value={newIncidentData.prioridad}
+                    onChange={handleNewIncidentChange}
                     required
                   >
                     <option value="Alta">Alta</option>
@@ -279,9 +329,10 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                   <Select
                     id="tipoBug"
                     name="tipoBug"
-                    value={newDefectData.tipoBug}
-                    onChange={handleNewDefectChange}
+                    value={newIncidentData.tipoBug}
+                    onChange={handleNewIncidentChange}
                   >
+                    <option value="">Seleccionar tipo...</option>
                     <option value="UI">UI</option>
                     <option value="Funcional">Funcional</option>
                     <option value="Performance">Performance</option>
@@ -297,8 +348,8 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                   <Select
                     id="areaAfectada"
                     name="areaAfectada"
-                    value={newDefectData.areaAfectada}
-                    onChange={handleNewDefectChange}
+                    value={newIncidentData.areaAfectada}
+                    onChange={handleNewIncidentChange}
                   >
                     <option value="">Seleccionar área...</option>
                     <option value="Frontend">Frontend</option>
@@ -310,38 +361,59 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     <option value="Otro">Otro</option>
                   </Select>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="idJira">ID Jira</Label>
-                  <Input 
-                    id="idJira"
-                    name="idJira"
-                    value={newDefectData.idJira}
-                    onChange={handleNewDefectChange}
-                  />
-                </div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="descripcion">Descripción *</Label>
-                <Textarea
+                <textarea
                   id="descripcion"
                   name="descripcion"
+                  className="w-full px-3 py-2 border rounded-md"
                   rows={4}
-                  value={newDefectData.descripcion}
-                  onChange={handleNewDefectChange}
+                  value={newIncidentData.descripcion}
+                  onChange={handleNewIncidentChange}
                   required
-                  placeholder="Describa el defecto encontrado..."
-                />
+                  placeholder="Describa el incidente..."
+                ></textarea>
+              </div>
+              
+              <div className="flex items-start gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="esErroneo"
+                    name="esErroneo"
+                    checked={newIncidentData.esErroneo}
+                    onChange={handleNewIncidentChange}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="esErroneo" className="text-sm">
+                    Marcado como erróneo
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="aplica"
+                    name="aplica"
+                    checked={newIncidentData.aplica}
+                    onChange={handleNewIncidentChange}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="aplica" className="text-sm">
+                    Aplica
+                  </Label>
+                </div>
               </div>
             </div>
             
             <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreateNewDefect} disabled={isLoading}>
-                {isLoading ? 'Guardando...' : 'Crear Defecto'}
+              <Button type="button" onClick={handleCreateNewIncident} disabled={isLoading}>
+                {isLoading ? 'Guardando...' : 'Crear Incidente'}
               </Button>
             </div>
           </div>
