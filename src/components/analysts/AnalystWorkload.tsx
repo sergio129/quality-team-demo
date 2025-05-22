@@ -137,8 +137,9 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     const completedProjects = updatedProjects.filter(p => 
       p.estadoCalculado === 'Certificado'
     );
-      // Calcular horas asignadas - SOLO de proyectos ACTIVOS (no certificados)
-    const totalHoursAssigned = activeProjects.reduce((total, project) => {
+    
+    // Calcular horas asignadas
+    const totalHoursAssigned = updatedProjects.reduce((total, project) => {
       return total + (project.horasEstimadas || project.horas || 0);
     }, 0);
     
@@ -187,11 +188,6 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       // Creamos una copia localizada del proyecto con el nuevo estado para mostrar cambios inmediatos
       const optimisticProject = { ...project, estadoCalculado: newStatus, estado: newStatus };
       
-      // Si el proyecto está pasando a Certificado, actualizamos también la fecha de certificación
-      if (newStatus === 'Certificado') {
-        optimisticProject.fechaCertificacion = new Date().toISOString();
-      }
-      
       // Usar la función del hook que incluye notificaciones, revalidaciones y manejo de errores
       await changeProjectStatus(
         project.id || projectId, 
@@ -211,13 +207,6 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           if (analystResponse.ok) {
             const analystData = await analystResponse.json();
             setAnalyst(analystData);
-          }
-          
-          // Refrescar todos los proyectos también
-          const projectsResponse = await fetch('/api/projects');
-          if (projectsResponse.ok) {
-            // Esto actualizará el caché de SWR
-            await mutate('/api/projects');
           }
         } catch (error) {
           console.error('Error al actualizar datos del analista:', error);
@@ -265,10 +254,10 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   }
     return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 justify-center">        <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
+      <div className="flex flex-wrap gap-3 justify-center">
+        <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
-          <p className="text-[10px] text-gray-600">{activeProjects.length ? `${totalHoursAssigned}h / ${MAX_MONTHLY_HOURS}h` : 'Solo activos'}</p>
           <p className="text-xs font-medium font-mono">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
         </div>
         <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center w-32">

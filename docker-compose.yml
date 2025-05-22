@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    container_name: quality-team-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0129
+      POSTGRES_DB: qualityteams
+    ports:
+      - "5432:5432"
+    volumes:
+      - quality-team-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  quality-team-data:
+    driver: local
