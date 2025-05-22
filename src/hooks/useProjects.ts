@@ -67,13 +67,26 @@ export async function createProject(project: Partial<Project>) {
         throw new Error(error.error || 'Error al crear el proyecto');
       }
 
-      const newProject = await response.json();
+      const result = await response.json();
       
-      // Revalidar la caché
+      // Revalidar la caché de proyectos
       mutate(PROJECTS_API);
       mutate(PROJECTS_STATUS_API);
       
-      return newProject;
+      // Revalidar la caché de planes de prueba, ya que se crea uno automáticamente
+      mutate('/api/test-plans');
+      if (project.idJira) {
+        mutate(`/api/test-plans?projectId=${project.idJira}`);
+      }
+      
+      // Mostrar mensaje más descriptivo si se creó un plan de prueba
+      if (result.testPlan) {
+        toast.success('Se ha creado automáticamente un plan de pruebas para este proyecto', {
+          duration: 5000 // Mostrar el mensaje por 5 segundos
+        });
+      }
+      
+      return result.project || result;
     },
     {
       loading: 'Creando proyecto...',

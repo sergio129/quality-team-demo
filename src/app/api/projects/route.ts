@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { projectService } from '@/services/projectService';
+import { testCaseService } from '@/services/testCaseService';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: NextRequest) {
     const url = new URL(req.url);
@@ -74,7 +76,51 @@ export async function POST(req: NextRequest) {
     const project = await req.json();
     const success = await projectService.saveProject(project);
     if (success) {
-        return NextResponse.json({ message: 'Project created successfully' });
+        // Crear automáticamente un plan de pruebas para el nuevo proyecto
+        try {
+            // Crear un plan de pruebas con valores predeterminados
+            const now = new Date();
+            const testPlan = {
+                id: uuidv4(),
+                projectId: project.idJira,
+                projectName: project.proyecto || 'Proyecto sin nombre',
+                codeReference: project.idJira,
+                startDate: now.toISOString().split('T')[0],
+                endDate: project.fechaEntrega || '',
+                estimatedHours: 0,
+                estimatedDays: 0,
+                totalCases: 0,
+                cycles: [
+                    {
+                        id: uuidv4(),
+                        number: 1,
+                        designed: 0,
+                        successful: 0,
+                        notExecuted: 0,
+                        defects: 0
+                    }
+                ],
+                testQuality: 100, // Calidad perfecta inicial
+                createdAt: now.toISOString(),
+                updatedAt: now.toISOString()
+            };
+            
+            // Guardar el plan de pruebas
+            await testCaseService.saveTestPlan(testPlan);
+            
+            return NextResponse.json({ 
+                message: 'Project created successfully with test plan',
+                project,
+                testPlan
+            });
+        } catch (error) {
+            console.error('Error creating test plan for project:', error);
+            // Aun si falla la creación del plan, devolvemos éxito ya que el proyecto se creó
+            return NextResponse.json({ 
+                message: 'Project created successfully but failed to create test plan',
+                project
+            });
+        }
     }
     return NextResponse.json({ message: 'Error creating project' }, { status: 500 });
 }

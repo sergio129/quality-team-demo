@@ -21,7 +21,7 @@
     "testQuality": 66.67,
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "createdAt": "2025-05-20T16:02:28.759Z",
-    "updatedAt": "2025-05-22T19:19:15.451Z"
+    "updatedAt": "2025-05-22T19:20:41.522Z"
   },
   {
     "projectId": "SRSS-143",
@@ -45,7 +45,7 @@
     "testQuality": -1,
     "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "createdAt": "2025-05-20T18:12:41.882Z",
-    "updatedAt": "2025-05-22T19:19:15.456Z"
+    "updatedAt": "2025-05-22T19:20:41.523Z"
   },
   {
     "projectId": "SBSF-1824",
@@ -69,7 +69,7 @@
     "testQuality": -1,
     "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
     "createdAt": "2025-05-20T20:40:18.804Z",
-    "updatedAt": "2025-05-22T19:19:15.459Z"
+    "updatedAt": "2025-05-22T19:20:41.525Z"
   },
   {
     "projectId": "SRCA-6548",
@@ -93,7 +93,7 @@
     "testQuality": 100,
     "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
     "createdAt": "2025-05-22T15:42:24.154Z",
-    "updatedAt": "2025-05-22T19:19:15.463Z"
+    "updatedAt": "2025-05-22T19:20:41.529Z"
   },
   {
     "projectId": "KOIN-261",
@@ -117,6 +117,30 @@
     "testQuality": 50,
     "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
     "createdAt": "2025-05-22T18:09:13.174Z",
-    "updatedAt": "2025-05-22T19:19:15.464Z"
+    "updatedAt": "2025-05-22T19:20:41.531Z"
+  },
+  {
+    "id": "7f7f16e9-ad7b-4587-9cc7-e4dd97ef6015",
+    "projectId": "PRUEBA-123",
+    "projectName": "Pruebas",
+    "codeReference": "PRUEBA-123",
+    "startDate": "2025-05-22",
+    "endDate": "2025-05-22T00:00:00.000Z",
+    "estimatedHours": 0,
+    "estimatedDays": 0,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "5decc540-906b-4957-a39f-b56e4edf475c",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-22T19:32:31.780Z",
+    "updatedAt": "2025-05-22T19:32:31.780Z"
   }
 ]
