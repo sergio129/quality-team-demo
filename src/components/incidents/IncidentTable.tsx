@@ -302,37 +302,24 @@ export function IncidentTable() {
                 <>
                     <div className="rounded-md border mb-4">
                         <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead 
-                                        className="cursor-pointer hover:bg-gray-50"
-                                        onClick={() => handleSort('id')}
-                                    >
+                            <TableHeader>                                <TableRow>
+                                    <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('id')}>
                                         <div className="flex items-center">
                                             ID {renderSortIcon('id')}
                                         </div>
                                     </TableHead>
                                     <TableHead>Célula</TableHead>
-                                    <TableHead 
-                                        className="cursor-pointer hover:bg-gray-50"
-                                        onClick={() => handleSort('estado')}
-                                    >
+                                    <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('estado')}>
                                         <div className="flex items-center">
                                             Estado {renderSortIcon('estado')}
                                         </div>
                                     </TableHead>
-                                    <TableHead 
-                                        className="cursor-pointer hover:bg-gray-50"
-                                        onClick={() => handleSort('prioridad')}
-                                    >
+                                    <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('prioridad')}>
                                         <div className="flex items-center">
                                             Prioridad {renderSortIcon('prioridad')}
                                         </div>
                                     </TableHead>
-                                    <TableHead 
-                                        className="cursor-pointer hover:bg-gray-50 w-[250px]"
-                                        onClick={() => handleSort('descripcion')}
-                                    >
+                                    <TableHead className="cursor-pointer hover:bg-gray-50 w-[250px]" onClick={() => handleSort('descripcion')}>
                                         <div className="flex items-center">
                                             Descripción {renderSortIcon('descripcion')}
                                         </div>

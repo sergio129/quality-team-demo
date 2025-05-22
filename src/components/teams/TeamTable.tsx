@@ -184,23 +184,17 @@ export function DataTable() {
             </>
           )}
         </div>
-      ) : (
-        <>          <div className="rounded-md border">
+      ) : (        <>
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('name')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('description')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('description')}>
                     <div className="flex items-center">
                       Descripción {renderSortIcon('description')}
                     </div>

@@ -201,36 +201,23 @@ export function DataTable() {
         <>
           <div className="rounded-md border">
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('name')}
-                  >
+              <TableHeader>                <TableRow>
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('email')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('email')}>
                     <div className="flex items-center">
                       Email {renderSortIcon('email')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('cells')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('cells')}>
                     <div className="flex items-center">
                       Célula {renderSortIcon('cells')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('role')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('role')}>
                     <div className="flex items-center">
                       Rol {renderSortIcon('role')}
                     </div>

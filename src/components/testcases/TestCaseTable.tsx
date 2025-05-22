@@ -218,11 +218,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </TableHeader>
             <TableBody>
               {filteredTestCases.map((testCase) => (
-                <TableRow 
-                  key={testCase.id} 
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleViewDetails(testCase)}
-                >                  <TableCell className="font-medium">{testCase.codeRef}</TableCell>
+                <TableRow key={testCase.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleViewDetails(testCase)}>
+                  <TableCell className="font-medium">{testCase.codeRef}</TableCell>
                   <TableCell>{testCase.userStoryId}</TableCell>
                   <TableCell>{testCase.name}</TableCell>
                   <TableCell>
@@ -231,8 +228,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                         {testPlans?.find(plan => plan.id === testCase.testPlanId)?.codeReference || 'Plan ' + testCase.testPlanId.slice(0, 6)}
                       </Badge>
                     )}
-                  </TableCell>                  <TableCell>{testCase.testType}</TableCell>
-                  <TableCell onClick={e => e.stopPropagation()}>
+                  </TableCell>
+                  <TableCell>{testCase.testType}</TableCell>                  <TableCell onClick={e => e.stopPropagation()}>
                     <TestCaseStatusChanger testCase={testCase} />
                   </TableCell>
                   <TableCell>{testCase.cycle}</TableCell>

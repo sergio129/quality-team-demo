@@ -222,39 +222,31 @@ export function DataTable() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('name')}
-                  >
+                <TableRow>                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('team')}
-                  >
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('team')}>
                     <div className="flex items-center">
                       Equipo {renderSortIcon('team')}
                     </div>
                   </TableHead>
-                  <TableHead 
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleSort('description')}
-                  >                    <div className="flex items-center">
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('description')}>
+                    <div className="flex items-center">
                       Descripción {renderSortIcon('description')}
                     </div>
-                  </TableHead>                  <TableHead>Proyectos</TableHead>
+                  </TableHead>
+                  <TableHead>Proyectos</TableHead>
                   <TableHead className="text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginationInfo.currentCells.map((cell) => (
-                  <TableRow key={cell.id}>
-                    <TableCell className="font-medium">{cell.name}</TableCell>
+                  <TableRow key={cell.id}>                    <TableCell className="font-medium">{cell.name}</TableCell>
                     <TableCell>{getTeamName(cell.teamId)}</TableCell>
-                    <TableCell>{cell.description}</TableCell>                    <TableCell>
+                    <TableCell>{cell.description}</TableCell>
+                    <TableCell>
                       <div className="flex items-center space-x-2">
                         {projectsCountByCell[cell.name.toLowerCase()] ? (
                           <>
@@ -274,7 +266,8 @@ export function DataTable() {
                           <span className="text-gray-400 text-xs">Sin proyectos</span>
                         )}
                       </div>
-                    </TableCell>                    <TableCell className="text-center">
+                    </TableCell>
+                    <TableCell className="text-center">
                       <div className="flex justify-center items-center space-x-2">
                         <EditCellDialog cell={cell} teams={teams} />
                         <Button
