@@ -81,12 +81,13 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
         idJira: testCase.codeRef || '',
       });
     }
-  }, [isOpen, testCase]);
-  const fetchAnalysts = async () => {
+  }, [isOpen, testCase]);  const fetchAnalysts = async () => {
     try {
+      console.log('Cargando analistas...');
       const response = await fetch('/api/analysts');
       if (!response.ok) throw new Error('Error al cargar analistas');
       const data = await response.json();
+      console.log('Analistas cargados:', data); // Log para depuración
       setAnalysts(data);
     } catch (error) {
       console.error('Error loading analysts:', error);
@@ -341,12 +342,15 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     onChange={handleNewIncidentChange}
                     required
                   >
-                    <option value="">Seleccionar analista...</option>
-                    {analysts.map(analyst => (
-                      <option key={analyst.id} value={analyst.nombre}>
-                        {analyst.nombre}
-                      </option>
-                    ))}
+                    <option value="">Seleccionar analista...</option>                    {analysts.length === 0 ? (
+                      <option value="" disabled>No hay analistas disponibles</option>
+                    ) : (
+                      analysts.map(analyst => (
+                        <option key={analyst.id} value={analyst.name}>
+                          {analyst.name}
+                        </option>
+                      ))
+                    )}
                   </Select>
                 </div>
                   <div className="space-y-2">
