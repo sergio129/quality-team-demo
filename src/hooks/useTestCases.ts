@@ -158,6 +158,43 @@ export async function updateTestCase(id: string, testCase: Partial<TestCase>) {
 }
 
 /**
+ * Función para cambiar el estado de un caso de prueba
+ */
+export async function updateTestCaseStatus(id: string, status: string, projectId?: string) {
+  return toast.promise(
+    async () => {
+      const response = await fetch(`${TEST_CASES_API}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Error al cambiar el estado del caso de prueba');
+      }
+
+      const updatedTestCase = await response.json();
+      
+      // Revalidar la caché
+      mutate(TEST_CASES_API);
+      mutate(`${TEST_CASES_API}/${id}`);
+      if (projectId) {
+        mutate(`${TEST_CASES_API}?projectId=${projectId}`);
+        mutate(`${TEST_CASE_STATS_API}?projectId=${projectId}`);
+      }
+      
+      return updatedTestCase;
+    },
+    {
+      loading: 'Cambiando estado del caso de prueba...',
+      success: 'Estado actualizado exitosamente',
+      error: (err) => `Error: ${err.message}`
+    }
+  );
+}
+
+/**
  * Función para eliminar un caso de prueba
  */
 export async function deleteTestCase(id: string, projectId?: string) {

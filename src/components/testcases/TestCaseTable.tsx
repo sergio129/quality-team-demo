@@ -17,6 +17,7 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import TestCaseForm from './TestCaseForm';
 import TestCaseDetailsDialog from './TestCaseDetailsDialog';
+import TestCaseStatusChanger from './TestCaseStatusChanger';
 import { toast } from 'sonner';
 import { useProjects } from '@/hooks/useProjects';
 
@@ -230,17 +231,9 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                         {testPlans?.find(plan => plan.id === testCase.testPlanId)?.codeReference || 'Plan ' + testCase.testPlanId.slice(0, 6)}
                       </Badge>
                     )}
-                  </TableCell>
-                  <TableCell>{testCase.testType}</TableCell><TableCell>
-                    <Badge variant={
-                      testCase.status === 'Exitoso' ? 'success' :
-                      testCase.status === 'Fallido' ? 'destructive' :
-                      testCase.status === 'Bloqueado' ? 'warning' :
-                      testCase.status === 'En progreso' ? 'default' :
-                      'outline'
-                    }>
-                      {testCase.status}
-                    </Badge>
+                  </TableCell>                  <TableCell>{testCase.testType}</TableCell>
+                  <TableCell onClick={e => e.stopPropagation()}>
+                    <TestCaseStatusChanger testCase={testCase} />
                   </TableCell>
                   <TableCell>{testCase.cycle}</TableCell>
                   <TableCell>{testCase.defects?.length || 0}</TableCell>
