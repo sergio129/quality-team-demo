@@ -298,11 +298,11 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         <div className="flex justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : testPlans && testPlans.length > 0 ? (
-        <div className="border rounded-md">
+      ) : testPlans && testPlans.length > 0 ? (        <div className="border rounded-md">
           <Table>
             <TableHeader>
-              <TableRow>                <TableHead>Referencia</TableHead>
+              <TableRow>
+                <TableHead>Referencia</TableHead>
                 <TableHead>Proyecto</TableHead>
                 <TableHead>Fecha Inicio</TableHead>
                 <TableHead>Fecha Fin</TableHead>
@@ -312,15 +312,17 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                   <QualityInfoButton />
                 </TableHead>
                 <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
+              </TableRow>            </TableHeader>
             <TableBody>
               {testPlans.map((plan) => (
-                <TableRow key={plan.id}>                  <TableCell>{plan.codeReference}</TableCell>                  <TableCell>{plan.projectName}</TableCell>
+                <TableRow key={plan.id}>
+                  <TableCell>{plan.codeReference}</TableCell>
+                  <TableCell>{plan.projectName}</TableCell>
                   <TableCell>{formatDateWithoutTimezone(plan.startDate)}</TableCell>
                   <TableCell>{plan.endDate ? formatDateWithoutTimezone(plan.endDate) : '-'}</TableCell>
                   <TableCell>{plan.totalCases}</TableCell>
-                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>                  <TableCell>
+                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
@@ -335,7 +337,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                         onClick={() => handleEditPlan(plan)}
                       >
                         Editar
-                      </Button>                      <Button
+                      </Button>
+                      <Button
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-800 hover:bg-red-100"

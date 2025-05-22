@@ -374,7 +374,7 @@
     "diasRetraso": 0,
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "En proceso",
-    "estadoCalculado": "En Progreso"
+    "estadoCalculado": "Certificado"
   },
   {
     "idJira": "SRSS-139",

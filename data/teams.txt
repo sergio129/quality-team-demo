@@ -42,7 +42,8 @@
     "description": "",
     "id": "c8d6550c-486e-4aef-9248-4bf43d6b9189",
     "members": [
-      "e3e7ba88-3675-4de0-be02-8caec0b76ff8"
+      "e3e7ba88-3675-4de0-be02-8caec0b76ff8",
+      "8947b61d-d634-4844-8b30-9100b632d236"
     ]
   }
 ]
