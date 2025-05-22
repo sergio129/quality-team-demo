@@ -227,19 +227,20 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       return <div className="py-4 text-center">No hay proyectos asignados a este analista</div>;
     }
   }
-  
-  return (
+    return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 justify-center">        <div className={`${workload.color} p-3 rounded-lg text-center w-32`}>
+      <div className="flex flex-wrap gap-3 justify-center">
+        <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
           <p className="text-xs font-medium font-mono">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
         </div>
-        <div className="bg-blue-50 p-3 rounded-lg text-center w-32">
+        <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center w-32">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
           <p className="text-xl font-bold text-blue-600">{activeProjects.length}</p>
           <p className="text-xs text-gray-500">en curso</p>
-        </div>        <div className={`p-3 rounded-lg text-center w-32 ${
+        </div>
+        <div key="availability" className={`p-3 rounded-lg text-center w-32 ${
           availabilityPercentage > 70 ? 'bg-green-50' : 
           availabilityPercentage > 30 ? 'bg-yellow-50' :
           'bg-red-50'
@@ -252,9 +253,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           }`}>{availabilityPercentage}%</p>
           <p className="text-xs text-gray-500">para proyectos</p>
         </div>
-      </div>
-
-      {/* Lista de proyectos activos */}      <div className="space-y-3">
+      </div>      {/* Lista de proyectos activos */}
+      <div className="space-y-3">
         <h3 className="text-sm font-medium border-b pb-1">
           Proyectos Asignados 
           <span className="text-gray-500 ml-2 text-xs">
@@ -266,11 +266,12 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           <div className="space-y-2">
             {activeProjects.map((project) => (
               <div
-                key={project.id}
+                key={project.id || project.idJira}
                 className="p-2 border rounded-md shadow-sm hover:bg-gray-50 text-sm"
               >
                 <div className="flex justify-between items-start">
-                  <div>                    <div className="font-medium">{project.nombre || project.proyecto}</div>
+                  <div>
+                    <div className="font-medium">{project.nombre || project.proyecto}</div>
                     <div className="text-xs text-gray-600 line-clamp-1">{project.descripcion}</div>
                     <div className="mt-1 flex items-center gap-2 text-xs">
                       <span className="flex items-center gap-1">
@@ -279,7 +280,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                       <span className="flex items-center gap-1">
                         <span className="text-gray-500">Horas:</span> {project.horasEstimadas || project.horas || 'N/A'}
                       </span>
-                      <span className="flex items-center gap-1">                        <span className="text-gray-500">Estado:</span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-gray-500">Estado:</span>
                         <span 
                           className={`px-1.5 py-0.5 rounded-full text-[10px] ${
                             project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' :
@@ -326,11 +328,10 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
             <span className="text-gray-500 ml-2 text-xs">
               {new Date(currentYear, currentMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
             </span>
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          </h3>          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {completedProjects.map((project) => (
               <div
-                key={project.id}
+                key={project.id || project.idJira}
                 className="p-2 border rounded-md shadow-sm bg-gray-50 text-sm"
               >
                 <div className="flex justify-between items-start">
