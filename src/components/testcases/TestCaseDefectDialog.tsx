@@ -258,17 +258,15 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="pb-2 border-b">
-          <DialogTitle className="text-lg flex items-center gap-2">
-            <span className="text-red-500">•</span>
-            Gestionar Defectos
+        <DialogHeader className="pb-2 border-b">          <DialogTitle className="text-lg flex items-center gap-2">
+            <span className={isNewDefectFormOpen ? "text-green-500" : "text-red-500"}>•</span>
+            {isNewDefectFormOpen ? 'Nuevo Defecto' : 'Gestionar Defectos'}
           </DialogTitle>
         </DialogHeader>          {isNewDefectFormOpen ? (
           <div className="space-y-4 py-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium flex items-center gap-2">
+            <div className="flex justify-between items-center">              <h3 className="text-lg font-medium flex items-center gap-2">
                 <span className="text-green-500">•</span>
-                Nuevo Incidente
+                Nuevo Defecto
               </h3>
               <Button 
                 variant="ghost" 
@@ -386,7 +384,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="prioridad">Prioridad *</Label>
+                  <Label htmlFor="prioridad">Prioridad <span className="text-red-500">*</span></Label>
                   <Select
                     id="prioridad"
                     name="prioridad"
@@ -440,7 +438,7 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="descripcion">Descripción *</Label>
+                <Label htmlFor="descripcion">Descripción <span className="text-red-500">*</span></Label>
                 <textarea
                   id="descripcion"
                   name="descripcion"
@@ -483,17 +481,25 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 </div>
               </div>
             </div>
-              <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
-                Cancelar
-              </Button>
-              <Button 
+              <div className="flex justify-end space-x-2 pt-4">              <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
+                Volver
+              </Button><Button 
                 type="button" 
                 onClick={handleCreateNewIncident} 
                 disabled={isLoading}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
               >
-                {isLoading ? 'Guardando...' : 'Crear y Vincular Defecto'}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="h-4 w-4" />
+                    Crear y Vincular Defecto
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -606,10 +612,10 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 />
               </div>
               
-              <div className="border rounded-md h-64 overflow-y-auto">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-full">
-                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+              <div className="border rounded-md h-64 overflow-y-auto">                {isLoading ? (
+                  <div className="flex flex-col justify-center items-center h-full py-8">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent mb-2"></div>
+                    <p className="text-gray-500">Cargando incidentes...</p>
                   </div>
                 ) : filteredIncidents.length === 0 ? (
                   <div className="flex justify-center items-center h-full text-gray-500">
@@ -617,11 +623,10 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {filteredIncidents.slice(0, 50).map(incident => (
-                      <div 
+                    {filteredIncidents.slice(0, 50).map(incident => (                      <div 
                         key={incident.id} 
-                        className={`p-3 hover:bg-gray-50 cursor-pointer ${
-                          selectedDefects.includes(incident.id) ? 'bg-blue-50' : ''
+                        className={`p-3 transition-all duration-150 hover:bg-gray-100 cursor-pointer ${
+                          selectedDefects.includes(incident.id) ? 'bg-blue-50 border-l-4 border-l-blue-400 pl-2' : ''
                         }`}
                         onClick={() => addDefect(incident.id)}
                       >
@@ -654,9 +659,13 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
-              </Button>
-              <Button type="button" onClick={handleSave} disabled={isLoading}>
-                {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>              <Button type="button" onClick={handleSave} disabled={isLoading} className="flex items-center gap-2">
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    Guardando...
+                  </>
+                ) : 'Guardar Cambios'}
               </Button>
             </DialogFooter>
           </div>
