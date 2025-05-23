@@ -10,6 +10,10 @@
    - Causa: Durante la migración a PostgreSQL, algunos proyectos fueron insertados múltiples veces.
    - Solución: Se creó un script para limpiar la base de datos y migrar nuevamente los proyectos, evitando duplicados.
 
+3. **Cálculo incorrecto de carga de trabajo**:
+   - Causa: La carga de trabajo (workload) incluía horas de proyectos con estado "Certificado" que ya no deberían contar como parte de la carga actual del analista.
+   - Solución: Se modificó el cálculo para considerar únicamente proyectos con estado "Por Iniciar" o "En Progreso".
+
 ## Soluciones implementadas
 
 ### 1. Corrección del cálculo de estados
@@ -51,6 +55,24 @@ Se desarrolló un script (`limpiarProyectos.js`) que realiza las siguientes acci
 
 El script incluye detección y prevención de duplicados, manejo automático de equipos y células faltantes, y un completo registro de todas las operaciones.
 
+### 3. Corrección del cálculo de carga de trabajo
+
+Se modificó el cálculo de la carga de trabajo (`totalHoursAssigned`) en el componente `AnalystWorkload.tsx` para considerar solamente las horas de los proyectos activos:
+
+```typescript
+// Antes: Calculaba las horas de todos los proyectos
+const totalHoursAssigned = updatedProjects.reduce((total, project) => {
+  return total + (project.horasEstimadas || project.horas || 0);
+}, 0);
+
+// Después: Calcula las horas solo de proyectos activos
+const totalHoursAssigned = activeProjects.reduce((total, project) => {
+  return total + (project.horasEstimadas || project.horas || 0);
+}, 0);
+```
+
+Este cambio garantiza que la cálculo de carga de trabajo, porcentajes de disponibilidad y niveles de carga (Alto, Medio, Bajo) reflejen con precisión solo los proyectos que realmente están activos y requieren tiempo del analista.
+
 ## Resultados
 
 - Se eliminaron 18 proyectos (incluyendo duplicados) de la base de datos
@@ -69,3 +91,5 @@ El script incluye detección y prevención de duplicados, manejo automático de 
 4. **Monitoreo de estado**: Implementar un mecanismo de revisión periódica de estados inconsistentes en la base de datos.
 
 5. **Pruebas de migración**: Antes de futuras migraciones, ejecutar pruebas más exhaustivas en un entorno de prueba para detectar problemas similares.
+
+6. **Verificación de métricas**: Revisar periódicamente que las métricas como carga de trabajo, disponibilidad y niveles de ocupación reflejan correctamente el estado real de los proyectos asignados a los analistas.

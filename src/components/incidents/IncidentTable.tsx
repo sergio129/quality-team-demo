@@ -28,6 +28,7 @@ import {
     deleteIncident,
     changeIncidentStatus 
 } from '@/hooks/useIncidents';
+import { useCells } from '@/hooks/useCells';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Incident, 'id' | 'descripcion' | 'estado' | 'prioridad' | 'fechaCreacion' | 'cliente'>;
@@ -37,6 +38,7 @@ export function IncidentTable() {
     // Usar los hooks personalizados con SWR
     const { incidents, isLoading, isError } = useIncidents();
     const { stats } = useIncidentStats();
+    const { cells, isLoading: isLoadingCells } = useCells();
     
     // Form state
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -330,8 +332,7 @@ export function IncidentTable() {
                             </TableHeader>
                             <TableBody>
                                 {paginationInfo.currentItems.map((incident: Incident) => (
-                                    <TableRow key={incident.id} className="cursor-pointer hover:bg-gray-50">
-                                        <TableCell
+                                    <TableRow key={incident.id} className="cursor-pointer hover:bg-gray-50">                                        <TableCell
                                             className="font-medium"
                                             onClick={() => {
                                                 setIncidentToView(incident);
@@ -340,7 +341,9 @@ export function IncidentTable() {
                                         >
                                             {incident.id}
                                         </TableCell>
-                                        <TableCell>{incident.celula}</TableCell>
+                                        <TableCell>
+                                            {cells.find(cell => cell.id === incident.celula)?.name || incident.celula}
+                                        </TableCell>
                                         <TableCell>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(incident.estado)}`}>
                                                 {incident.estado}

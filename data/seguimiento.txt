@@ -405,7 +405,9 @@
     "fechaCertificacion": "2025-05-26T00:00:00.000Z",
     "diasRetraso": -45142,
     "analistaProducto": "Yoarlis Carrillo\t",
-    "planTrabajo": ""
+    "planTrabajo": "",
+    "estado": "En Progreso",
+    "estadoCalculado": "En Progreso"
   },
   {
     "idJira": "ALPN-869",
