@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "verify-migration": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/verificarMigracion.ts",
-    "verify-migration-simple": "node scripts/verificarMigracionSimple.js",    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts",
+    "verify-migration-simple": "node scripts/verificarMigracionSimple.js",
+    "fix-testcase-fields": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/fixTestCaseFields.ts",
+    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts",
     "watch-sync": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/fileWatcher.ts",
     "watch-sync-simple": "nodemon --watch data --ext txt --exec \"npm run sync-data\"",
     "sync-db": "node scripts/syncDatabase.js"

@@ -392,11 +392,12 @@ async function syncIncidents(): Promise<void> {
 }
 
 /**
- * Importar funciones de sincronización de otros scripts
+ * Importar funciones de sincronización bidireccional de otros scripts
  */
-import { syncTestCases } from './syncTestCases';
-import { syncTestPlans } from './syncTestPlans';
+import { syncTestCases } from './syncTestCasesBidirectional';
+import { syncTestPlans } from './syncTestPlansBidirectional'; 
 import { syncProjects } from './syncProjects';
+import { syncIncidents as syncIncidentsBidirectional } from './syncIncidentsBidirectional';
 
 /**
  * Función principal que ejecuta todas las sincronizaciones
@@ -411,9 +412,8 @@ async function syncAll(): Promise<void> {
     // Equipos y células ya están sincronizados según la verificación
     // await syncTeams();
     // await syncCells();
-    
-    // Sincronizar incidentes (faltan 3 según el reporte)
-    await syncIncidents();
+      // Sincronizar incidentes usando la sincronización bidireccional completa
+    await syncIncidentsBidirectional();
     
     // Sincronizar proyectos
     await syncProjects();

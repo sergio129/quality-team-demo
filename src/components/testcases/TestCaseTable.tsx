@@ -202,9 +202,9 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
         </div>
       ) : (
         <div className="border rounded-md overflow-auto max-h-[65vh]">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white">
-              <TableRow>                <TableHead>Código</TableHead>
+          <Table>            <TableHeader className="sticky top-0 bg-white">
+              <TableRow>
+                <TableHead>Código</TableHead>
                 <TableHead>HU</TableHead>
                 <TableHead>Nombre del Caso</TableHead>
                 <TableHead>Plan Pruebas</TableHead>

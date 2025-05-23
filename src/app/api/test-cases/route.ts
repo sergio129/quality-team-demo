@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
         testCaseData.id = uuidv4();
     }
     
+    // Asegurar valores predeterminados para campos importantes
+    testCaseData.testType = testCaseData.testType || 'Funcional';
+    testCaseData.status = testCaseData.status || 'No ejecutado';
+    testCaseData.priority = testCaseData.priority || 'Media';
+    testCaseData.cycle = testCaseData.cycle || 1;
+    
     // Generar código de referencia único si tiene un plan de pruebas o proyecto seleccionado
     if (testCaseData.codeRef) {
         // Si el código ya tiene un número al final, lo mantenemos

@@ -283,11 +283,14 @@ export default class TestCasePrismaService {
     // Si no tiene estado, por defecto "No ejecutado"
     if (!status) {
       status = 'No ejecutado';
-    }
-
-    return {
+    }    return {
       ...testCaseData,
       status,
+      // Asegurar valores predeterminados para campos opcionales
+      testType: testCaseData.testType || 'Funcional',
+      cycle: testCaseData.cycle || 1,
+      priority: testCaseData.priority || 'Media',
+      responsiblePerson: testCaseData.responsiblePerson || '-',
       steps: steps.map((step: any) => ({
         id: step.id,
         description: step.description,

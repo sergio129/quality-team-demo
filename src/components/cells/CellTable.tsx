@@ -218,11 +218,11 @@ export function DataTable() {
           )}
         </div>
       ) : (
-        <>
-          <div className="rounded-md border">
+        <>          <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow>                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
+                <TableRow>
+                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}
                     </div>
@@ -243,7 +243,8 @@ export function DataTable() {
               </TableHeader>
               <TableBody>
                 {paginationInfo.currentCells.map((cell) => (
-                  <TableRow key={cell.id}>                    <TableCell className="font-medium">{cell.name}</TableCell>
+                  <TableRow key={cell.id}>
+                    <TableCell className="font-medium">{cell.name}</TableCell>
                     <TableCell>{getTeamName(cell.teamId)}</TableCell>
                     <TableCell>{cell.description}</TableCell>
                     <TableCell>
@@ -275,8 +276,7 @@ export function DataTable() {
                           size="sm"
                           onClick={() => handleDelete(cell.id)}
                         >
-                          Eliminar
-                        </Button>
+                          Eliminar                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
