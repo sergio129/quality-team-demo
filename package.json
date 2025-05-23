@@ -8,7 +8,8 @@
     "lint": "next lint",
     "verify-migration": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/verificarMigracion.ts",
     "verify-migration-simple": "node scripts/verificarMigracionSimple.js",
-    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts"
+    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts",
+    "sync-db": "node scripts/syncDatabase.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

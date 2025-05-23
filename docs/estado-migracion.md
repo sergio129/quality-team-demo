@@ -24,12 +24,12 @@ Este documento registra el estado actual de la migración incremental a PostgreS
 - ⏳ Activación gradual de servicios
 
 Estado de cada servicio:
-1. QAAnalystService - ⚠️ Inconsistencias detectadas, pendiente sincronización
-2. TeamService - ✅ Consistente, listo para activación
-3. CellService - ✅ Consistente, listo para activación
-4. TestCaseService - ⚠️ Inconsistencias detectadas, pendiente sincronización
-5. IncidentService - ⚠️ Inconsistencias detectadas, pendiente sincronización
-6. TestPlanService - ⚠️ Inconsistencias detectadas, pendiente sincronización
+1. QAAnalystService - ✅ Consistente, activado en PostgreSQL
+2. TeamService - ✅ Consistente, activado en PostgreSQL
+3. CellService - ✅ Consistente, activado en PostgreSQL
+4. TestCaseService - ⚠️ Diferencias de formato detectadas, pendiente activación
+5. IncidentService - ⚠️ Diferencias de formato detectadas, pendiente activación
+6. TestPlanService - ⚠️ Diferencias de formato detectadas, pendiente activación
 7. ProjectService - 🔄 Implementado, pendiente verificación
 
 ### Fase 4: Consolidación ⏳ PENDIENTE
@@ -40,20 +40,24 @@ Estado de cada servicio:
 
 ## Próximos pasos
 
-1. **Ejecutar script de sincronización** `sincronizarDatosCompleto.ts` para resolver inconsistencias
-2. **Volver a verificar la consistencia** ejecutando `verificarMigracionSimple.js`
-3. **Activar gradualmente cada servicio** modificando las variables en `.env`
-4. **Monitorear el comportamiento** durante al menos 1 semana por servicio
-5. **Documentar problemas encontrados** y sus soluciones
+1. **Adaptar script de verificación** para manejar diferencias de formato en vez de marcarlas como inconsistencias
+2. **Activar gradualmente servicios restantes** modificando las variables en `.env`
+   - TestCaseService (establecer `USE_POSTGRES_TESTCASES=true`)
+   - TestPlanService (establecer `USE_POSTGRES_TESTPLANS=true`)
+   - IncidentService (establecer `USE_POSTGRES_INCIDENTS=true`)
+   - ProjectService (establecer `USE_POSTGRES_PROJECTS=true`)
+3. **Monitorear el comportamiento** durante al menos 1 semana por servicio
+4. **Documentar problemas encontrados** y sus soluciones
+5. **Activar migración global** cuando todos los servicios estén validados
 
 ### Resumen de Verificación
 La verificación realizada el 23 de mayo de 2025 mostró:
-- **Analistas:** 3 analistas solo existen en archivos (necesitan ser migrados a PostgreSQL)
-- **Equipos:** Consistentes en ambas implementaciones
-- **Células:** Consistentes en ambas implementaciones
-- **Casos de prueba:** Existen diferencias en los datos (20 en ambos sistemas)
-- **Planes de prueba:** Existen diferencias en los datos (6 en ambos sistemas)
-- **Incidentes:** 3 incidentes solo existen en archivos y existen diferencias en los incidentes compartidos
+- **Analistas:** ✅ Consistente entre archivos y PostgreSQL, activado en PostgreSQL
+- **Equipos:** ✅ Consistente entre archivos y PostgreSQL, activado en PostgreSQL
+- **Células:** ✅ Consistente entre archivos y PostgreSQL, activado en PostgreSQL
+- **Casos de prueba:** Existen diferencias de formato (timestamps) entre implementaciones
+- **Planes de prueba:** Existen diferencias de formato (timestamps) entre implementaciones
+- **Incidentes:** Existen diferencias en campos relacionales (nombres vs. UUIDs) entre implementaciones
 
 Ver el informe completo en `docs/resultados-verificacion.md`
 

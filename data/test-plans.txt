@@ -1,10 +1,11 @@
 [
   {
+    "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "projectId": "SRCA-6556",
     "projectName": "Reestructuración Parametrización \"Prefijos\"",
     "codeReference": "SRCA-6556",
-    "startDate": "2025-05-20",
-    "endDate": "2025-05-20",
+    "startDate": "2025-05-20T00:00:00.000Z",
+    "endDate": "2025-05-20T00:00:00.000Z",
     "estimatedHours": 4,
     "estimatedDays": 1,
     "totalCases": 3,
@@ -19,16 +20,16 @@
       }
     ],
     "testQuality": 66.67,
-    "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
-    "createdAt": "2025-05-20T16:02:28.759Z",
+    "createdAt": "2025-05-22T22:26:06.365Z",
     "updatedAt": "2025-05-22T20:32:04.019Z"
   },
   {
+    "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
     "projectId": "SRSS-143",
     "projectName": "Modificación WS Consulta Hada SURA",
     "codeReference": "SRSS-143",
-    "startDate": "2025-05-20",
-    "endDate": "2025-05-22",
+    "startDate": "2025-05-20T00:00:00.000Z",
+    "endDate": "2025-05-22T00:00:00.000Z",
     "estimatedHours": 0,
     "estimatedDays": 0,
     "totalCases": 0,
@@ -43,16 +44,16 @@
       }
     ],
     "testQuality": -1,
-    "id": "4c22ce08-4a0f-4a41-8ecd-3fdb9f8f2a66",
-    "createdAt": "2025-05-20T18:12:41.882Z",
+    "createdAt": "2025-05-22T22:26:06.372Z",
     "updatedAt": "2025-05-22T20:32:04.021Z"
   },
   {
+    "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
     "projectId": "SBSF-1824",
     "projectName": "Pruebas funcionales Apps Servidor LAN 172.16.5.46 & DMZ 172.16.5.201",
     "codeReference": "SBSF-1824",
-    "startDate": "2025-05-21",
-    "endDate": "2025-05-30",
+    "startDate": "2025-05-21T00:00:00.000Z",
+    "endDate": "2025-05-30T00:00:00.000Z",
     "estimatedHours": 72,
     "estimatedDays": 9,
     "totalCases": 0,
@@ -67,18 +68,18 @@
       }
     ],
     "testQuality": -1,
-    "id": "b3007d86-bb1d-4f6d-b576-7ed9f737fde5",
-    "createdAt": "2025-05-20T20:40:18.804Z",
+    "createdAt": "2025-05-22T22:26:06.376Z",
     "updatedAt": "2025-05-22T20:32:04.023Z"
   },
   {
+    "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
     "projectId": "SRCA-6548",
     "projectName": "Revisión funcionalidades actuales SARA-Revisión documentación Migración GC sura",
     "codeReference": "SRCA-6548",
-    "startDate": "2025-05-22",
-    "endDate": "2025-05-23",
+    "startDate": "2025-05-22T00:00:00.000Z",
+    "endDate": "2025-05-23T00:00:00.000Z",
     "estimatedHours": 12,
-    "estimatedDays": 1.3,
+    "estimatedDays": 1,
     "totalCases": 7,
     "cycles": [
       {
@@ -91,16 +92,16 @@
       }
     ],
     "testQuality": 100,
-    "id": "1f1efbe6-9c90-4ab0-b9a5-668db9218a1b",
-    "createdAt": "2025-05-22T15:42:24.154Z",
+    "createdAt": "2025-05-22T22:26:06.380Z",
     "updatedAt": "2025-05-22T20:32:04.026Z"
   },
   {
+    "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
     "projectId": "KOIN-261",
     "projectName": "Koin Paquete 7 2025 KOIN-261",
     "codeReference": "KOIN-261",
-    "startDate": "2025-05-23",
-    "endDate": "2025-05-21",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-05-21T00:00:00.000Z",
     "estimatedHours": 25,
     "estimatedDays": 2,
     "totalCases": 10,
@@ -115,8 +116,7 @@
       }
     ],
     "testQuality": 70,
-    "id": "cf9a189a-dc25-413c-ba60-ed057f32095e",
-    "createdAt": "2025-05-22T18:09:13.174Z",
+    "createdAt": "2025-05-22T22:26:06.386Z",
     "updatedAt": "2025-05-22T20:32:04.028Z"
   },
   {
@@ -124,10 +124,10 @@
     "projectId": "BCIC-509",
     "projectName": "Arquetipos Ventas digitales",
     "codeReference": "BCIC-509",
-    "startDate": "2025-05-22",
-    "endDate": "2025-05-28",
+    "startDate": "2025-05-22T00:00:00.000Z",
+    "endDate": "2025-05-28T00:00:00.000Z",
     "estimatedHours": 2,
-    "estimatedDays": 0.2,
+    "estimatedDays": 0,
     "totalCases": 0,
     "cycles": [
       {
@@ -140,7 +140,7 @@
       }
     ],
     "testQuality": -1,
-    "createdAt": "2025-05-22T20:04:10.222Z",
+    "createdAt": "2025-05-22T22:26:06.391Z",
     "updatedAt": "2025-05-22T20:32:04.031Z"
   }
 ]

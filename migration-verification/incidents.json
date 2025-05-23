@@ -1,13 +1,9 @@
 {
   "total": {
     "file": 8,
-    "prisma": 5
+    "prisma": 8
   },
-  "onlyInFile": [
-    "INC-20250522-001",
-    "INC-20250522-002",
-    "INC-20250522-003"
-  ],
+  "onlyInFile": [],
   "onlyInPrisma": [],
   "inBoth": [
     {
@@ -27,9 +23,9 @@
         "asignadoA": {
           "file": "Andres Camilo Lazaro Roa"
         },
-        "aplica": {
-          "file": false,
-          "prisma": true
+        "idJira": {
+          "file": "KOIN-235",
+          "prisma": ""
         },
         "fechaSolucion": {
           "file": "2025-05-15T22:50:37.672Z",
@@ -68,9 +64,9 @@
         "asignadoA": {
           "file": "Juan David Vargas"
         },
-        "aplica": {
-          "file": false,
-          "prisma": true
+        "idJira": {
+          "file": "SRCA-6516",
+          "prisma": ""
         },
         "fechaSolucion": {
           "file": "2025-05-07T00:00:00.000Z",
@@ -99,9 +95,9 @@
         "asignadoA": {
           "file": "Sergio cabrera"
         },
-        "aplica": {
-          "file": false,
-          "prisma": true
+        "idJira": {
+          "file": "BCGT-1033",
+          "prisma": ""
         },
         "fechaSolucion": {
           "file": "2025-05-08T00:00:00.000Z",
@@ -130,9 +126,9 @@
         "asignadoA": {
           "file": "Sergio cabrera"
         },
-        "aplica": {
-          "file": false,
-          "prisma": true
+        "idJira": {
+          "file": "BCGT-1033",
+          "prisma": ""
         },
         "fechaSolucion": {
           "file": "2025-04-16T00:00:00.000Z",
@@ -157,13 +153,82 @@
         "asignadoA": {
           "file": "Juan David Vargas"
         },
+        "idJira": {
+          "file": "SRCA-6556",
+          "prisma": ""
+        },
         "fechaCreacion": {
           "file": "2025-05-20T13:47:17.038Z",
           "prisma": "2025-05-20T13:47:17.038Z"
+        }
+      }
+    },
+    {
+      "id": "INC-20250522-001",
+      "differences": {
+        "fechaCreacion": {
+          "file": "2025-05-22T18:55:34.233Z",
+          "prisma": "2025-05-22T18:55:34.233Z"
         },
-        "aplica": {
-          "file": false,
-          "prisma": true
+        "fechaReporte": {
+          "file": "2025-05-21T00:00:00.000Z",
+          "prisma": "2025-05-21T00:00:00.000Z"
+        },
+        "informadoPor": {
+          "file": "Leidy Iral"
+        },
+        "asignadoA": {
+          "file": "Andres Lazaro"
+        },
+        "idJira": {
+          "file": "KOIN-261-T002",
+          "prisma": ""
+        }
+      }
+    },
+    {
+      "id": "INC-20250522-002",
+      "differences": {
+        "fechaCreacion": {
+          "file": "2025-05-22T20:05:39.016Z",
+          "prisma": "2025-05-22T20:05:39.016Z"
+        },
+        "fechaReporte": {
+          "file": "2025-05-21T00:00:00.000Z",
+          "prisma": "2025-05-21T00:00:00.000Z"
+        },
+        "informadoPor": {
+          "file": "Leidy Iral"
+        },
+        "asignadoA": {
+          "file": "Andres Lazaro"
+        },
+        "idJira": {
+          "file": "KOIN-261-T003",
+          "prisma": ""
+        }
+      }
+    },
+    {
+      "id": "INC-20250522-003",
+      "differences": {
+        "fechaCreacion": {
+          "file": "2025-05-22T20:28:48.592Z",
+          "prisma": "2025-05-22T20:28:48.592Z"
+        },
+        "fechaReporte": {
+          "file": "2025-05-21T00:00:00.000Z",
+          "prisma": "2025-05-21T00:00:00.000Z"
+        },
+        "informadoPor": {
+          "file": "Leidy Iral"
+        },
+        "asignadoA": {
+          "file": "Andres Lazaro"
+        },
+        "idJira": {
+          "file": "KOIN-261-T007",
+          "prisma": ""
         }
       }
     }

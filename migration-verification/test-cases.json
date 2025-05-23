@@ -7,67 +7,14 @@
   "onlyInPrisma": [],
   "inBoth": [
     {
-      "id": "8f1ea45e-2a52-4c3b-8ce2-5c5964db0ebb",
-      "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
-        "createdAt": {
-          "file": "2025-05-20T16:29:42.519Z",
-          "prisma": "2025-05-22T22:26:06.396Z"
-        },
-        "updatedAt": {
-          "file": "2025-05-20T23:48:00.166Z",
-          "prisma": "2025-05-22T22:28:27.962Z"
-        }
-      }
-    },
-    {
       "id": "68ff8936-17bf-442a-91a6-7dee4e59f8bc",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-20T16:31:23.957Z",
+          "file": "2025-05-22T22:26:06.412Z",
           "prisma": "2025-05-22T22:26:06.412Z"
         },
         "updatedAt": {
-          "file": "2025-05-20T23:47:54.093Z",
+          "file": "2025-05-22T22:28:27.982Z",
           "prisma": "2025-05-22T22:28:27.982Z"
         }
       }
@@ -75,32 +22,12 @@
     {
       "id": "401647f2-55c4-4954-b863-9b0c6d1a9be9",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-20T17:30:08.407Z",
+          "file": "2025-05-22T22:26:06.423Z",
           "prisma": "2025-05-22T22:26:06.423Z"
         },
         "updatedAt": {
-          "file": "2025-05-20T23:47:47.351Z",
+          "file": "2025-05-22T22:28:27.996Z",
           "prisma": "2025-05-22T22:28:27.996Z"
         }
       }
@@ -108,32 +35,12 @@
     {
       "id": "2918958e-64d4-4c55-9cbc-3daebbf43af1",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Alta",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:44:00.877Z",
+          "file": "2025-05-22T22:26:06.437Z",
           "prisma": "2025-05-22T22:26:06.437Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:44:00.877Z",
+          "file": "2025-05-22T22:28:28.009Z",
           "prisma": "2025-05-22T22:28:28.009Z"
         }
       }
@@ -141,32 +48,12 @@
     {
       "id": "96dd55a7-59bc-4a21-9891-43908c5f5c25",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:44:33.136Z",
+          "file": "2025-05-22T22:26:06.451Z",
           "prisma": "2025-05-22T22:26:06.451Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:44:33.136Z",
+          "file": "2025-05-22T22:28:28.019Z",
           "prisma": "2025-05-22T22:28:28.019Z"
         }
       }
@@ -174,32 +61,12 @@
     {
       "id": "93f72170-837f-46ac-9827-115a5b24b6c0",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:44:56.132Z",
+          "file": "2025-05-22T22:26:06.453Z",
           "prisma": "2025-05-22T22:26:06.453Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:44:56.132Z",
+          "file": "2025-05-22T22:28:28.023Z",
           "prisma": "2025-05-22T22:28:28.023Z"
         }
       }
@@ -207,32 +74,12 @@
     {
       "id": "56ded650-668a-4c06-8f20-fb8c754ae5c3",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:45:19.130Z",
+          "file": "2025-05-22T22:26:06.456Z",
           "prisma": "2025-05-22T22:26:06.456Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:45:19.130Z",
+          "file": "2025-05-22T22:28:28.026Z",
           "prisma": "2025-05-22T22:28:28.026Z"
         }
       }
@@ -240,32 +87,12 @@
     {
       "id": "3ec3de80-1590-45d2-abc6-3c8e275c1caf",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:45:38.153Z",
+          "file": "2025-05-22T22:26:06.460Z",
           "prisma": "2025-05-22T22:26:06.460Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:45:38.153Z",
+          "file": "2025-05-22T22:28:28.028Z",
           "prisma": "2025-05-22T22:28:28.028Z"
         }
       }
@@ -273,32 +100,12 @@
     {
       "id": "6901597e-febc-4195-acd7-26746201325c",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:46:01.933Z",
+          "file": "2025-05-22T22:26:06.462Z",
           "prisma": "2025-05-22T22:26:06.462Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:46:01.933Z",
+          "file": "2025-05-22T22:28:28.033Z",
           "prisma": "2025-05-22T22:28:28.033Z"
         }
       }
@@ -306,32 +113,12 @@
     {
       "id": "e26d024e-13f0-49ff-84a7-cf958496b1f1",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Sergio Anaya",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T15:46:25.460Z",
+          "file": "2025-05-22T22:26:06.466Z",
           "prisma": "2025-05-22T22:26:06.466Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T15:46:25.460Z",
+          "file": "2025-05-22T22:28:28.036Z",
           "prisma": "2025-05-22T22:28:28.036Z"
         }
       }
@@ -339,32 +126,12 @@
     {
       "id": "80403630-2f4f-43e0-8d04-cb9af0643085",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T18:11:27.520Z",
+          "file": "2025-05-22T22:26:06.468Z",
           "prisma": "2025-05-22T22:26:06.468Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T18:11:27.520Z",
+          "file": "2025-05-22T22:28:28.040Z",
           "prisma": "2025-05-22T22:28:28.040Z"
         }
       }
@@ -372,32 +139,12 @@
     {
       "id": "814ab6bb-62fe-4001-a43e-afe4a90b0251",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T18:11:54.255Z",
+          "file": "2025-05-22T22:26:06.481Z",
           "prisma": "2025-05-22T22:26:06.481Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:20:58.442Z",
+          "file": "2025-05-22T22:28:28.054Z",
           "prisma": "2025-05-22T22:28:28.054Z"
         }
       }
@@ -405,32 +152,12 @@
     {
       "id": "32eb05f3-5895-44be-8850-2bad49965267",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:05:35.987Z",
+          "file": "2025-05-22T22:26:06.483Z",
           "prisma": "2025-05-22T22:26:06.483Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:16:35.267Z",
+          "file": "2025-05-22T22:28:28.056Z",
           "prisma": "2025-05-22T22:28:28.056Z"
         }
       }
@@ -438,32 +165,12 @@
     {
       "id": "c699f117-b350-4f4c-953c-94bb6f087bd4",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:25:17.306Z",
+          "file": "2025-05-22T22:26:06.488Z",
           "prisma": "2025-05-22T22:26:06.488Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:25:17.306Z",
+          "file": "2025-05-22T22:28:28.060Z",
           "prisma": "2025-05-22T22:28:28.060Z"
         }
       }
@@ -471,98 +178,25 @@
     {
       "id": "5b6c5899-c73e-481a-b12b-81a2b41fc916",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:25:40.648Z",
+          "file": "2025-05-22T22:26:06.491Z",
           "prisma": "2025-05-22T22:26:06.491Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:27:18.401Z",
+          "file": "2025-05-22T22:28:28.061Z",
           "prisma": "2025-05-22T22:28:28.061Z"
-        }
-      }
-    },
-    {
-      "id": "bb962afc-ed6b-4724-a90e-811da22fa1a7",
-      "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
-        "createdAt": {
-          "file": "2025-05-22T20:26:25.801Z",
-          "prisma": "2025-05-22T22:26:06.495Z"
-        },
-        "updatedAt": {
-          "file": "2025-05-22T20:26:25.801Z",
-          "prisma": "2025-05-22T22:28:28.065Z"
         }
       }
     },
     {
       "id": "57ec9045-ffa3-4bc0-9fb5-0bbb5f7a6a29",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:28:38.813Z",
+          "file": "2025-05-22T22:26:06.497Z",
           "prisma": "2025-05-22T22:26:06.497Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:29:24.449Z",
+          "file": "2025-05-22T22:28:28.067Z",
           "prisma": "2025-05-22T22:28:28.067Z"
         }
       }
@@ -570,65 +204,51 @@
     {
       "id": "86a9f8d0-3459-4de4-bb37-c3b32145cdff",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:30:30.381Z",
+          "file": "2025-05-22T22:26:06.500Z",
           "prisma": "2025-05-22T22:26:06.500Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:30:30.381Z",
+          "file": "2025-05-22T22:28:28.069Z",
           "prisma": "2025-05-22T22:28:28.069Z"
+        }
+      }
+    },
+    {
+      "id": "8f1ea45e-2a52-4c3b-8ce2-5c5964db0ebb",
+      "differences": {
+        "createdAt": {
+          "file": "2025-05-22T22:26:06.396Z",
+          "prisma": "2025-05-22T22:26:06.396Z"
+        },
+        "updatedAt": {
+          "file": "2025-05-22T22:28:27.962Z",
+          "prisma": "2025-05-22T22:28:27.962Z"
+        }
+      }
+    },
+    {
+      "id": "bb962afc-ed6b-4724-a90e-811da22fa1a7",
+      "differences": {
+        "createdAt": {
+          "file": "2025-05-22T22:26:06.495Z",
+          "prisma": "2025-05-22T22:26:06.495Z"
+        },
+        "updatedAt": {
+          "file": "2025-05-22T22:28:28.065Z",
+          "prisma": "2025-05-22T22:28:28.065Z"
         }
       }
     },
     {
       "id": "b508e07a-50b8-46db-946f-0aa2910266d5",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:31:02.354Z",
+          "file": "2025-05-22T22:26:06.502Z",
           "prisma": "2025-05-22T22:26:06.502Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:31:02.354Z",
+          "file": "2025-05-22T22:28:28.073Z",
           "prisma": "2025-05-22T22:28:28.073Z"
         }
       }
@@ -636,32 +256,12 @@
     {
       "id": "d15074f9-c9a6-48f8-9f28-db93bfe4b151",
       "differences": {
-        "testType": {
-          "file": "Funcional",
-          "prisma": null
-        },
-        "status": {
-          "file": "Exitoso",
-          "prisma": null
-        },
-        "cycle": {
-          "file": 1,
-          "prisma": null
-        },
-        "responsiblePerson": {
-          "file": "Leidy Iral",
-          "prisma": null
-        },
-        "priority": {
-          "file": "Media",
-          "prisma": null
-        },
         "createdAt": {
-          "file": "2025-05-22T20:31:31.254Z",
+          "file": "2025-05-22T22:26:06.506Z",
           "prisma": "2025-05-22T22:26:06.506Z"
         },
         "updatedAt": {
-          "file": "2025-05-22T20:31:31.254Z",
+          "file": "2025-05-22T22:28:28.077Z",
           "prisma": "2025-05-22T22:28:28.077Z"
         }
       }
