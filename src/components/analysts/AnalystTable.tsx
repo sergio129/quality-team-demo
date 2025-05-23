@@ -201,7 +201,8 @@ export function DataTable() {
         <>
           <div className="rounded-md border">
             <Table>
-              <TableHeader>                <TableRow>
+              <TableHeader>
+                <TableRow>
                   <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}

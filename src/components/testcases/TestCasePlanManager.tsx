@@ -306,13 +306,13 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
                 <TableHead>Proyecto</TableHead>
                 <TableHead>Fecha Inicio</TableHead>
                 <TableHead>Fecha Fin</TableHead>
-                <TableHead>Casos Totales</TableHead>
-                <TableHead className="flex items-center gap-1">
+                <TableHead>Casos Totales</TableHead>                <TableHead className="flex items-center gap-1">
                   Calidad
                   <QualityInfoButton />
                 </TableHead>
                 <TableHead>Acciones</TableHead>
-              </TableRow>            </TableHeader>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {testPlans.map((plan) => (
                 <TableRow key={plan.id}>

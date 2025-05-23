@@ -259,13 +259,15 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="pb-2 border-b">          <DialogTitle className="text-lg flex items-center gap-2">
+        <DialogHeader className="pb-2 border-b">
+          <DialogTitle className="text-lg flex items-center gap-2">
             <span className={isNewDefectFormOpen ? "text-green-500" : "text-red-500"}>•</span>
-            {isNewDefectFormOpen ? 'Nuevo Defecto' : 'Gestionar Defectos'}
-          </DialogTitle>
-        </DialogHeader>          {isNewDefectFormOpen ? (
+            {isNewDefectFormOpen ? 'Nuevo Defecto' : 'Gestionar Defectos'}          </DialogTitle>
+        </DialogHeader>
+          {isNewDefectFormOpen ? (
           <div className="space-y-4 py-4">
-            <div className="flex justify-between items-center">              <h3 className="text-lg font-medium flex items-center gap-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium flex items-center gap-2">
                 <span className="text-green-500">•</span>
                 Nuevo Defecto
               </h3>
@@ -277,9 +279,9 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12"></path>
-                </svg>
-              </Button>
-            </div>            <div className="space-y-4 mt-2">
+                </svg>              </Button>
+            </div>
+            <div className="space-y-4 mt-2">
               <p className="text-sm text-gray-500 mb-4">
                 Los campos marcados con <span className="text-red-500">*</span> son obligatorios
               </p>
@@ -293,7 +295,8 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">                <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="celula">Célula <span className="text-red-500">*</span></Label>
                   <Select
                     id="celula"
@@ -320,7 +323,8 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                     onChange={handleNewIncidentChange}
                     required
                   />
-                </div>              <div className="space-y-2">
+                </div>
+              <div className="space-y-2">
                 <Label htmlFor="fechaReporte">Fecha de Reporte <span className="text-red-500">*</span></Label>
                 <Input 
                   id="fechaReporte"
@@ -477,10 +481,11 @@ export default function TestCaseDefectDialog({ isOpen, onClose, testCase }: Test
                   </Label>
                 </div>
               </div>
-            </div>
-              <div className="flex justify-end space-x-2 pt-4">              <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
+            </div>              <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsNewDefectFormOpen(false)}>
                 Volver
-              </Button><Button 
+              </Button>
+              <Button 
                 type="button" 
                 onClick={handleCreateNewIncident} 
                 disabled={isLoading}

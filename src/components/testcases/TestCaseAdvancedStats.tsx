@@ -242,7 +242,8 @@ export default function TestCaseAdvancedStats({ projectId }: TestCaseAdvancedSta
           </Card>
         </TabsContent>
         
-        <TabsContent value="plans" className="space-y-4">          <div className="mb-4">
+        <TabsContent value="plans" className="space-y-4">
+          <div className="mb-4">
             <label className="block text-sm font-medium mb-2">Seleccionar Plan de Pruebas</label>
             <div className="flex items-end gap-2">
               <div className="flex-1">

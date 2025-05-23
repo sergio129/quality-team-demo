@@ -301,7 +301,8 @@ export function IncidentTable() {    // Usar los hooks personalizados con SWR
                 <>
                     <div className="rounded-md border mb-4">
                         <Table>
-                            <TableHeader>                                <TableRow>
+                            <TableHeader>
+                                <TableRow>
                                     <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('id')}>
                                         <div className="flex items-center">
                                             ID {renderSortIcon('id')}

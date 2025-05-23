@@ -23,20 +23,23 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
   const [defects, setDefects] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDefectDialogOpen, setIsDefectDialogOpen] = useState(false);
-  
-  // Filtrar solo los casos de prueba con defectos
-  const casesWithDefects = testCases.filter(
-    tc => tc.defects && tc.defects.length > 0
-  ).sort((a, b) => b.defects.length - a.defects.length);
+    // Filtrar solo los casos de prueba con defectos
+  const casesWithDefects = testCases && testCases.length > 0 
+    ? testCases
+        .filter(tc => tc && tc.defects && tc.defects.length > 0)
+        .sort((a, b) => (b.defects?.length || 0) - (a.defects?.length || 0))
+    : [];
   
   // Agrupar por ciclo
-  const cycleGroups = casesWithDefects.reduce((acc, tc) => {
-    if (!acc[tc.cycle]) {
-      acc[tc.cycle] = [];
-    }
-    acc[tc.cycle].push(tc);
-    return acc;
-  }, {} as Record<number, TestCase[]>);
+  const cycleGroups = casesWithDefects && casesWithDefects.length > 0
+    ? casesWithDefects.reduce((acc, tc) => {
+        if (!acc[tc.cycle]) {
+          acc[tc.cycle] = [];
+        }
+        acc[tc.cycle].push(tc);
+        return acc;
+      }, {} as Record<number, TestCase[]>)
+    : {};
   
   // Cargar defectos cuando se selecciona un caso de prueba
   useEffect(() => {
@@ -65,24 +68,29 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
       setIsLoading(false);
     }
   };
-  
-  // Calcular estadísticas de defectos
+    // Calcular estadísticas de defectos
   const calcDefectStats = () => {
-    const totalDefects = casesWithDefects.reduce(
-      (sum, tc) => sum + tc.defects.length, 0
-    );
+    // Asegurarse de que casesWithDefects esté definido y no vacío
+    const totalDefects = casesWithDefects && casesWithDefects.length > 0 
+      ? casesWithDefects.reduce(
+          (sum, tc) => sum + (tc.defects ? tc.defects.length : 0), 0
+        )
+      : 0;
     
-    const defectsPerCycle = Object.keys(cycleGroups).map(cycle => {
-      const casesInCycle = cycleGroups[Number(cycle)];
-      const defectsInCycle = casesInCycle.reduce(
-        (sum, tc) => sum + tc.defects.length, 0
-      );
+    // Asegurarse de que cycleGroups tenga elementos
+    const defectsPerCycle = Object.keys(cycleGroups || {}).map(cycle => {
+      const casesInCycle = cycleGroups[Number(cycle)] || [];
+      const defectsInCycle = casesInCycle.length > 0
+        ? casesInCycle.reduce(
+            (sum, tc) => sum + (tc.defects ? tc.defects.length : 0), 0
+          )
+        : 0;
       return { cycle, count: defectsInCycle };
     }).sort((a, b) => Number(b.cycle) - Number(a.cycle));
     
     return {
-      totalCases: testCases.length,
-      casesWithDefects: casesWithDefects.length,
+      totalCases: testCases ? testCases.length : 0,
+      casesWithDefects: casesWithDefects ? casesWithDefects.length : 0,
       totalDefects,
       defectsPerCycle
     };
@@ -152,56 +160,58 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
               <TableHead>Defectos</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.keys(cycleGroups)
-              .sort((a, b) => Number(b) - Number(a))
-              .flatMap(cycle => 
-                cycleGroups[Number(cycle)].map((testCase, idx) => (
-                  <TableRow key={testCase.id}>
-                    {idx === 0 && (
-                      <TableCell rowSpan={cycleGroups[Number(cycle)].length} className="font-medium">
-                        Ciclo {cycle}
-                      </TableCell>
-                    )}
-                    <TableCell>
-                      <div className="font-medium">{testCase.codeRef}</div>
-                      <div className="text-sm text-gray-500">{testCase.name}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={
-                        testCase.status === 'Exitoso' ? 'bg-green-100 text-green-800' :
-                        testCase.status === 'Fallido' ? 'bg-red-100 text-red-800' :
-                        testCase.status === 'Bloqueado' ? 'bg-orange-100 text-orange-800' :
-                        testCase.status === 'En progreso' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }>
-                        {testCase.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Bug className="h-4 w-4 text-red-500" />
-                        <span>{testCase.defects.length}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTestCase(testCase);
-                          setIsDefectDialogOpen(true);
-                        }}
-                      >
-                        Ver Defectos
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-            )}
-            
-            {casesWithDefects.length === 0 && (
+          </TableHeader>          <TableBody>
+            {Object.keys(cycleGroups || {}).length > 0 ? (
+              Object.keys(cycleGroups)
+                .sort((a, b) => Number(b) - Number(a))
+                .flatMap(cycle => {
+                  const cycleTestCases = cycleGroups[Number(cycle)] || [];
+                  return cycleTestCases && cycleTestCases.length > 0
+                    ? cycleTestCases.map((testCase, idx) => (
+                        <TableRow key={testCase?.id || `cycle-${cycle}-${idx}`}>
+                          {idx === 0 && (
+                            <TableCell rowSpan={cycleGroups[Number(cycle)]?.length || 1} className="font-medium">
+                              Ciclo {cycle}
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <div className="font-medium">{testCase?.codeRef}</div>
+                            <div className="text-sm text-gray-500">{testCase?.name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={
+                              testCase?.status === 'Exitoso' ? 'bg-green-100 text-green-800' :
+                              testCase?.status === 'Fallido' ? 'bg-red-100 text-red-800' :
+                              testCase?.status === 'Bloqueado' ? 'bg-orange-100 text-orange-800' :
+                              testCase?.status === 'En progreso' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }>
+                              {testCase?.status || 'No ejecutado'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-1">
+                              <Bug className="h-4 w-4 text-red-500" />
+                              <span>{testCase?.defects?.length || 0}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTestCase(testCase);
+                                setIsDefectDialogOpen(true);
+                              }}
+                            >
+                              Ver Defectos
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    : []
+                })
+            ) : (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                   No hay casos de prueba con defectos registrados
@@ -241,7 +251,7 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
                 </div>
               </div>
               
-              <div className="text-lg font-medium mb-2">Lista de Defectos ({selectedTestCase.defects.length})</div>
+              <div className="text-lg font-medium mb-2">Lista de Defectos ({selectedTestCase.defects?.length || 0})</div>
               
               {isLoading ? (
                 <div className="flex justify-center p-8">
