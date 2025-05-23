@@ -77,12 +77,12 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
         )
       : 0;
     
-    // Asegurarse de que cycleGroups tenga elementos
+    // Asegurarse de que cycleGroups tenga elementos y que no sea undefined
     const defectsPerCycle = Object.keys(cycleGroups || {}).map(cycle => {
       const casesInCycle = cycleGroups[Number(cycle)] || [];
       const defectsInCycle = casesInCycle.length > 0
         ? casesInCycle.reduce(
-            (sum, tc) => sum + (tc.defects ? tc.defects.length : 0), 0
+            (sum, tc) => sum + (tc?.defects ? tc.defects.length : 0), 0
           )
         : 0;
       return { cycle, count: defectsInCycle };
@@ -92,7 +92,7 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
       totalCases: testCases ? testCases.length : 0,
       casesWithDefects: casesWithDefects ? casesWithDefects.length : 0,
       totalDefects,
-      defectsPerCycle
+      defectsPerCycle: defectsPerCycle || []
     };
   };
   
@@ -106,7 +106,7 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
             <CardTitle className="text-sm font-medium">Total de Casos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCases}</div>
+            <div className="text-2xl font-bold">{stats?.totalCases || 0}</div>
           </CardContent>
         </Card>
         
@@ -115,9 +115,9 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
             <CardTitle className="text-sm font-medium">Casos con Defectos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-500">{stats.casesWithDefects}</div>
+            <div className="text-2xl font-bold text-orange-500">{stats?.casesWithDefects || 0}</div>
             <p className="text-xs text-gray-500">
-              {stats.totalCases > 0 
+              {stats?.totalCases > 0 
                 ? `${((stats.casesWithDefects / stats.totalCases) * 100).toFixed(1)}%`
                 : '0%'} de los casos
             </p>
@@ -129,7 +129,7 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
             <CardTitle className="text-sm font-medium">Total Defectos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">{stats.totalDefects}</div>
+            <div className="text-2xl font-bold text-red-500">{stats?.totalDefects || 0}</div>
           </CardContent>
         </Card>
         
@@ -139,11 +139,11 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.defectsPerCycle.length > 0 
+              {stats?.defectsPerCycle && stats.defectsPerCycle.length > 0 
                 ? `${stats.defectsPerCycle[0].count} defectos`
                 : 'N/A'}
             </div>
-            {stats.defectsPerCycle.length > 0 && (
+            {stats?.defectsPerCycle && stats.defectsPerCycle.length > 0 && (
               <p className="text-xs text-gray-500">Ciclo {stats.defectsPerCycle[0].cycle}</p>
             )}
           </CardContent>
@@ -226,7 +226,7 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
         <Dialog open={isDefectDialogOpen} onOpenChange={setIsDefectDialogOpen}>
           <DialogContent className="sm:max-w-[650px]">
             <DialogHeader>
-              <DialogTitle>Defectos del Caso {selectedTestCase.codeRef}</DialogTitle>
+              <DialogTitle>Defectos del Caso {selectedTestCase?.codeRef || 'N/A'}</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-4 py-2">
@@ -234,30 +234,30 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <div className="text-sm text-gray-500">Nombre del Caso</div>
-                    <div className="font-medium">{selectedTestCase.name}</div>
+                    <div className="font-medium">{selectedTestCase?.name || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Estado</div>
-                    <div className="font-medium">{selectedTestCase.status}</div>
+                    <div className="font-medium">{selectedTestCase?.status || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Historia de Usuario</div>
-                    <div className="font-medium">{selectedTestCase.userStoryId || 'N/A'}</div>
+                    <div className="font-medium">{selectedTestCase?.userStoryId || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="text-sm text-gray-500">Ciclo</div>
-                    <div className="font-medium">{selectedTestCase.cycle}</div>
+                    <div className="font-medium">{selectedTestCase?.cycle || 'N/A'}</div>
                   </div>
                 </div>
               </div>
               
-              <div className="text-lg font-medium mb-2">Lista de Defectos ({selectedTestCase.defects?.length || 0})</div>
+              <div className="text-lg font-medium mb-2">Lista de Defectos ({selectedTestCase?.defects?.length || 0})</div>
               
               {isLoading ? (
                 <div className="flex justify-center p-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
                 </div>
-              ) : defects.length > 0 ? (
+              ) : defects && defects.length > 0 ? (
                 <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -270,33 +270,33 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
                     </TableHeader>
                     <TableBody>
                       {defects.map(defect => (
-                        <TableRow key={defect.id}>
+                        <TableRow key={defect?.id || 'unknown'}>
                           <TableCell className="font-medium">
-                            {defect.id}
+                            {defect?.id || 'N/A'}
                           </TableCell>
                           <TableCell className="max-w-xs truncate">
-                            {defect.descripcion}
+                            {defect?.descripcion || 'Sin descripción'}
                           </TableCell>
                           <TableCell>
                             <Badge className={
-                              defect.estado.toLowerCase().includes('resuelto') || 
-                              defect.estado.toLowerCase().includes('cerrado')
+                              defect?.estado?.toLowerCase().includes('resuelto') || 
+                              defect?.estado?.toLowerCase().includes('cerrado')
                                 ? 'bg-green-100 text-green-800'
-                                : defect.estado.toLowerCase().includes('abierto') ||
-                                  defect.estado.toLowerCase().includes('en progreso')
+                                : defect?.estado?.toLowerCase().includes('abierto') ||
+                                  defect?.estado?.toLowerCase().includes('en progreso')
                                   ? 'bg-orange-100 text-orange-800'
                                   : 'bg-gray-100 text-gray-800'
                             }>
-                              {defect.estado}
+                              {defect?.estado || 'Desconocido'}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={
-                              defect.prioridad === 'Alta' ? 'border-red-500 text-red-500' :
-                              defect.prioridad === 'Media' ? 'border-yellow-500 text-yellow-600' :
+                              defect?.prioridad === 'Alta' ? 'border-red-500 text-red-500' :
+                              defect?.prioridad === 'Media' ? 'border-yellow-500 text-yellow-600' :
                               'border-blue-500 text-blue-500'
                             }>
-                              {defect.prioridad}
+                              {defect?.prioridad || 'Baja'}
                             </Badge>
                           </TableCell>
                         </TableRow>
