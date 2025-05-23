@@ -1,14 +1,16 @@
 {
   "name": "quality-team",
   "version": "0.1.0",
-  "private": true,  "scripts": {
+  "private": true,
+  "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "verify-migration": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/verificarMigracion.ts",
-    "verify-migration-simple": "node scripts/verificarMigracionSimple.js",
-    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts",
+    "verify-migration-simple": "node scripts/verificarMigracionSimple.js",    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts",
+    "watch-sync": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/fileWatcher.ts",
+    "watch-sync-simple": "nodemon --watch data --ext txt --exec \"npm run sync-data\"",
     "sync-db": "node scripts/syncDatabase.js"
   },
   "dependencies": {
@@ -18,9 +20,11 @@
     "@radix-ui/react-label": "^2.1.6",
     "@radix-ui/react-slot": "^1.2.2",
     "@radix-ui/react-tabs": "^1.1.11",
+    "@types/chokidar": "^2.1.7",
     "@types/file-saver": "^2.0.7",
     "@types/react-select": "^5.0.1",
     "@types/uuid": "^10.0.0",
+    "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -53,6 +57,7 @@
     "autoprefixer": "^10.4.14",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "nodemon": "^3.1.10",
     "postcss": "^8.4.23",
     "prisma": "^6.8.2",
     "tailwindcss": "^3.3.0",

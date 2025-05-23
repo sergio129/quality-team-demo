@@ -396,6 +396,7 @@ async function syncIncidents(): Promise<void> {
  */
 import { syncTestCases } from './syncTestCases';
 import { syncTestPlans } from './syncTestPlans';
+import { syncProjects } from './syncProjects';
 
 /**
  * Función principal que ejecuta todas las sincronizaciones
@@ -413,6 +414,9 @@ async function syncAll(): Promise<void> {
     
     // Sincronizar incidentes (faltan 3 según el reporte)
     await syncIncidents();
+    
+    // Sincronizar proyectos
+    await syncProjects();
     
     // Sincronizar casos de prueba y planes
     await syncTestCases();

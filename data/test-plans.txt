@@ -1,5 +1,29 @@
 [
   {
+    "id": "6db1e266-4aab-492e-9f6e-6364a1d03a8a",
+    "projectId": "BCBH-504",
+    "projectName": "COT-DLLO-Desarrollo Ajustes en el Chat Crédito Hipotecario",
+    "codeReference": "BCBH-504",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-06-03T00:00:00.000Z",
+    "estimatedHours": 15,
+    "estimatedDays": 1,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "e2e7dab6-21e8-489b-a4fb-eeebe9947748",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T19:28:35.561Z",
+    "updatedAt": "2025-05-23T19:28:35.561Z"
+  },
+  {
     "id": "c4eb68f2-5370-47fc-8ab8-763586f2a4cb",
     "projectId": "SRCA-6556",
     "projectName": "Reestructuración Parametrización \"Prefijos\"",
@@ -142,5 +166,77 @@
     "testQuality": -1,
     "createdAt": "2025-05-22T22:26:06.391Z",
     "updatedAt": "2025-05-22T20:32:04.031Z"
+  },
+  {
+    "id": "2ab5ff25-1706-405f-a124-07ba047cc61c",
+    "projectId": "BCBH-504",
+    "projectName": "BCBH-504",
+    "codeReference": "BCBH-504",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-06-06T00:00:00.000Z",
+    "estimatedHours": 15,
+    "estimatedDays": 1,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "1c2322de-16b5-4c8a-aa0c-193449b05cfc",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T19:51:52.633Z",
+    "updatedAt": "2025-05-23T19:51:52.633Z"
+  },
+  {
+    "id": "04d202b1-3c40-41b4-ac31-3937c0a2b8ae",
+    "projectId": "BCBH-504",
+    "projectName": "BCBH-504",
+    "codeReference": "BCBH-504",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-06-03T00:00:00.000Z",
+    "estimatedHours": 15,
+    "estimatedDays": 1,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "0789ed10-7a1a-4d6b-9a64-248c622718e2",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T20:25:08.979Z",
+    "updatedAt": "2025-05-23T20:25:08.979Z"
+  },
+  {
+    "id": "a7145cda-c9e7-48ae-923b-46bda7423a83",
+    "projectId": "PRUEBA-123",
+    "projectName": "123",
+    "codeReference": "PRUEBA-123",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-06-03T00:00:00.000Z",
+    "estimatedHours": 5,
+    "estimatedDays": 0,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "fc5bb7d2-5479-4d9d-b1f2-2a64ade53c4e",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T20:29:15.459Z",
+    "updatedAt": "2025-05-23T20:29:15.459Z"
   }
 ]
