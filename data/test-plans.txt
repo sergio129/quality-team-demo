@@ -238,5 +238,29 @@
     "testQuality": 100,
     "createdAt": "2025-05-23T20:29:15.459Z",
     "updatedAt": "2025-05-23T20:29:15.459Z"
+  },
+  {
+    "id": "90c4666e-3392-40dd-8aae-2aa62477342b",
+    "projectId": "PRUEBAS-123",
+    "projectName": "pruebas",
+    "codeReference": "PRUEBAS-123",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-06-02T00:00:00.000Z",
+    "estimatedHours": 9,
+    "estimatedDays": 1,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "35243560-d7d0-415c-8c1c-9f305b01e63e",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T20:46:29.596Z",
+    "updatedAt": "2025-05-23T20:46:29.596Z"
   }
 ]

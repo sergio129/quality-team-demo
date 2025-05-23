@@ -797,6 +797,22 @@
     "analistas": []
   },
   {
+    "id": "5fabb7db-c2e7-41a1-be57-7a3aba1c515a",
+    "idJira": "PRUEBAS-123",
+    "proyecto": "pruebas",
+    "equipo": "Desarrollo Bancolombia",
+    "celula": "Desarrollo Bancolombia",
+    "horas": 9,
+    "dias": 1,
+    "estadoCalculado": "Por Iniciar",
+    "fechaEntrega": "2025-06-02T00:00:00.000Z",
+    "fechaCertificacion": "2025-06-03T00:00:00.000Z",
+    "diasRetraso": 0,
+    "analistaProducto": "Sergio Anaya",
+    "planTrabajo": "rueba",
+    "analistas": []
+  },
+  {
     "id": "8140992e-c7ad-4117-8987-a4bd6305fc41",
     "idJira": "PRUEBA-123",
     "proyecto": "123",

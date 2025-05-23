@@ -43,10 +43,12 @@ async function writeJsonFile(filePath: string, data: any[]): Promise<void> {
 
 /**
  * Sincronizar proyectos entre archivos y PostgreSQL
- * Archivos -> PostgreSQL y PostgreSQL -> Archivos (bidireccional)
+ * SINCRONIZACIÓN BIDIRECCIONAL COMPLETA:
+ * - Archivos -> PostgreSQL (nuevos proyectos)
+ * - PostgreSQL -> Archivos (actualizaciones y eliminaciones)
  */
 export async function syncProjects(): Promise<void> {
-  console.log('Sincronizando proyectos...');
+  console.log('Sincronizando proyectos (bidireccional)...');
   
   // Obtener datos de archivos
   const fileProjects = await readJsonFile(PROJECTS_FILE);
@@ -66,8 +68,8 @@ export async function syncProjects(): Promise<void> {
   
   // Mapear IDs para comparación rápida
   const dbProjectJiraIds = new Set(dbProjects.map(p => p.idJira));
-  
-  // Migrar proyectos que solo existen en archivos a PostgreSQL
+  const fileProjectJiraIds = new Set(fileProjects.map(p => p.idJira));
+    // === PASO 1: Archivos -> PostgreSQL (nuevos proyectos) ===
   let newProjectsCount = 0;
   for (const fileProject of fileProjects) {
     if (!dbProjectJiraIds.has(fileProject.idJira)) {
@@ -138,6 +140,23 @@ export async function syncProjects(): Promise<void> {
     }
   }
 
+  // === PASO 2: PostgreSQL -> Archivos (eliminaciones) ===
+  // Identificar proyectos que están en archivos pero ya no en PostgreSQL
+  const projectsToDeleteFromFile = fileProjects.filter(fileProject => 
+    !dbProjectJiraIds.has(fileProject.idJira)
+  );
+  
+  let deletedFromFileCount = 0;
+  if (projectsToDeleteFromFile.length > 0) {
+    console.log(`🗑️  Se encontraron ${projectsToDeleteFromFile.length} proyectos para eliminar del archivo`);
+    
+    for (const projectToDelete of projectsToDeleteFromFile) {
+      console.log(`🗑️  Eliminando proyecto ${projectToDelete.idJira} del archivo`);
+      deletedFromFileCount++;
+    }
+  }
+
+  // === PASO 3: Sincronizar archivos con estado actual de PostgreSQL ===
   // Transformar los proyectos de PostgreSQL al formato de la aplicación para actualizar los archivos
   const formattedDbProjects = dbProjects.map(project => ({
     id: project.id,
@@ -163,9 +182,10 @@ export async function syncProjects(): Promise<void> {
     analistas: project.analysts.map(rel => rel.analystId)
   }));
   
-  // Guardar datos sincronizados en el archivo
+  // Guardar datos sincronizados en el archivo (esto elimina automáticamente los proyectos que ya no están en PostgreSQL)
   await writeJsonFile(PROJECTS_FILE, formattedDbProjects);
   
   console.log(`✅ ${newProjectsCount} nuevos proyectos migrados a PostgreSQL`);
+  console.log(`🗑️  ${deletedFromFileCount} proyectos eliminados del archivo`);
   console.log(`✅ ${formattedDbProjects.length} proyectos sincronizados en total`);
 }

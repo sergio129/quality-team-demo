@@ -1,9 +1,11 @@
 /**
  * Sincronizar incidentes
- * Archivos -> PostgreSQL
+ * SINCRONIZACIÓN BIDIRECCIONAL COMPLETA:
+ * - Archivos -> PostgreSQL (nuevos incidentes)
+ * - PostgreSQL -> Archivos (actualizaciones y eliminaciones)
  */
 async function syncIncidents(): Promise<void> {
-  console.log('Sincronizando incidentes...');
+  console.log('Sincronizando incidentes (bidireccional)...');
   
   // Obtener datos de archivos
   const fileIncidents = await readJsonFile(INCIDENTS_FILE);
@@ -19,8 +21,9 @@ async function syncIncidents(): Promise<void> {
   
   // Mapear IDs para comparación rápida
   const dbIncidentIds = new Set(dbIncidents.map(i => i.id));
+  const fileIncidentIds = new Set(fileIncidents.map(i => i.id));
   
-  // Migrar incidentes que solo existen en archivos a PostgreSQL
+  // === PASO 1: Archivos -> PostgreSQL (nuevos incidentes) ===
   let newIncidentsCount = 0;
   for (const fileIncident of fileIncidents) {
     if (!dbIncidentIds.has(fileIncident.id)) {
