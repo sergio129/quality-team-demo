@@ -15,14 +15,13 @@ export class ProjectPrismaService {
                     }
                 }
             });
-            
-            return projects.map((project: any) => ({
+              return projects.map((project: any) => ({
                 id: project.id,
                 idJira: project.idJira,
                 nombre: project.nombre || undefined,
                 proyecto: project.proyecto,
-                equipo: project.equipoId,
-                celula: project.celulaId,
+                equipo: project.team?.name || project.equipoId,
+                celula: project.cell?.name || project.celulaId,
                 horas: project.horas || 0,
                 dias: project.dias || 0,
                 horasEstimadas: project.horasEstimadas || undefined,

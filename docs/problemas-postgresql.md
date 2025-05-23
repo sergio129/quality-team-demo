@@ -8,6 +8,7 @@ Este documento registra los problemas encontrados durante la migración a Postgr
 |-------|----------|----------|----------|--------|
 | 23/05/2025 | TestCaseService | Error "fs is not defined" en los métodos getAllTestCases y getAllTestPlans | Implementación correcta del patrón adaptador para separar servicios de casos y planes | Resuelto |
 | 23/05/2025 | TeamPrismaService | Error "Unknown field `members` for include statement on model `Team`" | Corrección en las consultas para usar el campo 'analysts' en lugar de 'members' | Resuelto |
+| 23/05/2025 | ProjectPrismaService | Error de mapeo de campos entre el modelo Project y el esquema Prisma | Corrección del mapeo de campos en el servicio | Resuelto |
 
 ## Detalles de problemas
 
@@ -56,6 +57,27 @@ Se modificó el servicio `TeamPrismaService` para usar correctamente la relació
 
 **Lecciones aprendidas:**
 Al migrar a un ORM como Prisma, es importante asegurarse de que los nombres de las relaciones en el código coincidan exactamente con los definidos en el esquema. Además, cuando se usa una capa adaptadora, es crucial traducir correctamente entre el modelo de datos de la aplicación y el modelo de datos del ORM.
+
+### [23/05/2025] - [ProjectPrismaService] - [Error de mapeo en el servicio de proyectos]
+
+**Descripción:**
+El servicio de proyectos (`ProjectPrismaService`) no mapeaba correctamente los campos entre el modelo de la aplicación (`Project`) y el esquema de Prisma, lo que causaba que la lista de proyectos apareciera vacía.
+
+**Pasos para reproducir:**
+1. Activar la migración a PostgreSQL para proyectos (`USE_POSTGRES_PROJECTS=true`)
+2. Acceder a la página de proyectos
+
+**Impacto:**
+Los proyectos no se mostraban en la interfaz de usuario, apareciendo un mensaje de "No hay proyectos que coincidan con los criterios de búsqueda".
+
+**Causa raíz:**
+Había discrepancias entre los nombres de campos en el modelo `Project` de la aplicación y el esquema de Prisma. Por ejemplo, en el esquema de Prisma los campos `equipoId` y `celulaId` se usan como claves foráneas, mientras que en la aplicación se esperan campos llamados `equipo` y `celula`.
+
+**Solución:**
+Se modificó el servicio `ProjectPrismaService` para mapear correctamente los campos entre el esquema de Prisma y el modelo de la aplicación. Se corrigieron las consultas para incluir relaciones correctamente y se ajustaron los nombres de los campos para que coincidieran con lo esperado por la aplicación.
+
+**Lecciones aprendidas:**
+Es crucial asegurar que los adaptadores de servicio realicen un mapeo correcto entre el modelo de datos de la ORM y el modelo de datos esperado por la aplicación. El diseño de esquemas de base de datos sigue diferentes convenios que los modelos de objetos en la aplicación, por lo que los adaptadores deben conciliar estas diferencias.
 
 <!-- 
 Formato para documentar problemas:
