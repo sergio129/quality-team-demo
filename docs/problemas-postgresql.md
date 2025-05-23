@@ -8,7 +8,9 @@ Este documento registra los problemas encontrados durante la migración a Postgr
 |-------|----------|----------|----------|--------|
 | 23/05/2025 | TestCaseService | Error "fs is not defined" en los métodos getAllTestCases y getAllTestPlans | Implementación correcta del patrón adaptador para separar servicios de casos y planes | Resuelto |
 | 23/05/2025 | TeamPrismaService | Error "Unknown field `members` for include statement on model `Team`" | Corrección en las consultas para usar el campo 'analysts' en lugar de 'members' | Resuelto |
-| 23/05/2025 | ProjectPrismaService | Error de mapeo de campos entre el modelo Project y el esquema Prisma | Corrección del mapeo de campos en el servicio | Resuelto |
+| 23/05/2025 | ProjectPrismaService | Los proyectos mostraban IDs en lugar de nombres para equipos y células | Corrección para incluir los nombres en lugar de solo IDs | Resuelto |
+| 23/05/2025 | ProjectPrismaService | Los proyectos mostraban "Sin estado" en la columna ESTADO | Implementación de cálculo automático del estado basado en fechas y atributos | Resuelto |
+| 23/05/2025 | ProjectPrismaService | Estados de proyecto no mostrados | Cálculo automático del estado del proyecto basado en otros campos | Resuelto |
 
 ## Detalles de problemas
 
@@ -58,26 +60,63 @@ Se modificó el servicio `TeamPrismaService` para usar correctamente la relació
 **Lecciones aprendidas:**
 Al migrar a un ORM como Prisma, es importante asegurarse de que los nombres de las relaciones en el código coincidan exactamente con los definidos en el esquema. Además, cuando se usa una capa adaptadora, es crucial traducir correctamente entre el modelo de datos de la aplicación y el modelo de datos del ORM.
 
-### [23/05/2025] - [ProjectPrismaService] - [Error de mapeo en el servicio de proyectos]
+### [23/05/2025] - [ProjectPrismaService] - [Referencia a IDs en lugar de nombres]
 
 **Descripción:**
-El servicio de proyectos (`ProjectPrismaService`) no mapeaba correctamente los campos entre el modelo de la aplicación (`Project`) y el esquema de Prisma, lo que causaba que la lista de proyectos apareciera vacía.
+En la vista de proyectos, las columnas de Equipo y Célula estaban mostrando los IDs (UUID) en lugar de los nombres descriptivos, lo que hacía que la interfaz fuera difícil de usar y comprender.
 
 **Pasos para reproducir:**
 1. Activar la migración a PostgreSQL para proyectos (`USE_POSTGRES_PROJECTS=true`)
 2. Acceder a la página de proyectos
 
 **Impacto:**
-Los proyectos no se mostraban en la interfaz de usuario, apareciendo un mensaje de "No hay proyectos que coincidan con los criterios de búsqueda".
+La información mostrada era técnicamente correcta pero no útil para los usuarios, ya que mostraba IDs largos y crípticos en lugar de nombres descriptivos.
 
 **Causa raíz:**
-Había discrepancias entre los nombres de campos en el modelo `Project` de la aplicación y el esquema de Prisma. Por ejemplo, en el esquema de Prisma los campos `equipoId` y `celulaId` se usan como claves foráneas, mientras que en la aplicación se esperan campos llamados `equipo` y `celula`.
+El servicio `ProjectPrismaService` estaba devolviendo los IDs de las relaciones (`equipoId` y `celulaId`) en lugar de los nombres de equipo y célula. Esto ocurrió porque en el modelo relacional de Prisma, las relaciones se establecen mediante IDs, mientras que en el formato de archivo JSON, probablemente se almacenaban directamente los nombres.
 
 **Solución:**
-Se modificó el servicio `ProjectPrismaService` para mapear correctamente los campos entre el esquema de Prisma y el modelo de la aplicación. Se corrigieron las consultas para incluir relaciones correctamente y se ajustaron los nombres de los campos para que coincidieran con lo esperado por la aplicación.
+Se modificó el método `getAllProjects` en `ProjectPrismaService` para incluir los nombres de equipo y célula en lugar de solo los IDs:
+
+```typescript
+equipo: project.team?.name || project.equipoId,
+celula: project.cell?.name || project.celulaId,
+```
+
+La solución incluye un fallback a los IDs en caso de que los objetos relacionados no estén disponibles.
 
 **Lecciones aprendidas:**
-Es crucial asegurar que los adaptadores de servicio realicen un mapeo correcto entre el modelo de datos de la ORM y el modelo de datos esperado por la aplicación. El diseño de esquemas de base de datos sigue diferentes convenios que los modelos de objetos en la aplicación, por lo que los adaptadores deben conciliar estas diferencias.
+Al migrar de un sistema de almacenamiento basado en archivos a una base de datos relacional, es importante considerar cómo se resolverán las relaciones y cómo se presentarán los datos al usuario final. Es necesario adaptar la capa de servicio para que transforme correctamente los datos del formato de la base de datos al formato esperado por la interfaz de usuario.
+
+### [23/05/2025] - [ProjectPrismaService] - [Estados de proyecto no mostrados]
+
+**Descripción:**
+En la vista de proyectos, la columna de "ESTADO" mostraba "Sin estado" para todos los proyectos, aunque en muchos casos se podía inferir el estado del proyecto por otros campos como fechas o plan de trabajo.
+
+**Pasos para reproducir:**
+1. Activar la migración a PostgreSQL para proyectos (`USE_POSTGRES_PROJECTS=true`)
+2. Acceder a la página de proyectos
+
+**Impacto:**
+La información del estado de los proyectos no era visible, lo que dificultaba a los usuarios comprender rápidamente el estatus de los diferentes proyectos.
+
+**Causa raíz:**
+El servicio `ProjectPrismaService` estaba devolviendo directamente el valor del campo `estado` de la base de datos, que en muchos casos era nulo. En la versión de archivos, es posible que se calculara el estado automáticamente basado en otros campos o que se estableciera un valor por defecto.
+
+**Solución:**
+Se modificó el método `getAllProjects` en `ProjectPrismaService` para incluir lógica de cálculo automático del estado cuando éste no está definido en la base de datos:
+
+```typescript
+estado: project.estado || this.calcularEstadoProyecto(project),
+estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project)
+```
+
+Se implementaron dos métodos auxiliares:
+1. `calcularEstadoProyecto`: calcula el estado basado en fechas, plan de trabajo y otros campos
+2. `calcularEstadoCalculado`: determina el estado calculado entre "Por Iniciar", "En Progreso" y "Certificado"
+
+**Lecciones aprendidas:**
+Al migrar a un nuevo sistema de almacenamiento, es importante revisar no solo los datos directos sino también los valores derivados o calculados que pueden haberse manejado de forma diferente en el sistema anterior. Cuando se presenta información a los usuarios, es preferible mostrar valores calculados en lugar de campos nulos o vacíos.
 
 <!-- 
 Formato para documentar problemas:

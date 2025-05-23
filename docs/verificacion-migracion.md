@@ -5,28 +5,28 @@ Este documento contiene una lista de puntos a verificar durante la semana de mon
 ## Verificaciones diarias
 
 ### Funcionamiento general
-- [ ] La aplicación inicia correctamente
-- [ ] La navegación entre páginas funciona sin errores
-- [ ] No hay errores visibles en la interfaz de usuario
+- [x] La aplicación inicia correctamente
+- [x] La navegación entre páginas funciona sin errores
+- [x] No hay errores visibles en la interfaz de usuario
 
 ### Verificaciones por servicio
 
 #### QAAnalystService
-- [ ] Lista de analistas se carga correctamente
+- [x] Lista de analistas se carga correctamente
 - [ ] Creación de nuevos analistas funciona
 - [ ] Edición de analistas existentes funciona
 - [ ] Eliminación de analistas funciona
 - [ ] Asignación de analistas a células funciona
 
 #### TeamService
-- [ ] Lista de equipos se carga correctamente
+- [x] Lista de equipos se carga correctamente
 - [ ] Creación de nuevos equipos funciona
 - [ ] Edición de equipos existentes funciona
 - [ ] Eliminación de equipos funciona
 - [ ] Asignación de miembros a equipos funciona
 
 #### CellService
-- [ ] Lista de células se carga correctamente
+- [x] Lista de células se carga correctamente
 - [ ] Creación de nuevas células funciona
 - [ ] Edición de células existentes funciona
 - [ ] Eliminación de células funciona
@@ -56,7 +56,7 @@ Este documento contiene una lista de puntos a verificar durante la semana de mon
 - [ ] Relación con analistas funciona
 
 #### ProjectService
-- [ ] Lista de proyectos se carga correctamente
+- [x] Lista de proyectos se carga correctamente
 - [ ] Creación de nuevos proyectos funciona
 - [ ] Edición de proyectos existentes funciona
 - [ ] Eliminación de proyectos funciona

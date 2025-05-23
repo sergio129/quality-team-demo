@@ -24,9 +24,8 @@ export class ProjectPrismaService {
                 celula: project.cell?.name || project.celulaId,
                 horas: project.horas || 0,
                 dias: project.dias || 0,
-                horasEstimadas: project.horasEstimadas || undefined,
-                estado: project.estado || undefined,
-                estadoCalculado: project.estadoCalculado as any,
+                horasEstimadas: project.horasEstimadas || undefined,                estado: project.estado || this.calcularEstadoProyecto(project),
+                estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
                 descripcion: project.descripcion || undefined,
                 fechaInicio: project.fechaInicio || undefined,
                 fechaFin: project.fechaFin || undefined,
@@ -170,5 +169,70 @@ export class ProjectPrismaService {
             console.error(`Error deleting project ${id}:`, error);
             throw error;
         }
+    }
+
+    // Método para calcular el estado de un proyecto basado en fechas y otros atributos
+    private calcularEstadoProyecto(project: any): string {
+        // Si ya tiene un estado definido, usarlo
+        if (project.estado) return project.estado;
+        
+        // Obtener la fecha actual
+        const fechaActual = new Date();
+        
+        // Verificar si tiene fechaRealEntrega (proyecto finalizado)
+        if (project.fechaRealEntrega) {
+            return "finalizado";
+        }
+        
+        // Verificar si tiene plan de trabajo
+        if (project.planTrabajo && project.planTrabajo !== "") {
+            if (project.planTrabajo.toLowerCase().includes("finaliza")) {
+                return "finalizado";
+            } 
+            if (project.planTrabajo.toLowerCase().includes("prueba")) {
+                return "pruebas";
+            }
+            if (project.planTrabajo.toLowerCase().includes("actualiza")) {
+                return "actualizacion";
+            }
+            if (project.planTrabajo.toLowerCase().includes("proceso")) {
+                return "En proceso";
+            }
+        }
+        
+        // Comprobar si está retrasado
+        if (project.fechaEntrega && new Date(project.fechaEntrega) < fechaActual && !project.fechaRealEntrega) {
+            return "retrasado";
+        }
+        
+        // Comprobar si está en progreso
+        if (project.fechaInicio && new Date(project.fechaInicio) <= fechaActual) {
+            return "en progreso";
+        }
+        
+        // Por defecto, si no podemos determinar el estado
+        return "pendiente";
+    }
+    
+    // Método para calcular el estado calculado del proyecto
+    private calcularEstadoCalculado(project: any): 'Por Iniciar' | 'En Progreso' | 'Certificado' {
+        // Si ya tiene un estado calculado definido, usarlo
+        if (project.estadoCalculado) return project.estadoCalculado as any;
+        
+        // Obtener la fecha actual
+        const fechaActual = new Date();
+        
+        // Verificar si tiene fecha de certificación
+        if (project.fechaCertificacion) {
+            return "Certificado";
+        }
+        
+        // Verificar si ya ha iniciado
+        if (project.fechaInicio && new Date(project.fechaInicio) <= fechaActual) {
+            return "En Progreso";
+        }
+        
+        // Por defecto
+        return "Por Iniciar";
     }
 }
