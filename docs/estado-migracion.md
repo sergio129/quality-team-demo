@@ -27,10 +27,10 @@ Estado de cada servicio:
 1. QAAnalystService - ✅ Consistente, activado en PostgreSQL
 2. TeamService - ✅ Consistente, activado en PostgreSQL
 3. CellService - ✅ Consistente, activado en PostgreSQL
-4. TestCaseService - ⚠️ Diferencias de formato detectadas, pendiente activación
-5. IncidentService - ⚠️ Diferencias de formato detectadas, pendiente activación
-6. TestPlanService - ⚠️ Diferencias de formato detectadas, pendiente activación
-7. ProjectService - 🔄 Implementado, pendiente verificación
+4. TestCaseService - ✅ Activado en PostgreSQL (con diferencias de formato en timestamps)
+5. IncidentService - ✅ Activado en PostgreSQL (con diferencias en campos relacionales)
+6. TestPlanService - ✅ Activado en PostgreSQL (con diferencias de formato en timestamps)
+7. ProjectService - ✅ Activado en PostgreSQL
 
 ### Fase 4: Consolidación ⏳ PENDIENTE
 - ⏳ Eliminar código redundante
@@ -40,15 +40,12 @@ Estado de cada servicio:
 
 ## Próximos pasos
 
-1. **Adaptar script de verificación** para manejar diferencias de formato en vez de marcarlas como inconsistencias
-2. **Activar gradualmente servicios restantes** modificando las variables en `.env`
-   - TestCaseService (establecer `USE_POSTGRES_TESTCASES=true`)
-   - TestPlanService (establecer `USE_POSTGRES_TESTPLANS=true`)
-   - IncidentService (establecer `USE_POSTGRES_INCIDENTS=true`)
-   - ProjectService (establecer `USE_POSTGRES_PROJECTS=true`)
-3. **Monitorear el comportamiento** durante al menos 1 semana por servicio
-4. **Documentar problemas encontrados** y sus soluciones
-5. **Activar migración global** cuando todos los servicios estén validados
+1. **Monitorear el comportamiento del sistema** durante al menos 1 semana con todos los servicios activados en PostgreSQL
+2. **Adaptar script de verificación** para manejar diferencias de formato en vez de marcarlas como inconsistencias
+3. **Documentar problemas encontrados** y sus soluciones en el proceso de monitoreo
+4. **Validar el rendimiento y funcionalidad** con todos los servicios usando PostgreSQL
+5. **Activar migración global** cuando se confirme el correcto funcionamiento (`USE_POSTGRES=true`)
+6. **Eliminar código redundante** una vez completada la migración
 
 ### Resumen de Verificación
 La verificación realizada el 23 de mayo de 2025 mostró:

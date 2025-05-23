@@ -1,4 +1,5 @@
 import { TestCase } from '@/models/TestCase';
+import { TestPlan } from '@/models/TestPlan';
 import { migrationConfig } from '@/config/migration';
 import TestCaseFileService from './file/testCaseFileService';
 import TestCasePrismaService from './prisma/testCasePrismaService';
@@ -15,8 +16,7 @@ function getService() {
 export const testCaseService = {
   async getAllTestCases(): Promise<TestCase[]> {
     try {
-      const fileContent = await fs.readFile(TEST_CASES_FILE_PATH, 'utf-8');
-      return JSON.parse(fileContent);
+      return getService().getAllTestCases();
     } catch (error) {
       console.error('Error reading test cases:', error);
       return [];
@@ -25,8 +25,7 @@ export const testCaseService = {
 
   async getTestCasesByProject(projectId: string): Promise<TestCase[]> {
     try {
-      const testCases = await this.getAllTestCases();
-      return testCases.filter(testCase => testCase.projectId === projectId);
+      return getService().getTestCasesByProject(projectId);
     } catch (error) {
       console.error(`Error getting test cases for project ${projectId}:`, error);
       return [];
@@ -35,9 +34,7 @@ export const testCaseService = {
 
   async getTestCase(id: string): Promise<TestCase | null> {
     try {
-      const testCases = await this.getAllTestCases();
-      const testCase = testCases.find(tc => tc.id === id);
-      return testCase || null;
+      return getService().getTestCase(id);
     } catch (error) {
       console.error(`Error getting test case ${id}:`, error);
       return null;
@@ -46,9 +43,7 @@ export const testCaseService = {
 
   async saveTestCase(testCase: TestCase): Promise<boolean> {
     try {
-      const testCases = await this.getAllTestCases();
-      testCases.push(testCase);
-      await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(testCases, null, 2));
+      const result = await getService().saveTestCase(testCase);
       
       // Si el caso tiene un plan de pruebas asociado, actualizar su contador
       if (testCase.testPlanId) {
@@ -58,7 +53,7 @@ export const testCaseService = {
         }
       }
       
-      return true;
+      return result;
     } catch (error) {
       console.error('Error saving test case:', error);
       return false;
@@ -67,35 +62,31 @@ export const testCaseService = {
 
   async updateTestCase(id: string, updatedTestCase: Partial<TestCase>): Promise<boolean> {
     try {
-      const testCases = await this.getAllTestCases();
-      const index = testCases.findIndex(tc => tc.id === id);
-      if (index !== -1) {
-        const originalTestPlanId = testCases[index].testPlanId;
-        const newTestPlanId = updatedTestCase.testPlanId;
-        
-        testCases[index] = { ...testCases[index], ...updatedTestCase, updatedAt: new Date().toISOString() };
-        await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(testCases, null, 2));
-        
-        // Si cambió el plan de pruebas, actualizar ambos planes
-        if (originalTestPlanId && (!newTestPlanId || originalTestPlanId !== newTestPlanId)) {
-          // Buscar plan original y actualizar
-          const originalTestPlan = await this.getTestPlan(originalTestPlanId);
-          if (originalTestPlan && originalTestPlan.projectId) {
-            await this.updateTestPlanCaseCount(originalTestPlan.projectId);
-          }
+      // Obtener el caso de prueba original para verificar cambios en testPlanId
+      const originalTestCase = await this.getTestCase(id);
+      const originalTestPlanId = originalTestCase?.testPlanId;
+      const newTestPlanId = updatedTestCase.testPlanId;
+      
+      const result = await getService().updateTestCase(id, updatedTestCase);
+      
+      // Si cambió el plan de pruebas, actualizar ambos planes
+      if (originalTestPlanId && (!newTestPlanId || originalTestPlanId !== newTestPlanId)) {
+        // Buscar plan original y actualizar
+        const originalTestPlan = await this.getTestPlan(originalTestPlanId);
+        if (originalTestPlan && originalTestPlan.projectId) {
+          await this.updateTestPlanCaseCount(originalTestPlan.projectId);
         }
-        
-        // Actualizar el nuevo plan de pruebas (si existe)
-        if (newTestPlanId) {
-          const newTestPlan = await this.getTestPlan(newTestPlanId);
-          if (newTestPlan && newTestPlan.projectId) {
-            await this.updateTestPlanCaseCount(newTestPlan.projectId);
-          }
-        }
-        
-        return true;
       }
-      return false;
+      
+      // Actualizar el nuevo plan de pruebas (si existe)
+      if (newTestPlanId) {
+        const newTestPlan = await this.getTestPlan(newTestPlanId);
+        if (newTestPlan && newTestPlan.projectId) {
+          await this.updateTestPlanCaseCount(newTestPlan.projectId);
+        }
+      }
+      
+      return result;
     } catch (error) {
       console.error(`Error updating test case ${id}:`, error);
       return false;
@@ -104,12 +95,11 @@ export const testCaseService = {
 
   async deleteTestCase(id: string): Promise<boolean> {
     try {
-      const testCases = await this.getAllTestCases();
-      const caseToDelete = testCases.find(tc => tc.id === id);
+      // Obtener el caso antes de eliminarlo para conocer su plan asociado
+      const caseToDelete = await this.getTestCase(id);
       const testPlanId = caseToDelete?.testPlanId;
       
-      const filteredTestCases = testCases.filter(tc => tc.id !== id);
-      await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify(filteredTestCases, null, 2));
+      const result = await getService().deleteTestCase(id);
       
       // Si el caso tenía un plan asociado, actualizar el contador del plan
       if (testPlanId) {
@@ -119,7 +109,7 @@ export const testCaseService = {
         }
       }
       
-      return true;
+      return result;
     } catch (error) {
       console.error(`Error deleting test case ${id}:`, error);
       return false;
@@ -129,8 +119,7 @@ export const testCaseService = {
   // Planes de Prueba
   async getAllTestPlans(): Promise<TestPlan[]> {
     try {
-      const fileContent = await fs.readFile(TEST_PLANS_FILE_PATH, 'utf-8');
-      return JSON.parse(fileContent);
+      return getService().getAllTestPlans();
     } catch (error) {
       console.error('Error reading test plans:', error);
       return [];
@@ -139,8 +128,7 @@ export const testCaseService = {
 
   async getTestPlansByProject(projectId: string): Promise<TestPlan[]> {
     try {
-      const testPlans = await this.getAllTestPlans();
-      return testPlans.filter(plan => plan.projectId === projectId);
+      return getService().getTestPlansByProject(projectId);
     } catch (error) {
       console.error(`Error getting test plans for project ${projectId}:`, error);
       return [];
@@ -149,9 +137,7 @@ export const testCaseService = {
 
   async getTestPlan(id: string): Promise<TestPlan | null> {
     try {
-      const testPlans = await this.getAllTestPlans();
-      const testPlan = testPlans.find(plan => plan.id === id);
-      return testPlan || null;
+      return getService().getTestPlan(id);
     } catch (error) {
       console.error(`Error getting test plan ${id}:`, error);
       return null;
@@ -160,10 +146,7 @@ export const testCaseService = {
 
   async saveTestPlan(testPlan: TestPlan): Promise<boolean> {
     try {
-      const testPlans = await this.getAllTestPlans();
-      testPlans.push(testPlan);
-      await fs.writeFile(TEST_PLANS_FILE_PATH, JSON.stringify(testPlans, null, 2));
-      return true;
+      return getService().saveTestPlan(testPlan);
     } catch (error) {
       console.error('Error saving test plan:', error);
       return false;
@@ -172,18 +155,7 @@ export const testCaseService = {
 
   async updateTestPlan(id: string, updatedTestPlan: Partial<TestPlan>): Promise<boolean> {
     try {
-      const testPlans = await this.getAllTestPlans();
-      const index = testPlans.findIndex(plan => plan.id === id);
-      if (index !== -1) {
-        testPlans[index] = { 
-          ...testPlans[index], 
-          ...updatedTestPlan, 
-          updatedAt: new Date().toISOString() 
-        };
-        await fs.writeFile(TEST_PLANS_FILE_PATH, JSON.stringify(testPlans, null, 2));
-        return true;
-      }
-      return false;
+      return getService().updateTestPlan(id, updatedTestPlan);
     } catch (error) {
       console.error(`Error updating test plan ${id}:`, error);
       return false;
@@ -192,10 +164,7 @@ export const testCaseService = {
 
   async deleteTestPlan(id: string): Promise<boolean> {
     try {
-      const testPlans = await this.getAllTestPlans();
-      const filteredTestPlans = testPlans.filter(plan => plan.id !== id);
-      await fs.writeFile(TEST_PLANS_FILE_PATH, JSON.stringify(filteredTestPlans, null, 2));
-      return true;
+      return getService().deleteTestPlan(id);
     } catch (error) {
       console.error(`Error deleting test plan ${id}:`, error);
       return false;
@@ -285,7 +254,8 @@ export const testCaseService = {
       return {
         totalCases: testCases.length,
         statusStats,
-        cycleStats      };
+        cycleStats
+      };
     } catch (error) {
       console.error(`Error getting test case stats for project ${projectId}:`, error);
       return {
