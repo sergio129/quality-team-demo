@@ -6,19 +6,18 @@ export class TeamPrismaService {
         try {
             const teams = await prisma.team.findMany({
                 include: {
-                    members: {
+                    analysts: {
                         include: {
                             analyst: true
                         }
                     }
                 }
             });
-            
-            return teams.map(team => ({
+              return teams.map(team => ({
                 id: team.id,
                 name: team.name,
                 description: team.description || '',
-                members: team.members.map(member => member.analystId)
+                members: team.analysts.map((relation: { analystId: string }) => relation.analystId)
             }));
         } catch (error) {
             console.error('Error fetching teams from database:', error);
@@ -35,7 +34,7 @@ export class TeamPrismaService {
                     description: team.description,
                     // Si hay miembros, crear las relaciones
                     ...(team.members && team.members.length > 0 && {
-                        members: {
+                        analysts: {
                             create: team.members.map(analystId => ({
                                 analyst: { connect: { id: analystId } }
                             }))
@@ -43,7 +42,11 @@ export class TeamPrismaService {
                     })
                 },
                 include: {
-                    members: true
+                    analysts: {
+                        include: {
+                            analyst: true
+                        }
+                    }
                 }
             });
 
@@ -51,7 +54,7 @@ export class TeamPrismaService {
                 id: newTeam.id,
                 name: newTeam.name,
                 description: newTeam.description || '',
-                members: newTeam.members.map(member => member.analystId)
+                members: newTeam.analysts.map((relation: { analystId: string }) => relation.analystId)
             };
         } catch (error) {
             console.error('Error saving team to database:', error);
@@ -59,13 +62,13 @@ export class TeamPrismaService {
         }
     }
 
-    async updateTeam(id: string, team: Partial<Team>): Promise<Team | null> {
+    async updateTeam(id: string, teamData: Partial<Team>): Promise<Team | null> {
         try {
-            // Verificar que el equipo existe
+            // Primero necesitamos verificar si el equipo existe
             const existingTeam = await prisma.team.findUnique({
                 where: { id },
                 include: {
-                    members: true
+                    analysts: true
                 }
             });
 
@@ -73,82 +76,86 @@ export class TeamPrismaService {
                 return null;
             }
 
-            // Preparar los datos básicos para actualizar
-            const updateData: any = {};
-            if (team.name) updateData.name = team.name;
-            if (team.description !== undefined) updateData.description = team.description;
-
-            // Actualizar el equipo
-            const updatedTeam = await prisma.team.update({
+            // Actualizar el equipo básico
+            let updatedTeam = await prisma.team.update({
                 where: { id },
-                data: updateData,
+                data: {
+                    name: teamData.name !== undefined ? teamData.name : undefined,
+                    description: teamData.description !== undefined ? teamData.description : undefined,
+                },
                 include: {
-                    members: true
+                    analysts: {
+                        include: {
+                            analyst: true
+                        }
+                    }
                 }
             });
 
-            // Si se proporcionaron miembros, actualizar las relaciones
-            if (team.members) {
-                // Eliminar todas las relaciones actuales
+            // Si se proporcionan miembros, actualizar las relaciones
+            if (teamData.members !== undefined) {
+                // Eliminar todas las relaciones existentes
                 await prisma.teamAnalyst.deleteMany({
                     where: { teamId: id }
                 });
 
-                // Crear nuevas relaciones
-                await Promise.all(team.members.map(analystId => 
-                    prisma.teamAnalyst.create({
-                        data: {
-                            team: { connect: { id } },
-                            analyst: { connect: { id: analystId } }
-                        }
-                    })
-                ));
-            }
-
-            // Obtener el equipo actualizado con sus miembros
-            const refreshedTeam = await prisma.team.findUnique({
-                where: { id },
-                include: {
-                    members: true
+                // Crear nuevas relaciones si hay miembros
+                if (teamData.members && teamData.members.length > 0) {
+                    for (const analystId of teamData.members) {
+                        await prisma.teamAnalyst.create({
+                            data: {
+                                team: { connect: { id } },
+                                analyst: { connect: { id: analystId } }
+                            }
+                        });
+                    }
                 }
-            });
 
-            if (!refreshedTeam) {
-                return null;
+                // Volver a cargar el equipo para obtener las relaciones actualizadas
+                updatedTeam = await prisma.team.findUnique({
+                    where: { id },
+                    include: {
+                        analysts: {
+                            include: {
+                                analyst: true
+                            }
+                        }
+                    }
+                }) as any;
             }
 
             return {
-                id: refreshedTeam.id,
-                name: refreshedTeam.name,
-                description: refreshedTeam.description || '',
-                members: refreshedTeam.members.map(member => member.analystId)
+                id: updatedTeam.id,
+                name: updatedTeam.name,
+                description: updatedTeam.description || '',
+                members: updatedTeam.analysts.map((relation: { analystId: string }) => relation.analystId)
             };
         } catch (error) {
-            console.error('Error updating team in database:', error);
-            return null;
+            console.error(`Error updating team ${id}:`, error);
+            throw error;
         }
     }
 
     async deleteTeam(id: string): Promise<boolean> {
         try {
-            // Verificar que el equipo existe
-            const existingTeam = await prisma.team.findUnique({
+            // Verificar si el equipo existe
+            const team = await prisma.team.findUnique({
                 where: { id }
             });
 
-            if (!existingTeam) {
+            if (!team) {
                 return false;
             }
 
-            // Eliminar el equipo
+            // Eliminar el equipo (las relaciones se eliminarán automáticamente por las restricciones de clave foránea)
             await prisma.team.delete({
                 where: { id }
             });
 
             return true;
         } catch (error) {
-            console.error('Error deleting team from database:', error);
-            return false;
+            console.error(`Error deleting team ${id}:`, error);
+            throw error;
         }
     }
 
@@ -157,7 +164,11 @@ export class TeamPrismaService {
             const team = await prisma.team.findUnique({
                 where: { id },
                 include: {
-                    members: true
+                    analysts: {
+                        include: {
+                            analyst: true
+                        }
+                    }
                 }
             });
 
@@ -169,11 +180,11 @@ export class TeamPrismaService {
                 id: team.id,
                 name: team.name,
                 description: team.description || '',
-                members: team.members.map(member => member.analystId)
+                members: team.analysts.map((relation: { analystId: string }) => relation.analystId)
             };
         } catch (error) {
-            console.error('Error getting team by ID from database:', error);
-            return null;
+            console.error(`Error fetching team ${id}:`, error);
+            throw error;
         }
     }
 }
