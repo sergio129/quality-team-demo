@@ -1,12 +1,14 @@
 {
   "name": "quality-team",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
+  "private": true,  "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "verify-migration": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/verificarMigracion.ts",
+    "verify-migration-simple": "node scripts/verificarMigracionSimple.js",
+    "sync-data": "npx ts-node --transpile-only --project tsconfig.scripts.json scripts/sincronizarDatos.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -53,6 +55,7 @@
     "postcss": "^8.4.23",
     "prisma": "^6.8.2",
     "tailwindcss": "^3.3.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

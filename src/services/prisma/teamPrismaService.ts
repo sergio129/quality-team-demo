@@ -1,5 +1,5 @@
-import { Team } from '@/models/Team';
-import { prisma } from '@/lib/prisma';
+import { Team } from '../../models/Team';
+import { prisma } from '../../lib/prisma';
 
 export class TeamPrismaService {
     async getAllTeams(): Promise<Team[]> {

@@ -10,6 +10,38 @@ Sistema de gestión de calidad para equipos de pruebas de software.
 - Exportación a Excel y PDF
 - Gestión de equipos y analistas
 
+## Migración a PostgreSQL
+
+El sistema está en proceso de migración desde almacenamiento basado en archivos a PostgreSQL. Para controlar esta migración:
+
+1. Configura las variables en el archivo `.env`:
+   ```
+   # Activar PostgreSQL globalmente
+   USE_POSTGRES=true
+   
+   # O activar para servicios específicos
+   USE_POSTGRES_ANALYSTS=true
+   USE_POSTGRES_TEAMS=true
+   # etc.
+   ```
+
+2. Verifica la consistencia de datos:
+   ```bash
+   npx ts-node scripts/verificarMigracion.ts
+   ```
+
+3. Migra datos desde archivos:
+   ```bash
+   npx ts-node scripts/migrarDatos.js
+   ```
+
+4. Sincroniza datos (PostgreSQL -> Archivos):
+   ```bash
+   npx ts-node scripts/sincronizarDatos.ts
+   ```
+
+Para más detalles, consulta [Estado de la migración](docs/estado-migracion.md) y [Estrategia de migración](docs/estrategia-migracion-incremental.md).
+
 ## Cálculo de Calidad
 
 El sistema utiliza dos métodos diferentes para calcular la calidad:
