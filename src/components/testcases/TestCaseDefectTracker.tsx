@@ -45,6 +45,9 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
   useEffect(() => {
     if (selectedTestCase && selectedTestCase.defects && selectedTestCase.defects.length > 0) {
       loadDefectsForTestCase();
+    } else if (selectedTestCase) {
+      // Si no hay defectos, establecer un arreglo vacío
+      setDefects([]);
     }
   }, [selectedTestCase]);
   

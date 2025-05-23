@@ -27,12 +27,36 @@ import { TestPlan } from '@/models/TestCase';
 
 // Función para formatear fechas evitando problemas de zona horaria
 function formatDateWithoutTimezone(dateString: string): string {
-  // Separar la fecha YYYY-MM-DD
-  const parts = dateString.split('-');
-  if (parts.length !== 3) return dateString;
-  
-  // Formatear como DD/MM/YYYY
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  try {
+    // Intentar crear un objeto Date
+    const date = new Date(dateString);
+    
+    // Verificar si la fecha es válida
+    if (isNaN(date.getTime())) {
+      // Si el formato es como "22T00:00:00.000Z/05/2025", intenta extraer las partes
+      if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+          const day = parts[0].split('T')[0];
+          const month = parts[1];
+          const year = parts[2];
+          return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        }
+      }
+      // Si no se puede procesar el formato especial, devolver la cadena original
+      return dateString;
+    }
+    
+    // Formatear como DD/MM/YYYY
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  } catch (error) {
+    console.error("Error formateando fecha:", error);
+    return dateString;
+  }
 }
 
 interface TestCasePlanManagerProps {
