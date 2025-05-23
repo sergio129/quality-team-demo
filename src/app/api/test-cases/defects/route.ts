@@ -79,10 +79,17 @@ export async function POST(request: Request) {
     
     // Actualizar el caso de prueba con el nuevo defecto
     const updatedDefects = [...defects, defectId];
+    
+    // Determinar el nuevo estado basado en el estado actual y la presencia de defectos
+    let newStatus = testCase.status;
+    // Si el estado es "Exitoso", "No ejecutado" o null, cambiarlo a "Fallido"
+    if (!newStatus || newStatus === 'No ejecutado' || newStatus === 'Exitoso') {
+      newStatus = 'Fallido';
+    }
+    
     const success = await testCaseService.updateTestCase(testCaseId, {
       defects: updatedDefects,
-      // Si no hay fallos previos y se añade un defecto, cambiar estado a Fallido
-      status: testCase.status === 'Exitoso' ? 'Fallido' : testCase.status
+      status: newStatus
     });
     
     if (success) {

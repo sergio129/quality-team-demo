@@ -270,15 +270,30 @@ export default class TestCasePrismaService {
   // Método privado para mapear un caso de prueba de Prisma a nuestro modelo
   private mapPrismaTestCaseToModel(prismaTestCase: any): TestCase {
     const { steps, evidences, defects, ...testCaseData } = prismaTestCase;
+    
+    // Calcular el estado correcto basado en defectos
+    let status = testCaseData.status;
+    const defectsIds = defects.map((defect: any) => defect.incident.id);
+    
+    // Si hay defectos y el estado es null o "No ejecutado", marcarlo como fallido
+    if (defectsIds.length > 0 && (!status || status === 'No ejecutado')) {
+      status = 'Fallido';
+    }
+    
+    // Si no tiene estado, por defecto "No ejecutado"
+    if (!status) {
+      status = 'No ejecutado';
+    }
 
     return {
       ...testCaseData,
-      steps: steps.map(step => ({
+      status,
+      steps: steps.map((step: any) => ({
         id: step.id,
         description: step.description,
         expected: step.expected || ''
       })),
-      evidences: evidences.map(evidence => ({
+      evidences: evidences.map((evidence: any) => ({
         id: evidence.id,
         date: evidence.date.toISOString(),
         tester: evidence.tester,
@@ -288,7 +303,7 @@ export default class TestCasePrismaService {
         steps: evidence.steps || [],
         screenshots: evidence.screenshots || []
       })),
-      defects: defects.map(defect => defect.incident.id),
+      defects: defectsIds,
       createdAt: testCaseData.createdAt.toISOString(),
       updatedAt: testCaseData.updatedAt.toISOString()
     };
