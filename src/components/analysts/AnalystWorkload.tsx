@@ -137,9 +137,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     const completedProjects = updatedProjects.filter(p => 
       p.estadoCalculado === 'Certificado'
     );
-    
-    // Calcular horas asignadas
-    const totalHoursAssigned = updatedProjects.reduce((total, project) => {
+      // Calcular horas asignadas (solo de proyectos activos: Por Iniciar o En Progreso)
+    const totalHoursAssigned = activeProjects.reduce((total, project) => {
       return total + (project.horasEstimadas || project.horas || 0);
     }, 0);
     
