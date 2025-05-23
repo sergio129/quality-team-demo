@@ -65,7 +65,11 @@ export function useBulkAssignment() {
     }
   ): Promise<BulkAssignmentResult> => {
     return toast.promise(
-      async () => {
+      async () => {        // Validar que el projectId no esté vacío antes de hacer la llamada
+        if (!filters.projectId) {
+          throw new Error('Se debe proporcionar un proyecto para realizar la asignación masiva');
+        }
+        
         const response = await fetch(TEST_CASE_BULK_ASSIGN_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

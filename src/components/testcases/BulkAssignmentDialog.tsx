@@ -41,11 +41,14 @@ export default function BulkAssignmentDialog({
         await assignResponsiblePersonByIds(selectedTestCaseIds, responsiblePerson);
       }
       // Si no hay IDs seleccionados, aplicar a todos los casos que cumplan con los filtros
-      else {        await assignResponsiblePersonByFilters(responsiblePerson, {
+      else if (projectId) {
+        await assignResponsiblePersonByFilters(responsiblePerson, {
           projectId,
           testPlanId,
           onlyNull: onlyNull
         });
+      } else {
+        throw new Error('Se debe proporcionar un proyecto para realizar la asignación masiva');
       }
       onClose();
     } catch (error) {
@@ -82,18 +85,24 @@ export default function BulkAssignmentDialog({
               ))}
             </Select>
           </div>
-          
-          {selectedTestCaseIds.length === 0 && (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="onlyNull"
-                checked={onlyNull}
-                onCheckedChange={(checked: boolean) => setOnlyNull(checked)}
-              />
-              <Label htmlFor="onlyNull">
-                Solo asignar a casos sin persona responsable
-              </Label>
-            </div>
+            {selectedTestCaseIds.length === 0 && (
+            <>
+              {!projectId && (
+                <div className="p-3 mb-3 bg-amber-50 border border-amber-200 rounded-md text-amber-700 text-sm">
+                  Es necesario seleccionar un proyecto antes de realizar una asignación masiva.
+                </div>
+              )}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="onlyNull"
+                  checked={onlyNull}
+                  onCheckedChange={(checked: boolean) => setOnlyNull(checked)}
+                />
+                <Label htmlFor="onlyNull">
+                  Solo asignar a casos sin persona responsable
+                </Label>
+              </div>
+            </>
           )}
           
           <div className="flex justify-end space-x-2 pt-4">
@@ -104,10 +113,9 @@ export default function BulkAssignmentDialog({
               disabled={isSubmitting}
             >
               Cancelar
-            </Button>
-            <Button
+            </Button>            <Button
               type="submit"
-              disabled={!responsiblePerson || isSubmitting}
+              disabled={!responsiblePerson || isSubmitting || (selectedTestCaseIds.length === 0 && !projectId)}
             >
               Asignar
             </Button>
