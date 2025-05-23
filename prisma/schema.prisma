@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,118 +7,96 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// QAAnalyst model
 model QAAnalyst {
-  id             String          @id @default(uuid())
+  id             String           @id @default(uuid())
   name           String
-  email          String          @unique
+  email          String           @unique
   role           String
   color          String?
   availability   Int?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  // Relaciones
-  skills          Skill[]
-  certifications  Certification[]
-  specialties     Specialty[]
-  cells           AnalystCell[]
-  teams           TeamAnalyst[]
-  projects        ProjectAnalyst[]
-  incidents       Incident[]      @relation("InformedBy")
-  assignedBugs    Incident[]      @relation("AssignedTo")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  cells          AnalystCell[]
+  certifications Certification[]
+  assignedBugs   Incident[]       @relation("AssignedTo")
+  incidents      Incident[]       @relation("InformedBy")
+  projects       ProjectAnalyst[]
+  skills         Skill[]
+  specialties    Specialty[]
+  teams          TeamAnalyst[]
 }
 
 model Skill {
-  id             String     @id @default(uuid())
-  name           String
-  level          String     // Básico, Intermedio, Avanzado, Experto
-  
-  // Relaciones
-  analyst        QAAnalyst  @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
+  id        String    @id @default(uuid())
+  name      String
+  level     String
+  analystId String
+  analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
 model Certification {
-  id             String     @id @default(uuid())
-  name           String
-  issuer         String
-  date           DateTime
-  expiryDate     DateTime?
-  
-  // Relaciones
-  analyst        QAAnalyst  @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
+  id         String    @id @default(uuid())
+  name       String
+  issuer     String
+  date       DateTime
+  expiryDate DateTime?
+  analystId  String
+  analyst    QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
 model Specialty {
-  id             String     @id @default(uuid())
-  name           String
-  
-  // Relaciones
-  analysts       QAAnalyst  @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
+  id        String    @id @default(uuid())
+  name      String
+  analystId String
+  analysts  QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
-// Team model
 model Team {
-  id             String        @id @default(uuid())
-  name           String
-  description    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Relaciones
-  cells          Cell[]
-  analysts       TeamAnalyst[]
-  projects       Project[]
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  cells       Cell[]
+  projects    Project[]
+  analysts    TeamAnalyst[]
 }
 
-// Cell model
 model Cell {
-  id             String        @id @default(uuid())
-  name           String
-  description    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Relaciones
-  team           Team          @relation(fields: [teamId], references: [id])
-  teamId         String
-  analysts       AnalystCell[]
-  incidents      Incident[]
-  projects       Project[]
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  teamId      String
+  analysts    AnalystCell[]
+  team        Team          @relation(fields: [teamId], references: [id])
+  incidents   Incident[]
+  projects    Project[]
 }
 
-// Relación muchos a muchos entre analistas y células
 model AnalystCell {
-  id             String        @id @default(uuid())
-  
-  // Relaciones
-  analyst        QAAnalyst     @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
-  cell           Cell          @relation(fields: [cellId], references: [id], onDelete: Cascade)
-  cellId         String
-  
+  id        String    @id @default(uuid())
+  analystId String
+  cellId    String
+  analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
+  cell      Cell      @relation(fields: [cellId], references: [id], onDelete: Cascade)
+
   @@unique([analystId, cellId])
 }
 
-// Relación muchos a muchos entre analistas y equipos
 model TeamAnalyst {
-  id             String        @id @default(uuid())
-  
-  // Relaciones
-  team           Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  teamId         String
-  analyst        QAAnalyst     @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
-  
+  id        String    @id @default(uuid())
+  teamId    String
+  analystId String
+  analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
   @@unique([teamId, analystId])
 }
 
-// TestPlan model
 model TestPlan {
-  id             String        @id @default(uuid())
+  id             String      @id @default(uuid())
   projectId      String
   projectName    String
   codeReference  String
@@ -131,181 +106,154 @@ model TestPlan {
   estimatedDays  Int
   totalCases     Int
   testQuality    Float?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Relaciones
-  cycles         TestCycle[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   testCases      TestCase[]
+  cycles         TestCycle[]
 }
 
-// TestCase model
 model TestCase {
-  id             String        @id @default(uuid())
-  userStoryId    String
-  name           String
-  projectId      String
-  codeRef        String
-  expectedResult String
-  testType       String?       // Funcional, No Funcional, Regresión, etc.
-  status         String?       // No ejecutado, Exitoso, Fallido, etc.
-  category       String?
+  id                String           @id @default(uuid())
+  userStoryId       String
+  name              String
+  projectId         String
+  codeRef           String
+  expectedResult    String
+  testType          String?
+  status            String?
+  category          String?
   responsiblePerson String?
-  priority       String?       // Alta, Media, Baja
-  cycle          Int?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Relaciones
-  testPlan       TestPlan      @relation(fields: [testPlanId], references: [id])
-  testPlanId     String
-  steps          TestStep[]
-  evidences      TestEvidence[]
-  defects        DefectRelation[]
+  priority          String?
+  cycle             Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  testPlanId        String
+  defects           DefectRelation[]
+  testPlan          TestPlan         @relation(fields: [testPlanId], references: [id])
+  evidences         TestEvidence[]
+  steps             TestStep[]
 }
 
 model TestStep {
-  id             String        @id @default(uuid())
-  description    String
-  expected       String?
-  
-  // Relaciones
-  testCase       TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
-  testCaseId     String
+  id          String   @id @default(uuid())
+  description String
+  expected    String?
+  testCaseId  String
+  testCase    TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
 }
 
 model TestEvidence {
-  id             String        @id @default(uuid())
-  date           DateTime
-  tester         String
-  precondition   String?
-  result         String        // Exitoso, Fallido, No ejecutado
-  comments       String?
-  
-  // Relaciones
-  testCase       TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
-  testCaseId     String
-  steps          String[]      // Array de pasos
-  screenshots    String[]      // Array de URLs o rutas
+  id           String   @id @default(uuid())
+  date         DateTime
+  tester       String
+  precondition String?
+  result       String
+  comments     String?
+  testCaseId   String
+  steps        String[]
+  screenshots  String[]
+  testCase     TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
 }
 
 model TestCycle {
-  id             String        @id @default(uuid())
-  number         Int
-  designed       Int
-  successful     Int
-  notExecuted    Int
-  defects        Int
-  startDate      DateTime?
-  endDate        DateTime?
-  
-  // Relaciones
-  testPlan       TestPlan      @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
-  testPlanId     String
+  id          String    @id @default(uuid())
+  number      Int
+  designed    Int
+  successful  Int
+  notExecuted Int
+  defects     Int
+  startDate   DateTime?
+  endDate     DateTime?
+  testPlanId  String
+  testPlan    TestPlan  @relation(fields: [testPlanId], references: [id], onDelete: Cascade)
 }
 
-// Incident/Bug model
 model Incident {
-  id             String        @id @default(uuid())
-  estado         String
-  prioridad      String
-  descripcion    String
-  fechaCreacion  DateTime      @default(now())
-  fechaReporte   DateTime
-  fechaSolucion  DateTime?
-  diasAbierto    Int
-  esErroneo      Boolean       @default(false)
-  aplica         Boolean       @default(true)
-  cliente        String
-  idJira         String
-  tipoBug        String?       // UI, Funcional, Performance, etc.
-  areaAfectada   String?       // Frontend, Backend, DB, etc.
-  
-  // Relaciones
-  cell           Cell          @relation(fields: [celula], references: [id])
-  celula         String
-  informadoPor   QAAnalyst     @relation("InformedBy", fields: [informadoPorId], references: [id])
-  informadoPorId String
-  asignadoA      QAAnalyst     @relation("AssignedTo", fields: [asignadoAId], references: [id])
-  asignadoAId    String
-  etiquetas      Tag[]
+  id               String           @id @default(uuid())
+  estado           String
+  prioridad        String
+  descripcion      String
+  fechaCreacion    DateTime         @default(now())
+  fechaReporte     DateTime
+  fechaSolucion    DateTime?
+  diasAbierto      Int
+  esErroneo        Boolean          @default(false)
+  aplica           Boolean          @default(true)
+  cliente          String
+  idJira           String
+  tipoBug          String?
+  areaAfectada     String?
+  celula           String
+  informadoPorId   String
+  asignadoAId      String
+  testCases        DefectRelation[]
+  asignadoA        QAAnalyst        @relation("AssignedTo", fields: [asignadoAId], references: [id])
+  cell             Cell             @relation(fields: [celula], references: [id])
+  informadoPor     QAAnalyst        @relation("InformedBy", fields: [informadoPorId], references: [id])
   historialEstados StateChange[]
-  testCases      DefectRelation[]
+  etiquetas        Tag[]
 }
 
 model Tag {
-  id             String        @id @default(uuid())
-  name           String
-  
-  // Relaciones
-  incident       Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  incidentId     String
+  id         String   @id @default(uuid())
+  name       String
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
 
 model StateChange {
-  id             String        @id @default(uuid())
-  estado         String
-  fecha          DateTime
-  comentario     String?
-  
-  // Relaciones
-  incident       Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  incidentId     String
+  id         String   @id @default(uuid())
+  estado     String
+  fecha      DateTime
+  comentario String?
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
 
-// DefectRelation - Relación muchos a muchos entre casos de prueba e incidentes
 model DefectRelation {
-  id             String        @id @default(uuid())
-  
-  // Relaciones
-  testCase       TestCase      @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
-  testCaseId     String
-  incident       Incident      @relation(fields: [incidentId], references: [id], onDelete: Cascade)
-  incidentId     String
-  
+  id         String   @id @default(uuid())
+  testCaseId String
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  testCase   TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
   @@unique([testCaseId, incidentId])
 }
 
-// Project model
 model Project {
-  id             String        @id @default(uuid())
-  idJira         String
-  nombre         String?
-  proyecto       String
-  horas          Int
-  dias           Int
-  horasEstimadas Int?
-  estado         String?
-  estadoCalculado String?
-  descripcion    String?
-  fechaInicio    DateTime?
-  fechaFin       DateTime?
-  fechaEntrega   DateTime
-  fechaRealEntrega DateTime?
+  id                 String           @id @default(uuid())
+  idJira             String
+  nombre             String?
+  proyecto           String
+  horas              Int
+  dias               Int
+  horasEstimadas     Int?
+  estado             String?
+  estadoCalculado    String?
+  descripcion        String?
+  fechaInicio        DateTime?
+  fechaFin           DateTime?
+  fechaEntrega       DateTime
+  fechaRealEntrega   DateTime?
   fechaCertificacion DateTime?
-  diasRetraso    Int
-  analistaProducto String
-  planTrabajo    String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  
-  // Relaciones
-  team           Team          @relation(fields: [equipoId], references: [id])
-  equipoId       String        @map("equipo")
-  cell           Cell          @relation(fields: [celulaId], references: [id])
-  celulaId       String        @map("celula")
-  analysts       ProjectAnalyst[]
+  diasRetraso        Int
+  analistaProducto   String
+  planTrabajo        String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  equipoId           String           @map("equipo")
+  celulaId           String           @map("celula")
+  cell               Cell             @relation(fields: [celulaId], references: [id])
+  team               Team             @relation(fields: [equipoId], references: [id])
+  analysts           ProjectAnalyst[]
 }
 
-// Relación muchos a muchos entre proyectos y analistas
 model ProjectAnalyst {
-  id             String        @id @default(uuid())
-  
-  // Relaciones
-  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId      String
-  analyst        QAAnalyst     @relation(fields: [analystId], references: [id], onDelete: Cascade)
-  analystId      String
-  
+  id        String    @id @default(uuid())
+  projectId String
+  analystId String
+  analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
   @@unique([projectId, analystId])
 }

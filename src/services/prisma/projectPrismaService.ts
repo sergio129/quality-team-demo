@@ -213,8 +213,7 @@ export class ProjectPrismaService {
         // Por defecto, si no podemos determinar el estado
         return "pendiente";
     }
-    
-    // Método para calcular el estado calculado del proyecto
+      // Método para calcular el estado calculado del proyecto
     private calcularEstadoCalculado(project: any): 'Por Iniciar' | 'En Progreso' | 'Certificado' {
         // Si ya tiene un estado calculado definido, usarlo
         if (project.estadoCalculado) return project.estadoCalculado as any;
@@ -222,8 +221,8 @@ export class ProjectPrismaService {
         // Obtener la fecha actual
         const fechaActual = new Date();
         
-        // Verificar si tiene fecha de certificación
-        if (project.fechaCertificacion) {
+        // Verificar si tiene fecha de certificación y es menor o igual a la fecha actual
+        if (project.fechaCertificacion && new Date(project.fechaCertificacion) <= fechaActual) {
             return "Certificado";
         }
         
