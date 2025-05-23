@@ -188,6 +188,83 @@ export default class TestCasePrismaService {
       return false;
     }
   }
+  
+  // Actualizar la persona responsable de múltiples casos de prueba por IDs
+  async bulkUpdateResponsiblePerson(testCaseIds: string[], responsiblePerson: string): Promise<{updatedCount: number}> {
+    try {
+      const result = await prisma.testCase.updateMany({
+        where: {
+          id: {
+            in: testCaseIds
+          }
+        },
+        data: {
+          responsiblePerson,
+          updatedAt: new Date()
+        }
+      });
+
+      return { updatedCount: result.count };
+    } catch (error) {
+      console.error(`Error updating responsible person for multiple test cases:`, error);
+      return { updatedCount: 0 };
+    }
+  }
+  
+  // Actualizar la persona responsable de múltiples casos de prueba usando filtros
+  async bulkUpdateResponsiblePersonByFilters(
+    responsiblePerson: string,
+    filters: { projectId?: string; testPlanId?: string; status?: string; cycle?: number; onlyNull?: boolean }
+  ): Promise<{updatedCount: number; totalFiltered: number}> {
+    try {
+      // Construir el filtro donde
+      const where: any = {};
+      
+      if (filters.projectId) {
+        where.projectId = filters.projectId;
+      }
+      
+      if (filters.testPlanId) {
+        where.testPlanId = filters.testPlanId;
+      }
+      
+      if (filters.status) {
+        where.status = filters.status;
+      }
+      
+      if (filters.cycle) {
+        where.cycle = filters.cycle;
+      }
+        // Si onlyNull es true, solo actualizar casos que tengan responsiblePerson nulo o vacío
+      if (filters.onlyNull) {
+        where.OR = [
+          { responsiblePerson: null },
+          { responsiblePerson: '' },
+          { responsiblePerson: '-' }
+        ];
+      }
+      
+      // Primero, contar cuántos casos coinciden con los filtros
+      const totalFiltered = await prisma.testCase.count({ where });
+      
+      // Luego realizar la actualización
+      const result = await prisma.testCase.updateMany({
+        where,
+        data: {
+          responsiblePerson,
+          updatedAt: new Date()
+        }
+      });
+      
+      return { 
+        updatedCount: result.count,
+        totalFiltered
+      };
+    } catch (error) {
+      console.error(`Error updating responsible person with filters:`, error);
+      return { updatedCount: 0, totalFiltered: 0 };
+    }
+  }
 
   // Obtener estadísticas de casos de prueba por proyecto
   async getTestCaseStatsByProject(projectId: string, testPlanId?: string): Promise<any> {

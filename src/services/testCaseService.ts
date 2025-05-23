@@ -422,4 +422,49 @@ export const testCaseService = {
       return `${prefix}${Date.now().toString().slice(-5)}`;
     }
   },
+
+  // Actualizar masivamente la persona responsable para múltiples casos de prueba por IDs
+  async bulkUpdateResponsiblePerson(testCaseIds: string[], responsiblePerson: string): Promise<{updatedCount: number}> {
+    try {
+      // Asegurarse de que estamos usando el servicio de Prisma
+      if (!migrationConfig.services.testCases) {
+        console.error('La funcionalidad de actualización masiva solo está disponible con PostgreSQL');
+        return { updatedCount: 0 };
+      }
+      
+      return testCasePrismaService.bulkUpdateResponsiblePerson(testCaseIds, responsiblePerson);
+    } catch (error) {
+      console.error('Error en actualización masiva de persona responsable por IDs:', error);
+      return { updatedCount: 0 };
+    }
+  },
+
+  // Actualizar masivamente la persona responsable para casos de prueba que coincidan con los filtros
+  async bulkUpdateResponsiblePersonByFilters(
+    responsiblePerson: string,
+    filters: { projectId?: string; testPlanId?: string; status?: string; cycle?: number; onlyNull?: boolean }
+  ): Promise<{updatedCount: number; totalFiltered: number}> {
+    try {
+      // Asegurarse de que estamos usando el servicio de Prisma
+      if (!migrationConfig.services.testCases) {
+        console.error('La funcionalidad de actualización masiva solo está disponible con PostgreSQL');
+        return { updatedCount: 0, totalFiltered: 0 };
+      }
+      
+      const result = await testCasePrismaService.bulkUpdateResponsiblePersonByFilters(
+        responsiblePerson,
+        filters
+      );
+      
+      // Si se actualizaron casos, actualizar también el contador en los planes afectados
+      if (result.updatedCount > 0 && filters.projectId) {
+        await this.updateTestPlanCaseCount(filters.projectId);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error en actualización masiva de persona responsable por filtros:', error);
+      return { updatedCount: 0, totalFiltered: 0 };
+    }
+  },
 }
