@@ -80,9 +80,9 @@ export default function SelectTestPlan({ testPlans, onSelectPlan, selectedPlanId
     const projectB = projects.find(p => p.idJira === b)?.proyecto || '';
     return projectA.localeCompare(projectB);
   });
-
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative space-y-2" ref={dropdownRef}>
+      <label className="text-sm font-medium">Plan de pruebas</label>
       {/* Botón para mostrar el desplegable */}
       <button
         type="button"

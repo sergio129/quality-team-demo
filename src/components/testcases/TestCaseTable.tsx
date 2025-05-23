@@ -49,8 +49,22 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [selectedTestCaseIds, setSelectedTestCaseIds] = useState<string[]>([]);
   const [isBulkAssignDialogOpen, setIsBulkAssignDialogOpen] = useState(false);
-  // Recopilar todas las historias de usuario únicas
-  const uniqueUserStories = [...new Set(testCases?.map(tc => tc.userStoryId) || [])].filter(Boolean);
+  
+  // Efecto para limpiar el filtro de historia de usuario cuando cambia el plan de prueba
+  useEffect(() => {
+    // Reiniciar el filtro de historia de usuario al cambiar de plan
+    setFilters(prev => ({ ...prev, userStory: '' }));
+  }, [filters.testPlanId]);
+  
+  // Filtrar casos de prueba primero por el plan seleccionado
+  const testCasesBySelectedPlan = useMemo(() => {
+    return testCases.filter(tc => !filters.testPlanId || tc.testPlanId === filters.testPlanId);
+  }, [testCases, filters.testPlanId]);
+  
+  // Recopilar las historias de usuario únicas según el plan seleccionado
+  const uniqueUserStories = useMemo(() => {
+    return [...new Set(testCasesBySelectedPlan.map(tc => tc.userStoryId).filter(Boolean))].sort();
+  }, [testCasesBySelectedPlan]);
 
   // Filtrar casos de prueba según los filtros
   const filteredTestCases = testCases.filter((tc) => {
@@ -145,9 +159,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </Button>
           )}
         </div>
-      </div>
-
-      {/* Filtros */}      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      </div>      {/* Filtros */}      
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative z-30">
           <SelectTestPlan
             testPlans={testPlans || []}
@@ -155,60 +168,91 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             onSelectPlan={(planId) => setFilters(prev => ({ ...prev, testPlanId: planId }))}
           />
         </div>
-
-        <Input
-          placeholder="Buscar..."
-          value={filters.search}
-          onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
-        />
         
-        <Select
-          value={filters.status}
-          onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-        >
-          <option value="">Todos los estados</option>
-          <option value="No ejecutado">No ejecutado</option>
-          <option value="Exitoso">Exitoso</option>
-          <option value="Fallido">Fallido</option>
-          <option value="Bloqueado">Bloqueado</option>
-          <option value="En progreso">En progreso</option>
-        </Select>
-
-        <Select
-          value={filters.testType}
-          onChange={e => setFilters(prev => ({ ...prev, testType: e.target.value }))}
-        >
-          <option value="">Todos los tipos</option>
-          <option value="Funcional">Funcional</option>
-          <option value="No Funcional">No Funcional</option>
-          <option value="Regresión">Regresión</option>
-          <option value="Exploratoria">Exploratoria</option>
-          <option value="Integración">Integración</option>
-          <option value="Rendimiento">Rendimiento</option>
-          <option value="Seguridad">Seguridad</option>
-        </Select>
+        <div className="space-y-2">
+          <label htmlFor="search-input" className="text-sm font-medium">Búsqueda</label>
+          <Input
+            id="search-input"
+            placeholder="Buscar por nombre..."
+            value={filters.search}
+            onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+          />
+        </div>
         
-        {selectedTestCaseIds.length > 0 && (
-          <Button
-            onClick={() => setIsBulkAssignDialogOpen(true)}
+        <div className="space-y-2">
+          <label htmlFor="status-select" className="text-sm font-medium">Estado</label>
+          <Select
+            id="status-select"
+            value={filters.status}
+            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
           >
-            Asignar {selectedTestCaseIds.length} caso(s)
-          </Button>
-        )}
-      </div>
-
+            <option value="">Todos los estados</option>
+            <option value="No ejecutado">No ejecutado</option>
+            <option value="Exitoso">Exitoso</option>
+            <option value="Fallido">Fallido</option>
+            <option value="Bloqueado">Bloqueado</option>
+            <option value="En progreso">En progreso</option>
+          </Select>
+        </div>        <div className="space-y-2">
+          <label htmlFor="type-select" className="text-sm font-medium">Tipo de prueba</label>
+          <Select
+            id="type-select"
+            value={filters.testType}
+            onChange={e => setFilters(prev => ({ ...prev, testType: e.target.value }))}
+          >
+            <option value="">Todos los tipos</option>
+            <option value="Funcional">Funcional</option>
+            <option value="No Funcional">No Funcional</option>
+            <option value="Regresión">Regresión</option>
+            <option value="Exploratoria">Exploratoria</option>
+            <option value="Integración">Integración</option>
+            <option value="Rendimiento">Rendimiento</option>
+            <option value="Seguridad">Seguridad</option>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          {selectedTestCaseIds.length > 0 && (
+            <Button
+              onClick={() => setIsBulkAssignDialogOpen(true)}
+            >
+              Asignar {selectedTestCaseIds.length} caso(s)
+            </Button>
+          )}
+        </div>      </div>
+      
       {/* Selector de HU */}
-      <div>
-        <Select
+      <div className="mt-4 pt-4 border-t border-blue-100">
+        <div className="flex items-center justify-between mb-2">
+          <label htmlFor="hu-select" className="text-sm font-semibold text-blue-700">
+            Filtrar por Historia de Usuario
+          </label>
+          {filters.testPlanId && (
+            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+              {uniqueUserStories.length} {uniqueUserStories.length === 1 ? 'historia' : 'historias'} disponibles
+            </span>
+          )}
+        </div>        <Select
+          id="hu-select"
           value={filters.userStory}
           onChange={e => setFilters(prev => ({ ...prev, userStory: e.target.value }))}
+          disabled={!filters.testPlanId || uniqueUserStories.length === 0}
+          className={!filters.testPlanId ? "bg-gray-50 text-gray-400" : "border-blue-200 focus:border-blue-400"}
         >
-          <option value="">Todas las historias de usuario</option>
-          {uniqueUserStories.map((userStory) => (
-            <option key={userStory} value={userStory}>
-              {userStory}
-            </option>
-          ))}
+          {!filters.testPlanId ? (
+            <option value="">Seleccione un plan primero</option>
+          ) : uniqueUserStories.length === 0 ? (
+            <option value="">No hay historias en este plan</option>
+          ) : (
+            <>
+              <option value="">Todas las historias de usuario</option>
+              {uniqueUserStories.map((userStory) => (
+                <option key={userStory} value={userStory}>
+                  {userStory}
+                </option>
+              ))}
+            </>
+          )}
         </Select>
       </div>
 
