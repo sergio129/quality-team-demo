@@ -1,7 +1,22 @@
 [
   {
+    "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a",
     "name": "Sergio Anaya",
     "email": "sanayaromero62@gmail.com",
+    "role": "Senior",
+    "color": "#3B82F6",
+    "availability": 100,
+    "skills": [],
+    "certifications": [
+      {
+        "name": "ISTQB",
+        "issuer": "ISTQB",
+        "date": "2019-06-16T00:00:00.000Z"
+      }
+    ],
+    "specialties": [
+      "Frontend"
+    ],
     "cellIds": [
       "18cec5e1-b822-491a-86af-c22264f0e307",
       "ed17c938-0bf2-4a55-99ba-18b195712c23",
@@ -9,56 +24,53 @@
       "7ef92e37-abc4-4960-a59e-449ee7fc4fd3",
       "1eee65a6-7a36-4c55-bbe3-a116186eb837",
       "637ed3d2-2c4e-4fd7-b7d0-762737d972c0"
-    ],
-    "role": "Senior",
-    "id": "3cd6c45f-afc2-40cb-b8de-0cb30119485a",
-    "color": "#3B82F6",
-    "skills": [],
-    "certifications": [
-      {
-        "name": "ISTQB",
-        "issuer": "ISTQB",
-        "date": "2019-06-16"
-      }
-    ],
-    "specialties": [
-      "Frontend"
-    ],
-    "availability": 100
+    ]
   },
   {
+    "id": "8947b61d-d634-4844-8b30-9100b632d236",
     "name": "Yoarlis Carrillo\t",
     "email": "Yoarlys.carrillo@konecta.com",
+    "role": "Senior",
+    "color": "#3bf7bf",
+    "availability": 100,
+    "skills": [],
+    "certifications": [],
+    "specialties": [],
     "cellIds": [
       "18cec5e1-b822-491a-86af-c22264f0e307",
       "ed17c938-0bf2-4a55-99ba-18b195712c23"
-    ],
-    "role": "Senior",
-    "id": "8947b61d-d634-4844-8b30-9100b632d236",
-    "color": "#3bf7bf"
+    ]
   },
   {
+    "id": "04367fee-2e91-4a58-ac24-24274222991e",
     "name": "Yulieth Paola\t",
     "email": "yulieth.guarin@konecta.com",
+    "role": "Senior",
+    "color": "#cef73b",
+    "availability": 100,
+    "skills": [],
+    "certifications": [],
+    "specialties": [],
     "cellIds": [
       "18cec5e1-b822-491a-86af-c22264f0e307",
       "ed17c938-0bf2-4a55-99ba-18b195712c23",
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
-    ],
-    "role": "Senior",
-    "id": "04367fee-2e91-4a58-ac24-24274222991e",
-    "color": "#cef73b"
+    ]
   },
   {
+    "id": "e3e7ba88-3675-4de0-be02-8caec0b76ff8",
     "name": "Leidy Iral",
     "email": "leidy.iral@konecta.com",
+    "role": "Semi Senior",
+    "color": "#757b84",
+    "availability": 100,
+    "skills": [],
+    "certifications": [],
+    "specialties": [],
     "cellIds": [
       "18cec5e1-b822-491a-86af-c22264f0e307",
       "ed17c938-0bf2-4a55-99ba-18b195712c23",
       "8d712f1f-9b4b-4556-aea5-d2ddc2bc5d27"
-    ],
-    "role": "Semi Senior",
-    "id": "e3e7ba88-3675-4de0-be02-8caec0b76ff8",
-    "color": "#757b84"
+    ]
   }
 ]
