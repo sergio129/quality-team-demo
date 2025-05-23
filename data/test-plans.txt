@@ -262,5 +262,53 @@
     "testQuality": 100,
     "createdAt": "2025-05-23T20:46:29.596Z",
     "updatedAt": "2025-05-23T20:46:29.596Z"
+  },
+  {
+    "id": "f8637db8-ae60-4a98-b938-515d25c50bd0",
+    "projectId": "PRUEBA-123",
+    "projectName": "prueba",
+    "codeReference": "PRUEBA-123",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-05-24T00:00:00.000Z",
+    "estimatedHours": 4,
+    "estimatedDays": 0,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "7d3dea37-dcff-4b25-a437-f072dbd6d6b1",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T20:55:20.703Z",
+    "updatedAt": "2025-05-23T20:55:20.703Z"
+  },
+  {
+    "id": "506f6ea4-c3b0-4c54-8665-3ec76ca059ac",
+    "projectId": "PRUEBAS-235",
+    "projectName": "pruebas",
+    "codeReference": "PRUEBAS-235",
+    "startDate": "2025-05-23T00:00:00.000Z",
+    "endDate": "2025-05-24T00:00:00.000Z",
+    "estimatedHours": 5,
+    "estimatedDays": 0,
+    "totalCases": 0,
+    "cycles": [
+      {
+        "id": "f9d75607-22ea-4d70-a400-680d8e693b3d",
+        "number": 1,
+        "designed": 0,
+        "successful": 0,
+        "notExecuted": 0,
+        "defects": 0
+      }
+    ],
+    "testQuality": 100,
+    "createdAt": "2025-05-23T20:57:19.662Z",
+    "updatedAt": "2025-05-23T20:57:19.662Z"
   }
 ]

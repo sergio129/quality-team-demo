@@ -41,7 +41,7 @@ async function writeJsonFile(filePath: string, data: any[]): Promise<void> {
 }
 
 /**
- * Sincronizar incidentes
+ * Sincronizar incidentes entre archivos y PostgreSQL
  * SINCRONIZACIÓN BIDIRECCIONAL COMPLETA:
  * - Archivos -> PostgreSQL (nuevos incidentes)
  * - PostgreSQL -> Archivos (actualizaciones y eliminaciones)
@@ -51,7 +51,8 @@ export async function syncIncidents(): Promise<void> {
   
   // Obtener datos de archivos
   const fileIncidents = await readJsonFile(INCIDENTS_FILE);
-    // Obtener datos de PostgreSQL
+  
+  // Obtener datos de PostgreSQL
   const dbIncidents = await prisma.incident.findMany({
     include: {
       informadoPor: true,
@@ -61,8 +62,8 @@ export async function syncIncidents(): Promise<void> {
   });
   
   // Mapear IDs para comparación rápida
-  const dbIncidentIds = new Set(dbIncidents.map(i => i.id));
-  const fileIncidentIds = new Set(fileIncidents.map(i => i.id));
+  const dbIncidentIds = new Set(dbIncidents.map((i: any) => i.id));
+  const fileIncidentIds = new Set(fileIncidents.map((i: any) => i.id));
   
   // === PASO 1: Archivos -> PostgreSQL (nuevos incidentes) ===
   let newIncidentsCount = 0;
@@ -111,32 +112,35 @@ export async function syncIncidents(): Promise<void> {
         if (cell) {
           cellId = cell.id;
         }
-      }        // Crear el incidente en PostgreSQL
-        try {
-          await prisma.incident.create({
-            data: {
-              id: fileIncident.id,
-              estado: fileIncident.estado,
-              prioridad: fileIncident.prioridad,
-              descripcion: fileIncident.descripcion,
-              fechaReporte: fileIncident.fechaReporte ? new Date(fileIncident.fechaReporte) : new Date(),
-              fechaCreacion: fileIncident.fechaCreacion ? new Date(fileIncident.fechaCreacion) : new Date(),
-              fechaSolucion: fileIncident.fechaSolucion ? new Date(fileIncident.fechaSolucion) : null,
-              aplica: fileIncident.aplica ?? true,
-              diasAbierto: fileIncident.diasAbierto || 0,
-              esErroneo: fileIncident.esErroneo || false,
-              cliente: fileIncident.cliente || '',
-              idJira: fileIncident.idJira || '',
-              tipoBug: fileIncident.tipoBug || null,
-              areaAfectada: fileIncident.areaAfectada || null,
-              
-              // Relaciones
-              celula: cellId || '',
-              informadoPorId: informedById || '',
-              asignadoAId: assignedToId || ''
-            }
-          });
-          newIncidentsCount++;
+      }
+      
+      // Crear el incidente en PostgreSQL
+      try {
+        await prisma.incident.create({
+          data: {
+            id: fileIncident.id,
+            estado: fileIncident.estado,
+            prioridad: fileIncident.prioridad,
+            descripcion: fileIncident.descripcion,
+            fechaReporte: fileIncident.fechaReporte ? new Date(fileIncident.fechaReporte) : new Date(),
+            fechaCreacion: fileIncident.fechaCreacion ? new Date(fileIncident.fechaCreacion) : new Date(),
+            fechaSolucion: fileIncident.fechaSolucion ? new Date(fileIncident.fechaSolucion) : null,
+            aplica: fileIncident.aplica ?? true,
+            diasAbierto: fileIncident.diasAbierto || 0,
+            esErroneo: fileIncident.esErroneo || false,
+            cliente: fileIncident.cliente || '',
+            idJira: fileIncident.idJira || '',
+            tipoBug: fileIncident.tipoBug || null,
+            areaAfectada: fileIncident.areaAfectada || null,
+            
+            // Relaciones
+            celula: cellId || '',
+            informadoPorId: informedById || '',
+            asignadoAId: assignedToId || ''
+          }
+        });
+        
+        newIncidentsCount++;
       } catch (error) {
         console.error(`Error al migrar el incidente ${fileIncident.id}:`, error);
       }
@@ -145,7 +149,7 @@ export async function syncIncidents(): Promise<void> {
   
   // === PASO 2: PostgreSQL -> Archivos (eliminaciones) ===
   // Identificar incidentes que están en archivos pero ya no en PostgreSQL
-  const incidentsToDeleteFromFile = fileIncidents.filter(fileIncident => 
+  const incidentsToDeleteFromFile = fileIncidents.filter((fileIncident: any) => 
     !dbIncidentIds.has(fileIncident.id)
   );
   
@@ -158,6 +162,7 @@ export async function syncIncidents(): Promise<void> {
       deletedFromFileCount++;
     }
   }
+
   // === PASO 3: Sincronizar archivos con estado actual de PostgreSQL ===
   // Transformar los incidentes de PostgreSQL al formato de la aplicación para actualizar los archivos
   const formattedDbIncidents = dbIncidents.map((incident: any) => ({
@@ -179,8 +184,6 @@ export async function syncIncidents(): Promise<void> {
     informadoPor: incident.informadoPor?.name || incident.informadoPorId,
     asignadoA: incident.asignadoA?.name || incident.asignadoAId
   }));
-    asignadoA: incident.assignedTo?.name || incident.asignadoAId
-  }));
   
   // Guardar datos sincronizados en el archivo (esto elimina automáticamente los incidentes que ya no están en PostgreSQL)
   await writeJsonFile(INCIDENTS_FILE, formattedDbIncidents);
@@ -188,4 +191,20 @@ export async function syncIncidents(): Promise<void> {
   console.log(`✅ ${newIncidentsCount} nuevos incidentes migrados a PostgreSQL`);
   console.log(`🗑️  ${deletedFromFileCount} incidentes eliminados del archivo`);
   console.log(`✅ ${formattedDbIncidents.length} incidentes sincronizados en total`);
+}
+
+// Ejecutar si es llamado directamente
+if (require.main === module) {
+  syncIncidents()
+    .then(() => {
+      console.log('Sincronización de incidentes completada');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Error en la sincronización de incidentes:', error);
+      process.exit(1);
+    })
+    .finally(() => {
+      prisma.$disconnect();
+    });
 }
