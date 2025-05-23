@@ -23,12 +23,10 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
                         <div className="space-y-1">
                             <h4 className="text-sm font-medium text-gray-600">ID</h4>
                             <p className="text-gray-900">{incident.id}</p>
-                        </div>
-                        <div className="space-y-1">
+                        </div>                        <div className="space-y-1">
                             <h4 className="text-sm font-medium text-gray-600">ID de JIRA</h4>
                             <p className="text-gray-900">{incident.idJira || '-'}</p>
-                        </div>
-                        <div className="space-y-1">
+                        </div>                        <div className="space-y-1">
                             <h4 className="text-sm font-medium text-gray-600">Célula</h4>
                             <p className="text-gray-900">{incident.celula}</p>
                         </div>

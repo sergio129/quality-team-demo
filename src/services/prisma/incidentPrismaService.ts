@@ -32,7 +32,7 @@ export class IncidentPrismaService {
             });
             
             // Transformar desde formato DB a formato de aplicación
-            return dbIncidents.map(dbIncident => {
+            return dbIncidents.map(dbIncident => {                // Asegurar que se use el nombre de la célula si está disponible, no el ID
                 return {
                     id: dbIncident.id,
                     estado: dbIncident.estado,
@@ -48,7 +48,7 @@ export class IncidentPrismaService {
                     idJira: dbIncident.idJira,
                     tipoBug: dbIncident.tipoBug || undefined,
                     areaAfectada: dbIncident.areaAfectada || undefined,
-                    celula: dbIncident.celula,
+                    celula: dbIncident.cell?.name || dbIncident.celula,
                     informadoPorId: dbIncident.informadoPorId,
                     asignadoAId: dbIncident.asignadoAId,
                     etiquetas: dbIncident.etiquetas.map(tag => tag.name)

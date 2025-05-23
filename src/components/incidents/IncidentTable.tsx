@@ -28,17 +28,14 @@ import {
     deleteIncident,
     changeIncidentStatus 
 } from '@/hooks/useIncidents';
-import { useCells } from '@/hooks/useCells';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Incident, 'id' | 'descripcion' | 'estado' | 'prioridad' | 'fechaCreacion' | 'cliente'>;
 type SortDirection = 'asc' | 'desc';
 
-export function IncidentTable() {
-    // Usar los hooks personalizados con SWR
+export function IncidentTable() {    // Usar los hooks personalizados con SWR
     const { incidents, isLoading, isError } = useIncidents();
     const { stats } = useIncidentStats();
-    const { cells, isLoading: isLoadingCells } = useCells();
     
     // Form state
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -340,9 +337,8 @@ export function IncidentTable() {
                                             }}
                                         >
                                             {incident.id}
-                                        </TableCell>
-                                        <TableCell>
-                                            {cells.find(cell => cell.id === incident.celula)?.name || incident.celula}
+                                        </TableCell>                                        <TableCell>
+                                            {incident.celula}
                                         </TableCell>
                                         <TableCell>
                                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(incident.estado)}`}>
