@@ -6,21 +6,38 @@ export class ProjectPrismaService {
         try {
             const projects = await prisma.project.findMany({
                 include: {
-                    analysts: true
+                    team: true,
+                    cell: true,
+                    analysts: {
+                        include: {
+                            analyst: true
+                        }
+                    }
                 }
             });
             
-            return projects.map(project => ({
+            return projects.map((project: any) => ({
                 id: project.id,
                 idJira: project.idJira,
-                proyecto: project.name,
-                equipo: project.team,
-                celula: project.cell,
-                inicio: project.startDate?.toISOString() || '',
-                fin: project.endDate?.toISOString() || '',
-                progreso: project.progress,
-                estado: project.status,
-                analistas: project.analysts.map(a => a.analystId)
+                nombre: project.nombre || undefined,
+                proyecto: project.proyecto,
+                equipo: project.equipoId,
+                celula: project.celulaId,
+                horas: project.horas || 0,
+                dias: project.dias || 0,
+                horasEstimadas: project.horasEstimadas || undefined,
+                estado: project.estado || undefined,
+                estadoCalculado: project.estadoCalculado as any,
+                descripcion: project.descripcion || undefined,
+                fechaInicio: project.fechaInicio || undefined,
+                fechaFin: project.fechaFin || undefined,
+                fechaEntrega: project.fechaEntrega,
+                fechaRealEntrega: project.fechaRealEntrega || undefined,
+                fechaCertificacion: project.fechaCertificacion || undefined,
+                diasRetraso: project.diasRetraso,
+                analistaProducto: project.analistaProducto,
+                planTrabajo: project.planTrabajo,
+                analistas: project.analysts.map((a: any) => a.analystId)
             }));
         } catch (error) {
             console.error('Error fetching projects from database:', error);
@@ -34,13 +51,24 @@ export class ProjectPrismaService {
                 data: {
                     id: project.id || crypto.randomUUID(),
                     idJira: project.idJira,
-                    name: project.proyecto,
-                    team: project.equipo,
-                    cell: project.celula,
-                    startDate: project.inicio ? new Date(project.inicio) : null,
-                    endDate: project.fin ? new Date(project.fin) : null,
-                    progress: project.progreso || 0,
-                    status: project.estado || 'En progreso',
+                    nombre: project.nombre,
+                    proyecto: project.proyecto,
+                    equipoId: project.equipo,
+                    celulaId: project.celula,
+                    horas: project.horas || 0,
+                    dias: project.dias || 0,
+                    horasEstimadas: project.horasEstimadas,
+                    estado: project.estado,
+                    estadoCalculado: project.estadoCalculado,
+                    descripcion: project.descripcion,
+                    fechaInicio: project.fechaInicio,
+                    fechaFin: project.fechaFin,
+                    fechaEntrega: project.fechaEntrega,
+                    fechaRealEntrega: project.fechaRealEntrega,
+                    fechaCertificacion: project.fechaCertificacion,
+                    diasRetraso: project.diasRetraso || 0,
+                    analistaProducto: project.analistaProducto,
+                    planTrabajo: project.planTrabajo,
                     analysts: {
                         create: project.analistas?.map(analystId => ({
                             analystId
@@ -52,117 +80,96 @@ export class ProjectPrismaService {
             return true;
         } catch (error) {
             console.error('Error saving project to database:', error);
-            return false;
+            throw error;
         }
     }
 
-    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
+    async updateProject(id: string, project: Partial<Project>): Promise<boolean> {
         try {
-            const existingProject = await prisma.project.findUnique({
-                where: { idJira }
-            });
-            
-            if (!existingProject) {
-                return false;
-            }
-            
-            // Preparar los datos para actualizar
+            // Preparar los datos a actualizar
             const updateData: any = {};
             
-            if (project.proyecto) updateData.name = project.proyecto;
-            if (project.equipo) updateData.team = project.equipo;
-            if (project.celula) updateData.cell = project.celula;
-            if (project.inicio) updateData.startDate = new Date(project.inicio);
-            if (project.fin) updateData.endDate = new Date(project.fin);
-            if (project.progreso !== undefined) updateData.progress = project.progreso;
-            if (project.estado) updateData.status = project.estado;
+            // Mapear los campos del modelo Project a los campos de Prisma
+            if (project.idJira !== undefined) updateData.idJira = project.idJira;
+            if (project.nombre !== undefined) updateData.nombre = project.nombre;
+            if (project.proyecto !== undefined) updateData.proyecto = project.proyecto;
+            if (project.horas !== undefined) updateData.horas = project.horas;
+            if (project.dias !== undefined) updateData.dias = project.dias;
+            if (project.horasEstimadas !== undefined) updateData.horasEstimadas = project.horasEstimadas;
+            if (project.estado !== undefined) updateData.estado = project.estado;
+            if (project.estadoCalculado !== undefined) updateData.estadoCalculado = project.estadoCalculado;
+            if (project.descripcion !== undefined) updateData.descripcion = project.descripcion;
+            if (project.fechaInicio !== undefined) updateData.fechaInicio = project.fechaInicio;
+            if (project.fechaFin !== undefined) updateData.fechaFin = project.fechaFin;
+            if (project.fechaEntrega !== undefined) updateData.fechaEntrega = project.fechaEntrega;
+            if (project.fechaRealEntrega !== undefined) updateData.fechaRealEntrega = project.fechaRealEntrega;
+            if (project.fechaCertificacion !== undefined) updateData.fechaCertificacion = project.fechaCertificacion;
+            if (project.diasRetraso !== undefined) updateData.diasRetraso = project.diasRetraso;
+            if (project.analistaProducto !== undefined) updateData.analistaProducto = project.analistaProducto;
+            if (project.planTrabajo !== undefined) updateData.planTrabajo = project.planTrabajo;
             
-            // Actualizar proyecto
+            // Actualizar referencias a equipo o célula
+            if (project.equipo !== undefined) updateData.equipoId = project.equipo;
+            if (project.celula !== undefined) updateData.celulaId = project.celula;
+            
+            // Actualizar el proyecto
             await prisma.project.update({
-                where: { idJira },
+                where: { id },
                 data: updateData
             });
             
-            // Si hay analistas para actualizar
-            if (project.analistas) {
-                // Eliminar relaciones existentes
+            // Si se proporcionan analistas, actualizar las relaciones
+            if (project.analistas !== undefined) {
+                // Eliminar todas las relaciones existentes
                 await prisma.projectAnalyst.deleteMany({
-                    where: { projectId: existingProject.id }
+                    where: { projectId: id }
                 });
                 
-                // Crear nuevas relaciones
-                if (project.analistas.length > 0) {
-                    await prisma.projectAnalyst.createMany({
-                        data: project.analistas.map(analystId => ({
-                            projectId: existingProject.id,
-                            analystId
-                        }))
-                    });
+                // Crear nuevas relaciones si hay analistas
+                if (project.analistas && project.analistas.length > 0) {
+                    for (const analystId of project.analistas) {
+                        await prisma.projectAnalyst.create({
+                            data: {
+                                project: { connect: { id } },
+                                analyst: { connect: { id: analystId } }
+                            }
+                        });
+                    }
                 }
             }
             
             return true;
         } catch (error) {
-            console.error(`Error updating project ${idJira} in database:`, error);
-            return false;
+            console.error(`Error updating project ${id}:`, error);
+            throw error;
         }
     }
 
-    async deleteProject(idJira: string): Promise<boolean> {
+    async deleteProject(id: string): Promise<boolean> {
         try {
+            // Verificar si el proyecto existe
             const project = await prisma.project.findUnique({
-                where: { idJira }
+                where: { id }
             });
             
             if (!project) {
                 return false;
             }
             
-            // Eliminar relaciones primero
+            // Primero eliminar las relaciones con analistas
             await prisma.projectAnalyst.deleteMany({
-                where: { projectId: project.id }
+                where: { projectId: id }
             });
             
-            // Eliminar proyecto
+            // Luego eliminar el proyecto
             await prisma.project.delete({
-                where: { idJira }
+                where: { id }
             });
             
             return true;
         } catch (error) {
-            console.error(`Error deleting project ${idJira} from database:`, error);
-            return false;
-        }
-    }
-
-    async getProjectById(idJira: string): Promise<Project | null> {
-        try {
-            const project = await prisma.project.findUnique({
-                where: { idJira },
-                include: {
-                    analysts: true
-                }
-            });
-            
-            if (!project) {
-                return null;
-            }
-            
-            return {
-                id: project.id,
-                idJira: project.idJira,
-                proyecto: project.name,
-                equipo: project.team,
-                celula: project.cell,
-                inicio: project.startDate?.toISOString() || '',
-                fin: project.endDate?.toISOString() || '',
-                progreso: project.progress,
-                estado: project.status,
-                analistas: project.analysts.map(a => a.analystId)
-            };
-        } catch (error) {
-            console.error(`Error fetching project ${idJira} from database:`, error);
-            return null;
+            console.error(`Error deleting project ${id}:`, error);
+            throw error;
         }
     }
 }
