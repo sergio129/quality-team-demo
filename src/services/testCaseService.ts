@@ -1,22 +1,30 @@
-import { TestCase } from '@/models/TestCase';
-import { TestPlan } from '@/models/TestPlan';
+import { TestCase, TestPlan } from '@/models/TestCase';
 import { migrationConfig } from '@/config/migration';
 import TestCaseFileService from './file/testCaseFileService';
 import TestCasePrismaService from './prisma/testCasePrismaService';
+import TestPlanFileService from './file/testPlanFileService';
+import TestPlanPrismaService from './prisma/testPlanPrismaService';
 
 // Crear una instancia de cada servicio
-const fileService = new TestCaseFileService();
-const prismaService = new TestCasePrismaService();
+const testCaseFileService = new TestCaseFileService();
+const testCasePrismaService = new TestCasePrismaService();
+const testPlanFileService = new TestPlanFileService();
+const testPlanPrismaService = new TestPlanPrismaService();
 
-// Función para determinar qué servicio usar
-function getService() {
-  return migrationConfig.services.testCases ? prismaService : fileService;
-};
+// Función para determinar qué servicio usar para casos de prueba
+function getTestCaseService() {
+  return migrationConfig.services.testCases ? testCasePrismaService : testCaseFileService;
+}
+
+// Función para determinar qué servicio usar para planes de prueba
+function getTestPlanService() {
+  return migrationConfig.services.testPlans ? testPlanPrismaService : testPlanFileService;
+}
 
 export const testCaseService = {
   async getAllTestCases(): Promise<TestCase[]> {
     try {
-      return getService().getAllTestCases();
+      return getTestCaseService().getAllTestCases();
     } catch (error) {
       console.error('Error reading test cases:', error);
       return [];
@@ -25,7 +33,7 @@ export const testCaseService = {
 
   async getTestCasesByProject(projectId: string): Promise<TestCase[]> {
     try {
-      return getService().getTestCasesByProject(projectId);
+      return getTestCaseService().getTestCasesByProject(projectId);
     } catch (error) {
       console.error(`Error getting test cases for project ${projectId}:`, error);
       return [];
@@ -34,7 +42,7 @@ export const testCaseService = {
 
   async getTestCase(id: string): Promise<TestCase | null> {
     try {
-      return getService().getTestCase(id);
+      return getTestCaseService().getTestCase(id);
     } catch (error) {
       console.error(`Error getting test case ${id}:`, error);
       return null;
@@ -43,7 +51,7 @@ export const testCaseService = {
 
   async saveTestCase(testCase: TestCase): Promise<boolean> {
     try {
-      const result = await getService().saveTestCase(testCase);
+      const result = await getTestCaseService().saveTestCase(testCase);
       
       // Si el caso tiene un plan de pruebas asociado, actualizar su contador
       if (testCase.testPlanId) {
@@ -67,7 +75,7 @@ export const testCaseService = {
       const originalTestPlanId = originalTestCase?.testPlanId;
       const newTestPlanId = updatedTestCase.testPlanId;
       
-      const result = await getService().updateTestCase(id, updatedTestCase);
+      const result = await getTestCaseService().updateTestCase(id, updatedTestCase);
       
       // Si cambió el plan de pruebas, actualizar ambos planes
       if (originalTestPlanId && (!newTestPlanId || originalTestPlanId !== newTestPlanId)) {
@@ -99,7 +107,7 @@ export const testCaseService = {
       const caseToDelete = await this.getTestCase(id);
       const testPlanId = caseToDelete?.testPlanId;
       
-      const result = await getService().deleteTestCase(id);
+      const result = await getTestCaseService().deleteTestCase(id);
       
       // Si el caso tenía un plan asociado, actualizar el contador del plan
       if (testPlanId) {
@@ -119,7 +127,7 @@ export const testCaseService = {
   // Planes de Prueba
   async getAllTestPlans(): Promise<TestPlan[]> {
     try {
-      return getService().getAllTestPlans();
+      return getTestPlanService().getAllTestPlans();
     } catch (error) {
       console.error('Error reading test plans:', error);
       return [];
@@ -128,7 +136,7 @@ export const testCaseService = {
 
   async getTestPlansByProject(projectId: string): Promise<TestPlan[]> {
     try {
-      return getService().getTestPlansByProject(projectId);
+      return getTestPlanService().getTestPlansByProject(projectId);
     } catch (error) {
       console.error(`Error getting test plans for project ${projectId}:`, error);
       return [];
@@ -137,7 +145,7 @@ export const testCaseService = {
 
   async getTestPlan(id: string): Promise<TestPlan | null> {
     try {
-      return getService().getTestPlan(id);
+      return getTestPlanService().getTestPlan(id);
     } catch (error) {
       console.error(`Error getting test plan ${id}:`, error);
       return null;
@@ -146,7 +154,7 @@ export const testCaseService = {
 
   async saveTestPlan(testPlan: TestPlan): Promise<boolean> {
     try {
-      return getService().saveTestPlan(testPlan);
+      return getTestPlanService().saveTestPlan(testPlan);
     } catch (error) {
       console.error('Error saving test plan:', error);
       return false;
@@ -155,7 +163,7 @@ export const testCaseService = {
 
   async updateTestPlan(id: string, updatedTestPlan: Partial<TestPlan>): Promise<boolean> {
     try {
-      return getService().updateTestPlan(id, updatedTestPlan);
+      return getTestPlanService().updateTestPlan(id, updatedTestPlan);
     } catch (error) {
       console.error(`Error updating test plan ${id}:`, error);
       return false;
@@ -164,7 +172,7 @@ export const testCaseService = {
 
   async deleteTestPlan(id: string): Promise<boolean> {
     try {
-      return getService().deleteTestPlan(id);
+      return getTestPlanService().deleteTestPlan(id);
     } catch (error) {
       console.error(`Error deleting test plan ${id}:`, error);
       return false;
@@ -225,7 +233,7 @@ export const testCaseService = {
       await this.updateTestPlanCaseCount(projectId);
       
       // Estadísticas por ciclo
-      const cycleStats = {};
+      const cycleStats: Record<number, { designed: number, successful: number, notExecuted: number, defects: number }> = {};
       testCases.forEach(tc => {
         if (tc.cycle) {
           if (!cycleStats[tc.cycle]) {
