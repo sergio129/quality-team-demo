@@ -80,10 +80,18 @@ export class ProjectPrismaService {
             console.error('Error saving project to database:', error);
             throw error;
         }
-    }
-
-    async updateProject(id: string, project: Partial<Project>): Promise<boolean> {
+    }    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
         try {
+            // Primero buscar el proyecto por idJira para obtener su ID interno
+            const existingProject = await prisma.project.findFirst({
+                where: { idJira }
+            });
+            
+            if (!existingProject) {
+                console.log(`Project with idJira ${idJira} not found for update`);
+                return false;
+            }
+            
             // Preparar los datos a actualizar
             const updateData: any = {};
             
@@ -110,9 +118,9 @@ export class ProjectPrismaService {
             if (project.equipo !== undefined) updateData.equipoId = project.equipo;
             if (project.celula !== undefined) updateData.celulaId = project.celula;
             
-            // Actualizar el proyecto
+            // Actualizar el proyecto usando el ID interno
             await prisma.project.update({
-                where: { id },
+                where: { id: existingProject.id },
                 data: updateData
             });
             
@@ -120,7 +128,7 @@ export class ProjectPrismaService {
             if (project.analistas !== undefined) {
                 // Eliminar todas las relaciones existentes
                 await prisma.projectAnalyst.deleteMany({
-                    where: { projectId: id }
+                    where: { projectId: existingProject.id }
                 });
                 
                 // Crear nuevas relaciones si hay analistas
@@ -128,7 +136,7 @@ export class ProjectPrismaService {
                     for (const analystId of project.analistas) {
                         await prisma.projectAnalyst.create({
                             data: {
-                                project: { connect: { id } },
+                                project: { connect: { id: existingProject.id } },
                                 analyst: { connect: { id: analystId } }
                             }
                         });
@@ -136,37 +144,38 @@ export class ProjectPrismaService {
                 }
             }
             
+            console.log(`Project ${idJira} updated successfully`);
             return true;
         } catch (error) {
-            console.error(`Error updating project ${id}:`, error);
+            console.error(`Error updating project ${idJira}:`, error);
             throw error;
         }
-    }
-
-    async deleteProject(id: string): Promise<boolean> {
+    }    async deleteProject(idJira: string): Promise<boolean> {
         try {
-            // Verificar si el proyecto existe
-            const project = await prisma.project.findUnique({
-                where: { id }
+            // Verificar si el proyecto existe y obtener su ID interno
+            const project = await prisma.project.findFirst({
+                where: { idJira }
             });
             
             if (!project) {
+                console.log(`Project with idJira ${idJira} not found`);
                 return false;
             }
             
             // Primero eliminar las relaciones con analistas
             await prisma.projectAnalyst.deleteMany({
-                where: { projectId: id }
+                where: { projectId: project.id }
             });
             
             // Luego eliminar el proyecto
             await prisma.project.delete({
-                where: { id }
+                where: { id: project.id }
             });
             
+            console.log(`Project ${idJira} deleted successfully`);
             return true;
         } catch (error) {
-            console.error(`Error deleting project ${id}:`, error);
+            console.error(`Error deleting project ${idJira}:`, error);
             throw error;
         }
     }
