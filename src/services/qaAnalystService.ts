@@ -1,74 +1,129 @@
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { CellService } from './cellService';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const analystsFilePath = path.join(process.cwd(), 'data', 'analysts.txt');
+import { QAAnalystFileService } from './file/qaAnalystFileService';
+import { QAAnalystPrismaService } from './prisma/qaAnalystPrismaService';
+import { migrationConfig } from '@/config/migration';
 
 export class QAAnalystService {
-    private cellService: CellService;
+    private fileService: QAAnalystFileService;
+    private prismaService: QAAnalystPrismaService;
+    private usePostgres: boolean;
 
     constructor() {
-        this.cellService = new CellService();
+        this.fileService = new QAAnalystFileService();
+        this.prismaService = new QAAnalystPrismaService();
+        this.usePostgres = migrationConfig.shouldUsePostgresFor('analysts');
+        
+        // Log que base de datos estamos usando si el logging está habilitado
+        if (migrationConfig.logging.enabled) {
+            console.log(`[QAAnalystService] Using ${this.usePostgres ? 'PostgreSQL' : 'File'} storage`);
+        }
     }
 
     async getAllAnalysts(): Promise<QAAnalyst[]> {
         try {
-            const content = await fs.readFile(analystsFilePath, 'utf-8');
-            return content ? JSON.parse(content) : [];
+            const result = this.usePostgres 
+                ? await this.prismaService.getAllAnalysts() 
+                : await this.fileService.getAllAnalysts();
+                
+            return result;
         } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-                await fs.writeFile(analystsFilePath, '[]');
-                return [];
+            console.error(`[QAAnalystService] Error in getAllAnalysts:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.getAllAnalysts();
             }
             throw error;
         }
-    }    async saveAnalyst(analyst: QAAnalyst): Promise<QAAnalyst | null> {
-        // Verify all cells exist
-        for (const cellId of analyst.cellIds) {
-            const cell = await this.cellService.getCellById(cellId);
-            if (!cell) return null;
+    }
+    
+    async saveAnalyst(analyst: QAAnalyst): Promise<QAAnalyst | null> {
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.saveAnalyst(analyst)
+                : await this.fileService.saveAnalyst(analyst);
+                
+            return result;
+        } catch (error) {
+            console.error(`[QAAnalystService] Error in saveAnalyst:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.saveAnalyst(analyst);
+            }
+            return null;
         }
-
-        const analysts = await this.getAllAnalysts();
-        analyst.id = crypto.randomUUID();
-        analysts.push(analyst);
-        await fs.writeFile(analystsFilePath, JSON.stringify(analysts, null, 2));
-        return analyst;
     }
 
-    async updateAnalyst(id: string, analyst: QAAnalyst): Promise<QAAnalyst | null> {
-        // Verify all cells exist if cellIds is being updated
-        if (analyst.cellIds) {
-            for (const cellId of analyst.cellIds) {
-                const cell = await this.cellService.getCellById(cellId);
-                if (!cell) return null;
+    async updateAnalyst(id: string, analyst: Partial<QAAnalyst>): Promise<QAAnalyst | null> {
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.updateAnalyst(id, analyst)
+                : await this.fileService.updateAnalyst(id, analyst);
+                
+            return result;
+        } catch (error) {
+            console.error(`[QAAnalystService] Error in updateAnalyst:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.updateAnalyst(id, analyst);
             }
+            return null;
         }
-
-        const analysts = await this.getAllAnalysts();
-        const index = analysts.findIndex(a => a.id === id);
-        if (index === -1) return null;
-        
-        analysts[index] = { ...analysts[index], ...analyst };
-        await fs.writeFile(analystsFilePath, JSON.stringify(analysts, null, 2));
-        return analysts[index];
     }
 
     async deleteAnalyst(id: string): Promise<boolean> {
-        const analysts = await this.getAllAnalysts();
-        const filteredAnalysts = analysts.filter(a => a.id !== id);
-        if (filteredAnalysts.length === analysts.length) return false;
-        
-        await fs.writeFile(analystsFilePath, JSON.stringify(filteredAnalysts, null, 2));
-        return true;
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.deleteAnalyst(id)
+                : await this.fileService.deleteAnalyst(id);
+                
+            return result;
+        } catch (error) {
+            console.error(`[QAAnalystService] Error in deleteAnalyst:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.deleteAnalyst(id);
+            }
+            return false;
+        }
     }
 
     async getAnalystById(id: string): Promise<QAAnalyst | null> {
-        const analysts = await this.getAllAnalysts();
-        return analysts.find(a => a.id === id) || null;
-    }    async getAnalystsByCellId(cellId: string): Promise<QAAnalyst[]> {
-        const analysts = await this.getAllAnalysts();
-        return analysts.filter(a => a.cellIds.includes(cellId));
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.getAnalystById(id)
+                : await this.fileService.getAnalystById(id);
+                
+            return result;
+        } catch (error) {
+            console.error(`[QAAnalystService] Error in getAnalystById:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.getAnalystById(id);
+            }
+            return null;
+        }
+    }
+
+    async getAnalystsByCellId(cellId: string): Promise<QAAnalyst[]> {
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.getAnalystsByCellId(cellId)
+                : await this.fileService.getAnalystsByCellId(cellId);
+                
+            return result;
+        } catch (error) {
+            console.error(`[QAAnalystService] Error in getAnalystsByCellId:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[QAAnalystService] Falling back to file storage');
+                return await this.fileService.getAnalystsByCellId(cellId);
+            }
+            return [];
+        }
     }
 }

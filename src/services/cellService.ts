@@ -1,74 +1,129 @@
 import { Cell } from '@/models/Cell';
-import { TeamService } from './teamService';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const cellsFilePath = path.join(process.cwd(), 'data', 'cells.txt');
+import { CellFileService } from './file/cellFileService';
+import { CellPrismaService } from './prisma/cellPrismaService';
+import { migrationConfig } from '@/config/migration';
 
 export class CellService {
-    private teamService: TeamService;
+    private fileService: CellFileService;
+    private prismaService: CellPrismaService;
+    private usePostgres: boolean;
 
     constructor() {
-        this.teamService = new TeamService();
+        this.fileService = new CellFileService();
+        this.prismaService = new CellPrismaService();
+        this.usePostgres = migrationConfig.shouldUsePostgresFor('cells');
+        
+        // Log que base de datos estamos usando si el logging está habilitado
+        if (migrationConfig.logging.enabled) {
+            console.log(`[CellService] Using ${this.usePostgres ? 'PostgreSQL' : 'File'} storage`);
+        }
     }
 
     async getAllCells(): Promise<Cell[]> {
         try {
-            const content = await fs.readFile(cellsFilePath, 'utf-8');
-            return content ? JSON.parse(content) : [];
+            const result = this.usePostgres 
+                ? await this.prismaService.getAllCells() 
+                : await this.fileService.getAllCells();
+                
+            return result;
         } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-                await fs.writeFile(cellsFilePath, '[]');
-                return [];
+            console.error(`[CellService] Error in getAllCells:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.getAllCells();
             }
             throw error;
         }
     }
-
+    
     async saveCell(cell: Cell): Promise<Cell | null> {
-        // Verify team exists
-        const team = await this.teamService.getTeamById(cell.teamId);
-        if (!team) return null;
-
-        const cells = await this.getAllCells();
-        cell.id = crypto.randomUUID();
-        cells.push(cell);
-        await fs.writeFile(cellsFilePath, JSON.stringify(cells, null, 2));
-        return cell;
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.saveCell(cell)
+                : await this.fileService.saveCell(cell);
+                
+            return result;
+        } catch (error) {
+            console.error(`[CellService] Error in saveCell:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.saveCell(cell);
+            }
+            return null;
+        }
     }
 
-    async updateCell(id: string, cell: Cell): Promise<Cell | null> {
-        // Verify team exists if teamId is being updated
-        if (cell.teamId) {
-            const team = await this.teamService.getTeamById(cell.teamId);
-            if (!team) return null;
+    async updateCell(id: string, cell: Partial<Cell>): Promise<Cell | null> {
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.updateCell(id, cell)
+                : await this.fileService.updateCell(id, cell);
+                
+            return result;
+        } catch (error) {
+            console.error(`[CellService] Error in updateCell:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.updateCell(id, cell);
+            }
+            return null;
         }
-
-        const cells = await this.getAllCells();
-        const index = cells.findIndex(c => c.id === id);
-        if (index === -1) return null;
-        
-        cells[index] = { ...cells[index], ...cell };
-        await fs.writeFile(cellsFilePath, JSON.stringify(cells, null, 2));
-        return cells[index];
     }
 
     async deleteCell(id: string): Promise<boolean> {
-        const cells = await this.getAllCells();
-        const filteredCells = cells.filter(c => c.id !== id);
-        if (filteredCells.length === cells.length) return false;
-        
-        await fs.writeFile(cellsFilePath, JSON.stringify(filteredCells, null, 2));
-        return true;
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.deleteCell(id)
+                : await this.fileService.deleteCell(id);
+                
+            return result;
+        } catch (error) {
+            console.error(`[CellService] Error in deleteCell:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.deleteCell(id);
+            }
+            return false;
+        }
     }
 
     async getCellById(id: string): Promise<Cell | null> {
-        const cells = await this.getAllCells();
-        return cells.find(c => c.id === id) || null;
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.getCellById(id)
+                : await this.fileService.getCellById(id);
+                
+            return result;
+        } catch (error) {
+            console.error(`[CellService] Error in getCellById:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.getCellById(id);
+            }
+            return null;
+        }
     }
 
     async getCellsByTeamId(teamId: string): Promise<Cell[]> {
-        const cells = await this.getAllCells();
-        return cells.filter(c => c.teamId === teamId);
+        try {
+            const result = this.usePostgres
+                ? await this.prismaService.getCellsByTeamId(teamId)
+                : await this.fileService.getCellsByTeamId(teamId);
+                
+            return result;
+        } catch (error) {
+            console.error(`[CellService] Error in getCellsByTeamId:`, error);
+            // En caso de error con PostgreSQL, intentar con archivos
+            if (this.usePostgres) {
+                console.log('[CellService] Falling back to file storage');
+                return await this.fileService.getCellsByTeamId(teamId);
+            }
+            return [];
+        }
     }
 }

@@ -29,6 +29,31 @@ Calidad = 100 - (totalDefectos / totalCasosDisenados) * 100
 
 Para más detalles, vea el documento completo en [docs/calculo-calidad.md](docs/calculo-calidad.md).
 
+## Base de Datos
+
+### Migración a PostgreSQL
+
+El sistema ahora soporta dos tipos de almacenamiento:
+
+1. **Archivos de texto** (método original)
+2. **PostgreSQL** (nuevo método)
+
+Para ejecutar la aplicación con PostgreSQL:
+
+```bash
+$env:USE_POSTGRES="true"; npm run dev
+```
+
+O para habilitar servicios específicos con PostgreSQL:
+
+```bash
+$env:USE_POSTGRES_ANALYSTS="true"; $env:USE_POSTGRES_CELLS="true"; npm run dev
+```
+
+Para más detalles sobre la migración, consulte:
+- [docs/migracion-postgresql.md](docs/migracion-postgresql.md)
+- [docs/estrategia-migracion-incremental.md](docs/estrategia-migracion-incremental.md)
+
 ## Getting Started
 
 First, run the development server:

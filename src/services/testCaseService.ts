@@ -1,35 +1,16 @@
-const fs = require('fs').promises;
-const path = require('path');
-import { TestCase, TestPlan } from '@/models/TestCase';
+import { TestCase } from '@/models/TestCase';
+import { migrationConfig } from '@/config/migration';
+import TestCaseFileService from './file/testCaseFileService';
+import TestCasePrismaService from './prisma/testCasePrismaService';
 
-const TEST_CASES_FILE_PATH = path.join(process.cwd(), 'data', 'test-cases.txt');
-const TEST_PLANS_FILE_PATH = path.join(process.cwd(), 'data', 'test-plans.txt');
+// Crear una instancia de cada servicio
+const fileService = new TestCaseFileService();
+const prismaService = new TestCasePrismaService();
 
-// Función para asegurar que existen los archivos de datos
-async function ensureDataFilesExist() {
-  try {
-    // Verificar archivo de casos de prueba
-    try {
-      await fs.access(TEST_CASES_FILE_PATH);
-    } catch (error) {
-      // El archivo no existe, crearlo con un array vacío
-      await fs.writeFile(TEST_CASES_FILE_PATH, JSON.stringify([], null, 2));
-    }
-
-    // Verificar archivo de planes de prueba
-    try {
-      await fs.access(TEST_PLANS_FILE_PATH);
-    } catch (error) {
-      // El archivo no existe, crearlo con un array vacío
-      await fs.writeFile(TEST_PLANS_FILE_PATH, JSON.stringify([], null, 2));
-    }
-  } catch (error) {
-    console.error('Error al asegurar que existan los archivos de datos:', error);
-  }
-}
-
-// Asegurar que los archivos existan al importar el servicio
-ensureDataFilesExist();
+// Función para determinar qué servicio usar
+function getService() {
+  return migrationConfig.services.testCases ? prismaService : fileService;
+};
 
 export const testCaseService = {
   async getAllTestCases(): Promise<TestCase[]> {
