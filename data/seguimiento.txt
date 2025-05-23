@@ -711,5 +711,19 @@
     "analistaProducto": "Yoarlis Carrillo\t",
     "planTrabajo": "en desarrollo",
     "proyecto": "Arquetipos Ventas digitales"
+  },
+  {
+    "idJira": "BCBH-504",
+    "proyecto": "COT-DLLO-Desarrollo Ajustes en el Chat Crédito Hipotecario",
+    "equipo": "Desarrollo Bancolombia",
+    "celula": "Desarrollo Bancolombia",
+    "horas": 15,
+    "dias": 2,
+    "fechaEntrega": "2025-06-03T00:00:00.000Z",
+    "fechaRealEntrega": "2025-06-06T00:00:00.000Z",
+    "diasRetraso": 3,
+    "estadoCalculado": "Por Iniciar",
+    "analistaProducto": "Yulieth Paola\t",
+    "planTrabajo": "en desarrollo"
   }
 ]
