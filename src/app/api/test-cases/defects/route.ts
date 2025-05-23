@@ -77,6 +77,48 @@ export async function POST(request: Request) {
       );
     }
     
+    // Verificar que el defecto corresponda a este caso de prueba según su idJira
+    const allIncidents = await incidentService.getAll();
+    const defect = allIncidents.find(inc => inc.id === defectId);
+    
+    if (!defect) {
+      return NextResponse.json(
+        { error: 'Defecto no encontrado' },
+        { status: 404 }
+      );
+    }
+    
+    // Si el defecto tiene un idJira que parece ser un código de caso de prueba
+    // (formato PROJ-####-T### o T###), verificar que corresponda a este caso
+    if (defect.idJira && defect.idJira.includes('-T')) {
+      // Verificar si el idJira coincide con este caso
+      const codeMatch = 
+        defect.idJira === testCase.codeRef ||
+        defect.idJira === `${testCase.projectId}-${testCase.codeRef}` ||
+        testCase.codeRef === defect.idJira.replace(/^.*-/, '');
+      
+      if (!codeMatch) {
+        // Buscar el caso de prueba que debería recibir este defecto
+        const allTestCases = await testCaseService.getAllTestCases();
+        const correctTestCase = allTestCases.find(tc => 
+          defect.idJira === tc.codeRef || 
+          defect.idJira === `${tc.projectId}-${tc.codeRef}` ||
+          tc.codeRef === defect.idJira.replace(/^.*-/, '')
+        );
+        
+        if (correctTestCase) {
+          return NextResponse.json(
+            { 
+              error: 'El defecto no corresponde a este caso de prueba según su idJira',
+              suggestedTestCaseId: correctTestCase.id,
+              suggestedTestCase: correctTestCase.name
+            },
+            { status: 400 }
+          );
+        }
+      }
+    }
+    
     // Actualizar el caso de prueba con el nuevo defecto
     const updatedDefects = [...defects, defectId];
     
