@@ -118,6 +118,17 @@ export async function POST(request: Request) {
         }
       }
     }
+    // Si el defecto tiene un idJira que coincide exactamente con el ID del proyecto,
+    // no permitir asignarlo a ningún caso de prueba específico
+    else if (defect.idJira && defect.idJira === testCase.projectId) {
+      return NextResponse.json(
+        { 
+          error: 'No se puede asignar este defecto porque su idJira coincide con el ID del proyecto',
+          details: 'Este defecto está asociado a nivel de proyecto y no a un caso específico'
+        },
+        { status: 400 }
+      );
+    }
     
     // Actualizar el caso de prueba con el nuevo defecto
     const updatedDefects = [...defects, defectId];
