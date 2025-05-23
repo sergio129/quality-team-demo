@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTestPlans, createTestPlan } from '@/hooks/useTestCases';
 import { useProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { mutate } from 'swr';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Search, Filter, Star, StarOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import UpdateQualityButton from './UpdateQualityButton';
 import QualityInfoButton from './QualityInfoButton';
 import {
@@ -85,6 +85,26 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
     testQuality: 100
   });
 
+  // Estados para búsqueda y filtrado avanzados
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPlans, setFilteredPlans] = useState<TestPlan[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [plansPerPage] = useState(10);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    qualityFrom: 0,
+    qualityTo: 100,
+    hasCases: false
+  });
+  const [sortBy, setSortBy] = useState<{field: string, direction: 'asc' | 'desc'}>({
+    field: 'updatedAt', 
+    direction: 'desc'
+  });
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
   // Filtrar y ordenar proyectos que tienen planes de prueba
   const projectsWithPlans = projects
     .filter(project => testPlans?.some(plan => plan.projectId === project.idJira))
@@ -98,6 +118,159 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       // Si las fechas son iguales, ordenar por nombre del proyecto
       return (a.proyecto || '').localeCompare(b.proyecto || '');
     });
+
+  // Recuperar favoritos del localStorage al cargar
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('testPlanFavorites');
+    if (savedFavorites) {
+      try {
+        setFavorites(JSON.parse(savedFavorites));
+      } catch (e) {
+        console.error('Error parsing favorites from localStorage:', e);
+      }
+    }
+  }, []);
+
+  // Filtrar planes de prueba basados en los criterios de búsqueda y filtrado
+  useEffect(() => {
+    if (!testPlans) {
+      setFilteredPlans([]);
+      return;
+    }
+
+    // Primero filtrar por proyecto seleccionado
+    let filtered = selectedProjectId 
+      ? testPlans.filter(plan => plan.projectId === selectedProjectId)
+      : [...testPlans];
+    
+    // Luego aplicar filtro de búsqueda por texto
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(plan => 
+        plan.codeReference.toLowerCase().includes(search) || 
+        plan.projectName.toLowerCase().includes(search)
+      );
+    }
+    
+    // Aplicar filtros avanzados si están activados
+    if (advancedFiltersOpen) {
+      if (filters.dateFrom) {
+        filtered = filtered.filter(plan => new Date(plan.startDate) >= new Date(filters.dateFrom));
+      }
+      
+      if (filters.dateTo) {
+        filtered = filtered.filter(plan => new Date(plan.startDate) <= new Date(filters.dateTo));
+      }
+      
+      filtered = filtered.filter(plan => 
+        plan.testQuality >= filters.qualityFrom && 
+        plan.testQuality <= filters.qualityTo
+      );
+      
+      if (filters.hasCases) {
+        filtered = filtered.filter(plan => plan.totalCases > 0);
+      }
+    }
+
+    // Aplicar filtro de favoritos si está activado
+    if (showOnlyFavorites) {
+      filtered = filtered.filter(plan => favorites.includes(plan.id));
+    }
+    
+    // Ordenar los resultados
+    filtered.sort((a, b) => {
+      let valueA, valueB;
+      
+      // Obtener valores a comparar según el campo seleccionado
+      switch (sortBy.field) {
+        case 'codeReference':
+          valueA = a.codeReference;
+          valueB = b.codeReference;
+          break;
+        case 'projectName':
+          valueA = a.projectName;
+          valueB = b.projectName;
+          break;
+        case 'startDate':
+          valueA = new Date(a.startDate).getTime();
+          valueB = new Date(b.startDate).getTime();
+          break;
+        case 'totalCases':
+          valueA = a.totalCases;
+          valueB = b.totalCases;
+          break;
+        case 'testQuality':
+          valueA = a.testQuality;
+          valueB = b.testQuality;
+          break;
+        case 'updatedAt':
+        default:
+          valueA = new Date(a.updatedAt).getTime();
+          valueB = new Date(b.updatedAt).getTime();
+      }
+      
+      // Comparar según dirección
+      const compareResult = 
+        typeof valueA === 'string' && typeof valueB === 'string'
+          ? valueA.localeCompare(valueB)
+          : (valueA as number) - (valueB as number);
+      
+      return sortBy.direction === 'asc' ? compareResult : -compareResult;
+    });
+    
+    setFilteredPlans(filtered);
+    setCurrentPage(1); // Resetear a la primera página al cambiar los filtros
+  }, [testPlans, selectedProjectId, searchTerm, advancedFiltersOpen, filters, sortBy, favorites, showOnlyFavorites]);
+
+  // Función para manejar la paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Función para manejar cambios en el filtro de búsqueda
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Función para manejar cambios en los filtros avanzados
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' 
+        ? (e.target as HTMLInputElement).checked 
+        : type === 'number' 
+          ? parseFloat(value) 
+          : value
+    }));
+  };
+
+  // Función para ordenar los planes
+  const handleSort = (field: string) => {
+    setSortBy(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Función para alternar favoritos
+  const toggleFavorite = (planId: string) => {
+    setFavorites(prev => {
+      const newFavorites = prev.includes(planId)
+        ? prev.filter(id => id !== planId)
+        : [...prev, planId];
+      
+      // Guardar en localStorage
+      localStorage.setItem('testPlanFavorites', JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
+
+  // Calcular planes para la página actual
+  const indexOfLastPlan = currentPage * plansPerPage;
+  const indexOfFirstPlan = indexOfLastPlan - plansPerPage;
+  const currentPlans = filteredPlans.slice(indexOfFirstPlan, indexOfLastPlan);
+  const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProjectId(e.target.value);
@@ -302,12 +475,40 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
           <p className="text-sm text-amber-600 mt-1">
             No hay proyectos con planes de prueba. Crea un nuevo plan para comenzar.
           </p>
-        )}      </div>
+        )}      
+      </div>
       
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Lista de Planes</h3>
+      {/* Barra de búsqueda y filtros */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4 items-start md:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <Input
+            placeholder="Buscar por referencia o nombre de proyecto..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
+        
         <div className="flex gap-2">
-          <UpdateQualityButton />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAdvancedFiltersOpen(!advancedFiltersOpen)}
+          >
+            <Filter className="mr-1 h-4 w-4" />
+            Filtros {advancedFiltersOpen ? '▲' : '▼'}
+          </Button>
+          
+          <Button
+            variant={showOnlyFavorites ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+          >
+            <Star className="mr-1 h-4 w-4" />
+            Favoritos
+          </Button>
+          
           <Button
             variant="default"
             size="sm"
@@ -317,12 +518,84 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
           </Button>
         </div>
       </div>
+      
+      {/* Filtros avanzados */}
+      {advancedFiltersOpen && (
+        <div className="bg-gray-50 p-4 rounded-md border mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label htmlFor="dateFrom">Fecha desde:</Label>
+            <Input
+              id="dateFrom"
+              name="dateFrom"
+              type="date"
+              value={filters.dateFrom}
+              onChange={handleFilterChange}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="dateTo">Fecha hasta:</Label>
+            <Input
+              id="dateTo"
+              name="dateTo"
+              type="date"
+              value={filters.dateTo}
+              onChange={handleFilterChange}
+            />
+          </div>
+          
+          <div className="flex flex-col">
+            <Label htmlFor="qualityRange">Calidad (%): {filters.qualityFrom} - {filters.qualityTo}</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="qualityFrom"
+                name="qualityFrom"
+                type="range"
+                min="0"
+                max="100"
+                value={filters.qualityFrom}
+                onChange={handleFilterChange}
+              />
+              <Input
+                id="qualityTo"
+                name="qualityTo"
+                type="range"
+                min="0"
+                max="100"
+                value={filters.qualityTo}
+                onChange={handleFilterChange}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              id="hasCases"
+              name="hasCases"
+              type="checkbox"
+              checked={filters.hasCases}
+              onChange={handleFilterChange}
+              className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+            />
+            <Label htmlFor="hasCases">Solo planes con casos</Label>
+          </div>
+        </div>
+      )}
+      
+      {/* Resultados y estado de búsqueda */}
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-sm text-gray-500">
+          {filteredPlans.length} {filteredPlans.length === 1 ? 'plan encontrado' : 'planes encontrados'}
+        </p>
+        
+        <UpdateQualityButton />
+      </div>
 
       {isLoading ? (
         <div className="flex justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : testPlans && testPlans.length > 0 ? (        <div className="border rounded-md">
+      ) : filteredPlans && filteredPlans.length > 0 ? (        <div className="border rounded-md">
           <Table>
             <TableHeader>
               <TableRow>
@@ -338,7 +611,9 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
               </TableRow>
             </TableHeader>
             <TableBody>
-              {testPlans.map((plan) => (
+              {filteredPlans
+                .slice((currentPage - 1) * plansPerPage, currentPage * plansPerPage)
+                .map((plan) => (
                 <TableRow key={plan.id}>
                   <TableCell>{plan.codeReference}</TableCell>
                   <TableCell>{plan.projectName}</TableCell>
@@ -381,6 +656,33 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       ) : (
         <div className="text-center p-8 border rounded-md">
           <p className="text-gray-500">No hay planes de prueba disponibles para este proyecto.</p>
+        </div>
+      )}
+
+      {/* Paginación */}
+      {filteredPlans.length > plansPerPage && (
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Anterior
+          </Button>
+          <span className="text-sm text-gray-500">
+            Página {currentPage} de {Math.ceil(filteredPlans.length / plansPerPage)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === Math.ceil(filteredPlans.length / plansPerPage)}
+          >
+            Siguiente
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
         </div>
       )}
 

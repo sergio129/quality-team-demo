@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTestCases, deleteTestCase, useTestPlans } from '@/hooks/useTestCases';
-import { TestCase, TestPlan } from '@/models/TestCase';
+import { Cell } from '@/models/Cell';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -11,17 +11,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 import TestCaseForm from './TestCaseForm';
 import TestCaseDetailsDialog from './TestCaseDetailsDialog';
 import TestCaseStatusChanger from './TestCaseStatusChanger';
 import BulkAssignmentDialog from './BulkAssignmentDialog';
-import { toast } from 'sonner';
+import { useTestCases, useTestPlans, deleteTestCase } from '@/hooks/useTestCases';
 import { useProjects } from '@/hooks/useProjects';
+import { TestCase } from '@/models/TestCase';
+import SelectTestPlan from './SelectTestPlan';
 
 interface TestCaseTableProps {
   projectId?: string;
@@ -145,19 +147,14 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Select
-          value={filters.testPlanId}
-          onChange={e => setFilters(prev => ({ ...prev, testPlanId: e.target.value }))}
-        >
-          <option value="">Todos los planes</option>
-          {testPlans?.map((plan) => (
-            <option key={plan.id} value={plan.id}>
-              {plan.codeReference} - {plan.projectName}
-            </option>
-          ))}
-        </Select>
+      {/* Filtros */}      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="relative z-30">
+          <SelectTestPlan
+            testPlans={testPlans || []}
+            selectedPlanId={filters.testPlanId}
+            onSelectPlan={(planId) => setFilters(prev => ({ ...prev, testPlanId: planId }))}
+          />
+        </div>
 
         <Input
           placeholder="Buscar..."

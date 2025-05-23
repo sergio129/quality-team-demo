@@ -6,6 +6,7 @@ import TestCaseStats from '@/components/testcases/TestCaseStats';
 import TestCaseDefectTracker from '@/components/testcases/TestCaseDefectTracker';
 import TestCasePlanManager from '@/components/testcases/TestCasePlanManager';
 import TestCaseExport from '@/components/testcases/TestCaseExport';
+import SelectTestPlan from '@/components/testcases/SelectTestPlan';
 import { useProjects } from '@/hooks/useProjects';
 import { useTestCases, useTestPlans, createTestPlan } from '@/hooks/useTestCases';
 import { Select } from '@/components/ui/select';
@@ -239,21 +240,13 @@ export default function TestCasesPage() {
               )}
             </div>
           </div>
-          
-          <div>
+            <div>
             <label className="block text-sm font-medium mb-2">Plan de Pruebas</label>
-            <Select
-              value={selectedTestPlanId}
-              onChange={(e) => setSelectedTestPlanId(e.target.value)}
-              disabled={!selectedProjectId || testPlans.length === 0}
-            >
-              <option value="">Todos los planes</option>
-              {testPlans.map((plan) => (
-                <option key={plan.id} value={plan.id}>
-                  {plan.codeReference} - Ciclo {Math.max(...plan.cycles.map(c => c.number))}
-                </option>
-              ))}
-            </Select>
+            <SelectTestPlan 
+              testPlans={testPlans} 
+              selectedPlanId={selectedTestPlanId} 
+              onSelectPlan={(planId) => setSelectedTestPlanId(planId)}
+            />
             {selectedProjectId && testPlans.length === 0 && (
               <p className="text-xs text-amber-600 mt-1">No hay planes de prueba para este proyecto</p>
             )}
