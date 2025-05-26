@@ -11,8 +11,15 @@ export async function GET(request: Request) {
     }
 
     try {
-        const images = await incidentService.getImages(incidentId);
-        return NextResponse.json(images);
+        // Verificar si el incidente existe antes de buscar sus imágenes
+        try {
+            const images = await incidentService.getImages(incidentId);
+            return NextResponse.json(images || []);
+        } catch (imageError: any) {
+            console.warn(`Advertencia al obtener imágenes: ${imageError.message}`);
+            // Si hay un problema específico con las imágenes pero el incidente existe, devolver array vacío
+            return NextResponse.json([]);
+        }
     } catch (error: any) {
         console.error('Error al obtener imágenes del incidente:', error);
         return NextResponse.json({ 

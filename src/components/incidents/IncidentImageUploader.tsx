@@ -161,27 +161,23 @@ export default function IncidentImageUploader({ incidentId, readOnly = false }: 
               onChange={handleUpload}
               disabled={isUploading}
             />
-            <label htmlFor="image-upload">
-              <Button 
+            <label htmlFor="image-upload">              <Button 
                 type="button" 
                 variant="outline" 
                 disabled={isUploading}
                 className="cursor-pointer"
-                asChild
               >
-                <span>
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Subiendo...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Adjuntar imagen
-                    </>
-                  )}
-                </span>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Adjuntar imagen
+                  </>
+                )}
               </Button>
             </label>
           </div>

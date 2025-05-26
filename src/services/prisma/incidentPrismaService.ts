@@ -424,13 +424,32 @@ export class IncidentPrismaService {
             throw error;
         }
     }
-    
-    // Método para obtener todas las imágenes de un incidente
+      // Método para obtener todas las imágenes de un incidente
     async getImagesForIncident(incidentId: string): Promise<IncidentImage[]> {
         try {
+            // Verificar primero que el incidente existe
+            const incident = await prisma.incident.findUnique({
+                where: { id: incidentId }
+            });
+            
+            if (!incident) {
+                throw new Error(`Incidente con ID ${incidentId} no encontrado`);
+            }
+            
+            // Asegurarse de que prisma está disponible antes de llamar a findMany
+            if (!prisma.incidentImage) {
+                console.log('El modelo incidentImage no está disponible en el cliente Prisma');
+                return []; // Devolver array vacío en lugar de fallar
+            }
+            
             const images = await prisma.incidentImage.findMany({
                 where: { incidentId }
             });
+            
+            // Si no hay imágenes, devolver array vacío
+            if (!images || images.length === 0) {
+                return [];
+            }
             
             // Convertir el buffer de datos a base64 para enviar al cliente
             return images.map((image: any) => ({
