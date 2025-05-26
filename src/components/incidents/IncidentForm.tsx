@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import AsyncSelect from 'react-select/async';
 import { useJiraIdSuggestions, JiraOption } from '@/hooks/useJiraIdSuggestions';
 import IncidentImageUploader from './IncidentImageUploader';
+import FileUploader, { TempFileItem } from './FileUploader';
 import "./styles.css";
 
 interface IncidentFormProps {
@@ -43,6 +44,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
     });
     
     const [incidentSaved, setIncidentSaved] = useState(false);
+    const [tempFiles, setTempFiles] = useState<TempFileItem[]>([]);
 
     useEffect(() => {
         if (incident) {
@@ -70,14 +72,28 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
             return;
         }
         setError('');
-        await onSubmit({
-            ...formData,
-            fechaCreacion: formData.fechaCreacion || new Date(),
-            fechaReporte: formData.fechaReporte || new Date(),
-            diasAbierto: formData.diasAbierto || 0
-        });
-        setIncidentSaved(true);
-        onClose();
+        try {
+            // Guardar el incidente
+            const result = await onSubmit({
+                ...formData,
+                fechaCreacion: formData.fechaCreacion || new Date(),
+                fechaReporte: formData.fechaReporte || new Date(),
+                diasAbierto: formData.diasAbierto || 0
+            });
+            
+            // Si se ha creado un nuevo incidente y hay archivos temporales, subirlos
+            if (result && result.id && tempFiles.length > 0) {
+                toast.info(`Subiendo ${tempFiles.length} archivos...`);
+                await uploadTempFiles(result.id);
+                toast.success(`Se han subido ${tempFiles.length} archivos correctamente`);
+            }
+            
+            setIncidentSaved(true);
+            onClose();
+        } catch (error) {
+            console.error('Error al guardar el incidente:', error);
+            setError('Error al guardar el incidente');
+        }
     };
 
     const handleChange = (e: any) => {
@@ -109,6 +125,58 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
             ...prev,
             etiquetas: prev.etiquetas?.filter(t => t !== tag)
         }));
+    };
+
+    // Funciones para manejar archivos temporales
+    const handleAddTempFile = (file: TempFileItem) => {
+        setTempFiles(prev => [...prev, file]);
+    };
+
+    const handleRemoveTempFile = (fileId: string) => {
+        setTempFiles(prev => prev.filter(file => file.id !== fileId));
+    };
+
+    // Función para subir archivos temporales después de que se crea el incidente
+    const uploadTempFiles = async (incidentId: string) => {
+        if (tempFiles.length === 0) return;
+        
+        const uploadPromises = tempFiles.map(async (tempFile) => {
+            const formData = new FormData();
+            formData.append('incidentId', incidentId);
+            formData.append('file', tempFile.file);
+            
+            try {
+                const response = await fetch('/api/incidents/upload-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error al subir el archivo ${tempFile.fileName}`);
+                }
+                
+                return response.json();
+            } catch (error) {
+                console.error(`Error al subir el archivo ${tempFile.fileName}:`, error);
+                return null;
+            }
+        });
+        
+        try {
+            await Promise.all(uploadPromises);
+            console.log(`Se han subido ${tempFiles.length} archivos al incidente ${incidentId}`);
+        } catch (error) {
+            console.error('Error al subir archivos temporales:', error);
+        }
+    };
+
+    const handleSaveIncident = async () => {
+        // Lógica para guardar el incidente
+        // ...
+        // Después de guardar el incidente, subir los archivos temporales
+        if (incidentSaved && incident?.id) {
+            await uploadTempFiles(incident.id);
+        }
     };
 
     return (
@@ -481,12 +549,19 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     </div>
                                 </div>
                             )}
-                            
-                            {!incident && (
-                                <div className="bg-blue-50 p-4 rounded-md">
-                                    <p className="text-sm text-blue-800">
-                                        Podrás adjuntar archivos (imágenes, PDFs, documentos, etc.) después de guardar el incidente.
-                                    </p>
+                              {!incident && (
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600 mb-2">
+                                        Archivos adjuntos
+                                    </Label>
+                                    <div className="mt-2">
+                                        <FileUploader
+                                            files={tempFiles}
+                                            onFileAdd={handleAddTempFile}
+                                            onFileRemove={handleRemoveTempFile}
+                                            readOnly={false}
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </div>
