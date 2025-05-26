@@ -4,6 +4,16 @@ import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { useEffect, useState } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
+import Holidays from 'date-holidays';
+
+// Inicializar la instancia de Holidays para Colombia
+const holidays = new Holidays('CO');
+
+// Función para verificar si una fecha es día festivo en Colombia
+const isHoliday = (date: Date): boolean => {
+    const holiday = holidays.isHoliday(date);
+    return !!holiday;
+};
 
 interface TimelineViewProps {
     projects: Project[];
@@ -124,6 +134,11 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
     };
 
     const isProjectActive = (project: Project, date: Date) => {
+        // No mostrar proyectos en fines de semana o días festivos
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        const isColombianHoliday = isHoliday(date);
+        if (isWeekend || isColombianHoliday) return false;
+        
         // Convertir las fechas a UTC
         const projectStartDate = new Date(project.fechaEntrega);
         const projectEndDate = project.fechaCertificacion 
@@ -314,22 +329,35 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                     <div className="flex">
                         {dates.map((date) => {
                             const { day, dayName } = formatDayHeader(date);
-                            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                            const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0=Domingo, 6=Sábado
+                            const isColombianHoliday = isHoliday(date);
+                            const isNonWorkingDay = isWeekend || isColombianHoliday;
+                            
                             return (
                                 <div
                                     key={date.toISOString()}
                                     className={`w-12 flex-shrink-0 p-1 text-center border-r
-                                        ${isWeekend ? 'bg-gray-50' : 'bg-white'}
+                                        ${isNonWorkingDay ? 'bg-gray-100' : 'bg-white'}
+                                        ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
                                         ${isToday(date) ? 'border-b-2 border-blue-500' : ''}`}
-                                    title={date.toLocaleDateString('es-ES', { 
+                                    title={`${date.toLocaleDateString('es-ES', { 
                                         weekday: 'long',
                                         year: 'numeric',
                                         month: 'long',
                                         day: 'numeric'
-                                    })}
+                                    })}${isColombianHoliday ? ' - Día festivo en Colombia' : ''}`}
                                 >
-                                    <div className="text-xs text-gray-500">{dayName}</div>
-                                    <div className={`text-sm ${isToday(date) ? 'font-bold text-blue-600' : ''}`}>{day}</div>
+                                    <div className={`text-xs ${isNonWorkingDay ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+                                        {dayName}
+                                    </div>
+                                    <div className={`text-sm 
+                                        ${isToday(date) ? 'font-bold text-blue-600' : ''} 
+                                        ${isNonWorkingDay ? 'text-red-600' : ''}`}>
+                                        {day}
+                                    </div>
+                                    {isColombianHoliday && !isWeekend && (
+                                        <div className="h-1 w-full bg-red-300 rounded-full mt-0.5"></div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -341,7 +369,8 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                     {filteredAnalysts.map(analyst => {
                         const analystProjects = getProjectsForAnalyst(analyst.name);
 
-                        return (                            <div key={analyst.id} className="flex border-b hover:bg-gray-50">
+                        return (
+                            <div key={analyst.id} className="flex border-b hover:bg-gray-50">
                                 <div 
                                     className="w-40 flex-shrink-0 p-2 border-r" 
                                     style={{ 
@@ -352,41 +381,51 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                                     {analyst.name}
                                 </div>
                                 <div className="flex relative min-h-[50px]">
-                                    {dates.map((date) => (
-                                        <div
-                                            key={date.toISOString()}
-                                            className={`w-12 flex-shrink-0 border-r relative
-                                                ${date.getDay() === 0 || date.getDay() === 6 ? 'bg-gray-50' : ''}
-                                                ${isToday(date) ? 'bg-blue-50' : ''}`}
-                                        >                                            {analystProjects.map(project => {
-                                                if (!isProjectActive(project, date)) return null;
-                                                const jiraUrl = getJiraUrl(project.idJira);
-                                                return (
-                                                    <div key={project.idJira}>
-                                                        {jiraUrl ? (
-                                                            <a
-                                                                href={jiraUrl}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"                                                                title={renderProjectTooltip(project)}
-                                                                className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block"
-                                                                style={getProjectStyle(project)}
-                                                            >
-                                                                {project.idJira}
-                                                            </a>
-                                                        ) : (
-                                                            <span
-                                                                title={renderProjectTooltip(project)}
-                                                                className="mx-1 text-xs p-1 rounded shadow-sm block"
-                                                                style={getProjectStyle(project)}
-                                                            >
-                                                                {project.idJira}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ))}
+                                    {dates.map((date) => {
+                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                                        const isColombianHoliday = isHoliday(date);
+                                        const isNonWorkingDay = isWeekend || isColombianHoliday;
+                                        
+                                        return (
+                                            <div
+                                                key={date.toISOString()}
+                                                className={`w-12 flex-shrink-0 border-r relative
+                                                    ${isNonWorkingDay ? 'bg-gray-100' : ''}
+                                                    ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
+                                                    ${isToday(date) ? 'bg-blue-50' : ''}`}
+                                            >
+                                                {/* No mostramos proyectos en días no laborables */}
+                                                {!isNonWorkingDay && analystProjects.map(project => {
+                                                    if (!isProjectActive(project, date)) return null;
+                                                    const jiraUrl = getJiraUrl(project.idJira);
+                                                    return (
+                                                        <div key={project.idJira}>
+                                                            {jiraUrl ? (
+                                                                <a
+                                                                    href={jiraUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    title={renderProjectTooltip(project)}
+                                                                    className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block"
+                                                                    style={getProjectStyle(project)}
+                                                                >
+                                                                    {project.idJira}
+                                                                </a>
+                                                            ) : (
+                                                                <span
+                                                                    title={renderProjectTooltip(project)}
+                                                                    className="mx-1 text-xs p-1 rounded shadow-sm block"
+                                                                    style={getProjectStyle(project)}
+                                                                >
+                                                                    {project.idJira}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );
