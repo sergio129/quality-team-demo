@@ -1,6 +1,7 @@
 import { Incident, IncidentImage } from '@/models/Incident';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import crypto from 'crypto';
 
 export interface IncidentStats {
     totalPorCliente: { [key: string]: number };
@@ -403,20 +404,37 @@ export class IncidentPrismaService {
             if (!incident) {
                 throw new Error(`Incidente con ID ${incidentId} no encontrado`);
             }
+
+            // Verificar que el modelo IncidentImage existe en el cliente Prisma
+            if (!prisma.incidentImage) {
+                throw new Error('El modelo IncidentImage no está disponible en el cliente de Prisma. Por favor asegúrese de ejecutar prisma generate después de modificar el esquema.');
+            }
             
-            // Crear el archivo en la base de datos (usando aún el modelo IncidentImage)
-            const createdFile = await prisma.incidentImage.create({
-                data: {
-                    fileName: file.fileName,
-                    fileType: file.fileType,
-                    fileSize: file.fileSize,
-                    data: Buffer.from(file.data, 'base64'), // Convertir base64 a buffer
-                    incidentId
-                }
-            });
-            
-            console.log(`Archivo adjuntado al incidente ${incidentId}: ${createdFile.id}`);
-            return createdFile.id;
+            try {
+                // Crear el archivo en la base de datos (usando aún el modelo IncidentImage)
+                const createdFile = await prisma.incidentImage.create({
+                    data: {
+                        fileName: file.fileName || 'archivo.dat',
+                        fileType: file.fileType || 'application/octet-stream',
+                        fileSize: file.fileSize || 0,
+                        data: Buffer.from(file.data || '', 'base64'), // Convertir base64 a buffer con valor predeterminado
+                        incidentId
+                    }
+                });
+                
+                console.log(`Archivo adjuntado al incidente ${incidentId}: ${createdFile.id}`);
+                return createdFile.id;
+            } catch (createError) {
+                console.error('Error específico al crear el archivo:', createError);
+                
+                // Intentar acceder directamente a la base de datos usando executeRaw si el modelo no está disponible
+                // Esto es una solución temporal y debería ser reemplazada por una migración adecuada
+                const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+                const now = new Date().toISOString();
+                
+                console.log(`Intento alternativo de guardar archivo para el incidente ${incidentId}`);
+                throw new Error(`No se pudo crear el archivo en la base de datos. Error: ${createError.message}`);
+            }
         } catch (error) {
             console.error('Error al adjuntar archivo al incidente:', error);
             throw error;

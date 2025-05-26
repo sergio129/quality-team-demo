@@ -29,7 +29,7 @@ export default function IncidentImageUploader({ incidentId, readOnly = false }: 
     if (incidentId) {
       loadFiles();
     }
-  }, [incidentId]);// Función para cargar los archivos del incidente
+  }, [incidentId]);  // Función para cargar los archivos del incidente
   const loadFiles = async () => {
     if (!incidentId) return;
     
@@ -65,6 +65,7 @@ export default function IncidentImageUploader({ incidentId, readOnly = false }: 
       setIsLoading(false);
     }
   };
+  
   // Función para manejar la subida de un nuevo archivo
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -84,7 +85,8 @@ export default function IncidentImageUploader({ incidentId, readOnly = false }: 
       formData.append('incidentId', incidentId);
       formData.append('file', file);
       
-      const response = await fetch('/api/incidents/images', {
+      // Usar el nuevo endpoint que hemos creado para evitar problemas con Prisma
+      const response = await fetch('/api/incidents/upload-file', {
         method: 'POST',
         body: formData
       });
