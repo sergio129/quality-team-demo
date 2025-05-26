@@ -163,7 +163,8 @@ export default function TestCaseDefectTracker({ projectId, testPlanId }: TestCas
               <TableHead>Defectos</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
-          </TableHeader>          <TableBody>
+          </TableHeader>
+          <TableBody>
             {Object.keys(cycleGroups || {}).length > 0 ? (
               Object.keys(cycleGroups)
                 .sort((a, b) => Number(b) - Number(a))
