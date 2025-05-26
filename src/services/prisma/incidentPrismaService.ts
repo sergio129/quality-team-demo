@@ -111,10 +111,9 @@ export class IncidentPrismaService {
                     cliente: dbIncident.cliente,
                     idJira: dbIncident.idJira,
                     tipoBug: dbIncident.tipoBug || undefined,
-                    areaAfectada: dbIncident.areaAfectada || undefined,
-                    celula: dbIncident.cell?.name || dbIncident.celula,
-                    informadoPorId: dbIncident.informadoPorId,
-                    asignadoAId: dbIncident.asignadoAId,
+                    areaAfectada: dbIncident.areaAfectada || undefined,                    celula: dbIncident.cell?.name || dbIncident.celula,
+                    informadoPor: dbIncident.informadoPor?.name || '',
+                    asignadoA: dbIncident.asignadoA?.name || '',
                     etiquetas: dbIncident.etiquetas.map((tag: any) => tag.name)
                 };
             });
