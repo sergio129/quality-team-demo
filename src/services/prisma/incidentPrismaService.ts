@@ -20,6 +20,36 @@ function calculateDaysOpen(fechaCreacion: Date, fechaSolucion?: Date): number {
 }
 
 export class IncidentPrismaService {
+    private async findAnalystIdByName(name: string): Promise<string> {
+        const analyst = await prisma.qAAnalyst.findFirst({
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            }
+        });
+        if (!analyst) {
+            throw new Error(`Analista no encontrado: ${name}`);
+        }
+        return analyst.id;
+    }
+
+    private async findCellIdByName(name: string): Promise<string> {
+        const cell = await prisma.cell.findFirst({
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            }
+        });
+        if (!cell) {
+            throw new Error(`Célula no encontrada: ${name}`);
+        }
+        return cell.id;
+    }
+
     async getAll(): Promise<Incident[]> {
         try {
             const dbIncidents = await prisma.incident.findMany({
@@ -30,9 +60,8 @@ export class IncidentPrismaService {
                     etiquetas: true
                 }
             });
-            
-            // Transformar desde formato DB a formato de aplicación
-            return dbIncidents.map(dbIncident => {                // Asegurar que se use el nombre de la célula si está disponible, no el ID
+              // Transformar desde formato DB a formato de aplicación
+            return dbIncidents.map((dbIncident: any) => {                // Asegurar que se use el nombre de la célula si está disponible, no el ID
                 return {
                     id: dbIncident.id,
                     estado: dbIncident.estado,
@@ -51,17 +80,22 @@ export class IncidentPrismaService {
                     celula: dbIncident.cell?.name || dbIncident.celula,
                     informadoPorId: dbIncident.informadoPorId,
                     asignadoAId: dbIncident.asignadoAId,
-                    etiquetas: dbIncident.etiquetas.map(tag => tag.name)
+                    etiquetas: dbIncident.etiquetas.map((tag: any) => tag.name)
                 };
             });
         } catch (error) {
             console.error('Error fetching incidents from database:', error);
             throw error;
         }
-    }
-
-    async save(incident: Partial<Incident>): Promise<Incident> {
+    }    async save(incident: Partial<Incident>): Promise<Incident> {
         try {
+            // Obtener IDs basados en nombres
+            const [informadoPorId, asignadoAId, cellId] = await Promise.all([
+                this.findAnalystIdByName(incident.informadoPor || ''),
+                this.findAnalystIdByName(incident.asignadoA || ''),
+                this.findCellIdByName(incident.celula || '')
+            ]);
+
             // Generar ID único con el formato INC-YYYYMMDD-XXX
             const today = new Date();
             const dateStr = today.toISOString().slice(0,10).replace(/-/g,'');
@@ -111,9 +145,9 @@ export class IncidentPrismaService {
                     idJira: incident.idJira || '',
                     tipoBug: incident.tipoBug,
                     areaAfectada: incident.areaAfectada,
-                    celula: incident.celula || '',
-                    informadoPorId: incident.informadoPorId || '',
-                    asignadoAId: incident.asignadoAId || '',
+                    celula: cellId, // Use the resolved cell ID
+                    informadoPorId, // Use the resolved analyst IDs
+                    asignadoAId,
                     etiquetas: {
                         create: etiquetas.map(tag => ({
                             name: tag
@@ -144,18 +178,16 @@ export class IncidentPrismaService {
                 idJira: createdIncident.idJira,
                 tipoBug: createdIncident.tipoBug || undefined,
                 areaAfectada: createdIncident.areaAfectada || undefined,
-                celula: createdIncident.celula,
-                informadoPorId: createdIncident.informadoPorId,
-                asignadoAId: createdIncident.asignadoAId,
-                etiquetas: createdIncident.etiquetas.map(tag => tag.name)
+                celula: createdIncident.cell?.name || '',
+                informadoPor: createdIncident.informadoPor?.name || '',
+                asignadoA: createdIncident.asignadoA?.name || '',
+                etiquetas: createdIncident.etiquetas.map((tag: any) => tag.name)
             };
         } catch (error) {
             console.error('Error saving incident to database:', error);
             throw error;
         }
-    }
-
-    async update(id: string, incident: Partial<Incident>): Promise<Incident | null> {
+    }    async update(id: string, incident: Partial<Incident>): Promise<Incident | null> {
         try {
             // Verificar si el incidente existe
             const existingIncident = await prisma.incident.findUnique({
@@ -190,6 +222,24 @@ export class IncidentPrismaService {
             const fechaSolucion = incident.fechaSolucion;
             const diasAbierto = calculateDaysOpen(fechaCreacion, fechaSolucion);
             
+            // Obtener IDs basados en nombres si se proporcionaron
+            let informadoPorId = existingIncident.informadoPorId;
+            let asignadoAId = existingIncident.asignadoAId;
+            let cellId = existingIncident.celula;
+            
+            // Solo buscar IDs si se proporcionaron nuevos nombres
+            if (incident.informadoPor) {
+                informadoPorId = await this.findAnalystIdByName(incident.informadoPor);
+            }
+            
+            if (incident.asignadoA) {
+                asignadoAId = await this.findAnalystIdByName(incident.asignadoA);
+            }
+            
+            if (incident.celula) {
+                cellId = await this.findCellIdByName(incident.celula);
+            }
+            
             // Actualizar incidente
             const updatedIncident = await prisma.incident.update({
                 where: { id },
@@ -207,9 +257,9 @@ export class IncidentPrismaService {
                     idJira: incident.idJira,
                     tipoBug: incident.tipoBug,
                     areaAfectada: incident.areaAfectada,
-                    celula: incident.celula,
-                    informadoPorId: incident.informadoPorId,
-                    asignadoAId: incident.asignadoAId
+                    celula: cellId, // Use the resolved cell ID
+                    informadoPorId: informadoPorId, // Use the resolved analyst IDs
+                    asignadoAId: asignadoAId
                 },
                 include: {
                     etiquetas: true,
@@ -218,8 +268,7 @@ export class IncidentPrismaService {
                     asignadoA: true
                 }
             });
-            
-            // Convertir a formato de aplicación
+              // Convertir a formato de aplicación
             return {
                 id: updatedIncident.id,
                 estado: updatedIncident.estado,
@@ -235,10 +284,10 @@ export class IncidentPrismaService {
                 idJira: updatedIncident.idJira,
                 tipoBug: updatedIncident.tipoBug || undefined,
                 areaAfectada: updatedIncident.areaAfectada || undefined,
-                celula: updatedIncident.celula,
-                informadoPorId: updatedIncident.informadoPorId,
-                asignadoAId: updatedIncident.asignadoAId,
-                etiquetas: updatedIncident.etiquetas.map(tag => tag.name)
+                celula: updatedIncident.cell?.name || '',
+                informadoPor: updatedIncident.informadoPor?.name || '',
+                asignadoA: updatedIncident.asignadoA?.name || '',
+                etiquetas: updatedIncident.etiquetas.map((tag: { name: string }) => tag.name)
             };
         } catch (error) {
             console.error('Error updating incident in database:', error);
@@ -288,9 +337,8 @@ export class IncidentPrismaService {
                 },
                 totalAbiertas: 0
             };
-            
-            // Calcular estadísticas
-            incidents.forEach((incident) => {
+              // Calcular estadísticas
+            incidents.forEach((incident: any) => {
                 // Contar por cliente
                 if (!stats.totalPorCliente[incident.cliente]) {
                     stats.totalPorCliente[incident.cliente] = 0;

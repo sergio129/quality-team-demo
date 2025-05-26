@@ -84,6 +84,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
     cycles: [{ id: uuidv4(), number: 1, designed: 0, successful: 0, notExecuted: 0, defects: 0 }],
     testQuality: 100
   });
+  // Estado para la búsqueda de proyectos en el modal de creación
+  const [searchProjectTerm, setSearchProjectTerm] = useState('');
 
   // Estados para búsqueda y filtrado avanzados
   const [searchTerm, setSearchTerm] = useState('');
@@ -317,8 +319,7 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       
       return updatedPlan;
     });
-  };
-  const handleCreateTestPlan = async () => {
+  };  const handleCreateTestPlan = async () => {
     try {
       // Formatear fechas correctamente
       const now = new Date();
@@ -345,6 +346,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         updatedAt: now.toISOString()
       });
       
+      // Limpiar estados de búsqueda y cerrar el modal
+      setSearchProjectTerm('');
       setIsCreatingPlan(false);
       setNewTestPlan({
         projectId: selectedProjectId,
@@ -689,28 +692,66 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         </div>
       )}
 
-      <Dialog open={isCreatingPlan} onOpenChange={setIsCreatingPlan}>
+      <Dialog open={isCreatingPlan} onOpenChange={(open) => {
+          setIsCreatingPlan(open);
+          if (!open) {
+            setSearchProjectTerm('');
+          }
+        }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Nuevo Plan de Pruebas</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
+          </DialogHeader><div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="projectId">Proyecto</Label>
-              <Select
-                id="projectId"
-                value={newTestPlan.projectId}
-                onChange={handleProjectChange}
-                required
-              >
-                <option value="">Seleccionar proyecto</option>
-                {projects.map((project) => (
-                  <option key={project.id || project.idJira} value={project.idJira}>
-                    {project.proyecto}
-                  </option>
-                ))}
-              </Select>
+              <Label htmlFor="projectSearch">Proyecto</Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  id="projectSearch"
+                  placeholder="Buscar por ID o nombre de proyecto..."
+                  value={searchProjectTerm || ''}
+                  onChange={(e) => setSearchProjectTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              
+              {searchProjectTerm && searchProjectTerm.length > 0 && (
+                <div className="absolute z-10 mt-1 w-[calc(100%-2rem)] max-h-[300px] overflow-y-auto rounded-md border bg-white shadow-lg">
+                  {projects.filter(project => 
+                    project.proyecto?.toLowerCase().includes(searchProjectTerm.toLowerCase()) || 
+                    project.idJira?.toLowerCase().includes(searchProjectTerm.toLowerCase())
+                  ).map((project) => (
+                    <div
+                      key={project.id || project.idJira}
+                      className="cursor-pointer p-3 hover:bg-gray-50 border-b last:border-b-0"
+                      onClick={() => {
+                        const selectedProject = projects.find(p => p.id === project.id || p.idJira === project.idJira);
+                        if (selectedProject) {
+                          setSelectedProjectId(project.idJira || '');
+                          setSearchProjectTerm('');
+                          setNewTestPlan(prev => ({
+                            ...prev,
+                            projectId: project.idJira || '',
+                            projectName: project.proyecto || '',
+                            codeReference: project.idJira || ''
+                          }));
+                        }
+                      }}
+                    >
+                      <div className="font-medium">{project.proyecto}</div>
+                      <div className="text-sm text-gray-500">{project.idJira} - {project.equipo || 'Sin equipo'}</div>
+                    </div>
+                  ))}
+                  {projects.filter(project => 
+                    project.proyecto?.toLowerCase().includes(searchProjectTerm.toLowerCase()) || 
+                    project.idJira?.toLowerCase().includes(searchProjectTerm.toLowerCase())
+                  ).length === 0 && (
+                    <div className="p-3 text-sm text-gray-500 text-center">
+                      No se encontraron proyectos
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

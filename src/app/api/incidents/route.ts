@@ -15,8 +15,29 @@ export async function POST(request: Request) {
         const incident = await request.json();
         const newIncident = await incidentService.save(incident);
         return NextResponse.json(newIncident);
-    } catch (error) {
-        return NextResponse.json({ error: 'Error al crear incidencia' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Error detallado al crear incidencia:', error);
+        
+        // Errores específicos que podemos manejar mejor
+        if (error.message && error.message.includes('Analista no encontrado')) {
+            return NextResponse.json({ 
+                error: 'Error al crear incidencia: No se encontró el analista especificado',
+                details: error.message 
+            }, { status: 400 });
+        }
+        
+        if (error.message && error.message.includes('Célula no encontrada')) {
+            return NextResponse.json({ 
+                error: 'Error al crear incidencia: No se encontró la célula especificada',
+                details: error.message 
+            }, { status: 400 });
+        }
+        
+        // Error general
+        return NextResponse.json({ 
+            error: 'Error al crear incidencia',
+            details: error.message || 'Error desconocido'
+        }, { status: 500 });
     }
 }
 

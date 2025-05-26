@@ -128,11 +128,17 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       
       return updatedProject;
     });
-    
-    // Filtrar los proyectos activos y completados
-    const activeProjects = updatedProjects.filter(p => 
-      p.estadoCalculado === 'Por Iniciar' || p.estadoCalculado === 'En Progreso'
+      // Filtrar los proyectos por estado
+    const notStartedProjects = updatedProjects.filter(p => 
+      p.estadoCalculado === 'Por Iniciar'
     );
+    
+    const inProgressProjects = updatedProjects.filter(p => 
+      p.estadoCalculado === 'En Progreso'
+    );
+    
+    // Combinar proyectos activos (por iniciar + en progreso)
+    const activeProjects = [...notStartedProjects, ...inProgressProjects];
     
     const completedProjects = updatedProjects.filter(p => 
       p.estadoCalculado === 'Certificado'

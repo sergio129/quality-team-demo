@@ -314,7 +314,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                 <TableHead>
                   <div className="flex items-center">
                     <Checkbox
-                      checked={selectedTestCaseIds.length === filteredTestCases.length}                      onCheckedChange={(checked: boolean) => {
+                      checked={selectedTestCaseIds.length === filteredTestCases.length}
+                      onCheckedChange={(checked: boolean) => {
                         setSelectedTestCaseIds(checked ? filteredTestCases.map(tc => tc.id) : []);
                       }}
                     />
@@ -337,7 +338,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                 <TableRow key={testCase.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleViewDetails(testCase)}>
                   <TableCell className="font-medium">
                     <Checkbox
-                      checked={selectedTestCaseIds.includes(testCase.id)}                      onCheckedChange={(checked: boolean) => {
+                      checked={selectedTestCaseIds.includes(testCase.id)}
+                      onCheckedChange={(checked: boolean) => {
                         if (checked) {
                           setSelectedTestCaseIds(prev => [...prev, testCase.id]);
                         } else {
