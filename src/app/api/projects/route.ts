@@ -73,11 +73,41 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const project = await req.json();
-    const success = await projectService.saveProject(project);
-    if (success) {
-        // Crear automáticamente un plan de pruebas para el nuevo proyecto
-        try {            // Crear un plan de pruebas con valores predeterminados
+    try {
+        const project = await req.json();
+        console.log('[API] Datos recibidos para crear proyecto:', JSON.stringify(project, null, 2));
+        
+        // Validar campos obligatorios
+        if (!project.idJira || !project.proyecto || !project.equipo || !project.celula) {
+            return NextResponse.json({
+                message: 'Error: Faltan campos obligatorios (idJira, proyecto, equipo, celula)',
+                data: project
+            }, { status: 400 });
+        }
+        
+        // Asegurar que se tienen los valores numéricos correctos
+        if (project.horas === undefined) project.horas = 0;
+        if (project.dias === undefined) project.dias = 0;
+        if (project.diasRetraso === undefined) project.diasRetraso = 0;
+        
+        // Asegurar que las fechas sean objetos Date
+        if (project.fechaEntrega) {
+            project.fechaEntrega = new Date(project.fechaEntrega);
+        } else {
+            return NextResponse.json({
+                message: 'Error: La fecha de entrega es obligatoria',
+                data: project
+            }, { status: 400 });
+        }
+        
+        if (project.fechaCertificacion) {
+            project.fechaCertificacion = new Date(project.fechaCertificacion);
+        }
+        
+        const success = await projectService.saveProject(project);
+        if (success) {
+            // Crear automáticamente un plan de pruebas para el nuevo proyecto
+            try {            // Crear un plan de pruebas con valores predeterminados
             const now = new Date();
             
             // Corregir problema con fechas (garantizar que se use la fecha correcta)
@@ -149,9 +179,15 @@ export async function POST(req: NextRequest) {
                 message: 'Project created successfully but failed to create test plan',
                 project
             });
-        }
+        }    }
+    } catch (error: any) {
+        console.error('[API] Error al crear proyecto:', error);
+        return NextResponse.json({ 
+            message: 'Error creating project',
+            details: error?.message || 'Error desconocido',
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        }, { status: 500 });
     }
-    return NextResponse.json({ message: 'Error creating project' }, { status: 500 });
 }
 
 /**

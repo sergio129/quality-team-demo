@@ -41,43 +41,98 @@ export class ProjectPrismaService {
             console.error('Error fetching projects from database:', error);
             throw error;
         }
-    }
-
-    async saveProject(project: Project): Promise<boolean> {
+    }    async saveProject(project: Project): Promise<boolean> {
         try {
-            await prisma.project.create({
-                data: {
-                    id: project.id || crypto.randomUUID(),
-                    idJira: project.idJira,
-                    nombre: project.nombre,
-                    proyecto: project.proyecto,
-                    equipoId: project.equipo,
-                    celulaId: project.celula,
-                    horas: project.horas || 0,
-                    dias: project.dias || 0,
-                    horasEstimadas: project.horasEstimadas,
-                    estado: project.estado,
-                    estadoCalculado: project.estadoCalculado,
-                    descripcion: project.descripcion,
-                    fechaInicio: project.fechaInicio,
-                    fechaFin: project.fechaFin,
-                    fechaEntrega: project.fechaEntrega,
-                    fechaRealEntrega: project.fechaRealEntrega,
-                    fechaCertificacion: project.fechaCertificacion,
-                    diasRetraso: project.diasRetraso || 0,
-                    analistaProducto: project.analistaProducto,
-                    planTrabajo: project.planTrabajo,
-                    analysts: {
-                        create: project.analistas?.map(analystId => ({
-                            analystId
-                        })) || []
+            console.log(`[ProjectPrismaService] Guardando proyecto en base de datos: ${project.idJira}`);
+            
+            // Primero verificar que el equipo y la célula existan
+            let equipoId = project.equipo;
+            let celulaId = project.celula;
+            
+            try {
+                // Buscar equipo por ID o nombre
+                const team = await prisma.team.findFirst({
+                    where: {
+                        OR: [
+                            { id: project.equipo },
+                            { name: project.equipo }
+                        ]
                     }
+                });
+                
+                if (team) {
+                    equipoId = team.id;
+                    console.log(`[ProjectPrismaService] Equipo encontrado: ${team.name} (${team.id})`);
+                } else {
+                    console.error(`[ProjectPrismaService] Error: Equipo no encontrado: ${project.equipo}`);
+                    return false;
                 }
+                
+                // Buscar célula por ID o nombre
+                const cell = await prisma.cell.findFirst({
+                    where: {
+                        OR: [
+                            { id: project.celula },
+                            { name: project.celula }
+                        ]
+                    }
+                });
+                
+                if (cell) {
+                    celulaId = cell.id;
+                    console.log(`[ProjectPrismaService] Célula encontrada: ${cell.name} (${cell.id})`);
+                } else {
+                    console.error(`[ProjectPrismaService] Error: Célula no encontrada: ${project.celula}`);
+                    return false;
+                }
+            } catch (lookupError) {
+                console.error('[ProjectPrismaService] Error al buscar equipo/célula:', lookupError);
+                return false;
+            }
+            
+            // Construir datos del proyecto para la creación
+            const projectData = {
+                id: project.id || crypto.randomUUID(),
+                idJira: project.idJira,
+                nombre: project.nombre,
+                proyecto: project.proyecto,
+                equipoId: equipoId,
+                celulaId: celulaId,
+                horas: project.horas || 0,
+                dias: project.dias || 0,
+                horasEstimadas: project.horasEstimadas,
+                estado: project.estado || 'pendiente',
+                estadoCalculado: project.estadoCalculado || 'Por Iniciar',
+                descripcion: project.descripcion,
+                fechaInicio: project.fechaInicio,
+                fechaFin: project.fechaFin,
+                fechaEntrega: project.fechaEntrega,
+                fechaRealEntrega: project.fechaRealEntrega,
+                fechaCertificacion: project.fechaCertificacion,
+                diasRetraso: project.diasRetraso || 0,
+                analistaProducto: project.analistaProducto || '',
+                planTrabajo: project.planTrabajo || '',
+                analysts: {
+                    create: []
+                }
+            };
+            
+            // Agregar analistas si existen
+            if (project.analistas && Array.isArray(project.analistas) && project.analistas.length > 0) {
+                projectData.analysts.create = project.analistas.map(analystId => ({
+                    analystId
+                }));
+            }
+            
+            // Crear el proyecto
+            const result = await prisma.project.create({
+                data: projectData
             });
             
+            console.log(`[ProjectPrismaService] Proyecto creado correctamente con ID: ${result.id}`);
             return true;
         } catch (error) {
-            console.error('Error saving project to database:', error);
+            console.error('[ProjectPrismaService] Error al guardar proyecto en la base de datos:', error);
             throw error;
         }
     }    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {

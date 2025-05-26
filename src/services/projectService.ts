@@ -40,9 +40,55 @@ export class ProjectService {
         }
     }    async saveProject(project: Project): Promise<boolean> {
         try {
+            console.log(`[ProjectService] Guardando proyecto ${project.idJira}`, JSON.stringify({
+                idJira: project.idJira,
+                proyecto: project.proyecto,
+                equipo: project.equipo,
+                celula: project.celula
+            }, null, 2));
+            
+            // Validar campos requeridos según el esquema Prisma
+            if (!project.idJira || !project.proyecto || !project.equipo || !project.celula) {
+                console.error(`[ProjectService] Error: Datos de proyecto incompletos - faltan campos obligatorios`);
+                return false;
+            }
+            
+            // Preparar el proyecto con valores por defecto para campos requeridos
+            const projectToSave = { ...project };
+            
+            // Asegurar que campos numéricos sean números
+            projectToSave.horas = Number(projectToSave.horas) || 0;
+            projectToSave.dias = Number(projectToSave.dias) || 0;
+            projectToSave.diasRetraso = Number(projectToSave.diasRetraso) || 0;
+            
+            // Asegurar que fechas sean objetos Date
+            if (projectToSave.fechaEntrega) {
+                projectToSave.fechaEntrega = new Date(projectToSave.fechaEntrega);
+            }
+            if (projectToSave.fechaCertificacion) {
+                projectToSave.fechaCertificacion = new Date(projectToSave.fechaCertificacion);
+            }
+            if (projectToSave.fechaInicio) {
+                projectToSave.fechaInicio = new Date(projectToSave.fechaInicio);
+            }
+            if (projectToSave.fechaFin) {
+                projectToSave.fechaFin = new Date(projectToSave.fechaFin);
+            }
+            if (projectToSave.fechaRealEntrega) {
+                projectToSave.fechaRealEntrega = new Date(projectToSave.fechaRealEntrega);
+            }
+            
+            // Establecer valores predeterminados para estado si no están definidos
+            if (!projectToSave.estado) {
+                projectToSave.estado = 'pendiente';
+            }
+            if (!projectToSave.estadoCalculado) {
+                projectToSave.estadoCalculado = 'Por Iniciar';
+            }
+            
             const result = this.usePostgres
-                ? await this.prismaService.saveProject(project)
-                : await this.fileService.saveProject(project);
+                ? await this.prismaService.saveProject(projectToSave)
+                : await this.fileService.saveProject(projectToSave);
                 
             return result;
         } catch (error) {
@@ -50,11 +96,16 @@ export class ProjectService {
             // En caso de error con PostgreSQL, intentar con archivos
             if (this.usePostgres && migrationConfig.fallback.enabled) {
                 console.log('[ProjectService] Falling back to file storage');
-                return await this.fileService.saveProject(project);
+                try {
+                    return await this.fileService.saveProject(project);
+                } catch (fallbackError) {
+                    console.error('[ProjectService] Error en fallback a file storage:', fallbackError);
+                    return false;
+                }
             }
             return false;
         }
-    }    async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
+    }async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
         try {
             console.log(`[ProjectService] Actualizando proyecto ${idJira}`, JSON.stringify(updatedProject, null, 2));
             
