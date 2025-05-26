@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import AsyncSelect from 'react-select/async';
 import { useJiraIdSuggestions, JiraOption } from '@/hooks/useJiraIdSuggestions';
+import IncidentImageUploader from './IncidentImageUploader';
 import "./styles.css";
 
 interface IncidentFormProps {
@@ -20,7 +21,8 @@ interface IncidentFormProps {
     incident?: Incident;
 }
 
-export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFormProps) {    const [formData, setFormData] = useState<Partial<Incident>>({
+export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFormProps) {
+    const [formData, setFormData] = useState<Partial<Incident>>({
         celula: '',
         estado: 'Abierto',
         prioridad: 'Media',
@@ -39,6 +41,8 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         etiquetas: [],
         historialEstados: []
     });
+    
+    const [incidentSaved, setIncidentSaved] = useState(false);
 
     useEffect(() => {
         if (incident) {
@@ -72,6 +76,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
             fechaReporte: formData.fechaReporte || new Date(),
             diasAbierto: formData.diasAbierto || 0
         });
+        setIncidentSaved(true);
         onClose();
     };
 
@@ -463,6 +468,28 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     </Label>
                                 </div>
                             </div>
+                            
+                            {incident && incident.id && (
+                                <div>
+                                    <Label className="text-sm font-medium text-gray-600 mb-2">
+                                        Imágenes del Incidente
+                                    </Label>
+                                    <div className="mt-2">
+                                        <IncidentImageUploader 
+                                            incidentId={incident.id} 
+                                            readOnly={false} 
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {!incident && (
+                                <div className="bg-blue-50 p-4 rounded-md">
+                                    <p className="text-sm text-blue-800">
+                                        Podrás adjuntar imágenes después de guardar el incidente.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
