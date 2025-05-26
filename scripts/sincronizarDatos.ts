@@ -394,9 +394,9 @@ async function syncIncidents(): Promise<void> {
 /**
  * Importar funciones de sincronización bidireccional de otros scripts
  */
-import { syncTestCases } from './syncTestCasesBidirectional';
-import { syncTestPlans } from './syncTestPlansBidirectional'; 
-import { syncProjects } from './syncProjects';
+import { syncTestCasesBidirectional as syncTestCases } from './syncTestCasesBidirectional';
+import { syncTestPlansBidirectional as syncTestPlans } from './syncTestPlansBidirectional'; 
+import { syncProjects as syncProjectsBidirectional } from './syncProjects';
 import { syncIncidents as syncIncidentsBidirectional } from './syncIncidentsBidirectional';
 
 /**
@@ -411,12 +411,11 @@ async function syncAll(): Promise<void> {
     
     // Equipos y células ya están sincronizados según la verificación
     // await syncTeams();
-    // await syncCells();
-      // Sincronizar incidentes usando la sincronización bidireccional completa
+    // await syncCells();    // Sincronizar incidentes usando la sincronización bidireccional completa
     await syncIncidentsBidirectional();
     
     // Sincronizar proyectos
-    await syncProjects();
+    await syncProjectsBidirectional();
     
     // Sincronizar casos de prueba y planes
     await syncTestCases();
