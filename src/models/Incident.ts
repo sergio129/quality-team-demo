@@ -7,6 +7,15 @@ export interface StateChange {
 export type BugType = 'UI' | 'Funcional' | 'Performance' | 'Seguridad' | 'Base de Datos' | 'Integración' | 'Otro';
 export type AreaAfectada = 'Frontend' | 'Backend' | 'Base de Datos' | 'API' | 'Infraestructura' | 'Integración' | 'Otro';
 
+export interface IncidentImage {
+    id?: string;
+    fileName: string;
+    fileType: string;
+    fileSize: number;
+    data: string | ArrayBuffer; // Base64 o ArrayBuffer para el frontend
+    createdAt?: Date;
+}
+
 export interface Incident {
     id: string;
     celula: string;
@@ -27,4 +36,5 @@ export interface Incident {
     areaAfectada?: AreaAfectada;
     etiquetas?: string[];
     historialEstados?: StateChange[];
+    imagenes?: IncidentImage[]; // Nueva propiedad para las imágenes adjuntas
 }

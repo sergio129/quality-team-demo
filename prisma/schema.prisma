@@ -192,11 +192,23 @@ model Incident {
   informadoPor     QAAnalyst        @relation("InformedBy", fields: [informadoPorId], references: [id])
   historialEstados StateChange[]
   etiquetas        Tag[]
+  imagenes         IncidentImage[]  // Relación con las imágenes
 }
 
 model Tag {
   id         String   @id @default(uuid())
   name       String
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model IncidentImage {
+  id         String   @id @default(uuid())
+  fileName   String
+  fileType   String
+  fileSize   Int
+  data       Bytes    // Almacena los datos binarios de la imagen
+  createdAt  DateTime @default(now())
   incidentId String
   incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }

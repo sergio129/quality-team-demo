@@ -68,6 +68,33 @@ export class IncidentService {
             throw error;
         }
     }
+
+    async attachImage(incidentId: string, image: any): Promise<string> {
+        try {
+            return await this.prismaService.attachImageToIncident(incidentId, image);
+        } catch (error) {
+            console.error(`[IncidentService] Error al adjuntar imagen:`, error);
+            throw error;
+        }
+    }
+
+    async getImages(incidentId: string): Promise<any[]> {
+        try {
+            return await this.prismaService.getImagesForIncident(incidentId);
+        } catch (error) {
+            console.error(`[IncidentService] Error al obtener imágenes:`, error);
+            throw error;
+        }
+    }
+
+    async deleteImage(imageId: string): Promise<void> {
+        try {
+            await this.prismaService.deleteImage(imageId);
+        } catch (error) {
+            console.error(`[IncidentService] Error al eliminar imagen:`, error);
+            throw error;
+        }
+    }
 }
 
 // Exportar una instancia del servicio para mantener compatibilidad con el código existente

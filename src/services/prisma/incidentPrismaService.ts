@@ -1,4 +1,4 @@
-import { Incident } from '@/models/Incident';
+import { Incident, IncidentImage } from '@/models/Incident';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 
@@ -390,6 +390,73 @@ export class IncidentPrismaService {
             return stats;
         } catch (error) {
             console.error('Error getting incident stats from database:', error);
+            throw error;
+        }
+    }
+
+    // Método para adjuntar una imagen a un incidente
+    async attachImageToIncident(incidentId: string, image: any): Promise<string> {
+        try {
+            // Verificar que el incidente existe
+            const incident = await prisma.incident.findUnique({
+                where: { id: incidentId }
+            });
+            
+            if (!incident) {
+                throw new Error(`Incidente con ID ${incidentId} no encontrado`);
+            }
+            
+            // Crear la imagen en la base de datos
+            const createdImage = await prisma.incidentImage.create({
+                data: {
+                    fileName: image.fileName,
+                    fileType: image.fileType,
+                    fileSize: image.fileSize,
+                    data: Buffer.from(image.data, 'base64'), // Convertir base64 a buffer
+                    incidentId
+                }
+            });
+            
+            console.log(`Imagen adjuntada al incidente ${incidentId}: ${createdImage.id}`);
+            return createdImage.id;
+        } catch (error) {
+            console.error('Error al adjuntar imagen al incidente:', error);
+            throw error;
+        }
+    }
+    
+    // Método para obtener todas las imágenes de un incidente
+    async getImagesForIncident(incidentId: string): Promise<IncidentImage[]> {
+        try {
+            const images = await prisma.incidentImage.findMany({
+                where: { incidentId }
+            });
+            
+            // Convertir el buffer de datos a base64 para enviar al cliente
+            return images.map((image: any) => ({
+                id: image.id,
+                fileName: image.fileName,
+                fileType: image.fileType,
+                fileSize: image.fileSize,
+                data: image.data.toString('base64'),
+                createdAt: image.createdAt
+            }));
+        } catch (error) {
+            console.error('Error al obtener imágenes del incidente:', error);
+            throw error;
+        }
+    }
+    
+    // Método para eliminar una imagen
+    async deleteImage(imageId: string): Promise<void> {
+        try {
+            await prisma.incidentImage.delete({
+                where: { id: imageId }
+            });
+            
+            console.log(`Imagen ${imageId} eliminada correctamente`);
+        } catch (error) {
+            console.error(`Error al eliminar imagen ${imageId}:`, error);
             throw error;
         }
     }
