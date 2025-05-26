@@ -83,6 +83,12 @@ export class ProjectPrismaService {
     }    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
         try {
             console.log(`[ProjectPrismaService] Iniciando actualización del proyecto ${idJira}`);
+            console.log(`[ProjectPrismaService] Datos de actualización:`, JSON.stringify(project, null, 2));
+            
+            if (!idJira) {
+                console.error(`[ProjectPrismaService] Error: idJira es requerido para la actualización`);
+                return false;
+            }
             
             // Primero buscar el proyecto por idJira para obtener su ID interno
             const existingProject = await prisma.project.findFirst({
@@ -90,9 +96,11 @@ export class ProjectPrismaService {
             });
             
             if (!existingProject) {
-                console.log(`[ProjectPrismaService] Project with idJira ${idJira} not found for update`);
+                console.error(`[ProjectPrismaService] Proyecto con idJira ${idJira} no encontrado para actualizar`);
                 return false;
             }
+            
+            console.log(`[ProjectPrismaService] Proyecto encontrado con id interno: ${existingProject.id}`);
             
             // Preparar los datos a actualizar
             const updateData: any = {};
@@ -113,10 +121,15 @@ export class ProjectPrismaService {
                     updateData.horasEstimadas = project.horasEstimadas !== null ? 
                         Number(project.horasEstimadas) || 0 : null;
                 }
-                
-                // Campos de texto simples
-                if (project.estado !== undefined) updateData.estado = project.estado;
-                if (project.estadoCalculado !== undefined) updateData.estadoCalculado = project.estadoCalculado;
+                  // Campos de texto simples
+                if (project.estado !== undefined) {
+                    console.log(`[ProjectPrismaService] Actualizando estado de '${existingProject.estado || 'sin estado'}' a '${project.estado}'`);
+                    updateData.estado = project.estado;
+                }
+                if (project.estadoCalculado !== undefined) {
+                    console.log(`[ProjectPrismaService] Actualizando estadoCalculado de '${existingProject.estadoCalculado || 'sin estado'}' a '${project.estadoCalculado}'`);
+                    updateData.estadoCalculado = project.estadoCalculado;
+                }
                 if (project.descripcion !== undefined) updateData.descripcion = project.descripcion;
                 if (project.analistaProducto !== undefined) updateData.analistaProducto = project.analistaProducto;
                 if (project.planTrabajo !== undefined) updateData.planTrabajo = project.planTrabajo;
@@ -182,21 +195,30 @@ export class ProjectPrismaService {
                     }
                 }
                 
-                console.log(`[ProjectPrismaService] Datos a actualizar:`, updateData);
+                console.log(`[ProjectPrismaService] Datos a actualizar:`, updateData);                // Verificar si hay datos para actualizar
+                if (Object.keys(updateData).length === 0) {
+                    console.log(`[ProjectPrismaService] No hay datos para actualizar en el proyecto ${idJira}`);
+                    return true; // No hay nada que actualizar, pero no es un error
+                }
                 
                 // Actualizar el proyecto usando el ID interno
-                await prisma.project.update({
-                    where: { id: existingProject.id },
-                    data: updateData
-                });
-                
-                console.log(`[ProjectPrismaService] Proyecto ${idJira} actualizado correctamente`);
+                try {
+                    const result = await prisma.project.update({
+                        where: { id: existingProject.id },
+                        data: updateData
+                    });
+                    
+                    console.log(`[ProjectPrismaService] Proyecto ${idJira} actualizado correctamente:`, result.id);
+                    return true;
+                } catch (updateError: any) {
+                    console.error(`[ProjectPrismaService] Error al actualizar el proyecto en la base de datos:`, updateError);
+                    throw new Error(`Error al actualizar el proyecto en la base de datos: ${updateError?.message || 'Error desconocido'}`);
+                }
             } catch (dataErr) {
                 console.error(`[ProjectPrismaService] Error procesando datos del proyecto:`, dataErr);
                 throw dataErr;
             }
-            
-            // Si se proporcionan analistas, actualizar las relaciones
+              // Si se proporcionan analistas, actualizar las relaciones
             if (project.analistas !== undefined) {
                 try {
                     // Eliminar todas las relaciones existentes
@@ -205,8 +227,9 @@ export class ProjectPrismaService {
                     });
                     
                     // Crear nuevas relaciones si hay analistas
-                    if (project.analistas && Array.isArray(project.analistas) && project.analistas.length > 0) {
-                        for (const analystId of project.analistas) {
+                    const analistasArray = project.analistas;
+                    if (Array.isArray(analistasArray) && analistasArray.length > 0) {
+                        for (const analystId of analistasArray) {
                             try {
                                 // Primero verificar que el analista existe
                                 const analyst = await prisma.qAAnalyst.findUnique({

@@ -162,18 +162,14 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
         mutate(PROJECTS_API, optimisticData, false);
       }
       
-      // Enviar la solicitud real al servidor
+      // Enviar la solicitud real al servidor - CORREGIDO: usar estructura plana sin anidamiento
       const response = await fetch(PROJECTS_API, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          id,
-          idJira: projectIdJira, // Aseguramos que siempre se envíe un idJira
-          project: { 
-            estado: nuevoEstado, // Guardar también en el campo estado principal
-            estadoCalculado: nuevoEstado,
-            idJira: projectIdJira // Incluimos idJira en el objeto project también
-          } 
+          idJira: projectIdJira,
+          estado: nuevoEstado,
+          estadoCalculado: nuevoEstado
         }),
       });
 

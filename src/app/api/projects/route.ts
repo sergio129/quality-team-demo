@@ -162,9 +162,14 @@ export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
         
+        // Depuración: mostrar los datos recibidos
+        console.log('[API] Datos recibidos para actualización:', JSON.stringify(data, null, 2));
+        
         // Verificamos si la solicitud viene en el formato nuevo (con idJira separado) 
         // o en el formato antiguo (idJira dentro del proyecto)
         const idJira = data.id || data.idJira || (data.project && data.project.idJira);
+        
+        console.log('[API] ID Jira extraído:', idJira);
         
         if (!idJira) {
             return NextResponse.json(
@@ -173,8 +178,22 @@ export async function PUT(req: NextRequest) {
             );
         }
         
-        // Si tenemos un objeto project anidado, usamos esa estructura
-        const projectToUpdate = data.project ? { ...data.project } : data;
+        // Aseguramos que tenemos un objeto plano con todas las propiedades necesarias
+        // Si tenemos un objeto project anidado, lo aplanamos correctamente
+        let projectToUpdate: any = {};
+        if (data.project) {
+            console.log('[API] Usando datos del objeto project anidado');
+            projectToUpdate = { ...data.project };
+            // Aseguramos que idJira está presente en el objeto a actualizar
+            if (!projectToUpdate.idJira && idJira) {
+                projectToUpdate.idJira = idJira;
+            }
+        } else {
+            console.log('[API] Usando datos directamente del objeto principal');
+            projectToUpdate = { ...data };
+        }
+        
+        console.log('[API] Objeto preparado para actualización:', JSON.stringify(projectToUpdate, null, 2));
         
         console.log(`[API] Actualizando proyecto con idJira: ${idJira}`);
         
@@ -239,20 +258,20 @@ export async function PUT(req: NextRequest) {
                 const updatedProject = updatedProjects.find(p => p.idJira === idJira);
                 return NextResponse.json(updatedProject || { message: 'Project updated successfully' });
             }
-            
-            throw new Error('No se pudo actualizar el proyecto');
-        } catch (serviceError) {
+              throw new Error('No se pudo actualizar el proyecto');
+        } catch (serviceError: any) {
             console.error('[API] Error en el servicio:', serviceError);
             return NextResponse.json({ 
                 message: 'Error interno al actualizar el proyecto',
-                error: serviceError.message
+                error: 'No se pudo actualizar el proyecto',
+                details: serviceError?.message || 'Error desconocido'
             }, { status: 500 });
-        }
-    } catch (error) {
+        }    } catch (error: any) {
         console.error('[API] Error general:', error);
         return NextResponse.json({ 
             message: 'Error al procesar la solicitud',
-            error: error.message
+            error: error?.message || 'Error desconocido',
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
         }, { status: 500 });
     }
 }

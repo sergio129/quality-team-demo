@@ -56,7 +56,18 @@ export class ProjectService {
         }
     }    async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
         try {
-            console.log(`[ProjectService] Actualizando proyecto ${idJira}`, updatedProject);
+            console.log(`[ProjectService] Actualizando proyecto ${idJira}`, JSON.stringify(updatedProject, null, 2));
+            
+            // Validación básica de datos antes de continuar
+            if (!idJira) {
+                console.error('[ProjectService] Error: ID de Jira no proporcionado');
+                return false;
+            }
+            
+            if (!updatedProject || Object.keys(updatedProject).length === 0) {
+                console.error('[ProjectService] Error: No hay datos para actualizar');
+                return false;
+            }
             
             // Para evitar errores de tipo con las fechas, realizamos una conversión explícita
             const projectToUpdate = { ...updatedProject };
