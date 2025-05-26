@@ -154,51 +154,107 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Error creating project' }, { status: 500 });
 }
 
+/**
+ * Actualiza un proyecto existente
+ * Versión mejorada con mejor manejo de errores y tipos
+ */
 export async function PUT(req: NextRequest) {
-    const data = await req.json();
-    
-    // Verificamos si la solicitud viene en el formato nuevo (con idJira separado) 
-    // o en el formato antiguo (idJira dentro del proyecto)
-    const idJira = data.idJira || (data.project && data.project.idJira);
-    
-    if (!idJira) {
-        return NextResponse.json(
-            { message: 'Error: Se requiere un ID de Jira válido para actualizar un proyecto' }, 
-            { status: 400 }
-        );
+    try {
+        const data = await req.json();
+        
+        // Verificamos si la solicitud viene en el formato nuevo (con idJira separado) 
+        // o en el formato antiguo (idJira dentro del proyecto)
+        const idJira = data.id || data.idJira || (data.project && data.project.idJira);
+        
+        if (!idJira) {
+            return NextResponse.json(
+                { message: 'Error: Se requiere un ID de Jira válido para actualizar un proyecto' }, 
+                { status: 400 }
+            );
+        }
+        
+        // Si tenemos un objeto project anidado, usamos esa estructura
+        const projectToUpdate = data.project ? { ...data.project } : data;
+        
+        console.log(`[API] Actualizando proyecto con idJira: ${idJira}`);
+        
+        try {
+            // Preparar el proyecto para actualizar con conversiones seguras
+            const safeProject: any = { ...projectToUpdate };
+            
+            // Convertir campos de fecha con manejo de errores
+            try {
+                if (safeProject.fechaEntrega) {
+                    safeProject.fechaEntrega = new Date(safeProject.fechaEntrega);
+                }
+                if (safeProject.fechaInicio) {
+                    safeProject.fechaInicio = new Date(safeProject.fechaInicio);
+                }
+                if (safeProject.fechaFin) {
+                    safeProject.fechaFin = new Date(safeProject.fechaFin);
+                }
+                if (safeProject.fechaRealEntrega) {
+                    safeProject.fechaRealEntrega = new Date(safeProject.fechaRealEntrega);
+                }
+                if (safeProject.fechaCertificacion) {
+                    safeProject.fechaCertificacion = new Date(safeProject.fechaCertificacion);
+                }
+            } catch (dateError) {
+                console.error('[API] Error al convertir fechas:', dateError);
+                // Continuar con la actualización sin las fechas problemáticas
+            }
+            
+            // Convertir campos numéricos
+            if (safeProject.horas !== undefined) {
+                safeProject.horas = Number(safeProject.horas) || 0;
+            }
+            if (safeProject.dias !== undefined) {
+                safeProject.dias = Number(safeProject.dias) || 0;
+            }
+            if (safeProject.diasRetraso !== undefined) {
+                safeProject.diasRetraso = Number(safeProject.diasRetraso) || 0;
+            }
+            if (safeProject.horasEstimadas !== undefined && safeProject.horasEstimadas !== null) {
+                safeProject.horasEstimadas = Number(safeProject.horasEstimadas) || 0;
+            }
+            
+            // Saneamiento de campos especiales
+            if (!safeProject.analistas || !Array.isArray(safeProject.analistas)) {
+                safeProject.analistas = [];
+            }
+            
+            // Mantener consistencia entre estado y estadoCalculado
+            if (safeProject.estado) {
+                safeProject.estadoCalculado = safeProject.estado;
+            } else if (safeProject.estadoCalculado) {
+                safeProject.estado = safeProject.estadoCalculado;
+            }
+            
+            // Intentar actualizar el proyecto
+            const success = await projectService.updateProject(idJira, safeProject);
+            
+            if (success) {
+                // Obtener el proyecto actualizado para devolverlo en la respuesta
+                const updatedProjects = await projectService.getAllProjects();
+                const updatedProject = updatedProjects.find(p => p.idJira === idJira);
+                return NextResponse.json(updatedProject || { message: 'Project updated successfully' });
+            }
+            
+            throw new Error('No se pudo actualizar el proyecto');
+        } catch (serviceError) {
+            console.error('[API] Error en el servicio:', serviceError);
+            return NextResponse.json({ 
+                message: 'Error interno al actualizar el proyecto',
+                error: serviceError.message
+            }, { status: 500 });
+        }
+    } catch (error) {
+        console.error('[API] Error general:', error);
+        return NextResponse.json({ 
+            message: 'Error al procesar la solicitud',
+            error: error.message
+        }, { status: 500 });
     }
-      // Si tenemos un objeto project anidado, usamos esa estructura
-    const projectToUpdate = data.project ? { ...data.project } : data;
-    
-    console.log(`Actualizando proyecto con idJira: ${idJira}`, projectToUpdate);
-    
-    // Obtenemos el proyecto existente antes de actualizarlo
-    const existingProjects = await projectService.getAllProjects();
-    const existingProject = existingProjects.find(p => p.idJira === idJira);
-    
-    if (!existingProject) {
-        return NextResponse.json(
-            { message: `Error: No se encontró un proyecto con idJira: ${idJira}` }, 
-            { status: 404 }
-        );
-    }
-    
-    // Si se está actualizando el estado, asegurarnos de que ambos campos estado y estadoCalculado
-    // se actualicen para mantener la consistencia
-    if (projectToUpdate.estado) {
-        projectToUpdate.estadoCalculado = projectToUpdate.estado;
-    } else if (projectToUpdate.estadoCalculado) {
-        projectToUpdate.estado = projectToUpdate.estadoCalculado;
-    }
-    
-    const success = await projectService.updateProject(idJira, projectToUpdate);
-    if (success) {
-        // Obtener el proyecto actualizado para devolverlo en la respuesta
-        const updatedProjects = await projectService.getAllProjects();
-        const updatedProject = updatedProjects.find(p => p.idJira === idJira);
-        return NextResponse.json(updatedProject || { message: 'Project updated successfully' });
-    }
-    return NextResponse.json({ message: 'Error updating project' }, { status: 500 });
 }
 
 export async function DELETE(req: NextRequest) {

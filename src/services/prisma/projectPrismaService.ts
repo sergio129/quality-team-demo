@@ -82,72 +82,162 @@ export class ProjectPrismaService {
         }
     }    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
         try {
+            console.log(`[ProjectPrismaService] Iniciando actualización del proyecto ${idJira}`);
+            
             // Primero buscar el proyecto por idJira para obtener su ID interno
             const existingProject = await prisma.project.findFirst({
                 where: { idJira }
             });
             
             if (!existingProject) {
-                console.log(`Project with idJira ${idJira} not found for update`);
+                console.log(`[ProjectPrismaService] Project with idJira ${idJira} not found for update`);
                 return false;
             }
             
             // Preparar los datos a actualizar
             const updateData: any = {};
             
-            // Mapear los campos del modelo Project a los campos de Prisma
-            if (project.idJira !== undefined) updateData.idJira = project.idJira;
-            if (project.nombre !== undefined) updateData.nombre = project.nombre;
-            if (project.proyecto !== undefined) updateData.proyecto = project.proyecto;
-            if (project.horas !== undefined) updateData.horas = project.horas;
-            if (project.dias !== undefined) updateData.dias = project.dias;
-            if (project.horasEstimadas !== undefined) updateData.horasEstimadas = project.horasEstimadas;
-            if (project.estado !== undefined) updateData.estado = project.estado;
-            if (project.estadoCalculado !== undefined) updateData.estadoCalculado = project.estadoCalculado;
-            if (project.descripcion !== undefined) updateData.descripcion = project.descripcion;
-            if (project.fechaInicio !== undefined) updateData.fechaInicio = project.fechaInicio;
-            if (project.fechaFin !== undefined) updateData.fechaFin = project.fechaFin;
-            if (project.fechaEntrega !== undefined) updateData.fechaEntrega = project.fechaEntrega;
-            if (project.fechaRealEntrega !== undefined) updateData.fechaRealEntrega = project.fechaRealEntrega;
-            if (project.fechaCertificacion !== undefined) updateData.fechaCertificacion = project.fechaCertificacion;
-            if (project.diasRetraso !== undefined) updateData.diasRetraso = project.diasRetraso;
-            if (project.analistaProducto !== undefined) updateData.analistaProducto = project.analistaProducto;
-            if (project.planTrabajo !== undefined) updateData.planTrabajo = project.planTrabajo;
-            
-            // Actualizar referencias a equipo o célula
-            if (project.equipo !== undefined) updateData.equipoId = project.equipo;
-            if (project.celula !== undefined) updateData.celulaId = project.celula;
-            
-            // Actualizar el proyecto usando el ID interno
-            await prisma.project.update({
-                where: { id: existingProject.id },
-                data: updateData
-            });
+            try {
+                // Mapear los campos del modelo Project a los campos de Prisma
+                if (project.idJira !== undefined) updateData.idJira = project.idJira;
+                if (project.nombre !== undefined) updateData.nombre = project.nombre;
+                if (project.proyecto !== undefined) updateData.proyecto = project.proyecto;
+                
+                // Asegurar que los campos numéricos sean números válidos
+                if (project.horas !== undefined) updateData.horas = Number(project.horas) || 0;
+                if (project.dias !== undefined) updateData.dias = Number(project.dias) || 0;
+                if (project.diasRetraso !== undefined) updateData.diasRetraso = Number(project.diasRetraso) || 0;
+                
+                // Manejo especial para campos que pueden ser null
+                if (project.horasEstimadas !== undefined) {
+                    updateData.horasEstimadas = project.horasEstimadas !== null ? 
+                        Number(project.horasEstimadas) || 0 : null;
+                }
+                
+                // Campos de texto simples
+                if (project.estado !== undefined) updateData.estado = project.estado;
+                if (project.estadoCalculado !== undefined) updateData.estadoCalculado = project.estadoCalculado;
+                if (project.descripcion !== undefined) updateData.descripcion = project.descripcion;
+                if (project.analistaProducto !== undefined) updateData.analistaProducto = project.analistaProducto;
+                if (project.planTrabajo !== undefined) updateData.planTrabajo = project.planTrabajo;
+                
+                // Manejo seguro de fechas
+                // La conversión a Date ya debería estar hecha en el servicio llamante
+                if (project.fechaInicio !== undefined) updateData.fechaInicio = project.fechaInicio;
+                if (project.fechaFin !== undefined) updateData.fechaFin = project.fechaFin;
+                if (project.fechaEntrega !== undefined) updateData.fechaEntrega = project.fechaEntrega;
+                if (project.fechaRealEntrega !== undefined) updateData.fechaRealEntrega = project.fechaRealEntrega;
+                if (project.fechaCertificacion !== undefined) updateData.fechaCertificacion = project.fechaCertificacion;
+                
+                // Actualizar referencias a equipo o célula
+                if (project.equipo !== undefined) {
+                    // Verificar si es un ID o un nombre
+                    try {
+                        const team = await prisma.team.findFirst({
+                            where: {
+                                OR: [
+                                    { id: project.equipo },
+                                    { name: project.equipo }
+                                ]
+                            }
+                        });
+                        
+                        if (team) {
+                            updateData.equipoId = team.id;
+                            console.log(`[ProjectPrismaService] Usando equipo: ${team.name} (${team.id})`);
+                        } else {
+                            // Si no se encuentra, mantener el valor original
+                            console.log(`[ProjectPrismaService] No se encontró el equipo: ${project.equipo}, manteniendo el actual`);
+                            updateData.equipoId = existingProject.equipoId;
+                        }
+                    } catch (teamErr) {
+                        console.error("[ProjectPrismaService] Error buscando equipo:", teamErr);
+                        updateData.equipoId = existingProject.equipoId;
+                    }
+                }
+                
+                if (project.celula !== undefined) {
+                    try {
+                        // Verificar si es un ID o un nombre
+                        const cell = await prisma.cell.findFirst({
+                            where: {
+                                OR: [
+                                    { id: project.celula },
+                                    { name: project.celula }
+                                ]
+                            }
+                        });
+                        
+                        if (cell) {
+                            updateData.celulaId = cell.id;
+                            console.log(`[ProjectPrismaService] Usando célula: ${cell.name} (${cell.id})`);
+                        } else {
+                            // Si no se encuentra, mantener el valor original
+                            console.log(`[ProjectPrismaService] No se encontró la célula: ${project.celula}, manteniendo la actual`);
+                            updateData.celulaId = existingProject.celulaId;
+                        }
+                    } catch (cellErr) {
+                        console.error("[ProjectPrismaService] Error buscando célula:", cellErr);
+                        updateData.celulaId = existingProject.celulaId;
+                    }
+                }
+                
+                console.log(`[ProjectPrismaService] Datos a actualizar:`, updateData);
+                
+                // Actualizar el proyecto usando el ID interno
+                await prisma.project.update({
+                    where: { id: existingProject.id },
+                    data: updateData
+                });
+                
+                console.log(`[ProjectPrismaService] Proyecto ${idJira} actualizado correctamente`);
+            } catch (dataErr) {
+                console.error(`[ProjectPrismaService] Error procesando datos del proyecto:`, dataErr);
+                throw dataErr;
+            }
             
             // Si se proporcionan analistas, actualizar las relaciones
             if (project.analistas !== undefined) {
-                // Eliminar todas las relaciones existentes
-                await prisma.projectAnalyst.deleteMany({
-                    where: { projectId: existingProject.id }
-                });
-                
-                // Crear nuevas relaciones si hay analistas
-                if (project.analistas && project.analistas.length > 0) {
-                    for (const analystId of project.analistas) {
-                        await prisma.projectAnalyst.create({
-                            data: {
-                                project: { connect: { id: existingProject.id } },
-                                analyst: { connect: { id: analystId } }
+                try {
+                    // Eliminar todas las relaciones existentes
+                    await prisma.projectAnalyst.deleteMany({
+                        where: { projectId: existingProject.id }
+                    });
+                    
+                    // Crear nuevas relaciones si hay analistas
+                    if (project.analistas && Array.isArray(project.analistas) && project.analistas.length > 0) {
+                        for (const analystId of project.analistas) {
+                            try {
+                                // Primero verificar que el analista existe
+                                const analyst = await prisma.qAAnalyst.findUnique({
+                                    where: { id: analystId }
+                                });
+                                
+                                if (analyst) {
+                                    await prisma.projectAnalyst.create({
+                                        data: {
+                                            project: { connect: { id: existingProject.id } },
+                                            analyst: { connect: { id: analystId } }
+                                        }
+                                    });
+                                } else {
+                                    console.log(`[ProjectPrismaService] Analista no encontrado: ${analystId}, omitiendo`);
+                                }
+                            } catch (e) {
+                                console.error(`[ProjectPrismaService] Error al vincular analista ${analystId}:`, e);
+                                // Continuar con el siguiente analista
                             }
-                        });
+                        }
                     }
+                } catch (analysterr) {
+                    console.error(`[ProjectPrismaService] Error actualizando analistas:`, analysterr);
+                    // No fallamos la operación completa por los analistas
                 }
             }
             
-            console.log(`Project ${idJira} updated successfully`);
             return true;
         } catch (error) {
-            console.error(`Error updating project ${idJira}:`, error);
+            console.error(`[ProjectPrismaService] Error updating project ${idJira}:`, error);
             throw error;
         }
     }    async deleteProject(idJira: string): Promise<boolean> {

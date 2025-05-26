@@ -38,7 +38,9 @@ export class ProjectService {
             }
             throw error;
         }
-    }    async saveProject(project: Project): Promise<boolean> {
+    }
+
+    async saveProject(project: Project): Promise<boolean> {
         try {
             const result = this.usePostgres
                 ? await this.prismaService.saveProject(project)
@@ -54,48 +56,15 @@ export class ProjectService {
             }
             return false;
         }
-    }    async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
+    }
+
+    async updateProject(idJira: string, updatedProject: Partial<Project>): Promise<boolean> {
         try {
-            console.log(`[ProjectService] Actualizando proyecto ${idJira}`, updatedProject);
-            
-            // Para evitar errores de tipo con las fechas, realizamos una conversión explícita
-            const projectToUpdate = { ...updatedProject };
-            
-            // Convertir fechas al formato adecuado para PostgreSQL
-            if (projectToUpdate.fechaInicio) {
-                projectToUpdate.fechaInicio = new Date(projectToUpdate.fechaInicio);
-            }
-            if (projectToUpdate.fechaFin) {
-                projectToUpdate.fechaFin = new Date(projectToUpdate.fechaFin);
-            }
-            if (projectToUpdate.fechaEntrega) {
-                projectToUpdate.fechaEntrega = new Date(projectToUpdate.fechaEntrega);
-            }
-            if (projectToUpdate.fechaRealEntrega) {
-                projectToUpdate.fechaRealEntrega = new Date(projectToUpdate.fechaRealEntrega);
-            }
-            if (projectToUpdate.fechaCertificacion) {
-                projectToUpdate.fechaCertificacion = new Date(projectToUpdate.fechaCertificacion);
-            }
-            
-            // Convertir campos numéricos para evitar errores de tipo
-            if (projectToUpdate.horas !== undefined) {
-                projectToUpdate.horas = Number(projectToUpdate.horas);
-            }
-            if (projectToUpdate.dias !== undefined) {
-                projectToUpdate.dias = Number(projectToUpdate.dias);
-            }
-            if (projectToUpdate.diasRetraso !== undefined) {
-                projectToUpdate.diasRetraso = Number(projectToUpdate.diasRetraso);
-            }
-            if (projectToUpdate.horasEstimadas !== undefined) {
-                projectToUpdate.horasEstimadas = projectToUpdate.horasEstimadas !== null ? 
-                    Number(projectToUpdate.horasEstimadas) : null;
-            }
+            console.log(`[ProjectService] Actualizando proyecto ${idJira} usando versión debug`);
             
             const result = this.usePostgres
-                ? await this.prismaService.updateProject(idJira, projectToUpdate)
-                : await this.fileService.updateProject(idJira, projectToUpdate);
+                ? await this.debugPrismaService.updateProject(idJira, updatedProject)
+                : await this.fileService.updateProject(idJira, updatedProject);
                 
             return result;
         } catch (error) {
@@ -103,12 +72,7 @@ export class ProjectService {
             // En caso de error con PostgreSQL, intentar con archivos
             if (this.usePostgres && migrationConfig.fallback.enabled) {
                 console.log('[ProjectService] Falling back to file storage');
-                try {
-                    return await this.fileService.updateProject(idJira, updatedProject);
-                } catch (fallbackError) {
-                    console.error(`[ProjectService] Fallback error:`, fallbackError);
-                    return false;
-                }
+                return await this.fileService.updateProject(idJira, updatedProject);
             }
             return false;
         }
@@ -149,30 +113,11 @@ export class ProjectService {
             return null;
         }
     }
-    
-    async updateProjectStatus(projectId: string, newStatus: string): Promise<boolean> {
-        try {
-            const project = await this.getProjectById(projectId);
-            if (!project) return false;
-            
-            // Actualizar solo los campos de estado
-            const updateData: Partial<Project> = {
-                estado: newStatus,
-                estadoCalculado: newStatus
-            };
-            
-            // Si el estado es "Certificado" y no tiene fecha de certificación, establecerla
-            if (newStatus === 'Certificado' && !project.fechaCertificacion) {
-                updateData.fechaCertificacion = new Date().toISOString();
-            }
-            
-            return await this.updateProject(projectId, updateData);
-        } catch (error) {
-            console.error(`[ProjectService] Error in updateProjectStatus:`, error);
-            return false;
-        }
+
+    async updateProjectStatus(idJira: string, status: string): Promise<boolean> {
+        return await this.updateProject(idJira, { 
+            estado: status, 
+            estadoCalculado: status 
+        });
     }
 }
-
-// Exportar una instancia del servicio para mantener compatibilidad con el código existente
-export const projectService = new ProjectService();
