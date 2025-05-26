@@ -50,6 +50,41 @@ export class IncidentPrismaService {
         return cell.id;
     }
 
+    private async findOrCreateAnalystByName(name: string): Promise<string> {
+        if (!name) {
+            // Si no se proporciona nombre, asignar a un "Analista Desconocido" por defecto
+            name = "Analista Desconocido";
+        }
+
+        // Buscar analista existente
+        const existingAnalyst = await prisma.qAAnalyst.findFirst({
+            where: {
+                name: {
+                    equals: name,
+                    mode: 'insensitive'
+                }
+            }
+        });
+
+        // Si existe, devolver su ID
+        if (existingAnalyst) {
+            return existingAnalyst.id;
+        }
+
+        // Si no existe, crear un nuevo registro (con valores predeterminados para los campos obligatorios)
+        const newAnalyst = await prisma.qAAnalyst.create({
+            data: {
+                name: name,
+                email: `${name.toLowerCase().replace(/\s+/g, '.')}@placeholder.com`, // Email generado
+                role: 'Externo', // Rol predeterminado para analistas externos
+                color: '#808080' // Color predeterminado
+            }
+        });
+
+        console.log(`[IncidentPrismaService] Creado nuevo analista: ${name}`);
+        return newAnalyst.id;
+    }
+
     async getAll(): Promise<Incident[]> {
         try {
             const dbIncidents = await prisma.incident.findMany({
@@ -92,7 +127,7 @@ export class IncidentPrismaService {
             // Obtener IDs basados en nombres
             const [informadoPorId, asignadoAId, cellId] = await Promise.all([
                 this.findAnalystIdByName(incident.informadoPor || ''),
-                this.findAnalystIdByName(incident.asignadoA || ''),
+                this.findOrCreateAnalystByName(incident.asignadoA || ''),
                 this.findCellIdByName(incident.celula || '')
             ]);
 
@@ -231,9 +266,8 @@ export class IncidentPrismaService {
             if (incident.informadoPor) {
                 informadoPorId = await this.findAnalystIdByName(incident.informadoPor);
             }
-            
-            if (incident.asignadoA) {
-                asignadoAId = await this.findAnalystIdByName(incident.asignadoA);
+              if (incident.asignadoA) {
+                asignadoAId = await this.findOrCreateAnalystByName(incident.asignadoA);
             }
             
             if (incident.celula) {
