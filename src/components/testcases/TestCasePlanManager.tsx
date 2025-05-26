@@ -504,22 +504,13 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
             <Filter className="mr-1 h-4 w-4" />
             Filtros {advancedFiltersOpen ? '▲' : '▼'}
           </Button>
-          
-          <Button
+            <Button
             variant={showOnlyFavorites ? "default" : "outline"}
             size="sm"
             onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
           >
             <Star className="mr-1 h-4 w-4" />
             Favoritos
-          </Button>
-          
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setIsCreatingPlan(true)}
-          >
-            Nuevo Plan
           </Button>
         </div>
       </div>

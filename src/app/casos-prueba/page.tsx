@@ -241,7 +241,6 @@ export default function TestCasesPage() {
             </div>
           </div>
             <div>
-            <label className="block text-sm font-medium mb-2">Plan de Pruebas</label>
             <SelectTestPlan 
               testPlans={testPlans} 
               selectedPlanId={selectedTestPlanId} 
