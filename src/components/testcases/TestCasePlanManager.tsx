@@ -130,7 +130,6 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       }
     }
   }, []);
-
   // Filtrar planes de prueba basados en los criterios de búsqueda y filtrado
   useEffect(() => {
     if (!testPlans) {
@@ -218,8 +217,11 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       return sortBy.direction === 'asc' ? compareResult : -compareResult;
     });
     
+    // Actualizar el estado sin causar un bucle infinito
     setFilteredPlans(filtered);
-    setCurrentPage(1); // Resetear a la primera página al cambiar los filtros
+    // Solo resetear a la primera página cuando cambien los filtros, no cuando se actualiza filteredPlans
+    setCurrentPage(1); 
+    // No incluir filteredPlans en las dependencias para evitar el bucle infinito
   }, [testPlans, selectedProjectId, searchTerm, advancedFiltersOpen, filters, sortBy, favorites, showOnlyFavorites]);
 
   // Función para manejar la paginación
