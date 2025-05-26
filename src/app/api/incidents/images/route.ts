@@ -29,38 +29,45 @@ export async function GET(request: Request) {
     }
 }
 
-// POST para adjuntar una imagen a un incidente
+// POST para adjuntar un archivo a un incidente
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const incidentId = formData.get('incidentId') as string;
-        const file = formData.get('image') as File;
+        const file = formData.get('file') || formData.get('image') as File; // Aceptamos 'file' o 'image' para mantener compatibilidad
 
         if (!incidentId || !file) {
-            return NextResponse.json({ error: 'Se requiere el ID del incidente y la imagen' }, { status: 400 });
+            return NextResponse.json({ error: 'Se requiere el ID del incidente y el archivo' }, { status: 400 });
+        }
+        
+        // Validar tamaño máximo de 10 MB
+        if (file.size > 10 * 1024 * 1024) {
+            return NextResponse.json({ 
+                error: 'El archivo excede el tamaño máximo permitido de 10 MB' 
+            }, { status: 400 });
         }
 
         const fileBytes = await file.arrayBuffer();
         const buffer = Buffer.from(fileBytes);
         
-        const imageData = {
+        const fileData = {
             fileName: file.name,
-            fileType: file.type,
+            fileType: file.type || 'application/octet-stream', // Tipo por defecto si no se especifica
             fileSize: file.size,
             data: buffer.toString('base64')
         };
 
-        const imageId = await incidentService.attachImage(incidentId, imageData);
+        const fileId = await incidentService.attachImage(incidentId, fileData);
         
         return NextResponse.json({ 
             success: true, 
-            imageId,
-            message: 'Imagen adjuntada correctamente' 
+            fileId,
+            message: 'Archivo adjuntado correctamente' 
         });
     } catch (error: any) {
-        console.error('Error al adjuntar imagen al incidente:', error);
+        console.error('Error al adjuntar archivo al incidente:', error);
         return NextResponse.json({ 
-            error: 'Error al adjuntar imagen',
+            error: 'Error al adjuntar archivo',
             details: error.message || 'Error desconocido'
         }, { status: 500 });
     }

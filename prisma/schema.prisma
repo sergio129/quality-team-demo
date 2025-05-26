@@ -207,7 +207,7 @@ model IncidentImage {
   fileName   String
   fileType   String
   fileSize   Int
-  data       Bytes    // Almacena los datos binarios de la imagen
+  data       Bytes    // Almacena los datos binarios del archivo
   createdAt  DateTime @default(now())
   incidentId String
   incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
