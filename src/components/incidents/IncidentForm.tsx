@@ -468,11 +468,10 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                     </Label>
                                 </div>
                             </div>
-                            
-                            {incident && incident.id && (
+                              {incident && incident.id && (
                                 <div>
                                     <Label className="text-sm font-medium text-gray-600 mb-2">
-                                        Imágenes del Incidente
+                                        Archivos del Incidente
                                     </Label>
                                     <div className="mt-2">
                                         <IncidentImageUploader 
@@ -486,7 +485,7 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                             {!incident && (
                                 <div className="bg-blue-50 p-4 rounded-md">
                                     <p className="text-sm text-blue-800">
-                                        Podrás adjuntar imágenes después de guardar el incidente.
+                                        Podrás adjuntar archivos (imágenes, PDFs, documentos, etc.) después de guardar el incidente.
                                     </p>
                                 </div>
                             )}

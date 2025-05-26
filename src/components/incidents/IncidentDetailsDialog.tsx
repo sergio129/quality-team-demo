@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Incident } from '@/models/Incident';
+import IncidentImageUploader from './IncidentImageUploader';
 
 interface IncidentDetailsDialogProps {
     incident: Incident | null;
@@ -93,9 +94,7 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
                                 <span className="ml-2 font-medium text-gray-900">{incident.aplica ? 'Sí' : 'No'}</span>
                             </div>
                         </div>
-                    </div>
-
-                    {incident.historialEstados && incident.historialEstados.length > 0 && (
+                    </div>                    {incident.historialEstados && incident.historialEstados.length > 0 && (
                         <div className="space-y-3 pt-4 border-t border-gray-200">
                             <h4 className="text-sm font-medium text-gray-600">Historial de Estados</h4>
                             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
@@ -113,6 +112,18 @@ export function IncidentDetailsDialog({ incident, isOpen, onClose }: IncidentDet
                             </div>
                         </div>
                     )}
+                    
+                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-600">Archivos Adjuntos</h4>
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            {incident.id && (
+                                <IncidentImageUploader 
+                                    incidentId={incident.id} 
+                                    readOnly={true} 
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>

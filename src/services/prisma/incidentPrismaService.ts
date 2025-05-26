@@ -392,10 +392,8 @@ export class IncidentPrismaService {
             console.error('Error getting incident stats from database:', error);
             throw error;
         }
-    }
-
-    // Método para adjuntar una imagen a un incidente
-    async attachImageToIncident(incidentId: string, image: any): Promise<string> {
+    }    // Método para adjuntar un archivo a un incidente
+    async attachImageToIncident(incidentId: string, file: any): Promise<string> {
         try {
             // Verificar que el incidente existe
             const incident = await prisma.incident.findUnique({
@@ -406,21 +404,21 @@ export class IncidentPrismaService {
                 throw new Error(`Incidente con ID ${incidentId} no encontrado`);
             }
             
-            // Crear la imagen en la base de datos
-            const createdImage = await prisma.incidentImage.create({
+            // Crear el archivo en la base de datos (usando aún el modelo IncidentImage)
+            const createdFile = await prisma.incidentImage.create({
                 data: {
-                    fileName: image.fileName,
-                    fileType: image.fileType,
-                    fileSize: image.fileSize,
-                    data: Buffer.from(image.data, 'base64'), // Convertir base64 a buffer
+                    fileName: file.fileName,
+                    fileType: file.fileType,
+                    fileSize: file.fileSize,
+                    data: Buffer.from(file.data, 'base64'), // Convertir base64 a buffer
                     incidentId
                 }
             });
             
-            console.log(`Imagen adjuntada al incidente ${incidentId}: ${createdImage.id}`);
-            return createdImage.id;
+            console.log(`Archivo adjuntado al incidente ${incidentId}: ${createdFile.id}`);
+            return createdFile.id;
         } catch (error) {
-            console.error('Error al adjuntar imagen al incidente:', error);
+            console.error('Error al adjuntar archivo al incidente:', error);
             throw error;
         }
     }

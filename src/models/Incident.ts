@@ -7,7 +7,7 @@ export interface StateChange {
 export type BugType = 'UI' | 'Funcional' | 'Performance' | 'Seguridad' | 'Base de Datos' | 'Integración' | 'Otro';
 export type AreaAfectada = 'Frontend' | 'Backend' | 'Base de Datos' | 'API' | 'Infraestructura' | 'Integración' | 'Otro';
 
-export interface IncidentImage {
+export interface IncidentFile {
     id?: string;
     fileName: string;
     fileType: string;
@@ -15,6 +15,9 @@ export interface IncidentImage {
     data: string | ArrayBuffer; // Base64 o ArrayBuffer para el frontend
     createdAt?: Date;
 }
+
+// Mantenemos el nombre de la interfaz anterior por compatibilidad
+export interface IncidentImage extends IncidentFile {}
 
 export interface Incident {
     id: string;
@@ -36,5 +39,6 @@ export interface Incident {
     areaAfectada?: AreaAfectada;
     etiquetas?: string[];
     historialEstados?: StateChange[];
-    imagenes?: IncidentImage[]; // Nueva propiedad para las imágenes adjuntas
+    imagenes?: IncidentFile[]; // Ahora maneja cualquier archivo
+    archivos?: IncidentFile[]; // Alias alternativo para mejor semántica
 }
