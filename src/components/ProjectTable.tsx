@@ -9,6 +9,7 @@ import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
+import PaginationControls from './projects/PaginationControls';
 import { useProjects, useProjectStats, createProject, updateProject, deleteProject, changeProjectStatus } from '@/hooks/useProjects';
 
 const HOURS_PER_DAY = 9;
@@ -44,13 +45,24 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [startDate, setStartDate] = useState(() => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth(), 1);
-    });
-    const [endDate, setEndDate] = useState<Date | null>(null);    useEffect(() => {
+    });    const [endDate, setEndDate] = useState<Date | null>(null);
+    
+    // Estados para paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [pageOptions] = useState([5, 10, 20, 50, 100]);
+
+    useEffect(() => {
         // Ya no necesitamos cargar los proyectos manualmente
         fetchTeams();
         fetchCells();
         fetchAnalysts();
     }, []);
+
+    // Resetear paginación cuando cambian los filtros
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterEquipo, filterAnalista, startDate, endDate]);
 
     useEffect(() => {
         if (newProject.horas) {
@@ -326,9 +338,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const closeStatusDialog = () => {
         setStatusDialogOpen(false);
         setProjectToChangeStatus(null);
-    };
-
-    const filteredProjects = sortData(projects.filter(project => {
+    };    // Primero obtenemos todos los proyectos filtrados
+    const allFilteredProjects = sortData(projects.filter(project => {
         // Comprobar que las propiedades existan antes de acceder a ellas
         const matchesSearch =
             (project.idJira?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -346,12 +357,26 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         return matchesSearch && matchesEquipo && matchesAnalista && matchesDate;
     }));
     
+    // Cálculos para paginación
+    const totalItems = allFilteredProjects.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    
+    // Asegurar que currentPage esté dentro de los límites válidos
+    const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    if (validCurrentPage !== currentPage) {
+        setCurrentPage(validCurrentPage);
+    }
+    
+    // Obtener los proyectos para la página actual
+    const startIndex = (validCurrentPage - 1) * itemsPerPage;
+    const filteredProjects = allFilteredProjects.slice(startIndex, startIndex + itemsPerPage);
+    
     const equipos = Array.from(new Set(projects.map(p => p.equipo || '').filter(Boolean)));
-    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));    return (
+    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));return (
         <div className="space-y-4">
-            {/* Dashboard de Resumen y KPIs */}
-            {!isLoadingProjects && !isErrorProjects && filteredProjects.length > 0 && (
-                <ProjectDashboard projects={projects} />
+            {/* Dashboard de Resumen y KPIs */}            {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
+            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
+                <ProjectDashboard projects={allFilteredProjects} />
             )}
             
             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -834,6 +859,18 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
 ))}
 </tbody>
                     </table>
+                    
+                    {/* Controles de paginación */}
+                    <PaginationControls
+                        currentPage={validCurrentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        itemsPerPage={itemsPerPage}
+                        pageOptions={pageOptions}
+                        startIndex={startIndex}
+                        onPageChange={setCurrentPage}
+                        onItemsPerPageChange={setItemsPerPage}
+                    />
                 </div>
             )}
               {/* Diálogo de cambio de estado */}
