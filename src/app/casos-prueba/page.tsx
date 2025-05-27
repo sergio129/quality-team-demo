@@ -217,22 +217,43 @@ export default function TestCasesPage() {
                       ? `${filteredProjects.length} proyecto(s) encontrado(s)` 
                       : 'No se encontraron proyectos'}
                   </div>
-                  
-                  <ul>
-                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {
-                      clearProjectSelection();
-                      setShowProjectDropdown(false);
-                    }}>
-                      <div className="font-medium">Todos los proyectos</div>
+                    <ul role="listbox" aria-label="Lista de proyectos">
+                    <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      <button 
+                        className="w-full text-left bg-transparent border-0 p-0 focus:outline-blue-500" 
+                        onClick={() => {
+                          clearProjectSelection();
+                          setShowProjectDropdown(false);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            clearProjectSelection();
+                            setShowProjectDropdown(false);
+                          }
+                        }}
+                      >
+                        <div className="font-medium">Todos los proyectos</div>
+                      </button>
                     </li>
                     {filteredProjects.map((project) => (
                       <li 
                         key={project.id || project.idJira} 
                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => selectProject(project)}
                       >
-                        <div className="font-medium">{project.proyecto}</div>
-                        {project.idJira && <div className="text-xs text-gray-500">ID Jira: {project.idJira}</div>}
+                        <button
+                          className="w-full text-left bg-transparent border-0 p-0 focus:outline-blue-500"
+                          onClick={() => selectProject(project)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              selectProject(project);
+                            }
+                          }}
+                        >
+                          <div className="font-medium">{project.proyecto}</div>
+                          {project.idJira && <div className="text-xs text-gray-500">ID Jira: {project.idJira}</div>}
+                        </button>
                       </li>
                     ))}
                   </ul>

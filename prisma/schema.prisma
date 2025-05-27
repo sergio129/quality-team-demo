@@ -185,9 +185,10 @@ model Incident {
   areaAfectada     String?
   celula           String
   informadoPorId   String
-  asignadoAId      String
+  asignadoAId      String?         // Ahora es opcional
+  asignadoA_text   String?         // Nuevo campo para almacenar directamente el nombre
   testCases        DefectRelation[]
-  asignadoA        QAAnalyst        @relation("AssignedTo", fields: [asignadoAId], references: [id])
+  asignadoA        QAAnalyst?       @relation("AssignedTo", fields: [asignadoAId], references: [id])
   cell             Cell             @relation(fields: [celula], references: [id])
   informadoPor     QAAnalyst        @relation("InformedBy", fields: [informadoPorId], references: [id])
   historialEstados StateChange[]

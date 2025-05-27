@@ -112,9 +112,10 @@ export class IncidentPrismaService {
                     cliente: dbIncident.cliente,
                     idJira: dbIncident.idJira,
                     tipoBug: dbIncident.tipoBug || undefined,
-                    areaAfectada: dbIncident.areaAfectada || undefined,                    celula: dbIncident.cell?.name || dbIncident.celula,
+                    areaAfectada: dbIncident.areaAfectada || undefined,                celula: dbIncident.cell?.name || dbIncident.celula,
                     informadoPor: dbIncident.informadoPor?.name || '',
-                    asignadoA: dbIncident.asignadoA?.name || '',
+                    // Usamos preferentemente el campo de texto directo, con fallback al analista relacionado
+                    asignadoA: dbIncident.asignadoA_text || dbIncident.asignadoA?.name || '',
                     etiquetas: dbIncident.etiquetas.map((tag: any) => tag.name)
                 };
             });
@@ -125,9 +126,8 @@ export class IncidentPrismaService {
     }    async save(incident: Partial<Incident>): Promise<Incident> {
         try {
             // Obtener IDs basados en nombres
-            const [informadoPorId, asignadoAId, cellId] = await Promise.all([
+            const [informadoPorId, cellId] = await Promise.all([
                 this.findAnalystIdByName(incident.informadoPor || ''),
-                this.findOrCreateAnalystByName(incident.asignadoA || ''),
                 this.findCellIdByName(incident.celula || '')
             ]);
 
@@ -179,10 +179,12 @@ export class IncidentPrismaService {
                     cliente: incident.cliente || '',
                     idJira: incident.idJira || '',
                     tipoBug: incident.tipoBug,
-                    areaAfectada: incident.areaAfectada,
-                    celula: cellId, // Use the resolved cell ID
-                    informadoPorId, // Use the resolved analyst IDs
-                    asignadoAId,
+                    areaAfectada: incident.areaAfectada,                    celula: cellId, // Use the resolved cell ID
+                    informadoPorId, // Use the resolved analyst ID
+                    // Almacenamos directamente el nombre del responsable asignado en el campo asignadoA_text
+                    asignadoA_text: incident.asignadoA || '',
+                    // Ya no utilizamos la relación asignadoAId
+                    asignadoAId: null,
                     etiquetas: {
                         create: etiquetas.map(tag => ({
                             name: tag
@@ -205,11 +207,12 @@ export class IncidentPrismaService {
                 descripcion: createdIncident.descripcion,
                 fechaCreacion: createdIncident.fechaCreacion,
                 fechaReporte: createdIncident.fechaReporte,
-                fechaSolucion: createdIncident.fechaSolucion || undefined,
-                diasAbierto: createdIncident.diasAbierto,
+                fechaSolucion: createdIncident.fechaSolucion || undefined,                diasAbierto: createdIncident.diasAbierto,
                 esErroneo: createdIncident.esErroneo,
                 aplica: createdIncident.aplica,
                 cliente: createdIncident.cliente,
+                // Usamos el campo de texto directo para el responsable asignado
+                asignadoA: createdIncident.asignadoA_text || createdIncident.asignadoA?.name || '',
                 idJira: createdIncident.idJira,
                 tipoBug: createdIncident.tipoBug || undefined,
                 areaAfectada: createdIncident.areaAfectada || undefined,
