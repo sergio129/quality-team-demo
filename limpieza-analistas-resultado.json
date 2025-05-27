@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "message": "Proceso completado. 1 analistas eliminados, 2 fallidos.",
+  "processed": 3,
+  "successful": 1,
+  "failed": 2,
+  "results": [
+    {
+      "id": "217a0d14-f87e-4b5f-9aae-90fd029e0343",
+      "name": "Cristian Herrera",
+      "email": "cristian.herrera@placeholder.com",
+      "success": true,
+      "message": "Eliminado correctamente"
+    },
+    {
+      "id": "5fef50c3-b4ae-46b3-b56c-7d930299764d",
+      "name": "Andres Lazaro",
+      "email": "andres.lazaro@placeholder.com",
+      "success": false,
+      "message": "\nInvalid `Promise.all(incidentsAssigned.map((incident)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].incident.update()` invocation in\ne:\\Proyectos\\quality-team\\.next\\server\\chunks\\[root-of-the-server]__c57badb4._.js:1625:211\n\n  1622 });\n  1623 // 2.2 Actualizar los incidentes para usar el campo de texto\n  1624 if (incidentsAssigned.length > 0) {\n→ 1625     await Promise.all(incidentsAssigned.map((incident)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].incident.update({\n             where: {\n               id: \"INC-20250522-003\"\n             },\n             data: {\n               asignadoA_text: \"Andres Lazaro\",\n               ~~~~~~~~~~~~~~\n               asignadoAId: null,\n           ?   id?: String | StringFieldUpdateOperationsInput,\n           ?   estado?: String | StringFieldUpdateOperationsInput,\n           ?   prioridad?: String | StringFieldUpdateOperationsInput,\n           ?   descripcion?: String | StringFieldUpdateOperationsInput,\n           ?   fechaCreacion?: DateTime | DateTimeFieldUpdateOperationsInput,\n           ?   fechaReporte?: DateTime | DateTimeFieldUpdateOperationsInput,\n           ?   fechaSolucion?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,\n           ?   diasAbierto?: Int | IntFieldUpdateOperationsInput,\n           ?   esErroneo?: Boolean | BoolFieldUpdateOperationsInput,\n           ?   aplica?: Boolean | BoolFieldUpdateOperationsInput,\n           ?   cliente?: String | StringFieldUpdateOperationsInput,\n           ?   idJira?: String | StringFieldUpdateOperationsInput,\n           ?   tipoBug?: String | NullableStringFieldUpdateOperationsInput | Null,\n           ?   areaAfectada?: String | NullableStringFieldUpdateOperationsInput | Null,\n           ?   testCases?: DefectRelationUpdateManyWithoutIncidentNestedInput,\n           ?   asignadoA?: QAAnalystUpdateOneRequiredWithoutAssignedBugsNestedInput,\n           ?   cell?: CellUpdateOneRequiredWithoutIncidentsNestedInput,\n           ?   informadoPor?: QAAnalystUpdateOneRequiredWithoutIncidentsNestedInput,\n           ?   historialEstados?: StateChangeUpdateManyWithoutIncidentNestedInput,\n           ?   etiquetas?: TagUpdateManyWithoutIncidentNestedInput,\n           ?   imagenes?: IncidentImageUpdateManyWithoutIncidentNestedInput\n             }\n           })\n\nUnknown argument `asignadoA_text`. Available options are marked with ?."
+    },
+    {
+      "id": "b7df806f-cfe7-41f6-88c1-33381c075e98",
+      "name": "0",
+      "email": "0@placeholder.com",
+      "success": false,
+      "message": "\nInvalid `Promise.all(incidentsAssigned.map((incident)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].incident.update()` invocation in\ne:\\Proyectos\\quality-team\\.next\\server\\chunks\\[root-of-the-server]__c57badb4._.js:1625:211\n\n  1622 });\n  1623 // 2.2 Actualizar los incidentes para usar el campo de texto\n  1624 if (incidentsAssigned.length > 0) {\n→ 1625     await Promise.all(incidentsAssigned.map((incident)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__[\"prisma\"].incident.update({\n             where: {\n               id: \"INC-20250526-001\"\n             },\n             data: {\n               asignadoA_text: \"0\",\n               ~~~~~~~~~~~~~~\n               asignadoAId: null,\n           ?   id?: String | StringFieldUpdateOperationsInput,\n           ?   estado?: String | StringFieldUpdateOperationsInput,\n           ?   prioridad?: String | StringFieldUpdateOperationsInput,\n           ?   descripcion?: String | StringFieldUpdateOperationsInput,\n           ?   fechaCreacion?: DateTime | DateTimeFieldUpdateOperationsInput,\n           ?   fechaReporte?: DateTime | DateTimeFieldUpdateOperationsInput,\n           ?   fechaSolucion?: DateTime | NullableDateTimeFieldUpdateOperationsInput | Null,\n           ?   diasAbierto?: Int | IntFieldUpdateOperationsInput,\n           ?   esErroneo?: Boolean | BoolFieldUpdateOperationsInput,\n           ?   aplica?: Boolean | BoolFieldUpdateOperationsInput,\n           ?   cliente?: String | StringFieldUpdateOperationsInput,\n           ?   idJira?: String | StringFieldUpdateOperationsInput,\n           ?   tipoBug?: String | NullableStringFieldUpdateOperationsInput | Null,\n           ?   areaAfectada?: String | NullableStringFieldUpdateOperationsInput | Null,\n           ?   testCases?: DefectRelationUpdateManyWithoutIncidentNestedInput,\n           ?   asignadoA?: QAAnalystUpdateOneRequiredWithoutAssignedBugsNestedInput,\n           ?   cell?: CellUpdateOneRequiredWithoutIncidentsNestedInput,\n           ?   informadoPor?: QAAnalystUpdateOneRequiredWithoutIncidentsNestedInput,\n           ?   historialEstados?: StateChangeUpdateManyWithoutIncidentNestedInput,\n           ?   etiquetas?: TagUpdateManyWithoutIncidentNestedInput,\n           ?   imagenes?: IncidentImageUpdateManyWithoutIncidentNestedInput\n             }\n           })\n\nUnknown argument `asignadoA_text`. Available options are marked with ?."
+    }
+  ]
+}

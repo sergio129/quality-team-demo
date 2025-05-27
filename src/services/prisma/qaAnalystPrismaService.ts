@@ -275,12 +275,106 @@ export class QAAnalystPrismaService {
   
   async deleteAnalyst(id: string): Promise<boolean> {
     try {
-      await prisma.qAAnalyst.delete({
-        where: { id }
+      // Primero verificamos si hay incidentes que lo referencian
+      const incidentsAssigned = await prisma.incident.findMany({
+        where: { asignadoAId: id }
       });
+
+      const incidentsReported = await prisma.incident.findMany({
+        where: { informadoPorId: id }
+      });
+
+      // Si hay incidentes donde este analista está asignado o que informó, actualizamos esos registros
+      if (incidentsAssigned.length > 0) {
+        console.log(`Actualizando ${incidentsAssigned.length} incidentes donde el analista está asignado`);
+        
+        // Para cada incidente donde este analista está asignado:
+        // 1. Guardamos el nombre en asignadoA_text
+        // 2. Removemos la relación con el analista
+        for (const incident of incidentsAssigned) {
+          // Obtenemos el nombre del analista antes de eliminar la relación
+          const analyst = await prisma.qAAnalyst.findUnique({
+            where: { id }
+          });
+
+          if (analyst) {
+            await prisma.incident.update({
+              where: { id: incident.id },
+              data: {
+                asignadoA_text: analyst.name,
+                asignadoAId: null
+              }
+            });
+          }
+        }
+      }
+
+      // Para incidentes informados, necesitamos otro enfoque
+      if (incidentsReported.length > 0) {
+        console.log(`Actualizando ${incidentsReported.length} incidentes reportados por el analista`);
+        
+        // Obtenemos un analista predeterminado para reasignar
+        const defaultAnalyst = await prisma.qAAnalyst.findFirst({
+          where: {
+            id: { not: id } // Cualquier analista que no sea el que estamos eliminando
+          }
+        });
+
+        if (!defaultAnalyst) {
+          console.error('No se encontró un analista alternativo para reasignar incidentes');
+          return false;
+        }
+
+        // Reasignamos los incidentes informados
+        await prisma.incident.updateMany({
+          where: { informadoPorId: id },
+          data: {
+            informadoPorId: defaultAnalyst.id
+          }
+        });
+      }
+
+      // Eliminar todos los registros relacionados
+      await prisma.$transaction([
+        // Eliminar relaciones con células
+        prisma.analystCell.deleteMany({
+          where: { analystId: id }
+        }),
+        
+        // Eliminar habilidades
+        prisma.skill.deleteMany({
+          where: { analystId: id }
+        }),
+        
+        // Eliminar certificaciones
+        prisma.certification.deleteMany({
+          where: { analystId: id }
+        }),
+        
+        // Eliminar especialidades
+        prisma.specialty.deleteMany({
+          where: { analystId: id }
+        }),
+
+        // Eliminar relaciones con proyectos
+        prisma.projectAnalyst.deleteMany({
+          where: { analystId: id }
+        }),
+
+        // Eliminar relaciones con equipos
+        prisma.teamAnalyst.deleteMany({
+          where: { analystId: id }
+        }),
+
+        // Finalmente, eliminar el analista
+        prisma.qAAnalyst.delete({
+          where: { id }
+        })
+      ]);
+      
       return true;
     } catch (error) {
-      console.error('Error deleting analyst from database:', error);
+      console.error('Error detallado al eliminar analista:', error);
       return false;
     }
   }
