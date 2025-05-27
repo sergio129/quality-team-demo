@@ -8,6 +8,7 @@ import { TimelineView } from './TimelineView/TimelineView';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
+import ProjectDashboard from './projects/ProjectDashboard';
 import { useProjects, useProjectStats, createProject, updateProject, deleteProject, changeProjectStatus } from '@/hooks/useProjects';
 
 const HOURS_PER_DAY = 9;
@@ -346,10 +347,13 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     }));
     
     const equipos = Array.from(new Set(projects.map(p => p.equipo || '').filter(Boolean)));
-    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));
-
-    return (
+    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));    return (
         <div className="space-y-4">
+            {/* Dashboard de Resumen y KPIs */}
+            {!isLoadingProjects && !isErrorProjects && filteredProjects.length > 0 && (
+                <ProjectDashboard projects={projects} />
+            )}
+            
             <div className="flex justify-between items-center flex-wrap gap-4">
                 <div className="flex space-x-2">
                     <button
