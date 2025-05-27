@@ -448,117 +448,201 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       <div className="mb-4">
         <h2 className="text-2xl font-bold">Planes de Prueba</h2>
         <p className="text-gray-500">Gestiona los planes de prueba del proyecto</p>
-      </div>
-
-      <div className="mb-4">
-        <Label>Proyecto</Label>
-        <Select 
-          value={selectedProjectId} 
-          onChange={handleProjectChange}
-          className="max-w-md"
-        >
-          <option value="">Seleccionar proyecto</option>
-          {projectsWithPlans.map((project) => {
-            const planCount = testPlans?.filter(p => p.projectId === project.idJira).length || 0;
-            const isUrgent = project.fechaEntrega && 
-              (new Date(project.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 30;
-            
-            return (
-              <option 
-                key={project.idJira} 
-                value={project.idJira}
-                className={isUrgent ? 'text-red-600 font-medium' : ''}
+      </div>      <div className="mb-4">
+        <Label htmlFor="projectSelect">Proyecto</Label>
+        <div className="relative">
+          <div className="flex space-x-2">
+            <Select 
+              id="projectSelect"
+              value={selectedProjectId} 
+              onChange={handleProjectChange}
+              className="max-w-md flex-1"
+            >
+              <option value="">Seleccionar proyecto</option>
+              {/* Proyectos urgentes primero (30 días) */}
+              {projectsWithPlans.some(p => p.fechaEntrega && (new Date(p.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 30) && (
+                <optgroup label="⚠️ Entrega próxima (30 días)">
+                  {projectsWithPlans
+                    .filter(p => p.fechaEntrega && (new Date(p.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) <= 30)
+                    .map((project) => {
+                      const planCount = testPlans?.filter(p => p.projectId === project.idJira).length || 0;
+                      return (
+                        <option key={project.idJira} value={project.idJira}>
+                          {project.proyecto} ({planCount} {planCount === 1 ? 'plan' : 'planes'})
+                        </option>
+                      );
+                    })
+                  }
+                </optgroup>
+              )}
+              
+              {/* Proyectos con fecha de entrega */}
+              {projectsWithPlans.some(p => p.fechaEntrega && (new Date(p.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) > 30) && (
+                <optgroup label="📅 Con fecha de entrega">
+                  {projectsWithPlans
+                    .filter(p => p.fechaEntrega && (new Date(p.fechaEntrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) > 30)
+                    .map((project) => {
+                      const planCount = testPlans?.filter(p => p.projectId === project.idJira).length || 0;
+                      return (
+                        <option key={project.idJira} value={project.idJira}>
+                          {project.proyecto} ({planCount} {planCount === 1 ? 'plan' : 'planes'})
+                        </option>
+                      );
+                    })
+                  }
+                </optgroup>
+              )}
+              
+              {/* Proyectos sin fecha de entrega */}
+              {projectsWithPlans.some(p => !p.fechaEntrega) && (
+                <optgroup label="📋 Sin fecha de entrega">
+                  {projectsWithPlans
+                    .filter(p => !p.fechaEntrega)
+                    .map((project) => {
+                      const planCount = testPlans?.filter(p => p.projectId === project.idJira).length || 0;
+                      return (
+                        <option key={project.idJira} value={project.idJira}>
+                          {project.proyecto} ({planCount} {planCount === 1 ? 'plan' : 'planes'})
+                        </option>
+                      );
+                    })
+                  }
+                </optgroup>
+              )}
+            </Select>
+            {selectedProjectId && (
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => setSelectedProjectId('')}
+                title="Limpiar selección"
               >
-                {project.proyecto} ({planCount} {planCount === 1 ? 'plan' : 'planes'})
-              </option>
-            );
-          })}
-        </Select>
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
         {!isLoading && projectsWithPlans.length === 0 && (
           <p className="text-sm text-amber-600 mt-1">
             No hay proyectos con planes de prueba. Crea un nuevo plan para comenzar.
           </p>
         )}      
       </div>
-      
-      {/* Barra de búsqueda y filtros */}
-      <div className="flex flex-col md:flex-row gap-4 mb-4 items-start md:items-center">
+        {/* Barra de búsqueda y filtros */}
+      <div className="flex flex-col md:flex-row gap-3 mb-4 items-start md:items-center bg-gray-50 p-3 rounded-md border">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           <Input
-            placeholder="Buscar por referencia o nombre de proyecto..."
+            placeholder="Buscar planes por referencia o proyecto..."
             className="pl-8"
             value={searchTerm}
             onChange={handleSearchChange}
           />
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAdvancedFiltersOpen(!advancedFiltersOpen)}
-          >
-            <Filter className="mr-1 h-4 w-4" />
-            Filtros {advancedFiltersOpen ? '▲' : '▼'}
-          </Button>
-            <Button
             variant={showOnlyFavorites ? "default" : "outline"}
             size="sm"
             onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+            className="flex-shrink-0"
           >
             <Star className="mr-1 h-4 w-4" />
-            Favoritos
+            {showOnlyFavorites ? 'Todos los planes' : 'Solo favoritos'}
+          </Button>
+          
+          <Button
+            variant={advancedFiltersOpen ? "default" : "outline"}
+            size="sm"
+            onClick={() => setAdvancedFiltersOpen(!advancedFiltersOpen)}
+            className="flex-shrink-0"
+          >
+            <Filter className="mr-1 h-4 w-4" />
+            Filtros avanzados
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSearchTerm('');
+              setFilters({
+                dateFrom: '',
+                dateTo: '',
+                qualityFrom: 0,
+                qualityTo: 100,
+                hasCases: false
+              });
+              setShowOnlyFavorites(false);
+            }}
+            className="flex-shrink-0"
+            disabled={!searchTerm && !advancedFiltersOpen && !showOnlyFavorites}
+            title="Limpiar todos los filtros"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
           </Button>
         </div>
       </div>
       
       {/* Filtros avanzados */}
       {advancedFiltersOpen && (
-        <div className="bg-gray-50 p-4 rounded-md border mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="dateFrom">Fecha desde:</Label>
+        <div className="bg-gray-50 p-4 rounded-md border mb-4 grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="dateFrom" className="text-xs font-medium">Fecha desde</Label>
             <Input
               id="dateFrom"
               name="dateFrom"
               type="date"
               value={filters.dateFrom}
               onChange={handleFilterChange}
+              className="h-9"
             />
           </div>
           
-          <div>
-            <Label htmlFor="dateTo">Fecha hasta:</Label>
+          <div className="space-y-1">
+            <Label htmlFor="dateTo" className="text-xs font-medium">Fecha hasta</Label>
             <Input
               id="dateTo"
               name="dateTo"
               type="date"
               value={filters.dateTo}
               onChange={handleFilterChange}
+              className="h-9"
             />
           </div>
           
-          <div className="flex flex-col">
-            <Label htmlFor="qualityRange">Calidad (%): {filters.qualityFrom} - {filters.qualityTo}</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="qualityFrom"
-                name="qualityFrom"
-                type="range"
-                min="0"
-                max="100"
-                value={filters.qualityFrom}
-                onChange={handleFilterChange}
-              />
-              <Input
-                id="qualityTo"
-                name="qualityTo"
-                type="range"
-                min="0"
-                max="100"
-                value={filters.qualityTo}
-                onChange={handleFilterChange}
-              />
+          <div className="space-y-1 col-span-1 md:col-span-2">
+            <div className="flex justify-between">
+              <Label htmlFor="qualityRange" className="text-xs font-medium">Calidad</Label>
+              <span className="text-xs text-gray-500">{filters.qualityFrom}% - {filters.qualityTo}%</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <span className="text-xs text-gray-500">Mínimo</span>
+                <Input
+                  id="qualityFrom"
+                  name="qualityFrom"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={filters.qualityFrom}
+                  onChange={handleFilterChange}
+                  className="h-2"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-gray-500">Máximo</span>
+                <Input
+                  id="qualityTo"
+                  name="qualityTo"
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={filters.qualityTo}
+                  onChange={handleFilterChange}
+                  className="h-2"
+                />
+              </div>
             </div>
           </div>
           
@@ -571,7 +655,7 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
               onChange={handleFilterChange}
               className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
             />
-            <Label htmlFor="hasCases">Solo planes con casos</Label>
+            <Label htmlFor="hasCases" className="text-sm">Solo planes con casos</Label>
           </div>
         </div>
       )}
@@ -583,101 +667,207 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         </p>
         
         <UpdateQualityButton />
-      </div>
-
-      {isLoading ? (
+      </div>      {isLoading ? (
         <div className="flex justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
         </div>
-      ) : filteredPlans && filteredPlans.length > 0 ? (        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Referencia</TableHead>
-                <TableHead>Proyecto</TableHead>
-                <TableHead>Fecha Inicio</TableHead>
-                <TableHead>Fecha Fin</TableHead>
-                <TableHead>Casos Totales</TableHead>
-                <TableHead className="flex items-center gap-1">
-                  Calidad
-                  <QualityInfoButton />
-                </TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPlans
-                .slice((currentPage - 1) * plansPerPage, currentPage * plansPerPage)
-                .map((plan) => (
-                <TableRow key={plan.id}>
-                  <TableCell>{plan.codeReference}</TableCell>
-                  <TableCell>{plan.projectName}</TableCell>
-                  <TableCell>{formatDateWithoutTimezone(plan.startDate)}</TableCell>
-                  <TableCell>{plan.endDate ? formatDateWithoutTimezone(plan.endDate) : '-'}</TableCell>
-                  <TableCell>{plan.totalCases}</TableCell>
-                  <TableCell>{plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onPlanSelected(plan.id)}
-                      >
-                        Gestionar Casos
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditPlan(plan)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-800 hover:bg-red-100"
-                        onClick={() => prepareDeletePlan(plan)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Eliminar
-                      </Button>
+      ) : filteredPlans && filteredPlans.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-gray-50">
+                  <TableHead className="cursor-pointer" onClick={() => handleSort('codeReference')}>
+                    Referencia {sortBy.field === 'codeReference' && (sortBy.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer whitespace-nowrap" onClick={() => handleSort('projectName')}>
+                    Proyecto {sortBy.field === 'projectName' && (sortBy.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer whitespace-nowrap" onClick={() => handleSort('startDate')}>
+                    Fecha {sortBy.field === 'startDate' && (sortBy.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer text-center whitespace-nowrap" onClick={() => handleSort('totalCases')}>
+                    Casos {sortBy.field === 'totalCases' && (sortBy.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead className="cursor-pointer text-center whitespace-nowrap" onClick={() => handleSort('testQuality')}>
+                    <div className="flex items-center justify-center gap-1">
+                      Calidad
+                      <QualityInfoButton />
+                      {sortBy.field === 'testQuality' && (sortBy.direction === 'asc' ? '↑' : '↓')}
                     </div>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredPlans
+                  .slice((currentPage - 1) * plansPerPage, currentPage * plansPerPage)
+                  .map((plan) => (
+                  <TableRow key={plan.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => toggleFavorite(plan.id)}
+                          className="text-gray-400 hover:text-yellow-500 focus:outline-none"
+                          title={favorites.includes(plan.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
+                        >
+                          {favorites.includes(plan.id) ? 
+                            <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" /> : 
+                            <StarOff className="h-4 w-4" />
+                          }
+                        </button>
+                        {plan.codeReference}
+                      </div>
+                    </TableCell>
+                    <TableCell className="truncate max-w-[200px]" title={plan.projectName}>
+                      {plan.projectName}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <div>
+                        {formatDateWithoutTimezone(plan.startDate)}
+                        {plan.endDate && (
+                          <div className="text-xs text-gray-500">
+                            hasta {formatDateWithoutTimezone(plan.endDate)}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">{plan.totalCases}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-center">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium 
+                          ${plan.testQuality >= 80 ? 'bg-green-100 text-green-800' : 
+                            plan.testQuality >= 50 ? 'bg-yellow-100 text-yellow-800' : 
+                            plan.testQuality >= 0 ? 'bg-red-100 text-red-800' : 
+                            'bg-gray-100 text-gray-800'}`}>
+                          {plan.testQuality === -1 ? 'N/A' : `${plan.testQuality}%`}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 h-8"
+                          onClick={() => onPlanSelected(plan.id)}
+                          title="Gestionar casos de prueba"
+                        >
+                          Casos
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEditPlan(plan)}
+                          title="Editar plan"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-800 hover:bg-red-100"
+                          onClick={() => prepareDeletePlan(plan)}
+                          title="Eliminar plan"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : (
         <div className="text-center p-8 border rounded-md">
           <p className="text-gray-500">No hay planes de prueba disponibles para este proyecto.</p>
         </div>
-      )}
-
-      {/* Paginación */}
+      )}      {/* Paginación */}
       {filteredPlans.length > plansPerPage && (
-        <div className="flex justify-between items-center mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Anterior
-          </Button>
-          <span className="text-sm text-gray-500">
-            Página {currentPage} de {Math.ceil(filteredPlans.length / plansPerPage)}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === Math.ceil(filteredPlans.length / plansPerPage)}
-          >
-            Siguiente
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
+        <div className="flex justify-center items-center mt-4">
+          <div className="flex items-center gap-1 bg-gray-50 border rounded-lg p-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              title="Primera página"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline></svg>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              title="Página anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex items-center mx-2">
+              {/* Mostrar páginas numéricas */}
+              {Array.from({ length: Math.min(5, Math.ceil(filteredPlans.length / plansPerPage)) }, (_, i) => {
+                // Cálculo para mostrar las páginas cercanas a la actual
+                let pageToShow;
+                const totalPages = Math.ceil(filteredPlans.length / plansPerPage);
+                
+                if (totalPages <= 5) {
+                  // Si hay 5 o menos páginas, mostrar todas
+                  pageToShow = i + 1;
+                } else if (currentPage <= 3) {
+                  // Si estamos en las primeras páginas
+                  pageToShow = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  // Si estamos en las últimas páginas
+                  pageToShow = totalPages - 4 + i;
+                } else {
+                  // Si estamos en una página intermedia
+                  pageToShow = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageToShow}
+                    variant={currentPage === pageToShow ? "default" : "ghost"}
+                    size="sm"
+                    className={`h-8 w-8 p-0 font-medium ${currentPage === pageToShow ? "" : "text-gray-600"}`}
+                    onClick={() => handlePageChange(pageToShow)}
+                  >
+                    {pageToShow}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === Math.ceil(filteredPlans.length / plansPerPage)}
+              title="Página siguiente"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handlePageChange(Math.ceil(filteredPlans.length / plansPerPage))}
+              disabled={currentPage === Math.ceil(filteredPlans.length / plansPerPage)}
+              title="Última página"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+            </Button>
+          </div>
         </div>
       )}
 
