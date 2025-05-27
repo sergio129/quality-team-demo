@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTestPlans, createTestPlan } from '@/hooks/useTestCases';
 import { useProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
@@ -86,10 +86,8 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
   });
   // Estado para la búsqueda de proyectos en el modal de creación
   const [searchProjectTerm, setSearchProjectTerm] = useState('');
-
   // Estados para búsqueda y filtrado avanzados
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredPlans, setFilteredPlans] = useState<TestPlan[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [plansPerPage] = useState(10);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
@@ -131,12 +129,11 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
         console.error('Error parsing favorites from localStorage:', e);
       }
     }
-  }, []);
-  // Filtrar planes de prueba basados en los criterios de búsqueda y filtrado
-  useEffect(() => {
+  }, []);  // Usar useMemo en lugar de useEffect para calcular los planes filtrados
+  // Esto evita el bucle infinito de actualizaciones
+  const filteredPlans = useMemo(() => {
     if (!testPlans) {
-      setFilteredPlans([]);
-      return;
+      return [];
     }
 
     // Primero filtrar por proyecto seleccionado
@@ -219,12 +216,13 @@ export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanMana
       return sortBy.direction === 'asc' ? compareResult : -compareResult;
     });
     
-    // Actualizar el estado sin causar un bucle infinito
-    setFilteredPlans(filtered);
-    // Solo resetear a la primera página cuando cambien los filtros, no cuando se actualiza filteredPlans
-    setCurrentPage(1); 
-    // No incluir filteredPlans en las dependencias para evitar el bucle infinito
+    return filtered;
   }, [testPlans, selectedProjectId, searchTerm, advancedFiltersOpen, filters, sortBy, favorites, showOnlyFavorites]);
+  
+  // Efecto separado para resetear la página cuando cambien los filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedProjectId, searchTerm, advancedFiltersOpen, filters, sortBy, showOnlyFavorites]);
 
   // Función para manejar la paginación
   const handlePageChange = (page: number) => {
