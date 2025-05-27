@@ -833,6 +833,9 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                     analysts={analysts}
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}
+                    startDate={startDate}
+                    endDate={endDate}
+                    selectedDateFilter={selectedDateFilter}
                 />
             ) : activeView === 'cards' ? (
                 <ProjectCardsView
