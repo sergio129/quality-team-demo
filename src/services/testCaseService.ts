@@ -400,13 +400,33 @@ export const testCaseService = {
       if (casesWithPrefix.length === 0) {
         return `${prefix}001`;
       }
-      
-      // Extraemos los números del final de los códigos existentes
+        // Extraemos los números del final de los códigos existentes
       const numbers = casesWithPrefix
         .map(tc => {
-          // Extraer el número del final del código (después del último guion)
-          const match = tc.codeRef.match(/[0-9]+$/);
-          return match ? parseInt(match[0], 10) : 0;
+          if (!tc.codeRef || tc.codeRef.length > 100) {
+            return 0; // Si el código es demasiado largo o nulo, ignoramos
+          }
+          // Extraer el número del final del código usando una expresión regular segura
+          // \d+ es más seguro que [0-9]+ y test() es más eficiente que match() para esta comprobación          // Extraer el número del final de manera segura sin bactracking
+          let suffixNumber = 0;
+          let i = tc.codeRef.length - 1;
+          let digitEnd = -1;
+          let digitStart = -1;
+          
+          // Encuentra el final de los dígitos (último dígito)
+          while (i >= 0 && tc.codeRef[i] >= '0' && tc.codeRef[i] <= '9') {
+            digitEnd = i;
+            i--;
+          }
+          
+          // Si encontramos dígitos al final
+          if (digitEnd !== -1) {
+            digitStart = i + 1; // Posición del primer dígito
+            const numberStr = tc.codeRef.substring(digitStart, digitEnd + 1);
+            suffixNumber = parseInt(numberStr, 10);
+          }
+          
+          return suffixNumber;
         })
         .filter(num => !isNaN(num));
       

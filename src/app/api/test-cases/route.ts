@@ -35,11 +35,29 @@ export async function POST(req: NextRequest) {
     testCaseData.status = testCaseData.status || 'No ejecutado';
     testCaseData.priority = testCaseData.priority || 'Media';
     testCaseData.cycle = testCaseData.cycle || 1;
-    
-    // Generar código de referencia único si tiene un plan de pruebas o proyecto seleccionado
+      // Generar código de referencia único si tiene un plan de pruebas o proyecto seleccionado
     if (testCaseData.codeRef) {
-        // Si el código ya tiene un número al final, lo mantenemos
-        if (!testCaseData.codeRef.match(/[0-9]+$/)) {
+        // Si el código ya tiene un número al final, lo mantenemos        // Establecemos una longitud máxima para evitar ataques de DoS
+        const MAX_LENGTH = 100; // Longitud máxima razonable para el código
+        if (testCaseData.codeRef.length > MAX_LENGTH) {
+            testCaseData.codeRef = testCaseData.codeRef.substring(0, MAX_LENGTH);
+        }
+
+        // Enfoque más seguro sin usar expresiones regulares con backtracking
+        // Verificamos manualmente si la cadena termina con dígitos
+        let hasDigitSuffix = false;
+        
+        if (testCaseData.codeRef.length > 0) {
+            // Comenzamos desde el final de la cadena
+            let i = testCaseData.codeRef.length - 1;
+            
+            // Si el último carácter es un dígito, tenemos un sufijo de dígitos
+            if (testCaseData.codeRef[i] >= '0' && testCaseData.codeRef[i] <= '9') {
+                hasDigitSuffix = true;
+            }
+        }
+        
+        if (!hasDigitSuffix) {
             // Si no tiene un número al final, generamos uno único
             const prefix = testCaseData.codeRef;
             testCaseData.codeRef = await testCaseService.generateUniqueCodeRef(prefix);

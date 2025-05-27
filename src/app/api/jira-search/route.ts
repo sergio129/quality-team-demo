@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -50,15 +51,40 @@ export async function GET(request: Request) {
                     results.push(`${matchingPrefix}-${paddedNum}`);
                 }
             }
-        }
-
-        // 5. Generar sugerencias para prefijos que coincidan
+        }        // 5. Generar sugerencias para prefijos que coincidan
         if (matchingPrefixes.length > 0 && !isNumber && !isFullId && !isPartialId) {
             matchingPrefixes.forEach(prefix => {
                 // Generar 5 IDs aleatorios para cada prefijo
                 for (let i = 0; i < 5; i++) {
-                    const num = Math.floor(Math.random() * 9000) + 1000;
-                    results.push(`${prefix}-${num}`);
+                    // Usar crypto.randomBytes para generar números aleatorios criptográficamente seguros
+                    try {
+                        // Generar un número entre 1000 y 9999 usando crypto
+                        const buffer = crypto.randomBytes(2); // 2 bytes = 16 bits
+                        const randomValue = buffer.readUInt16BE(0);
+                        const num = 1000 + (randomValue % 9000);
+                        
+                        results.push(`${prefix}-${num}`);
+                    } catch (cryptoError) {                        // Fallback en caso de que crypto no esté disponible
+                        // Aunque Math.random no es criptográficamente seguro, 
+                        // lo hacemos más robusto combinando timestamp y técnicas adicionales
+                        console.warn("Crypto API no disponible, usando alternativa mejorada");
+                        
+                        // Usar una combinación de fuentes de entropía
+                        const timestamp = Date.now();
+                        const performanceValue = typeof performance !== 'undefined' ? 
+                            performance.now() * 1000 : 0;
+                        
+                        // Combinar varias fuentes para mejorar la aleatoriedad
+                        let randomValue = timestamp ^ performanceValue;
+                        
+                        // Añadir un segundo valor pseudo-aleatorio y aplicar operaciones para mejorar dispersión
+                        const randomValue2 = (timestamp * 31) ^ (Date.now() * 17);
+                        randomValue = (randomValue * 7919) ^ (randomValue2 * 104729); // Números primos grandes
+                        
+                        // Asegurar que esté en el rango requerido (1000-9999)
+                        const num = 1000 + (Math.abs(randomValue) % 9000);
+                        results.push(`${prefix}-${num}`);
+                    }
                 }
             });
         }
