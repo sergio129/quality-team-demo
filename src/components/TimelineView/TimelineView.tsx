@@ -2,7 +2,7 @@
 
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import Holidays from 'date-holidays';
 
@@ -34,8 +34,10 @@ export function TimelineView({
     startDate,
     endDate,
     selectedDateFilter
-}: Readonly<TimelineViewProps>) {
-    const [dates, setDates] = useState<Date[]>([]);    // Efecto para actualizar el calendario basado en los filtros de fecha del padre
+}: Readonly<TimelineViewProps>): ReactNode {
+    const [dates, setDates] = useState<Date[]>([]);
+    
+    // Efecto para actualizar el calendario basado en los filtros de fecha del padre
     useEffect(() => {
         const newDates: Date[] = [];
         
@@ -60,19 +62,26 @@ export function TimelineView({
                     calculatedEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
                     break;
                 case 'year':
-                    // Para año, mostrar solo los primeros 31 días para no sobrecargar
+                    // Para año, limitamos a mostrar solo 30 días para no sobrecargar
+                    // Esto es una solución temporal hasta implementar una vista específica para año
                     calculatedEndDate = new Date(currentDate);
-                    calculatedEndDate.setDate(currentDate.getDate() + 30);
+                    calculatedEndDate.setDate(currentDate.getDate() + 29); // Limitamos a 30 días (0-29)
                     break;
             }
         }
         
+        // Limitamos el máximo de fechas a mostrar para evitar problemas de rendimiento
+        const maxDatesToShow = 90; // Máximo número de días que mostraremos en cualquier vista
+        
         // Generar el array de fechas a mostrar
-        while (currentDate <= calculatedEndDate) {
+        let daysCount = 0;
+        while (currentDate <= calculatedEndDate && daysCount < maxDatesToShow) {
             newDates.push(new Date(currentDate));
             currentDate.setDate(currentDate.getDate() + 1);
+            daysCount++;
         }
         
+        console.log(`Generadas ${newDates.length} fechas para la vista de ${selectedDateFilter}`);
         setDates(newDates);
     }, [startDate, endDate, selectedDateFilter]);
 
@@ -117,53 +126,39 @@ export function TimelineView({
     };    const isProjectActive = (project: Project, date: Date) => {
         // No mostrar proyectos en fines de semana o días festivos
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        if (isWeekend) return false;
+        
+        // Optimización: solo verificar festivos si no es fin de semana
         const isColombianHoliday = isHoliday(date);
-        if (isWeekend || isColombianHoliday) return false;
+        if (isColombianHoliday) return false;
         
         // Si no hay fechaEntrega, no podemos determinar si está activo
         if (!project.fechaEntrega) return false;
         
-        // Convertir fechas a objetos Date y normalizar
-        const projectFechaEntrega = new Date(project.fechaEntrega);
-        projectFechaEntrega.setHours(0, 0, 0, 0);
-        
-        const projectFechaCertificacion = project.fechaCertificacion 
-            ? new Date(project.fechaCertificacion) 
+        // Convertir fechas a timestamps para comparaciones más rápidas
+        const compareTimestamp = new Date(date).setHours(0, 0, 0, 0);
+        const entregaTimestamp = new Date(project.fechaEntrega).setHours(0, 0, 0, 0);
+        const certificacionTimestamp = project.fechaCertificacion 
+            ? new Date(project.fechaCertificacion).setHours(0, 0, 0, 0) 
             : null;
-        if (projectFechaCertificacion) {
-            projectFechaCertificacion.setHours(0, 0, 0, 0);
+        const todayTimestamp = new Date().setHours(0, 0, 0, 0);
+        
+        // CASO 1: Proyecto certificado - mostrar solo entre fecha entrega y certificación
+        if (certificacionTimestamp !== null) {
+            return compareTimestamp >= entregaTimestamp && compareTimestamp <= certificacionTimestamp;
         }
         
-        // Normalizar la fecha de comparación
-        const compareDate = new Date(date);
-        compareDate.setHours(0, 0, 0, 0);
-        
-        // Obtener la fecha actual para proyectos en curso
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        // Simplificar la lógica:
-        
-        // CASO 1: Si el proyecto tiene fecha de certificación y la fecha está entre la fecha de entrega y certificación
-        if (projectFechaCertificacion) {
-            return compareDate.getTime() >= projectFechaEntrega.getTime() && 
-                  compareDate.getTime() <= projectFechaCertificacion.getTime();
-        }
-        
-        // CASO 2: Si el proyecto NO tiene fecha de certificación:
-        
-        // Si la fecha de comparación es exactamente la fecha de entrega, siempre mostrar
-        if (compareDate.getTime() === projectFechaEntrega.getTime()) {
+        // CASO 2: Proyecto no certificado
+        // Mostrar si es el día exacto de entrega
+        if (compareTimestamp === entregaTimestamp) {
             return true;
         }
         
-        // Para fechas después de la entrega hasta hoy (proyectos en curso/retrasados)
-        if (compareDate.getTime() > projectFechaEntrega.getTime() && 
-            compareDate.getTime() <= today.getTime()) {
+        // Mostrar si es después de la entrega y hasta hoy (en curso o retrasado)
+        if (compareTimestamp > entregaTimestamp && compareTimestamp <= todayTimestamp) {
             return true;
         }
         
-        // En cualquier otro caso, no mostrar
         return false;
     };// Esta función ahora retorna un objeto de estilo en lugar de clases CSS
     const getProjectStyle = (project: Project) => {
@@ -210,11 +205,7 @@ export function TimelineView({
         // Proyecto en curso dentro del plazo usando el color del analista
         return style;
     };
-    
-    // Para mantener la compatibilidad con el código existente que espera una clase CSS
-    const getProjectColor = () => {
-        return ''; // Ya no necesitamos clases, usamos estilos en línea
-    };
+      // Esta función ya no es necesaria porque usamos estilos en línea en lugar de clases CSS
 
     const renderProjectTooltip = (project: Project) => {
         const today = new Date();
@@ -241,11 +232,7 @@ Fecha Entrega: ${formatDate(project.fechaEntrega)}
 ${project.fechaCertificacion ? `Fecha Certificación: ${formatDate(project.fechaCertificacion)}` : ''}
 ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
 `.trim();
-    };
-
-    // Generar array de años para el selector (5 años atrás y adelante)
-    const years = Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - 5 + i);
-    const months = Array.from({ length: 12 }, (_, i) => new Date(2024, i, 1));
+    };    // Estos arrays ya no son necesarios porque los filtros de fecha se gestionan desde el componente padre
 
     return (
         <div className="overflow-x-auto">
@@ -360,15 +347,19 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                             </div>
                         );
                     })}
-                </div>                {/* Información sobre la fecha seleccionada */}
-                <div className="mt-4 text-center">
+                </div>                {/* Información sobre la fecha seleccionada */}                <div className="mt-4 text-center">
                     <span className="font-semibold">
                         {selectedDateFilter === 'week' 
                             ? `Semana del ${formatDate(startDate)}` 
                             : selectedDateFilter === 'year'
-                            ? startDate.getFullYear()
+                            ? `${startDate.getFullYear()} - Vista previa limitada (30 días)`
                             : startDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                     </span>
+                    {selectedDateFilter === 'year' && (
+                        <p className="text-sm text-orange-600 mt-1">
+                            La vista de año completo muestra solo los primeros 30 días para mejorar el rendimiento
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

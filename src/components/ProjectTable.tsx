@@ -109,7 +109,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 end.setDate(start.getDate() + 6);
                 break;
             case 'year':
-                // Inicio del año actual
+                // Inicio del año actual - para vista completa filtramos proyectos por año
+                // pero en la vista del calendario se mostrará un período más corto
                 start = new Date(today.getFullYear(), 0, 1);
                 end = new Date(today.getFullYear(), 11, 31);
                 break;
