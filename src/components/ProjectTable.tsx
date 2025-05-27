@@ -30,14 +30,15 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
     const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    
+    const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [activeView, setActiveView] = useState<'table' | 'timeline' | 'cards'>('table');
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
-    }>({ key: null, direction: 'asc' });
-    const [filterEquipo, setFilterEquipo] = useState<string>('');
+    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');
     const [filterAnalista, setFilterAnalista] = useState<string>('');
+    const [filterEstado, setFilterEstado] = useState<string>('');
     // Estados para el cambio de estado del proyecto
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
@@ -57,12 +58,10 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         fetchTeams();
         fetchCells();
         fetchAnalysts();
-    }, []);
-
-    // Resetear paginación cuando cambian los filtros
+    }, []);    // Resetear paginación cuando cambian los filtros
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, filterEquipo, filterAnalista, startDate, endDate]);
+    }, [searchTerm, filterEquipo, filterAnalista, filterEstado, startDate, endDate]);
 
     useEffect(() => {
         if (newProject.horas) {
@@ -345,16 +344,16 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             (project.idJira?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.proyecto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.equipo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (project.analistaProducto?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-
-        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
+            (project.analistaProducto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (project.descripcion?.toLowerCase() || '').includes(searchTerm.toLowerCase());        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
+        const matchesEstado = !filterEstado || project.estadoCalculado === filterEstado;
         
         // Filtrar por fecha (verificar si la fecha existe)
         const projectDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
-        const matchesDate = projectDate ? (projectDate >= startDate && (!endDate || projectDate <= endDate)) : false;
+        const matchesDate = !startDate || (projectDate ? (projectDate >= startDate && (!endDate || projectDate <= endDate)) : true);
 
-        return matchesSearch && matchesEquipo && matchesAnalista && matchesDate;
+        return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado && matchesDate;
     }));
     
     // Cálculos para paginación
@@ -418,8 +417,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             Vista Calendario
                         </button>
                     </div>
-                </div>
-                <div className="flex items-center space-x-4">
+                </div>                <div className="flex items-center space-x-4">
                     {/* Filtros de fecha */}
                     <div className="flex gap-2">
                         <button
@@ -453,38 +451,50 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             Año actual
                         </button>
                     </div>
-
-                    {/* Separador */}
-                    <div className="w-px h-8 bg-gray-300"></div>
-
-                    {/* Filtros existentes */}
-                    <select
-                        className="border rounded px-3 py-2"
-                        value={filterEquipo}
-                        onChange={(e) => setFilterEquipo(e.target.value)}
-                    >
-                        <option value="">Todos los equipos</option>
-                        {equipos.map(equipo => (
-                            <option key={equipo} value={equipo}>{equipo}</option>
-                        ))}
-                    </select>
-                    <select
-                        className="border rounded px-3 py-2"
-                        value={filterAnalista}
-                        onChange={(e) => setFilterAnalista(e.target.value)}
-                    >
-                        <option value="">Todos los analistas</option>
-                        {analistas.map(analista => (
-                            <option key={analista} value={analista}>{analista}</option>
-                        ))}
-                    </select>
-                    <input
-                        type="text"
-                        placeholder="Buscar proyecto..."
-                        className="w-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    
+                    {/* Filtros básicos */}
+                    <div className="flex flex-wrap gap-2">
+                        <select
+                            className="border rounded px-3 py-2"
+                            value={filterEquipo}
+                            onChange={(e) => setFilterEquipo(e.target.value)}
+                        >
+                            <option value="">Todos los equipos</option>
+                            {equipos.map(equipo => (
+                                <option key={equipo} value={equipo}>{equipo}</option>
+                            ))}
+                        </select>
+                        <select
+                            className="border rounded px-3 py-2"
+                            value={filterAnalista}
+                            onChange={(e) => setFilterAnalista(e.target.value)}
+                        >
+                            <option value="">Todos los analistas</option>
+                            {analistas.map(analista => (
+                                <option key={analista} value={analista}>{analista}</option>
+                            ))}
+                        </select>
+                        <select
+                            className="border rounded px-3 py-2"
+                            value={filterEstado}
+                            onChange={(e) => setFilterEstado(e.target.value)}
+                        >
+                            <option value="">Todos los estados</option>
+                            <option value="Por Iniciar">Por Iniciar</option>
+                            <option value="En Progreso">En Progreso</option>
+                            <option value="Certificado">Certificado</option>
+                            <option value="Completado">Completado</option>
+                            <option value="Finalizado">Finalizado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                        <input
+                            type="text"
+                            placeholder="Buscar proyecto..."
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
