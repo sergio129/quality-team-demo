@@ -6,8 +6,7 @@ echo 🚀 Iniciando Quality Team con sincronización automática...
 REM Abrir una ventana para el servidor de desarrollo
 start "Quality Team - Dev Server" cmd /k "echo 🌐 Iniciando servidor de desarrollo... && npm run dev"
 
-REM Abrir otra ventana para el file watcher
-start "Quality Team - Auto Sync" cmd /k "echo 🔍 Iniciando sincronización automática... && npm run watch-sync"
+
 
 echo ✅ Servicios iniciados:
 echo   - Servidor de desarrollo en la primera ventana
