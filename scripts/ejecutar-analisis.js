@@ -132,12 +132,10 @@ try {
     ? 'Usando token de autenticación desde ' + (sonarToken ? 'variable de entorno' : 'archivo de configuración')
     : 'No se proporcionó token de autenticación. Usando credenciales por defecto.';
   console.log(tokenMessage);
-  
-  // Ejecutar el scanner con la forma correcta
+    // Ejecutar el scanner con la forma correcta
   sonarqubeScanner({
     serverUrl: 'http://localhost:9000',
-    token: finalToken,
-    options: {
+    token: finalToken,    options: {
       'sonar.projectKey': 'quality-team',
       'sonar.projectName': 'Quality Team',
       'sonar.projectVersion': '1.0.0',
@@ -149,8 +147,9 @@ try {
       'sonar.sourceEncoding': 'UTF-8',
       'sonar.typescript.tsconfigPath': 'tsconfig.json',
       'sonar.qualitygate.wait': 'true'
-    }
-  }, () => {
+      // La siguiente propiedad requiere SonarQube Developer Edition o superior
+      // 'sonar.branch.name': 'Migracion2'
+    }  }, () => {
     console.log('✅ Análisis completado correctamente');
     console.log('🌐 Acceda a los resultados en http://localhost:9000/dashboard?id=quality-team');
     process.exit(0);

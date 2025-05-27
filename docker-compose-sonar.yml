@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  # SonarQube server
+  sonarqube:
+    image: sonarqube:latest
+    container_name: quality-team-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - sonar-network
+    # Configuración para mejorar el rendimiento de SonarQube
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  # PostgreSQL para SonarQube (recomendado para entorno de producción)
+  sonar-db:
+    image: postgres:13
+    container_name: quality-team-sonar-db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - sonar_db_data:/var/lib/postgresql/data
+    networks:
+      - sonar-network
+
+volumes:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  sonar_db_data:
+
+networks:
+  sonar-network:
+    driver: bridge

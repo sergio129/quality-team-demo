@@ -426,10 +426,17 @@ export class IncidentPrismaService {
                 return createdFile.id;
             } catch (createError) {
                 console.error('Error específico al crear el archivo:', createError);
-                
-                // Intentar acceder directamente a la base de datos usando executeRaw si el modelo no está disponible
+                  // Intentar acceder directamente a la base de datos usando executeRaw si el modelo no está disponible
                 // Esto es una solución temporal y debería ser reemplazada por una migración adecuada
-                const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+                let id;
+                if (crypto.randomUUID) {
+                    id = crypto.randomUUID();
+                } else {
+                    // Usar crypto.randomBytes como alternativa segura para generar un id único
+                    // cuando randomUUID no está disponible
+                    const randomBytes = crypto.randomBytes(16);
+                    id = randomBytes.toString('hex');
+                }
                 const now = new Date().toISOString();
                 
                 console.log(`Intento alternativo de guardar archivo para el incidente ${incidentId}`);

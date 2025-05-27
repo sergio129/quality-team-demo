@@ -1,0 +1,6 @@
+projectKey=quality-team
+serverUrl=http://localhost:9000
+serverVersion=25.5.0.107428
+dashboardUrl=http://localhost:9000/dashboard?id=quality-team
+ceTaskId=95ceaee3-fe3d-4d4b-a582-f1fb36e80b6d
+ceTaskUrl=http://localhost:9000/api/ce/task?id=95ceaee3-fe3d-4d4b-a582-f1fb36e80b6d

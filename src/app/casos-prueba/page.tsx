@@ -181,12 +181,12 @@ export default function TestCasesPage() {
       </div>
 
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Buscar/Seleccionar Proyecto</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">          <div>
+            <label htmlFor="projectSearch" className="block text-sm font-medium mb-2">Buscar/Seleccionar Proyecto</label>
             <div className="relative">
               <div className="flex">
                 <Input
+                  id="projectSearch"
                   type="text"
                   placeholder="Buscar por nombre o código Jira..."
                   value={projectSearchTerm}

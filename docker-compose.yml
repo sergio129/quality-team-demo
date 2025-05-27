@@ -1,18 +1,69 @@
 version: '3.8'
+
 services:
-  postgres:
-    image: postgres:16
-    container_name: quality-team-postgres
+  # Servicio para la aplicación Next.js
+  quality-team-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quality-team-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 0129
-      POSTGRES_DB: qualityteams
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@quality-team-db:5432/quality_team_db?schema=public
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - quality-team-db
+    networks:
+      - quality-team-network
+
+  # Servicio para la base de datos PostgreSQL
+  quality-team-db:
+    image: postgres:15
+    container_name: quality-team-db
+    restart: unless-stopped
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=quality_team_db
     volumes:
-      - quality-team-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - quality-team-network
+
+  # Servicio para SonarQube
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
     restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - SONARQUBE_JDBC_USERNAME=postgres
+      - SONARQUBE_JDBC_PASSWORD=postgres
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://quality-team-db:5432/sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - quality-team-network
+    depends_on:
+      - quality-team-db
 
 volumes:
-  quality-team-data:
-    driver: local
+  postgres_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+
+networks:
+  quality-team-network:
+    driver: bridge
