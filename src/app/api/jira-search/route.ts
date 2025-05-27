@@ -87,10 +87,9 @@ export async function GET(request: Request) {
                     }
                 }
             });
-        }
-
-        // Ordenar y eliminar duplicados
-        return NextResponse.json([...new Set(results)].sort());
+        }        // Ordenar y eliminar duplicados
+        // Usamos String.localeCompare para garantizar una ordenación alfabética confiable
+        return NextResponse.json([...new Set(results)].sort((a, b) => a.localeCompare(b)));
     } catch (error) {
         console.error('Error searching JIRA IDs:', error);
         return NextResponse.json({ error: 'Error al buscar IDs de JIRA' }, { status: 500 });
