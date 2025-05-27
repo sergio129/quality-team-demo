@@ -33,10 +33,14 @@ export default function ProjectCardsView({
   const getStatusColor = (estado: string) => {
     switch (estado?.toLowerCase()) {
       case 'completado':
+      case 'certificado':
+      case 'finalizado':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'en progreso':
+      case 'en proceso':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pendiente':
+      case 'por iniciar':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'cancelado':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -49,10 +53,14 @@ export default function ProjectCardsView({
   const getStatusIcon = (estado: string) => {
     switch (estado?.toLowerCase()) {
       case 'completado':
+      case 'certificado':
+      case 'finalizado':
         return <CheckCircle className="w-4 h-4" />;
       case 'en progreso':
+      case 'en proceso':
         return <Clock className="w-4 h-4" />;
       case 'pendiente':
+      case 'por iniciar':
         return <AlertCircle className="w-4 h-4" />;
       case 'cancelado':
         return <XCircle className="w-4 h-4" />;
@@ -79,6 +87,7 @@ export default function ProjectCardsView({
       </a>
     );
   };
+
   // Función para calcular si el proyecto está retrasado
   const isProjectDelayed = (project: Project) => {
     if (!project.fechaEntrega) return false;
@@ -86,13 +95,15 @@ export default function ProjectCardsView({
     const fechaEntrega = new Date(project.fechaEntrega);
     return fechaEntrega < today && 
            !['completado', 'certificado', 'finalizado'].includes(project.estado?.toLowerCase() || '');
-  };  // Función para obtener los colores de la tarjeta según el estado
+  };
+
+  // Función para obtener los colores de la tarjeta según el estado
   const getCardColors = (project: Project) => {
-    const estado = project.estado?.toLowerCase();
+    const estado = project.estado?.toLowerCase() || '';
     const estadoCalculado = project.estadoCalculado?.toLowerCase();
     
     // Priorizar estados completados - siempre verde aunque esté retrasado
-    if (['completado', 'certificado', 'finalizado'].includes(estado || '') || 
+    if (['completado', 'certificado', 'finalizado'].includes(estado) || 
         estadoCalculado === 'certificado') {
       return {
         background: 'bg-green-50',
@@ -110,8 +121,8 @@ export default function ProjectCardsView({
       };
     }
     
-    // Colores para proyectos en progreso
-    if (['en progreso', 'en proceso'].includes(estado || '') || 
+    // Para estado "en progreso"
+    if (['en progreso', 'en proceso'].includes(estado) || 
         estadoCalculado === 'en progreso') {
       return {
         background: 'bg-blue-50',
@@ -120,15 +131,17 @@ export default function ProjectCardsView({
       };
     }
     
-    // Para estados pendientes o por iniciar
-    if (['pendiente', 'por iniciar'].includes(estado || '')) {
+    // Para estados "Por iniciar" o pendientes
+    if (['pendiente', 'por iniciar'].includes(estado) ||
+        estadoCalculado === 'por iniciar') {
       return {
         background: 'bg-yellow-50',
         border: 'border-yellow-300',
         shadow: 'hover:shadow-yellow-200'
       };
     }
-      // Para estados cancelados
+    
+    // Para estado cancelado
     if (estado === 'cancelado') {
       return {
         background: 'bg-gray-50',
@@ -136,7 +149,8 @@ export default function ProjectCardsView({
         shadow: 'hover:shadow-gray-200'
       };
     }
-      // Valor por defecto para otros estados
+    
+    // Por defecto, usar estilo básico
     return {
       background: 'bg-white',
       border: 'border-gray-200',
@@ -160,7 +174,7 @@ export default function ProjectCardsView({
         return (
           <div
             key={project.id}
-            className={`bg-white rounded-lg shadow-md border transition-shadow duration-200 ${cardColors.border} ${cardColors.shadow} ${cardColors.background}`}
+            className={`rounded-lg shadow-md border transition-all duration-200 ${cardColors.border} ${cardColors.shadow} ${cardColors.background}`}
           >
             {/* Header de la tarjeta */}
             <div className="p-4 border-b border-gray-100">
@@ -172,9 +186,10 @@ export default function ProjectCardsView({
                   <div className="mt-1">
                     {renderJiraId(project.idJira)}
                   </div>
-                </div>              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.estado ?? '')}`}>
-                  {getStatusIcon(project.estado ?? '')}
-                  {project.estado ?? 'Sin estado'}
+                </div>
+                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(project.estado || '')}`}>
+                  {getStatusIcon(project.estado || '')}
+                  {project.estado || 'Sin estado'}
                 </div>
               </div>
             </div>
@@ -230,8 +245,10 @@ export default function ProjectCardsView({
                     {project.planTrabajo}
                   </span>
                 </div>
-              )}            {/* Indicador de retraso */}
-              {Boolean(project.diasRetraso && project.diasRetraso > 0) && (
+              )}
+              
+              {/* Indicador de retraso */}
+              {Boolean(project.diasRetraso && project.diasRetraso > 0) && !['completado', 'certificado', 'finalizado'].includes(project.estado?.toLowerCase() || '') && (
                 <div className="bg-red-100 border border-red-200 rounded-md p-2">
                   <div className="flex items-center gap-1 text-red-700 text-sm font-medium">
                     <AlertCircle className="w-4 h-4" />
@@ -239,14 +256,17 @@ export default function ProjectCardsView({
                   </div>
                 </div>
               )}
-            </div>          {/* Footer con acciones */}          <div className={`px-4 py-3 border-t border-gray-100 rounded-b-lg ${
-            project.estado?.toLowerCase() === 'completado' ? 'bg-green-50' :
-            isProjectDelayed(project) ? 'bg-red-50' : 
-            project.estado?.toLowerCase() === 'en progreso' ? 'bg-blue-50' :
-            project.estado?.toLowerCase() === 'pendiente' ? 'bg-yellow-50' :
-            'bg-gray-50'
-          }`}>
-            <div className="flex justify-between items-center">
+            </div>
+            
+            {/* Footer con acciones */}          
+            <div className={`px-4 py-3 border-t border-gray-100 rounded-b-lg ${
+              ['completado', 'certificado', 'finalizado'].includes(project.estado?.toLowerCase() || '') || project.estadoCalculado === 'Certificado' ? 'bg-green-50' :
+              isProjectDelayed(project) ? 'bg-red-50' : 
+              ['en progreso', 'en proceso'].includes(project.estado?.toLowerCase() || '') || project.estadoCalculado === 'En Progreso' ? 'bg-blue-50' :
+              ['pendiente', 'por iniciar'].includes(project.estado?.toLowerCase() || '') || project.estadoCalculado === 'Por Iniciar' ? 'bg-yellow-50' :
+              'bg-gray-50'
+            }`}>
+              <div className="flex justify-between items-center">
                 <button
                   onClick={() => onChangeStatus(project)}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium"
