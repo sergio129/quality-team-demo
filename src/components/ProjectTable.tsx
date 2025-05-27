@@ -2,7 +2,7 @@
 
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
@@ -10,7 +10,8 @@ import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
-import { useProjects, useProjectStats, createProject, updateProject, deleteProject, changeProjectStatus } from '@/hooks/useProjects';
+import ProjectCardsView from './projects/ProjectCardsView';
+import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 
 const HOURS_PER_DAY = 9;
 
@@ -29,9 +30,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
     const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
-    const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [activeView, setActiveView] = useState<'table' | 'timeline'>('table');
+    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [activeView, setActiveView] = useState<'table' | 'timeline' | 'cards'>('table');
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
@@ -386,8 +386,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         onClick={() => setShowForm(true)}
                     >
                         Nuevo Proyecto
-                    </button>
-                    <div className="flex rounded-lg overflow-hidden border">
+                    </button>                    <div className="flex rounded-lg overflow-hidden border">
                         <button
                             className={`px-4 py-2 transition-colors ${
                                 activeView === 'table'
@@ -397,6 +396,16 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             onClick={() => setActiveView('table')}
                         >
                             Vista Tabla
+                        </button>
+                        <button
+                            className={`px-4 py-2 transition-colors ${
+                                activeView === 'cards'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            onClick={() => setActiveView('cards')}
+                        >
+                            Vista Tarjetas
                         </button>
                         <button
                             className={`px-4 py-2 transition-colors ${
@@ -808,13 +817,42 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         <p className="text-red-800 font-medium">Error al cargar los proyectos</p>
                         <p className="text-red-600 mt-1">Por favor, intente nuevamente más tarde</p>
                     </div>
-                </div>
-            ) : activeView === 'timeline' ? (
+                </div>            ) : activeView === 'timeline' ? (
                 <TimelineView
                     projects={filteredProjects}
                     analysts={analysts}
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}
+                />
+            ) : activeView === 'cards' ? (
+                <ProjectCardsView
+                    projects={filteredProjects}
+                    onEditProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede editar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        setEditingProject(project);
+                        setNewProject(project);
+                        setShowForm(true);
+                    }}
+                    onDeleteProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede eliminar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        toast.info('¿Estás seguro?', {
+                            action: {
+                                label: 'Eliminar',
+                                onClick: () => handleDelete(project.idJira)
+                            },
+                            description: 'Esta acción no se puede deshacer',                            cancel: {
+                                label: 'Cancelar',
+                                onClick: () => {}
+                            }
+                        });
+                    }}
+                    onChangeStatus={(project) => openStatusDialog(project)}
                 />
             ) : (
                 <div className="overflow-x-auto bg-white rounded-lg shadow">
