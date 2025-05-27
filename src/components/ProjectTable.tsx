@@ -36,13 +36,14 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
-    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');
-    const [filterAnalista, setFilterAnalista] = useState<string>('');
+    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');    const [filterAnalista, setFilterAnalista] = useState<string>('');
     const [filterEstado, setFilterEstado] = useState<string>('');
     // Estados para el cambio de estado del proyecto
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
-    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'year' | 'custom'>('month');
+    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
+    const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
     const [startDate, setStartDate] = useState(() => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth(), 1);
@@ -108,11 +109,10 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 end = new Date(start);
                 end.setDate(start.getDate() + 6);
                 break;
-            case 'year':
-                // Inicio del año actual - para vista completa filtramos proyectos por año
-                // pero en la vista del calendario se mostrará un período más corto
-                start = new Date(today.getFullYear(), 0, 1);
-                end = new Date(today.getFullYear(), 11, 31);
+            case 'custom-month':
+                // Mes específico seleccionado del año seleccionado
+                start = new Date(selectedYear, selectedMonth, 1);
+                end = new Date(selectedYear, selectedMonth + 1, 0);
                 break;
             case 'month':
             default:
@@ -131,7 +131,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         
         // Forzar la actualización de los filtros cuando cambia el rango de fechas
         console.log(`Filtro de fecha cambiado: ${selectedDateFilter} - ${start.toDateString()} a ${end.toDateString()}`);
-    }, [selectedDateFilter]);// La función loadProjects ya no es necesaria porque usamos el hook useProjects
+    }, [selectedDateFilter, selectedYear, selectedMonth]);// La función loadProjects ya no es necesaria porque usamos el hook useProjects
 
     const fetchTeams = async () => {
         try {
@@ -453,9 +453,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             Vista Calendario
                         </button>
                     </div>
-                </div>                <div className="flex items-center space-x-4">
-                    {/* Filtros de fecha */}
-                    <div className="flex gap-2">
+                </div>                <div className="flex items-center space-x-4">                    {/* Filtros de fecha */}
+                    <div className="flex gap-2 items-center">
                         <button
                             onClick={() => setSelectedDateFilter('week')}
                             className={`px-3 py-1.5 rounded text-sm transition-colors ${
@@ -476,16 +475,42 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         >
                             Mes actual
                         </button>
-                        <button
-                            onClick={() => setSelectedDateFilter('year')}
-                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
-                                selectedDateFilter === 'year'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 hover:bg-gray-200'
-                            }`}
-                        >
-                            Año actual
-                        </button>
+                        <div className={`flex gap-2 items-center px-2 py-1 rounded ${
+                            selectedDateFilter === 'custom-month' 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-gray-100'
+                        }`}>
+                            <select 
+                                className={`text-sm rounded ${
+                                    selectedDateFilter === 'custom-month' ? 'bg-blue-500' : 'bg-gray-100'
+                                }`}
+                                value={selectedYear}
+                                onChange={(e) => {
+                                    setSelectedYear(parseInt(e.target.value));
+                                    setSelectedDateFilter('custom-month');
+                                }}
+                            >
+                                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
+                            <select 
+                                className={`text-sm rounded ${
+                                    selectedDateFilter === 'custom-month' ? 'bg-blue-500' : 'bg-gray-100'
+                                }`}
+                                value={selectedMonth}
+                                onChange={(e) => {
+                                    setSelectedMonth(parseInt(e.target.value));
+                                    setSelectedDateFilter('custom-month');
+                                }}
+                            >
+                                {Array.from({ length: 12 }, (_, i) => i).map(month => (
+                                    <option key={month} value={month}>
+                                        {new Date(2000, month, 1).toLocaleString('es-ES', { month: 'long' })}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                     
                     {/* Filtros básicos */}
@@ -863,9 +888,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         <p className="text-red-800 font-medium">Error al cargar los proyectos</p>
                         <p className="text-red-600 mt-1">Por favor, intente nuevamente más tarde</p>
                     </div>
-                </div>            ) : activeView === 'timeline' ? (
-                <TimelineView
-                    projects={allFilteredProjects} /* Pasar todos los proyectos filtrados, no solo los de la página actual */
+                </div>            ) : activeView === 'timeline' ? (                <TimelineView
+                    projects={allFilteredProjects} // Pasar todos los proyectos filtrados, no solo los de la página actual
                     analysts={analysts}
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}

@@ -23,7 +23,7 @@ interface TimelineViewProps {
     // Nuevos props para recibir los filtros de fecha del padre
     startDate: Date;
     endDate: Date | null;
-    selectedDateFilter: 'week' | 'month' | 'year' | 'custom';
+    selectedDateFilter: 'week' | 'month' | 'custom-month' | 'custom';
 }
 
 export function TimelineView({ 
@@ -51,21 +51,15 @@ export function TimelineView({
             calculatedEndDate = new Date(endDate);
         } else {
             calculatedEndDate = new Date(currentDate);
-            
-            switch (selectedDateFilter) {
+              switch (selectedDateFilter) {
                 case 'week':
                     // Una semana desde la fecha de inicio
                     calculatedEndDate.setDate(currentDate.getDate() + 6);
                     break;
                 case 'month':
-                    // Fin del mes
+                case 'custom-month':
+                    // Fin del mes (ya sea actual o seleccionado)
                     calculatedEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-                    break;
-                case 'year':
-                    // Para año, limitamos a mostrar solo 30 días para no sobrecargar
-                    // Esto es una solución temporal hasta implementar una vista específica para año
-                    calculatedEndDate = new Date(currentDate);
-                    calculatedEndDate.setDate(currentDate.getDate() + 29); // Limitamos a 30 días (0-29)
                     break;
             }
         }
@@ -351,15 +345,8 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                     <span className="font-semibold">
                         {selectedDateFilter === 'week' 
                             ? `Semana del ${formatDate(startDate)}` 
-                            : selectedDateFilter === 'year'
-                            ? `${startDate.getFullYear()} - Vista previa limitada (30 días)`
                             : startDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                     </span>
-                    {selectedDateFilter === 'year' && (
-                        <p className="text-sm text-orange-600 mt-1">
-                            La vista de año completo muestra solo los primeros 30 días para mejorar el rendimiento
-                        </p>
-                    )}
                 </div>
             </div>
         </div>
