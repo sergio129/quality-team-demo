@@ -94,9 +94,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         } else {
             setFilteredCells([]);
         }
-    }, [newProject.equipo, cells, teams]);
-
-    useEffect(() => {
+    }, [newProject.equipo, cells, teams]);    useEffect(() => {
         const today = new Date();
         let start: Date;
         let end: Date;
@@ -122,10 +120,17 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                 break;
         }
+        
+        // Asegurarnos de que las fechas estén normalizadas a medianoche
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999); // Fin del día para incluir todo el último día
 
         setStartDate(start);
         setEndDate(end);
-    }, [selectedDateFilter]);      // La función loadProjects ya no es necesaria porque usamos el hook useProjects
+        
+        // Forzar la actualización de los filtros cuando cambia el rango de fechas
+        console.log(`Filtro de fecha cambiado: ${selectedDateFilter} - ${start.toDateString()} a ${end.toDateString()}`);
+    }, [selectedDateFilter]);// La función loadProjects ya no es necesaria porque usamos el hook useProjects
 
     const fetchTeams = async () => {
         try {
@@ -338,8 +343,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         setStatusDialogOpen(false);
         setProjectToChangeStatus(null);
     };    // Primero obtenemos todos los proyectos filtrados
-    const allFilteredProjects = sortData(projects.filter(project => {
-        // Comprobar que las propiedades existan antes de acceder a ellas
+    const allFilteredProjects = sortData(projects.filter(project => {        // Comprobar que las propiedades existan antes de acceder a ellas
         const matchesSearch =
             (project.idJira?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.proyecto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -349,9 +353,38 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
         const matchesEstado = !filterEstado || project.estadoCalculado === filterEstado;
         
-        // Filtrar por fecha (verificar si la fecha existe)
-        const projectDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
-        const matchesDate = !startDate || (projectDate ? (projectDate >= startDate && (!endDate || projectDate <= endDate)) : true);
+        // Filtrar por fecha - lógica más inclusiva
+        let matchesDate = true;
+        
+        // Solo aplicamos filtro de fecha para vistas de tabla y tarjetas
+        // Para vista de calendario, dejamos que TimelineView maneje el filtrado por completo
+        if (activeView !== 'timeline' && startDate) {
+            if (project.fechaEntrega) {
+                const fechaEntrega = new Date(project.fechaEntrega);
+                fechaEntrega.setHours(0, 0, 0, 0);
+                
+                const fechaCertificacion = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
+                if (fechaCertificacion) fechaCertificacion.setHours(0, 0, 0, 0);
+                
+                // La fecha de startDate y endDate ya están normalizadas a medianoche
+                
+                // Un proyecto coincide con el rango de fechas si:
+                // 1. Su fecha de entrega está dentro del rango
+                // 2. Su fecha de certificación está dentro del rango
+                // 3. Su período abarca el rango completo (comenzó antes y termina después)
+                // 4. Comenzó antes y aún no se ha certificado
+                matchesDate = 
+                    // Fecha de entrega dentro del rango
+                    (fechaEntrega >= startDate && (!endDate || fechaEntrega <= endDate)) ||
+                    // Fecha de certificación dentro del rango (si existe)
+                    (fechaCertificacion && fechaCertificacion >= startDate && (!endDate || fechaCertificacion <= endDate)) ||
+                    // Proyecto que abarca el rango completo
+                    (fechaEntrega <= startDate && (fechaCertificacion ? fechaCertificacion >= (endDate || new Date()) : true));
+            } else {
+                // Si el proyecto no tiene fecha de entrega, lo consideramos que no coincide con el filtro de fecha
+                matchesDate = false;
+            }
+        }
 
         return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado && matchesDate;
     }));
@@ -371,9 +404,11 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const filteredProjects = allFilteredProjects.slice(startIndex, startIndex + itemsPerPage);
     
     const equipos = Array.from(new Set(projects.map(p => p.equipo || '').filter(Boolean)));
-    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));return (
+    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));
+    
+    return (
         <div className="space-y-4">
-            {/* Dashboard de Resumen y KPIs */}            {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
+            {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
             {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
                 <ProjectDashboard projects={allFilteredProjects} />
             )}
@@ -829,7 +864,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                     </div>
                 </div>            ) : activeView === 'timeline' ? (
                 <TimelineView
-                    projects={filteredProjects}
+                    projects={allFilteredProjects} /* Pasar todos los proyectos filtrados, no solo los de la página actual */
                     analysts={analysts}
                     filterAnalista={filterAnalista}
                     filterEquipo={filterEquipo}

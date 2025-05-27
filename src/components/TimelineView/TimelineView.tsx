@@ -34,32 +34,43 @@ export function TimelineView({
     startDate,
     endDate,
     selectedDateFilter
-}: TimelineViewProps) {
-    const [dates, setDates] = useState<Date[]>([]);
-
-    // Efecto para actualizar el calendario basado en los filtros de fecha del padre
+}: Readonly<TimelineViewProps>) {
+    const [dates, setDates] = useState<Date[]>([]);    // Efecto para actualizar el calendario basado en los filtros de fecha del padre
     useEffect(() => {
         const newDates: Date[] = [];
-        const currentDate = new Date(startDate);
-        const effectiveEndDate = endDate || new Date(currentDate);
         
-        if (selectedDateFilter === 'year') {
-            // Para el filtro de año, limitar la cantidad de días para no sobrecargar el calendario
-            const yearEndDate = new Date(currentDate.getFullYear(), 11, 31);
-            const maxEndDate = new Date(currentDate);
-            maxEndDate.setDate(currentDate.getDate() + 60); // Limitamos a 60 días máximo
-            const limitedEndDate = endDate && endDate < maxEndDate ? endDate : maxEndDate;
-            
-            while (currentDate <= limitedEndDate && currentDate <= yearEndDate) {
-                newDates.push(new Date(currentDate));
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
+        // Crear una copia de la fecha de inicio para no modificar la original
+        const currentDate = new Date(startDate);
+        
+        // Usar la fecha de fin proporcionada o calcular una fecha de fin apropiada según el filtro
+        let calculatedEndDate: Date;
+        
+        if (endDate) {
+            calculatedEndDate = new Date(endDate);
         } else {
-            // Para los filtros de semana y mes
-            while (currentDate <= effectiveEndDate) {
-                newDates.push(new Date(currentDate));
-                currentDate.setDate(currentDate.getDate() + 1);
+            calculatedEndDate = new Date(currentDate);
+            
+            switch (selectedDateFilter) {
+                case 'week':
+                    // Una semana desde la fecha de inicio
+                    calculatedEndDate.setDate(currentDate.getDate() + 6);
+                    break;
+                case 'month':
+                    // Fin del mes
+                    calculatedEndDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                    break;
+                case 'year':
+                    // Para año, mostrar solo los primeros 31 días para no sobrecargar
+                    calculatedEndDate = new Date(currentDate);
+                    calculatedEndDate.setDate(currentDate.getDate() + 30);
+                    break;
             }
+        }
+        
+        // Generar el array de fechas a mostrar
+        while (currentDate <= calculatedEndDate) {
+            newDates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
         }
         
         setDates(newDates);
@@ -69,13 +80,14 @@ export function TimelineView({
     const filteredAnalysts = analysts.filter(analyst => {
         if (filterAnalista && analyst.name !== filterAnalista) return false;
         return true;
-    });
-
-    const getProjectsForAnalyst = (analystName: string) => {
+    });    const getProjectsForAnalyst = (analystName: string) => {
         return projects.filter(p => {
+            // Filtrado básico por analista y equipo
             const matchesAnalista = p.analistaProducto === analystName;
             const matchesEquipo = !filterEquipo || p.equipo === filterEquipo;
-            const fechaEntrega = new Date(p.fechaEntrega);
+            
+            // No aplicar filtro de fecha adicional, mostrar todos los proyectos del analista
+            // El filtrado por fecha se maneja en isProjectActive para cada día específico
             return matchesAnalista && matchesEquipo;
         });
     };
@@ -102,47 +114,64 @@ export function TimelineView({
         return date.getDate() === today.getDate() &&
             date.getMonth() === today.getMonth() &&
             date.getFullYear() === today.getFullYear();
-    };
-
-    const isProjectActive = (project: Project, date: Date) => {
+    };    const isProjectActive = (project: Project, date: Date) => {
         // No mostrar proyectos en fines de semana o días festivos
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         const isColombianHoliday = isHoliday(date);
         if (isWeekend || isColombianHoliday) return false;
         
-        // Convertir las fechas a UTC
-        const projectStartDate = new Date(project.fechaEntrega);
-        const projectEndDate = project.fechaCertificacion 
+        // Si no hay fechaEntrega, no podemos determinar si está activo
+        if (!project.fechaEntrega) return false;
+        
+        // Convertir fechas a objetos Date y normalizar
+        const projectFechaEntrega = new Date(project.fechaEntrega);
+        projectFechaEntrega.setHours(0, 0, 0, 0);
+        
+        const projectFechaCertificacion = project.fechaCertificacion 
             ? new Date(project.fechaCertificacion) 
-            : new Date(project.fechaEntrega);
-
-        // Normalizar todas las fechas a UTC
-        const compareDate = new Date(Date.UTC(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate()
-        ));
-
-        const startDateUTC = new Date(Date.UTC(
-            projectStartDate.getUTCFullYear(),
-            projectStartDate.getUTCMonth(),
-            projectStartDate.getUTCDate()
-        ));
-
-        const endDateUTC = new Date(Date.UTC(
-            projectEndDate.getUTCFullYear(),
-            projectEndDate.getUTCMonth(),
-            projectEndDate.getUTCDate()
-        ));
-
-        return compareDate >= startDateUTC && compareDate <= endDateUTC;
-    };    // Esta función ahora retorna un objeto de estilo en lugar de clases CSS
+            : null;
+        if (projectFechaCertificacion) {
+            projectFechaCertificacion.setHours(0, 0, 0, 0);
+        }
+        
+        // Normalizar la fecha de comparación
+        const compareDate = new Date(date);
+        compareDate.setHours(0, 0, 0, 0);
+        
+        // Obtener la fecha actual para proyectos en curso
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Simplificar la lógica:
+        
+        // CASO 1: Si el proyecto tiene fecha de certificación y la fecha está entre la fecha de entrega y certificación
+        if (projectFechaCertificacion) {
+            return compareDate.getTime() >= projectFechaEntrega.getTime() && 
+                  compareDate.getTime() <= projectFechaCertificacion.getTime();
+        }
+        
+        // CASO 2: Si el proyecto NO tiene fecha de certificación:
+        
+        // Si la fecha de comparación es exactamente la fecha de entrega, siempre mostrar
+        if (compareDate.getTime() === projectFechaEntrega.getTime()) {
+            return true;
+        }
+        
+        // Para fechas después de la entrega hasta hoy (proyectos en curso/retrasados)
+        if (compareDate.getTime() > projectFechaEntrega.getTime() && 
+            compareDate.getTime() <= today.getTime()) {
+            return true;
+        }
+        
+        // En cualquier otro caso, no mostrar
+        return false;
+    };// Esta función ahora retorna un objeto de estilo en lugar de clases CSS
     const getProjectStyle = (project: Project) => {
         const today = new Date();
         
         // Buscar al analista asignado para usar su color como base
         const assignedAnalyst = filteredAnalysts.find(a => a.name === project.analistaProducto);
-        const analystColor = assignedAnalyst?.color || '#3B82F6'; // Azul como color por defecto
+        const analystColor = assignedAnalyst?.color ?? '#3B82F6'; // Azul como color por defecto
         
         // Estilos por defecto
         const style: React.CSSProperties = {
