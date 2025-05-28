@@ -11,6 +11,7 @@ import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog'
 import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
 import ProjectCardsView from './projects/ProjectCardsView';
+import KanbanView from './projects/KanbanView';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 
 const HOURS_PER_DAY = 9;
@@ -28,11 +29,10 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [newProject, setNewProject] = useState<Partial<Project>>({});
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
-    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [activeView, setActiveView] = useState<'table' | 'timeline' | 'cards'>('table');
+    const [activeView, setActiveView] = useState<'table' | 'timeline' | 'cards' | 'kanban'>('table');
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
@@ -356,10 +356,9 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         
         // Filtrar por fecha - lógica más inclusiva
         let matchesDate = true;
-        
-        // Solo aplicamos filtro de fecha para vistas de tabla y tarjetas
-        // Para vista de calendario, dejamos que TimelineView maneje el filtrado por completo
-        if (activeView !== 'timeline' && startDate) {
+          // Solo aplicamos filtro de fecha para vistas de tabla y tarjetas
+        // Para vista de calendario y kanban, dejamos que los componentes manejen el filtrado por completo
+        if (activeView !== 'timeline' && activeView !== 'kanban' && startDate) {
             if (project.fechaEntrega) {
                 const fechaEntrega = new Date(project.fechaEntrega);
                 fechaEntrega.setHours(0, 0, 0, 0);
@@ -451,6 +450,16 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             onClick={() => setActiveView('timeline')}
                         >
                             Vista Calendario
+                        </button>
+                        <button
+                            className={`px-4 py-2 transition-colors ${
+                                activeView === 'kanban'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                            onClick={() => setActiveView('kanban')}
+                        >
+                            Vista Kanban
                         </button>
                     </div>
                 </div>                <div className="flex items-center space-x-4">                    {/* Filtros de fecha */}
@@ -895,7 +904,37 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                     filterEquipo={filterEquipo}
                     startDate={startDate}
                     endDate={endDate}
-                    selectedDateFilter={selectedDateFilter}
+                    selectedDateFilter={selectedDateFilter}                />
+            ) : activeView === 'kanban' ? (
+                <KanbanView
+                    projects={allFilteredProjects}
+                    onEditProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede editar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        setEditingProject(project);
+                        setNewProject(project);
+                        setShowForm(true);
+                    }}
+                    onDeleteProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede eliminar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        toast.info('¿Estás seguro?', {
+                            action: {
+                                label: 'Eliminar',
+                                onClick: () => handleDelete(project.idJira)
+                            },
+                            description: 'Esta acción no se puede deshacer',
+                            cancel: {
+                                label: 'Cancelar',
+                                onClick: () => {}
+                            }
+                        });
+                    }}
+                    onChangeStatus={(project) => openStatusDialog(project)}
                 />
             ) : activeView === 'cards' ? (
                 <ProjectCardsView
@@ -919,7 +958,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 label: 'Eliminar',
                                 onClick: () => handleDelete(project.idJira)
                             },
-                            description: 'Esta acción no se puede deshacer',                            cancel: {
+                            description: 'Esta acción no se puede deshacer',                            
+                            cancel: {
                                 label: 'Cancelar',
                                 onClick: () => {}
                             }
