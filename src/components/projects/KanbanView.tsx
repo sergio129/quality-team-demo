@@ -13,19 +13,27 @@ interface KanbanViewProps {
   readonly onEditProject: (project: Project) => void;
   readonly onDeleteProject: (project: Project) => void;
   readonly onChangeStatus: (project: Project) => void;
+  readonly startDate?: Date | null;
+  readonly endDate?: Date | null;
+  readonly selectedDateFilter?: 'week' | 'month' | 'custom-month' | 'custom';
 }
 
 export default function KanbanView({
   projects,
   onEditProject,
   onDeleteProject,
-  onChangeStatus
-}: KanbanViewProps) {  // Estado para manejar actualizaciones locales durante el drag and drop
+  onChangeStatus,
+  startDate,
+  endDate,
+  selectedDateFilter = 'month'
+}: KanbanViewProps) {
+  // Estado para manejar actualizaciones locales durante el drag and drop
   const [localProjects, setLocalProjects] = useState<Project[]>(projects);
-
   // Efecto para actualizar los proyectos locales cuando cambian los props
   useEffect(() => {
     setLocalProjects(projects);
+    // Los proyectos ya vienen filtrados desde ProjectTable
+    console.log(`KanbanView recibió ${projects.length} proyectos filtrados`);
   }, [projects]);
 
   // Agrupar proyectos por estado
@@ -161,10 +169,36 @@ export default function KanbanView({
     { id: 'Certificado', title: 'Certificado' },
     { id: 'Retrasado', title: 'Retrasados' },
   ];
+  // Formatear periodo para mostrar en un mensaje informativo
+  const getPeriodMessage = () => {
+    if (!startDate) return '';
+    
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+    
+    switch (selectedDateFilter) {
+      case 'week':
+        return 'Mostrando proyectos de la semana actual';
+      case 'month':
+        return 'Mostrando proyectos del mes actual';
+      case 'custom-month':
+        return `Mostrando proyectos de ${start.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`;
+      case 'custom':
+        return `Mostrando proyectos del ${start.toLocaleDateString('es-ES')} al ${end.toLocaleDateString('es-ES')}`;
+      default:
+        return '';
+    }
+  };
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col space-y-4">
+        {/* Mensaje de período seleccionado */}
+        {startDate && (
+          <div className="text-sm text-gray-500 italic mb-2">
+            {getPeriodMessage()}
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {columns.map((column) => (
             <div

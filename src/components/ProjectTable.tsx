@@ -353,12 +353,11 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             (project.descripcion?.toLowerCase() || '').includes(searchTerm.toLowerCase());        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
         const matchesEstado = !filterEstado || project.estadoCalculado === filterEstado;
-        
-        // Filtrar por fecha - lógica más inclusiva
+          // Filtrar por fecha - lógica más inclusiva
         let matchesDate = true;
           // Solo aplicamos filtro de fecha para vistas de tabla y tarjetas
-        // Para vista de calendario y kanban, dejamos que los componentes manejen el filtrado por completo
-        if (activeView !== 'timeline' && activeView !== 'kanban' && startDate) {
+        // Para vista de calendario dejamos que el componente maneje el filtrado por completo
+        if (activeView !== 'timeline' && startDate) {
             if (project.fechaEntrega) {
                 const fechaEntrega = new Date(project.fechaEntrega);
                 fechaEntrega.setHours(0, 0, 0, 0);
@@ -935,8 +934,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         });
                     }}
                     onChangeStatus={(project) => openStatusDialog(project)}
-                />
-            ) : activeView === 'cards' ? (
+                />            ) : activeView === 'cards' ? (
                 <ProjectCardsView
                     projects={filteredProjects}
                     onEditProject={(project) => {
@@ -959,6 +957,38 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 onClick: () => handleDelete(project.idJira)
                             },
                             description: 'Esta acción no se puede deshacer',                            
+                            cancel: {
+                                label: 'Cancelar',
+                                onClick: () => {}
+                            }
+                        });
+                    }}                    onChangeStatus={(project) => openStatusDialog(project)}
+                />            ) : activeView === 'kanban' ? (
+                <KanbanView
+                    projects={allFilteredProjects} // Usar todos los proyectos filtrados, sin paginación
+                    startDate={startDate}
+                    endDate={endDate}
+                    selectedDateFilter={selectedDateFilter}
+                    onEditProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede editar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        setEditingProject(project);
+                        setNewProject(project);
+                        setShowForm(true);
+                    }}
+                    onDeleteProject={(project) => {
+                        if (!project.idJira) {
+                            toast.error('No se puede eliminar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        toast.info('¿Estás seguro?', {
+                            action: {
+                                label: 'Eliminar',
+                                onClick: () => handleDelete(project.idJira)
+                            },
+                            description: 'Esta acción no se puede deshacer',
                             cancel: {
                                 label: 'Cancelar',
                                 onClick: () => {}
