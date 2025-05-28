@@ -34,14 +34,21 @@ export default function KanbanView({
     setLocalProjects(projects);
     // Los proyectos ya vienen filtrados desde ProjectTable
     console.log(`KanbanView recibió ${projects.length} proyectos filtrados`);
-  }, [projects]);
-
-  // Agrupar proyectos por estado
+  }, [projects]);  // Agrupar proyectos por estado
   const getColumnProjects = (status: string) => {
     return localProjects.filter(p => {
       if (status === 'Retrasado') {
-        return isProjectDelayed(p) && 
-          (!p.estado || !['Certificado', 'Completado'].includes(p.estado));
+        // Mostrar en columna "Retrasado" solo si tiene días de retraso > 0 y no está certificado
+        const isDelayed = isProjectDelayed(p);
+        console.log(`Proyecto ${p.idJira || p.nombre}: Estado=${p.estadoCalculado}, Días retraso=${p.diasRetraso}, ¿Retrasado? ${isDelayed}`);
+        return isDelayed;
+      }
+      
+      // Para otras columnas, mostrar solo si:
+      // 1. Coincide con el estado de la columna
+      // 2. Y no está retrasado (o está certificado a pesar de estar retrasado)
+      if (isProjectDelayed(p)) {
+        return false; // No mostrar proyectos retrasados en otras columnas
       }
       return p.estadoCalculado === status;
     });
@@ -57,15 +64,16 @@ export default function KanbanView({
       day: '2-digit',
       timeZone: 'UTC'
     });
-  };
-
-  // Verificar si un proyecto está retrasado
+  };  // Verificar si un proyecto está retrasado
   const isProjectDelayed = (project: Project) => {
-    if (!project.fechaEntrega) return false;
-    const today = new Date();
-    const fechaEntrega = new Date(project.fechaEntrega);
-    return fechaEntrega < today && 
-           !['completado', 'certificado', 'finalizado'].includes(project.estado?.toLowerCase() || '');
+    // Un proyecto está retrasado si:
+    // 1. Tiene días de retraso mayor a 0
+    // 2. Y NO está certificado
+    
+    console.log(`Proyecto ${project.idJira}: Días retraso: ${project.diasRetraso}, Estado: ${project.estadoCalculado}`);
+    
+    return project.diasRetraso > 0 && 
+           project.estadoCalculado !== 'Certificado';
   };
 
   // Renderizar el ID de Jira como un enlace
@@ -252,11 +260,16 @@ export default function KanbanView({
                                 {renderJiraId(project.idJira)}
                               </div>
                             </div>
-                            
-                            <div className="text-xs text-gray-500 space-y-1">
-                              <div className="flex items-center gap-1">
+                              <div className="text-xs text-gray-500 space-y-1">                              <div className={`flex items-center gap-1 ${
+                                column.id === 'Retrasado' ? 'text-red-500 font-semibold' : ''
+                              }`}>
                                 <Calendar className="w-3 h-3" />
                                 <span>Entrega: {formatDate(project.fechaEntrega)}</span>
+                                {column.id === 'Retrasado' && (
+                                  <span className="bg-red-100 text-red-700 px-1 rounded text-xs">
+                                    {project.diasRetraso} {project.diasRetraso === 1 ? 'día' : 'días'} de retraso
+                                  </span>
+                                )}
                               </div>
                               {project.analistaProducto && (
                                 <div className="flex items-center gap-1">

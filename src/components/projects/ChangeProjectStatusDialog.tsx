@@ -45,10 +45,9 @@ export function ChangeProjectStatusDialog({ project, onClose, isOpen }: ChangePr
       setIsLoading(false);
     }
   };
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
+      <DialogContent className="sm:max-w-md fixed z-50">
         <DialogHeader>
           <DialogTitle>Cambiar Estado del Proyecto</DialogTitle>
         </DialogHeader>
