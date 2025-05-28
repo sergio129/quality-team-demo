@@ -2,10 +2,9 @@
 
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { useEffect, useState, useCallback, useMemo, memo, ReactNode } from 'react';
+import { useEffect, useState, ReactNode, useMemo, useCallback, memo } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import Holidays from 'date-holidays';
-import { FixedSizeGrid, FixedSizeList } from 'react-window';
 
 // Inicializar la instancia de Holidays para Colombia
 const holidays = new Holidays('CO');
@@ -17,12 +16,10 @@ const holidayCache = new Map<string, boolean>();
 const isHoliday = (date: Date): boolean => {
     const dateString = date.toISOString().split('T')[0];
     
-    // Si el resultado está en caché, devolverlo
     if (holidayCache.has(dateString)) {
         return holidayCache.get(dateString) as boolean;
     }
     
-    // Si no está en caché, calcularlo y guardarlo
     const result = !!holidays.isHoliday(date);
     holidayCache.set(dateString, result);
     return result;
@@ -34,14 +31,6 @@ const isToday = (date: Date): boolean => {
     return date.getDate() === today.getDate() &&
         date.getMonth() === today.getMonth() &&
         date.getFullYear() === today.getFullYear();
-};
-
-// Función para determinar si un día es laborable
-const isWorkingDay = (date: Date): boolean => {
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0=Domingo, 6=Sábado
-    if (isWeekend) return false;
-    
-    return !isHoliday(date);
 };
 
 // Formateo consistente de fechas para comparaciones
