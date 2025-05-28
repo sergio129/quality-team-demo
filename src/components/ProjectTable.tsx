@@ -32,7 +32,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [activeView, setActiveView] = useState<'table' | 'timeline' | 'cards' | 'kanban'>('table');
+    const [activeView, setActiveView] = useState<'table' | 'timeline' | 'kanban'>('table');
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
@@ -419,8 +419,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         onClick={() => setShowForm(true)}
                     >
                         Nuevo Proyecto
-                    </button>                    <div className="flex rounded-lg overflow-hidden border">
-                        <button
+                    </button>                    <div className="flex rounded-lg overflow-hidden border">                        <button
                             className={`px-4 py-2 transition-colors ${
                                 activeView === 'table'
                                     ? 'bg-blue-600 text-white'
@@ -429,16 +428,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             onClick={() => setActiveView('table')}
                         >
                             Vista Tabla
-                        </button>
-                        <button
-                            className={`px-4 py-2 transition-colors ${
-                                activeView === 'cards'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                            onClick={() => setActiveView('cards')}
-                        >
-                            Vista Tarjetas
                         </button>
                         <button
                             className={`px-4 py-2 transition-colors ${
@@ -931,38 +920,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 label: 'Cancelar',
                                 onClick: () => {}
                             }
-                        });
-                    }}
+                        });                    }}
                     onChangeStatus={(project) => openStatusDialog(project)}
-                />            ) : activeView === 'cards' ? (
-                <ProjectCardsView
-                    projects={filteredProjects}
-                    onEditProject={(project) => {
-                        if (!project.idJira) {
-                            toast.error('No se puede editar un proyecto sin ID de Jira');
-                            return;
-                        }
-                        setEditingProject(project);
-                        setNewProject(project);
-                        setShowForm(true);
-                    }}
-                    onDeleteProject={(project) => {
-                        if (!project.idJira) {
-                            toast.error('No se puede eliminar un proyecto sin ID de Jira');
-                            return;
-                        }
-                        toast.info('¿Estás seguro?', {
-                            action: {
-                                label: 'Eliminar',
-                                onClick: () => handleDelete(project.idJira)
-                            },
-                            description: 'Esta acción no se puede deshacer',                            
-                            cancel: {
-                                label: 'Cancelar',
-                                onClick: () => {}
-                            }
-                        });
-                    }}                    onChangeStatus={(project) => openStatusDialog(project)}
                 />            ) : activeView === 'kanban' ? (
                 <KanbanView
                     projects={allFilteredProjects} // Usar todos los proyectos filtrados, sin paginación

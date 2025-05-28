@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Project } from '@/models/Project';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { getJiraUrl } from '@/utils/jiraUtils';
-import { Calendar, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, AlertCircle, XCircle, Users, User, FileText } from 'lucide-react';
 import { changeProjectStatus } from '@/hooks/useProjects';
 import { toast } from 'sonner';
 
@@ -251,16 +251,27 @@ export default function KanbanView({
                               ${snapshot.isDragging ? 'shadow-md' : ''}
                               ${project.estadoCalculado === 'Certificado' ? 'cursor-default opacity-90' : 'cursor-grab'}
                             `}
-                          >
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium text-sm">
+                          >                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium text-sm line-clamp-2">
                                 {project.nombre || project.proyecto}
                               </h4>
                               <div className="shrink-0 ml-2">
                                 {renderJiraId(project.idJira)}
                               </div>
                             </div>
-                              <div className="text-xs text-gray-500 space-y-1">                              <div className={`flex items-center gap-1 ${
+
+                            <div className="text-xs text-gray-500 space-y-1 mb-2">
+                              {/* Equipo y célula */}
+                              <div className="flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                <span>
+                                  {project.equipo}
+                                  {project.celula && <span> - {project.celula}</span>}
+                                </span>
+                              </div>
+                              
+                              {/* Fecha de entrega */}
+                              <div className={`flex items-center gap-1 ${
                                 column.id === 'Retrasado' ? 'text-red-500 font-semibold' : ''
                               }`}>
                                 <Calendar className="w-3 h-3" />
@@ -271,10 +282,26 @@ export default function KanbanView({
                                   </span>
                                 )}
                               </div>
+                              
+                              {/* Horas/dias estimados */}
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{project.horas}h ({project.dias} días)</span>
+                              </div>
+
+                              {/* Analista */}
                               {project.analistaProducto && (
                                 <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
+                                  <User className="w-3 h-3" />
                                   <span>Analista: {project.analistaProducto}</span>
+                                </div>
+                              )}
+
+                              {/* Descripción (si existe) */}
+                              {project.descripcion && (
+                                <div className="flex items-start gap-1 mt-2">
+                                  <FileText className="w-3 h-3 mt-0.5" />
+                                  <span className="line-clamp-2 text-gray-600">{project.descripcion}</span>
                                 </div>
                               )}
                             </div>
