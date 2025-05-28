@@ -5,6 +5,7 @@ import { QAAnalyst } from '@/models/QAAnalyst';
 import { useEffect, useState, ReactNode, useMemo, useCallback, memo } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import Holidays from 'date-holidays';
+import { ProjectDebug } from './ProjectDebug';
 
 // Inicializar la instancia de Holidays para Colombia
 const holidays = new Holidays('CO');
@@ -36,7 +37,8 @@ const isToday = (date: Date): boolean => {
 // Formateo consistente de fechas para comparaciones
 const normalizeDate = (date: Date | string): number => {
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.setHours(0, 0, 0, 0);
+    // Convertimos a UTC para evitar problemas con horarios de verano y zonas horarias
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 };
 
 // Componente para mostrar un día en el encabezado (memoizado)
@@ -95,10 +97,9 @@ const ProjectItem = memo(({
     );
     
     const analystColor = assignedAnalyst?.color ?? '#3B82F6'; // Azul como color por defecto
-    
-    const projectStyle = useMemo(() => {
+      const projectStyle = useMemo(() => {
         const today = new Date();
-        const todayTimestamp = normalizeDate(today);
+        const todayStr = today.toISOString().split('T')[0];
         
         // Estilos por defecto
         const style: React.CSSProperties = {
@@ -124,8 +125,8 @@ const ProjectItem = memo(({
         }
         
         // Proyecto no certificado aún
-        const fechaEntregaTimestamp = project.fechaEntrega ? normalizeDate(project.fechaEntrega) : 0;
-        if (fechaEntregaTimestamp < todayTimestamp) {
+        const fechaEntregaStr = project.fechaEntrega ? new Date(project.fechaEntrega).toISOString().split('T')[0] : '';
+        if (fechaEntregaStr < todayStr) {
             // Ha pasado la fecha de entrega y no está certificado
             return {
                 backgroundColor: '#FFEDD5', // bg-orange-200
@@ -217,9 +218,7 @@ const DayCell = memo(({
 }) => {
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const isColombianHoliday = isHoliday(date);
-    const isNonWorkingDay = isWeekend || isColombianHoliday;
-    
-    // Este cálculo ahora está memoizado
+    const isNonWorkingDay = isWeekend || isColombianHoliday;    // Este cálculo ahora está memoizado
     const activeProjects = useMemo(() => {
         if (isNonWorkingDay) return [];
         
@@ -227,23 +226,22 @@ const DayCell = memo(({
             // Si no hay fechaEntrega, no podemos determinar si está activo
             if (!project.fechaEntrega) return false;
             
-            // Convertir fechas a timestamps para comparaciones más rápidas
-            const compareTimestamp = normalizeDate(date);
-            const entregaTimestamp = normalizeDate(project.fechaEntrega);
-            const certificacionTimestamp = project.fechaCertificacion 
-                ? normalizeDate(project.fechaCertificacion)
-                : null;
-            const todayTimestamp = normalizeDate(new Date());
+            // Convertir fechas a formato ISO para comparaciones consistentes
+            const compareStr = date.toISOString().split('T')[0];
+            const entregaStr = project.fechaEntrega ? new Date(project.fechaEntrega).toISOString().split('T')[0] : '';
+            const certificacionStr = project.fechaCertificacion ? new Date(project.fechaCertificacion).toISOString().split('T')[0] : '';
+            const todayStr = new Date().toISOString().split('T')[0];
             
-            // CASO 1: Proyecto certificado - mostrar solo entre fecha entrega y certificación
-            if (certificacionTimestamp !== null) {
-                return compareTimestamp >= entregaTimestamp && compareTimestamp <= certificacionTimestamp;
+            // CASO 1: Proyecto certificado - mostrar solo entre fecha entrega y certificación (inclusive)
+            if (certificacionStr) {
+                // Incluimos tanto la fecha de entrega como la fecha de certificación
+                return compareStr >= entregaStr && compareStr <= certificacionStr;
             }
             
             // CASO 2: Proyecto no certificado
             // Mostrar si es el día exacto de entrega o después de la entrega y hasta hoy
-            return (compareTimestamp === entregaTimestamp) || 
-                   (compareTimestamp > entregaTimestamp && compareTimestamp <= todayTimestamp);
+            return (compareStr === entregaStr) || 
+                   (compareStr > entregaStr && compareStr <= todayStr);
         });
     }, [analystProjects, date, isNonWorkingDay]);
 
@@ -336,8 +334,7 @@ export function TimelineView({
     endDate,
     selectedDateFilter
 }: Readonly<TimelineViewProps>): ReactNode {
-    const [dates, setDates] = useState<Date[]>([]);
-    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
+    const [dates, setDates] = useState<Date[]>([]);    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
     const [currentPage, setCurrentPage] = useState(0); // Página actual
     
     // Efecto para actualizar el calendario basado en los filtros de fecha del padre
@@ -381,6 +378,15 @@ export function TimelineView({
         console.log(`Generadas ${newDates.length} fechas para la vista de ${selectedDateFilter}`);
         setDates(newDates);
     }, [startDate, endDate, selectedDateFilter]);
+
+    // Limpieza de caché cuando cambian los proyectos o filtros relevantes
+    useEffect(() => {
+        // Importamos la función de limpieza de caché desde TimelineUtils
+        import('./TimelineUtils').then(({ clearProjectCache }) => {
+            console.log('[TimelineView] Limpiando caché debido a cambios en proyectos o filtros');
+            clearProjectCache();
+        });
+    }, [projects, filterEquipo, filterAnalista, startDate, endDate]);
 
     // Filtrar analistas basado en los criterios
     const filteredAnalysts = useMemo(() => {
@@ -438,13 +444,10 @@ export function TimelineView({
         
         return () => {
             window.removeEventListener('resize', updatePageSize);
-        };
-    }, []);
-
-    return (
-        <div className="space-y-4">
-            {/* Controles de paginación */}
-            <div className="flex justify-between items-center mb-2">
+        };    }, []);    return (
+        <div className="flex flex-col w-full overflow-hidden">
+            {/* Cabecera con la fecha o rango seleccionado */}
+            <div className="bg-white p-4 border-b shadow-sm mb-4 rounded-t-lg flex justify-between items-center">
                 <div className="text-sm text-gray-600">
                     Mostrando {currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, filteredAnalysts.length)} de {filteredAnalysts.length} analistas
                 </div>

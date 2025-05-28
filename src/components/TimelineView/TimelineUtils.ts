@@ -20,11 +20,33 @@ export const getProjectDateCacheKey = (projectId: string, dateString: string): s
 
 /**
  * Normaliza una fecha para comparaciones consistentes
- * Retorna el timestamp a medianoche
+ * Retorna el timestamp a medianoche en UTC
+ * 
+ * Esta función garantiza:
+ * 1. Crear un nuevo objeto Date para evitar modificar la fecha original
+ * 2. Usar UTC para evitar problemas con cambios de horario de verano/invierno
+ * 3. Convertir a timestamp para comparaciones numéricas más precisas
+ * 
+ * IMPORTANTE: Para evitar problemas de zona horaria en comparaciones, es recomendable
+ * convertir el resultado a formato YYYY-MM-DD usando toISOString().split('T')[0]
  */
 export const normalizeDate = (date: Date | string): number => {
+    if (!date) return 0;
+    
+    // Si es una cadena, convertir a objeto Date
     const d = typeof date === 'string' ? new Date(date) : new Date(date);
-    return d.setHours(0, 0, 0, 0);
+    
+    // Crear una nueva fecha usando solo los componentes de año, mes y día
+    // Esto elimina la hora, minutos, segundos y milisegundos para una comparación justa
+    // Utilizamos Date.UTC para crear un timestamp consistente independiente de la zona horaria local
+    const timestamp = Date.UTC(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        0, 0, 0, 0
+    );
+    
+    return timestamp;
 };
 
 /**
@@ -62,28 +84,26 @@ export const isProjectActive = (project: Project, date: Date, isWorkingDay: bool
     if (projectActiveCache.has(cacheKey)) {
         return projectActiveCache.get(cacheKey) as boolean;
     }
-    
-    // Convertir fechas a timestamps para comparaciones más rápidas
-    const compareTimestamp = normalizeDate(date);
-    const entregaTimestamp = normalizeDate(project.fechaEntrega);
-    const certificacionTimestamp = project.fechaCertificacion 
-        ? normalizeDate(project.fechaCertificacion)
-        : null;
-    const todayTimestamp = normalizeDate(new Date());
-    
+      // Convertir fechas a formato ISO para comparaciones sencillas y consistentes
+    const compareStr = date.toISOString().split('T')[0];
+    const entregaStr = project.fechaEntrega ? new Date(project.fechaEntrega).toISOString().split('T')[0] : '';
+    const certificacionStr = project.fechaCertificacion ? new Date(project.fechaCertificacion).toISOString().split('T')[0] : '';
+    const todayStr = new Date().toISOString().split('T')[0];    
     let result = false;
     
     // CASO 1: Proyecto certificado - mostrar solo entre fecha entrega y certificación
-    if (certificacionTimestamp !== null) {
-        result = compareTimestamp >= entregaTimestamp && compareTimestamp <= certificacionTimestamp;
+    if (certificacionStr) {
+        // Proyecto certificado - mostrar en todas las fechas desde entrega hasta certificación (inclusive)
+        // Comparamos las fechas en formato YYYY-MM-DD para evitar problemas de zona horaria
+        result = compareStr >= entregaStr && compareStr <= certificacionStr;
     } else {
         // CASO 2: Proyecto no certificado
         // Mostrar si es el día exacto de entrega
-        if (compareTimestamp === entregaTimestamp) {
+        if (compareStr === entregaStr) {
             result = true;
         } else {
             // Mostrar si es después de la entrega y hasta hoy (en curso o retrasado)
-            result = compareTimestamp > entregaTimestamp && compareTimestamp <= todayTimestamp;
+            result = compareStr > entregaStr && compareStr <= todayStr;
         }
     }
     
@@ -96,7 +116,27 @@ export const isProjectActive = (project: Project, date: Date, isWorkingDay: bool
 /**
  * Limpia la caché cuando cambian los proyectos o fechas
  * Llamar esta función cuando se actualizan los datos de proyectos
+ * 
+ * @param projectId Opcional: ID del proyecto específico para limpiar solo su caché
  */
-export const clearProjectCache = (): void => {
-    projectActiveCache.clear();
+export const clearProjectCache = (projectId?: string): void => {
+    if (projectId) {
+        // Limpiar solo las entradas de caché para este proyecto específico
+        const keysToDelete: string[] = [];
+        projectActiveCache.forEach((_, key) => {
+            if (key.startsWith(`${projectId}_`)) {
+                keysToDelete.push(key);
+            }
+        });
+        
+        keysToDelete.forEach(key => {
+            projectActiveCache.delete(key);
+        });
+        
+        console.log(`[TimelineUtils] Caché limpiada para proyecto ${projectId}`);
+    } else {
+        // Limpiar toda la caché
+        projectActiveCache.clear();
+        console.log('[TimelineUtils] Caché limpiada completamente');
+    }
 };
