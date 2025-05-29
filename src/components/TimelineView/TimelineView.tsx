@@ -227,12 +227,11 @@ const DayCell = memo(({
     // Verificar si el analista está de vacaciones en esta fecha
     const vacation = isAnalystOnVacation(vacations, analystId, date);
     const isOnVacation = !!vacation;
-    
-    // Determinar si es el primer o último día de vacaciones
+      // Determinar si es el primer o último día de vacaciones
     let isFirstDay = false;
     let isLastDay = false;
     
-    if (isOnVacation) {
+    if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
         const startDate = typeof vacation.startDate === 'string' 
             ? vacation.startDate.split('T')[0] 
@@ -244,9 +243,8 @@ const DayCell = memo(({
         isFirstDay = dateStr === startDate;
         isLastDay = dateStr === endDate;
     }
-    
-    // Log para depurar problemas de visualización de vacaciones
-    if (isOnVacation) {
+      // Log para depurar problemas de visualización de vacaciones
+    if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
         const startDate = typeof vacation.startDate === 'string' ? 
             vacation.startDate.split('T')[0] : 
@@ -296,29 +294,28 @@ const DayCell = memo(({
                 vacation.type === 'training' ? 'Capacitación' : 
                 vacation.type === 'leave' ? 'Permiso' : 
                 'Ausencia'}: ${vacation.description || 'Sin descripción'}` : ''}
-        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && (
+        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && vacation && (
                 <div className="absolute inset-0 z-10">
                     <div className={`w-full h-full 
-                        ${vacation?.type === 'vacation' ? 'bg-purple-100' : 
-                         vacation?.type === 'training' ? 'bg-green-100' : 
-                         vacation?.type === 'leave' ? 'bg-yellow-100' : 
+                        ${vacation.type === 'vacation' ? 'bg-purple-100' : 
+                         vacation.type === 'training' ? 'bg-green-100' : 
+                         vacation.type === 'leave' ? 'bg-yellow-100' : 
                          'bg-gray-100'}`}>
-                        
-                        {/* Línea horizontal para conectar días consecutivos */}
+                          {/* Línea horizontal para conectar días consecutivos */}
                         {!isFirstDay && (
                             <div className={`absolute top-1/2 left-0 w-1/2 h-1
-                                ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
-                                 vacation?.type === 'training' ? 'bg-green-500' : 
-                                 vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                ${vacation.type === 'vacation' ? 'bg-purple-500' : 
+                                 vacation.type === 'training' ? 'bg-green-500' : 
+                                 vacation.type === 'leave' ? 'bg-yellow-500' : 
                                  'bg-gray-500'}`}>
                             </div>
                         )}
                         
                         {!isLastDay && (
                             <div className={`absolute top-1/2 right-0 w-1/2 h-1
-                                ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
-                                 vacation?.type === 'training' ? 'bg-green-500' : 
-                                 vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                ${vacation.type === 'vacation' ? 'bg-purple-500' : 
+                                 vacation.type === 'training' ? 'bg-green-500' : 
+                                 vacation.type === 'leave' ? 'bg-yellow-500' : 
                                  'bg-gray-500'}`}>
                             </div>
                         )}
@@ -334,14 +331,13 @@ const DayCell = memo(({
                             <div className="absolute right-0 top-0 bottom-0 w-1 
                                 bg-gradient-to-l from-white to-transparent"></div>
                         )}
-                        
-                        {/* Indicador central para todos los días */}
+                          {/* Indicador central para todos los días */}
                         {(isFirstDay || isLastDay) ? (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                 <div className={`w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center
-                                    ${vacation?.type === 'vacation' ? 'bg-purple-500 border-purple-700' : 
-                                     vacation?.type === 'training' ? 'bg-green-500 border-green-700' : 
-                                     vacation?.type === 'leave' ? 'bg-yellow-500 border-yellow-700' : 
+                                    ${vacation.type === 'vacation' ? 'bg-purple-500 border-purple-700' : 
+                                     vacation.type === 'training' ? 'bg-green-500 border-green-700' : 
+                                     vacation.type === 'leave' ? 'bg-yellow-500 border-yellow-700' : 
                                      'bg-gray-500 border-gray-700'}`}>
                                     <div className="w-2 h-2 bg-white rounded-full"></div>
                                 </div>
@@ -349,9 +345,9 @@ const DayCell = memo(({
                         ) : (
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                 <div className={`w-3 h-3 rounded-full
-                                    ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
-                                     vacation?.type === 'training' ? 'bg-green-500' : 
-                                     vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                    ${vacation.type === 'vacation' ? 'bg-purple-500' : 
+                                     vacation.type === 'training' ? 'bg-green-500' : 
+                                     vacation.type === 'leave' ? 'bg-yellow-500' : 
                                      'bg-gray-500'}`}>
                                 </div>
                             </div>
