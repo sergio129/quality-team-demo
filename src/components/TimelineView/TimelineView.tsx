@@ -227,9 +227,12 @@ const DayCell = memo(({
     // Verificar si el analista está de vacaciones en esta fecha
     const vacation = isAnalystOnVacation(vacations, analystId, date);
     const isOnVacation = !!vacation;
-      // Determinar si es el primer o último día de vacaciones
+    
+    // Determinar si es el primer o último día de vacaciones
     let isFirstDay = false;
     let isLastDay = false;
+    let isFirstWorkingDayAfterNonWorking = false;
+    let isLastWorkingDayBeforeNonWorking = false;
     
     if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
@@ -242,6 +245,56 @@ const DayCell = memo(({
             
         isFirstDay = dateStr === startDate;
         isLastDay = dateStr === endDate;
+        
+    // Verificar si es el primer día laboral después de un fin de semana o festivo
+        if (!isNonWorkingDay) {
+            // Crear fecha del día anterior
+            const prevDate = new Date(date);
+            prevDate.setDate(prevDate.getDate() - 1);
+            
+            // Verificar si el día anterior era no laborable, pero dentro del período de vacaciones
+            const isPrevWeekend = prevDate.getDay() === 0 || prevDate.getDay() === 6;
+            const isPrevHoliday = isHoliday(prevDate);
+            const isPrevNonWorking = isPrevWeekend || isPrevHoliday;
+            
+            // Comprobar si el día anterior también estaba dentro del período de vacaciones
+            const prevDateStr = prevDate.toISOString().split('T')[0];
+            const startDateStr = typeof vacation.startDate === 'string' 
+                ? vacation.startDate.split('T')[0] 
+                : vacation.startDate.toISOString().split('T')[0];
+                
+            // Es el primer día laborable después de días no laborables si:
+            // 1. El día anterior era no laborable
+            // 2. Y el día anterior estaba dentro del período de vacaciones (no antes del inicio)
+            if (isPrevNonWorking && prevDateStr >= startDateStr) {
+                isFirstWorkingDayAfterNonWorking = true;
+            }
+        }
+        
+        // Verificar si es el último día laboral antes de un fin de semana o festivo
+        if (!isNonWorkingDay) {
+            // Crear fecha del día siguiente
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            
+            // Verificar si el día siguiente es no laborable, pero dentro del período de vacaciones
+            const isNextWeekend = nextDate.getDay() === 0 || nextDate.getDay() === 6;
+            const isNextHoliday = isHoliday(nextDate);
+            const isNextNonWorking = isNextWeekend || isNextHoliday;
+            
+            // Comprobar si el día siguiente también está dentro del período de vacaciones
+            const nextDateStr = nextDate.toISOString().split('T')[0];
+            const endDateStr = typeof vacation.endDate === 'string' 
+                ? vacation.endDate.split('T')[0] 
+                : vacation.endDate.toISOString().split('T')[0];
+                
+            // Es el último día laborable antes de días no laborables si:
+            // 1. El día siguiente es no laborable
+            // 2. Y el día siguiente está dentro del período de vacaciones (no después del fin)
+            if (isNextNonWorking && nextDateStr <= endDateStr) {
+                isLastWorkingDayBeforeNonWorking = true;
+            }
+        }
     }
       // Log para depurar problemas de visualización de vacaciones
     if (isOnVacation && vacation) {
@@ -294,30 +347,43 @@ const DayCell = memo(({
                 vacation.type === 'training' ? 'Capacitación' : 
                 vacation.type === 'leave' ? 'Permiso' : 
                 'Ausencia'}: ${vacation.description || 'Sin descripción'}` : ''}
-        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && vacation && (
-                <div className="absolute inset-0 z-10">
+        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && vacation && (                <div className="absolute inset-0 z-10">
                     <div className={`w-full h-full 
-                        ${vacation.type === 'vacation' ? 'bg-purple-100' : 
-                         vacation.type === 'training' ? 'bg-green-100' : 
-                         vacation.type === 'leave' ? 'bg-yellow-100' : 
-                         'bg-gray-100'}`}>
-                          {/* Línea horizontal para conectar días consecutivos */}
-                        {!isFirstDay && (
-                            <div className={`absolute top-1/2 left-0 w-1/2 h-1
-                                ${vacation.type === 'vacation' ? 'bg-purple-500' : 
-                                 vacation.type === 'training' ? 'bg-green-500' : 
-                                 vacation.type === 'leave' ? 'bg-yellow-500' : 
-                                 'bg-gray-500'}`}>
-                            </div>
-                        )}
-                        
-                        {!isLastDay && (
-                            <div className={`absolute top-1/2 right-0 w-1/2 h-1
-                                ${vacation.type === 'vacation' ? 'bg-purple-500' : 
-                                 vacation.type === 'training' ? 'bg-green-500' : 
-                                 vacation.type === 'leave' ? 'bg-yellow-500' : 
-                                 'bg-gray-500'}`}>
-                            </div>
+                        ${isNonWorkingDay 
+                          ? (vacation.type === 'vacation' ? 'bg-purple-50' : 
+                             vacation.type === 'training' ? 'bg-green-50' : 
+                             vacation.type === 'leave' ? 'bg-yellow-50' : 
+                             'bg-gray-50')
+                          : (vacation.type === 'vacation' ? 'bg-purple-100' : 
+                             vacation.type === 'training' ? 'bg-green-100' : 
+                             vacation.type === 'leave' ? 'bg-yellow-100' : 
+                             'bg-gray-100')
+                        }`}>{/* Línea horizontal para conectar días consecutivos - solo para días laborales */}
+                        {/* Líneas conectoras horizontales - solo para días laborales */}
+                        {!isNonWorkingDay && (
+                            <>
+                                {/* Línea izquierda: mostrar en días no iniciales o en días después de no laborales */}
+                                {(!isFirstDay || isFirstWorkingDayAfterNonWorking) && (
+                                    <div className={`absolute top-1/2 left-0 w-1/2 h-1
+                                        ${vacation.type === 'vacation' ? 'bg-purple-500' : 
+                                         vacation.type === 'training' ? 'bg-green-500' : 
+                                         vacation.type === 'leave' ? 'bg-yellow-500' : 
+                                         'bg-gray-500'}`}
+                                        title="Continúa desde el día anterior o después de fin de semana/festivo">
+                                    </div>
+                                )}
+                                
+                                {/* Línea derecha: mostrar en días no finales o en días antes de no laborales */}
+                                {(!isLastDay || isLastWorkingDayBeforeNonWorking) && (
+                                    <div className={`absolute top-1/2 right-0 w-1/2 h-1
+                                        ${vacation.type === 'vacation' ? 'bg-purple-500' : 
+                                         vacation.type === 'training' ? 'bg-green-500' : 
+                                         vacation.type === 'leave' ? 'bg-yellow-500' : 
+                                         'bg-gray-500'}`}
+                                        title="Continúa hacia el día siguiente o antes de fin de semana/festivo">
+                                    </div>
+                                )}
+                            </>
                         )}
                         
                         {/* Indicador especial para el primer día */}
@@ -330,9 +396,19 @@ const DayCell = memo(({
                         {isLastDay && (
                             <div className="absolute right-0 top-0 bottom-0 w-1 
                                 bg-gradient-to-l from-white to-transparent"></div>
-                        )}
-                          {/* Indicador central para todos los días */}
-                        {(isFirstDay || isLastDay) ? (
+                        )}                        {/* Indicador central para todos los días */}
+                        {isNonWorkingDay ? (
+                            // Indicador sutil para días no laborables
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className={`w-2 h-2 rounded-full opacity-50
+                                    ${vacation.type === 'vacation' ? 'bg-purple-400' : 
+                                     vacation.type === 'training' ? 'bg-green-400' : 
+                                     vacation.type === 'leave' ? 'bg-yellow-400' : 
+                                     'bg-gray-400'}`}>
+                                </div>
+                            </div>
+                        ) : (isFirstDay || isLastDay) ? (
+                            // Indicador destacado para primer o último día laboral
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                 <div className={`w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center
                                     ${vacation.type === 'vacation' ? 'bg-purple-500 border-purple-700' : 
@@ -343,6 +419,7 @@ const DayCell = memo(({
                                 </div>
                             </div>
                         ) : (
+                            // Indicador estándar para días laborales intermedios
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                 <div className={`w-3 h-3 rounded-full
                                     ${vacation.type === 'vacation' ? 'bg-purple-500' : 
