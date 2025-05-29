@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { EditAnalystDialog } from './EditAnalystDialog';
 import { AnalystStatsDialog } from './AnalystStatsDialog';
 import { AnalystWorkloadDialog } from './AnalystWorkloadDialog';
+import { AnalystVacationsDialog } from './AnalystVacationsDialog';
 import { toast } from 'sonner';
 import { useAnalysts, useCells, deleteAnalyst, CellInfo } from '@/hooks/useAnalysts';
 
@@ -261,6 +262,7 @@ export function DataTable() {
                       <div className="flex items-center justify-end space-x-1">
                         <AnalystStatsDialog analyst={analyst} />
                         <AnalystWorkloadDialog analyst={analyst} />
+                        <AnalystVacationsDialog analyst={analyst} />
                         <EditAnalystDialog analyst={analyst} cells={cells} />
                         <Button
                           variant="destructive"

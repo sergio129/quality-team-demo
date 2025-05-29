@@ -2,10 +2,11 @@
 
 import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { useEffect, useState, ReactNode, useMemo, useCallback, memo } from 'react';
+import { AnalystVacation } from '@/models/AnalystVacation';
+import { useState, useEffect, useMemo, useCallback, memo, ReactNode } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
+import { isAnalystOnVacation } from '@/hooks/useAnalystVacations';
 import Holidays from 'date-holidays';
-import { ProjectDebug } from './ProjectDebug';
 
 // Inicializar la instancia de Holidays para Colombia
 const holidays = new Holidays('CO');
@@ -210,15 +211,25 @@ ProjectItem.displayName = 'ProjectItem';
 const DayCell = memo(({ 
     date, 
     analystProjects, 
-    analysts 
+    analysts,
+    analystId,
+    vacations = []
 }: { 
     date: Date; 
     analystProjects: Project[]; 
     analysts: QAAnalyst[];
+    analystId: string;
+    vacations?: AnalystVacation[];
 }) => {
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const isColombianHoliday = isHoliday(date);
-    const isNonWorkingDay = isWeekend || isColombianHoliday;    // Este cálculo ahora está memoizado
+    const isNonWorkingDay = isWeekend || isColombianHoliday;
+    
+    // Verificar si el analista está de vacaciones en esta fecha
+    const vacation = isAnalystOnVacation(vacations, analystId, date);
+    const isOnVacation = !!vacation;
+    
+    // Este cálculo ahora está memoizado
     const activeProjects = useMemo(() => {
         if (isNonWorkingDay) return [];
         
@@ -250,9 +261,25 @@ const DayCell = memo(({
             className={`w-12 flex-shrink-0 border-r relative
                 ${isNonWorkingDay ? 'bg-gray-100' : ''}
                 ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
-                ${isToday(date) ? 'bg-blue-50' : ''}`}
+                ${isToday(date) ? 'bg-blue-50' : ''}
+                ${isOnVacation ? 'bg-purple-50' : ''}`}
+            title={isOnVacation ? `Vacaciones: ${vacation?.description || 'Sin descripción'}` : ''}
         >
-            {!isNonWorkingDay && activeProjects.map(project => (
+            {/* Mostrar indicador de vacaciones cuando corresponda */}
+            {isOnVacation && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-full h-full bg-purple-100 bg-opacity-70 flex items-center justify-center">
+                        <span className="text-xs text-purple-800 font-medium px-1 py-0.5 bg-white bg-opacity-70 rounded">
+                            {vacation?.type === 'vacation' ? 'Vacaciones' : 
+                             vacation?.type === 'training' ? 'Capacitación' : 
+                             vacation?.type === 'leave' ? 'Permiso' : 'Ausente'}
+                        </span>
+                    </div>
+                </div>
+            )}
+            
+            {/* Mostrar proyectos solo si no está de vacaciones y no es día no laborable */}
+            {!isOnVacation && !isNonWorkingDay && activeProjects.map(project => (
                 <div key={project.idJira}>
                     <ProjectItem 
                         project={project} 
@@ -272,13 +299,15 @@ const AnalystRow = memo(({
     dates, 
     projects, 
     filterEquipo, 
-    analysts 
+    analysts,
+    vacations = []
 }: { 
     analyst: QAAnalyst; 
     dates: Date[]; 
     projects: Project[]; 
     filterEquipo?: string;
     analysts: QAAnalyst[];
+    vacations?: AnalystVacation[];
 }) => {
     // Memoizar los proyectos filtrados por analista
     const analystProjects = useMemo(() => {
@@ -307,6 +336,8 @@ const AnalystRow = memo(({
                         date={date} 
                         analystProjects={analystProjects} 
                         analysts={analysts}
+                        analystId={analyst.id}
+                        vacations={vacations}
                     />
                 ))}
             </div>
@@ -323,6 +354,7 @@ interface TimelineViewProps {
     startDate: Date;
     endDate: Date | null;
     selectedDateFilter: 'week' | 'month' | 'custom-month' | 'custom';
+    vacations?: AnalystVacation[]; // Nueva prop para vacaciones
 }
 
 export function TimelineView({ 
@@ -332,7 +364,8 @@ export function TimelineView({
     filterAnalista,
     startDate,
     endDate,
-    selectedDateFilter
+    selectedDateFilter,
+    vacations = [] // Valor por defecto: array vacío
 }: Readonly<TimelineViewProps>): ReactNode {
     const [dates, setDates] = useState<Date[]>([]);    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
     const [currentPage, setCurrentPage] = useState(0); // Página actual
@@ -413,7 +446,7 @@ export function TimelineView({
     // Calcular el número total de páginas
     const totalPages = Math.ceil(filteredAnalysts.length / pageSize);
     
-    // Obtener los analistas para la página actual
+    // Obtener los analistas para la página current
     const currentAnalysts = useMemo(() => {
         const start = currentPage * pageSize;
         return filteredAnalysts.slice(start, start + pageSize);
@@ -501,6 +534,7 @@ export function TimelineView({
                                 projects={projects} 
                                 filterEquipo={filterEquipo}
                                 analysts={filteredAnalysts}
+                                vacations={vacations.filter(v => v.analystId === analyst.id)}
                             />
                         ))}
                     </div>

@@ -13,6 +13,7 @@ import PaginationControls from './projects/PaginationControls';
 import ProjectCardsView from './projects/ProjectCardsView';
 import KanbanView from './projects/KanbanView';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
+import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 
 const HOURS_PER_DAY = 9;
 
@@ -22,6 +23,9 @@ interface FormErrors {
 
 export default function ProjectTable() {    // Usar hook personalizado SWR para proyectos
     const { projects, isLoading: isLoadingProjects, isError: isErrorProjects } = useProjects();
+    
+    // Obtener datos de vacaciones de analistas
+    const { vacations, isLoading: isLoadingVacations } = useAnalystVacations();
     
     const [searchTerm, setSearchTerm] = useState('');
     const [editingProject, setEditingProject] = useState<Project | null>(null);
