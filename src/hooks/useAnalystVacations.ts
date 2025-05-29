@@ -107,39 +107,27 @@ export async function deleteAnalystVacation(id: string) {
 export function isAnalystOnVacation(vacations: AnalystVacation[], analystId: string, date: Date): AnalystVacation | null {
   if (!vacations || vacations.length === 0) return null;
   
-  // Normalizar la fecha que queremos comprobar (solo la fecha sin hora)
-  const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // Función auxiliar para obtener solo la fecha en formato "YYYY-MM-DD"
+  const getDateString = (dateValue: Date | string): string => {
+    if (typeof dateValue === 'string') {
+      return dateValue.split('T')[0];
+    }
+    return dateValue.toISOString().split('T')[0];
+  };
   
-  console.log(`Verificando vacaciones para analista ${analystId} en fecha ${dateToCheck.toISOString().split('T')[0]}`);
+  // Convertir la fecha a comprobar a formato string YYYY-MM-DD
+  const dateToCheckStr = getDateString(date);
   
+  // Filtrar por el analista específico y verificar si la fecha está en el rango
   return vacations.find(vacation => {
     // Solo considerar vacaciones del analista especificado
     if (vacation.analystId !== analystId) return false;
     
-    // Convertir fechas a objetos Date normalizados (sin considerar la hora)
-    let startDate: Date;
-    let endDate: Date;
+    // Obtener fechas de inicio y fin como strings YYYY-MM-DD
+    const startDateStr = getDateString(vacation.startDate);
+    const endDateStr = getDateString(vacation.endDate);
     
-    if (vacation.startDate instanceof Date) {
-      startDate = new Date(vacation.startDate.getFullYear(), vacation.startDate.getMonth(), vacation.startDate.getDate());
-    } else {
-      // Si es string, crear un nuevo Date pero garantizando que es solo la fecha
-      const parts = vacation.startDate.toString().split('T')[0].split('-');
-      startDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-    }
-    
-    if (vacation.endDate instanceof Date) {
-      endDate = new Date(vacation.endDate.getFullYear(), vacation.endDate.getMonth(), vacation.endDate.getDate());
-    } else {
-      // Si es string, crear un nuevo Date pero garantizando que es solo la fecha
-      const parts = vacation.endDate.toString().split('T')[0].split('-');
-      endDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
-    }
-    
-    // Comparar solo las fechas sin considerar la hora
-    console.log(`Comparando: ${dateToCheck.toISOString().split('T')[0]} con rango ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`);
-    
-    // Verificar si la fecha cae dentro del periodo de vacaciones
-    return dateToCheck >= startDate && dateToCheck <= endDate;
+    // Verificar si la fecha está dentro del rango (inclusive)
+    return dateToCheckStr >= startDateStr && dateToCheckStr <= endDateStr;
   }) || null;
 }

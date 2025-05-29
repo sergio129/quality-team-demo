@@ -223,11 +223,22 @@ const DayCell = memo(({
 }) => {
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const isColombianHoliday = isHoliday(date);
-    const isNonWorkingDay = isWeekend || isColombianHoliday;
-    
-    // Verificar si el analista está de vacaciones en esta fecha
+    const isNonWorkingDay = isWeekend || isColombianHoliday;    // Verificar si el analista está de vacaciones en esta fecha
     const vacation = isAnalystOnVacation(vacations, analystId, date);
     const isOnVacation = !!vacation;
+    
+    // Log para depurar problemas de visualización de vacaciones
+    if (isOnVacation) {
+        const dateStr = date.toISOString().split('T')[0];
+        const startDate = typeof vacation.startDate === 'string' ? 
+            vacation.startDate.split('T')[0] : 
+            vacation.startDate.toISOString().split('T')[0];
+        const endDate = typeof vacation.endDate === 'string' ? 
+            vacation.endDate.split('T')[0] : 
+            vacation.endDate.toISOString().split('T')[0];
+            
+        console.log(`[${analystId}] Está de ${vacation.type} en ${dateStr}: ${startDate} - ${endDate}`);
+    }
     
     // Este cálculo ahora está memoizado
     const activeProjects = useMemo(() => {
@@ -264,12 +275,18 @@ const DayCell = memo(({
                 ${isToday(date) ? 'bg-blue-50' : ''}
                 ${isOnVacation ? 'bg-purple-50' : ''}`}
             title={isOnVacation ? `Vacaciones: ${vacation?.description || 'Sin descripción'}` : ''}
-        >
-            {/* Mostrar indicador de vacaciones cuando corresponda */}
+        >            {/* Mostrar indicador de vacaciones cuando corresponda */}
             {isOnVacation && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-full h-full bg-purple-100 bg-opacity-70 flex items-center justify-center">
-                        <span className="text-xs text-purple-800 font-medium px-1 py-0.5 bg-white bg-opacity-70 rounded">
+                    <div className={`w-full h-full flex items-center justify-center
+                        ${vacation?.type === 'vacation' ? 'bg-purple-100' : 
+                         vacation?.type === 'training' ? 'bg-green-100' : 
+                         vacation?.type === 'leave' ? 'bg-yellow-100' : 'bg-gray-100'} 
+                        bg-opacity-70`}>
+                        <span className={`text-xs font-medium px-1 py-0.5 bg-white bg-opacity-70 rounded
+                            ${vacation?.type === 'vacation' ? 'text-purple-800' : 
+                             vacation?.type === 'training' ? 'text-green-800' : 
+                             vacation?.type === 'leave' ? 'text-yellow-800' : 'text-gray-800'}`}>
                             {vacation?.type === 'vacation' ? 'Vacaciones' : 
                              vacation?.type === 'training' ? 'Capacitación' : 
                              vacation?.type === 'leave' ? 'Permiso' : 'Ausente'}

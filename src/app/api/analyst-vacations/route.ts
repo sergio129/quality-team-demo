@@ -75,11 +75,18 @@ export async function POST(req: NextRequest) {
     }
     
     // Crear objeto de vacaciones
+    // Normalizar las fechas a medianoche UTC para evitar problemas de zona horaria
+    const startDate = new Date(data.startDate);
+    startDate.setUTCHours(0, 0, 0, 0);
+    
+    const endDate = new Date(data.endDate);
+    endDate.setUTCHours(0, 0, 0, 0);
+    
     const newVacation = {
       id: uuidv4(),
       analystId: data.analystId,
-      startDate: new Date(data.startDate),
-      endDate: new Date(data.endDate),
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
       description: data.description || '',
       type: data.type
     };
