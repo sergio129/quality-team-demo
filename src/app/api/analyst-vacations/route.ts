@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { analystVacationService } from '@/services/analystVacationService';
+import { AnalystVacationService } from '@/services/analystVacationService';
+
+// Crear una instancia del servicio directamente aquí para evitar problemas de importación
+const vacationService = new AnalystVacationService();
 
 // Handler para GET - Obtener todas las vacaciones o filtrar por analista
 export async function GET(req: NextRequest) {
@@ -11,9 +14,9 @@ export async function GET(req: NextRequest) {
     let vacations;
     
     if (analystId) {
-      vacations = await analystVacationService.getVacationsByAnalyst(analystId);
+      vacations = await vacationService.getVacationsByAnalyst(analystId);
     } else {
-      vacations = await analystVacationService.getAllVacations();
+      vacations = await vacationService.getAllVacations();
     }
     
     return NextResponse.json(vacations);
