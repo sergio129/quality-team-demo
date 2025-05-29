@@ -12,6 +12,7 @@ import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
 import ProjectCardsView from './projects/ProjectCardsView';
 import KanbanView from './projects/KanbanView';
+import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 
@@ -44,14 +45,16 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const [filterEstado, setFilterEstado] = useState<string>('');
     // Estados para el cambio de estado del proyecto
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-    const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
-    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
+    const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
     const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
     const [startDate, setStartDate] = useState(() => {
         const today = new Date();
         return new Date(today.getFullYear(), today.getMonth(), 1);
     });    const [endDate, setEndDate] = useState<Date | null>(null);
+    
+    // Estado para el tipo de exportación a Excel
+    const [exportFilterType, setExportFilterType] = useState<'week' | 'month' | 'year' | 'all'>('month');
     
     // Estados para paginación
     const [currentPage, setCurrentPage] = useState(1);
@@ -112,17 +115,26 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 start.setHours(0, 0, 0, 0);
                 end = new Date(start);
                 end.setDate(start.getDate() + 6);
+                
+                // Actualizar el tipo de filtro para exportación
+                setExportFilterType('week');
                 break;
             case 'custom-month':
                 // Mes específico seleccionado del año seleccionado
                 start = new Date(selectedYear, selectedMonth, 1);
                 end = new Date(selectedYear, selectedMonth + 1, 0);
+                
+                // Actualizar el tipo de filtro para exportación
+                setExportFilterType('month');
                 break;
             case 'month':
             default:
                 // Inicio del mes actual
                 start = new Date(today.getFullYear(), today.getMonth(), 1);
                 end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                
+                // Actualizar el tipo de filtro para exportación
+                setExportFilterType('month');
                 break;
         }
         
@@ -416,14 +428,32 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 <ProjectDashboard projects={allFilteredProjects} />
             )}
             
-            <div className="flex justify-between items-center flex-wrap gap-4">
-                <div className="flex space-x-2">
+            <div className="flex justify-between items-center flex-wrap gap-4">                <div className="flex space-x-2">
                     <button
                         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                         onClick={() => setShowForm(true)}
                     >
                         Nuevo Proyecto
-                    </button>                    <div className="flex rounded-lg overflow-hidden border">                        <button
+                    </button>
+                    
+                    <div className="flex items-center space-x-2">
+                        <select 
+                            className="border rounded px-3 py-2"
+                            value={exportFilterType}
+                            onChange={(e) => setExportFilterType(e.target.value as 'week' | 'month' | 'year' | 'all')}
+                            title="Seleccionar tipo de exportación"
+                        >
+                            <option value="week">Exportar semanal</option>
+                            <option value="month">Exportar mensual</option>
+                            <option value="year">Exportar anual</option>
+                            <option value="all">Exportar todos</option>
+                        </select>
+                        
+                        <ExportToExcelButton 
+                            projects={allFilteredProjects} 
+                            filterType={exportFilterType}
+                        />
+                    </div><div className="flex rounded-lg overflow-hidden border">                        <button
                             className={`px-4 py-2 transition-colors ${
                                 activeView === 'table'
                                     ? 'bg-blue-600 text-white'

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, X, Filter } from 'lucide-react';
+import { Project } from '@/models/Project';
+import ExportToExcelButton from './ExportToExcelButton';
 
 interface AdvancedFiltersPanelProps {
   filterEquipo: string;
@@ -24,6 +26,9 @@ interface AdvancedFiltersPanelProps {
   setStartDate?: React.Dispatch<React.SetStateAction<Date>>;
   endDate?: Date | null;
   setEndDate?: React.Dispatch<React.SetStateAction<Date | null>>;
+  projects?: Project[]; // Lista de proyectos para exportar
+  exportFilterType?: 'week' | 'month' | 'year' | 'all'; // Tipo de filtro para exportación
+  setExportFilterType?: (value: 'week' | 'month' | 'year' | 'all') => void;
 }
 
 export default function AdvancedFiltersPanel({
@@ -47,7 +52,10 @@ export default function AdvancedFiltersPanel({
   startDate,
   setStartDate,
   endDate,
-  setEndDate
+  setEndDate,
+  projects,
+  exportFilterType,
+  setExportFilterType
 }: AdvancedFiltersPanelProps) {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState(0);
@@ -327,6 +335,22 @@ export default function AdvancedFiltersPanel({
           </div>
         </div>
       )}
+      {/* Botón de exportación a Excel */}
+      <div className="mt-4">
+        <ExportToExcelButton 
+          projects={projects}
+          filterEquipo={filterEquipo}
+          filterAnalista={filterAnalista}
+          filterEstado={filterEstado}
+          filterCelula={filterCelula}
+          searchTerm={searchTerm}
+          filterAtrasado={filterAtrasado}
+          startDate={startDate}
+          endDate={endDate}
+          exportFilterType={exportFilterType}
+          setExportFilterType={setExportFilterType}
+        />
+      </div>
     </div>
   );
 }
