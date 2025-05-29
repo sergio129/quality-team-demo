@@ -54,16 +54,25 @@ export async function POST(req: NextRequest) {
     
     const endDate = new Date(data.endDate);
     endDate.setUTCHours(0, 0, 0, 0);
-      // Crear el registro usando el servicio de Prisma
-    const newVacation = await vacationService.createVacation({
-      analystId: data.analystId,
-      startDate: startDate,
-      endDate: endDate,
-      description: data.description || '',
-      type: data.type
+    // Crear el registro directamente con Prisma
+    const newVacation = await prisma.analystVacation.create({
+      data: {
+        analystId: data.analystId,
+        startDate: startDate,
+        endDate: endDate,
+        description: data.description || '',
+        type: data.type
+      }
     });
     
-    return NextResponse.json(newVacation);
+    // Convertir las fechas a objetos Date para mantener compatibilidad
+    const formattedVacation = {
+      ...newVacation,
+      startDate: new Date(newVacation.startDate),
+      endDate: new Date(newVacation.endDate)
+    };
+    
+    return NextResponse.json(formattedVacation);
   } catch (error) {
     console.error('Error en POST de vacaciones:', error);
     return NextResponse.json({
@@ -82,8 +91,10 @@ export async function DELETE(req: NextRequest) {
         error: 'Se requiere el ID de las vacaciones'
       }, { status: 400 });
     }
-      // Eliminar usando el servicio Prisma
-    await vacationService.deleteVacation(data.id);
+    // Eliminar directamente con Prisma
+    await prisma.analystVacation.delete({
+      where: { id: data.id }
+    });
     
     // Responder con éxito
     return NextResponse.json({ success: true });

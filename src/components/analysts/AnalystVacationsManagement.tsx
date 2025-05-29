@@ -10,6 +10,7 @@ import {
 } from '@/hooks/useAnalystVacations';
 import { Calendar, X, Info, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/incidents/ConfirmDialog';
 
 interface AnalystVacationsManagementProps {
   analyst: QAAnalyst;
@@ -71,12 +72,21 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
       console.error('Error al crear vacaciones:', error);
     }
   };
-  
+    // Estado para el diálogo de confirmación
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [vacationToDelete, setVacationToDelete] = useState<string | null>(null);
+
   // Eliminar un período de vacaciones
   const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que deseas eliminar este período de vacaciones?')) {
+    setVacationToDelete(id);
+    setConfirmDialogOpen(true);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (vacationToDelete) {
       try {
-        await deleteAnalystVacation(id);
+        await deleteAnalystVacation(vacationToDelete);
+        setConfirmDialogOpen(false);
       } catch (error) {
         console.error('Error al eliminar vacaciones:', error);
       }
@@ -249,9 +259,19 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
+          </div>        </div>
       )}
+      
+      {/* Diálogo de confirmación para eliminar */}
+      <ConfirmDialog
+        isOpen={confirmDialogOpen}
+        title="Confirmación"
+        message="¿Estás seguro de que deseas eliminar este período de vacaciones?"
+        confirmLabel="Aceptar"
+        cancelLabel="Cancelar"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDialogOpen(false)}
+      />
     </div>
   );
 }
