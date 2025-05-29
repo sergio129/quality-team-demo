@@ -128,15 +128,16 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 if (exportFilterType !== 'all') {
                     setExportFilterType('month');
                 }
-                break;
-            case 'month':
+                break;            case 'month':
             default:
                 // Inicio del mes actual
                 start = new Date(today.getFullYear(), today.getMonth(), 1);
                 end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                 
-                // Actualizar el tipo de filtro para exportación
-                setExportFilterType('month');
+                // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
+                if (exportFilterType !== 'all') {
+                    setExportFilterType('month');
+                }
                 break;
         }
         
@@ -444,11 +445,10 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             value={exportFilterType}
                             onChange={(e) => setExportFilterType(e.target.value as 'week' | 'month' | 'year' | 'all')}
                             title="Seleccionar tipo de exportación"
-                        >
-                            <option value="week">Exportar semanal</option>
-                            <option value="month">Exportar mensual</option>
-                            <option value="year">Exportar anual</option>
-                            <option value="all">Exportar todos</option>
+                        >                            <option value="week">Exportar proyectos semanales</option>
+                            <option value="month">Exportar proyectos mensuales</option>
+                            <option value="year">Exportar proyectos anuales</option>
+                            <option value="all">Exportar TODOS los proyectos</option>
                         </select>
                           <ExportToExcelButton 
                             projects={exportFilterType === 'all' ? projects : allFilteredProjects} 

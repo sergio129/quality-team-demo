@@ -27,7 +27,6 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
       day: '2-digit'
     });
   };
-
   // Función para generar el nombre del archivo según el filtro
   const generateFileName = () => {
     const currentDate = new Date();
@@ -49,7 +48,9 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
         break;
     }
     
-    return `Proyectos_${filterName}_${formattedDate}.xlsx`;
+    // Incluir el número de proyectos en el nombre del archivo
+    const totalProjects = projects.length;
+    return `Proyectos_${filterName}_${totalProjects}_registros_${formattedDate}.xlsx`;
   };
 
   // Función para exportar los datos a Excel
