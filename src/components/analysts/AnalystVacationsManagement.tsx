@@ -319,20 +319,19 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
           
           <div className="overflow-hidden border rounded-lg">            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr>                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Tipo
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                     Descripción
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
                     Período
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
                     Días
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
                     Acciones
                   </th>
                 </tr>
@@ -377,14 +376,33 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
                         <Calendar className="w-4 h-4 mr-1 text-gray-400" />
                         <span>{formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <div className="flex flex-col items-center text-xs">
-                        <div className="font-semibold text-blue-600">
-                          {calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate))} hábiles
+                    </td>                    <td className="px-4 py-2">
+                      <div className="flex flex-col items-center">
+                        {/* Contadores de días */}
+                        <div className="flex justify-between w-full mb-1">
+                          <span className="font-semibold text-blue-600 text-sm">
+                            {calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate))} hábiles
+                          </span>
+                          <span className="text-gray-500 text-sm">
+                            {calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))} calendario
+                          </span>
                         </div>
-                        <div className="text-gray-500">
-                          {calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))} calendario
+                        
+                        {/* Barra visual mejorada */}
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-600" 
+                            style={{ 
+                              width: `${Math.round((calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate)) / 
+                                calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))) * 100)}%` 
+                            }}
+                          ></div>
+                        </div>
+                        
+                        {/* Leyenda */}
+                        <div className="flex justify-between w-full mt-1 text-xs">
+                          <span className="text-blue-600">Laborables</span>
+                          <span className="text-gray-500">Total</span>
                         </div>
                       </div>
                     </td>
