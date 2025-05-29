@@ -8,22 +8,23 @@ datasource db {
 }
 
 model QAAnalyst {
-  id             String           @id @default(uuid())
-  name           String
-  email          String           @unique
-  role           String
-  color          String?
-  availability   Int?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  cells          AnalystCell[]
-  certifications Certification[]
-  assignedBugs   Incident[]       @relation("AssignedTo")
-  incidents      Incident[]       @relation("InformedBy")
-  projects       ProjectAnalyst[]
-  skills         Skill[]
-  specialties    Specialty[]
-  teams          TeamAnalyst[]
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  role            String
+  color           String?
+  availability    Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  cells           AnalystCell[]
+  AnalystVacation AnalystVacation[]
+  certifications  Certification[]
+  assignedBugs    Incident[]        @relation("AssignedTo")
+  incidents       Incident[]        @relation("InformedBy")
+  projects        ProjectAnalyst[]
+  skills          Skill[]
+  specialties     Specialty[]
+  teams           TeamAnalyst[]
 }
 
 model Skill {
@@ -185,15 +186,15 @@ model Incident {
   areaAfectada     String?
   celula           String
   informadoPorId   String
-  asignadoAId      String?         // Ahora es opcional
-  asignadoA_text   String?         // Nuevo campo para almacenar directamente el nombre
+  asignadoAId      String?
+  asignadoA_text   String?
   testCases        DefectRelation[]
   asignadoA        QAAnalyst?       @relation("AssignedTo", fields: [asignadoAId], references: [id])
   cell             Cell             @relation(fields: [celula], references: [id])
   informadoPor     QAAnalyst        @relation("InformedBy", fields: [informadoPorId], references: [id])
+  imagenes         IncidentImage[]
   historialEstados StateChange[]
   etiquetas        Tag[]
-  imagenes         IncidentImage[]  // Relación con las imágenes
 }
 
 model Tag {
@@ -208,7 +209,7 @@ model IncidentImage {
   fileName   String
   fileType   String
   fileSize   Int
-  data       Bytes    // Almacena los datos binarios del archivo
+  data       Bytes
   createdAt  DateTime @default(now())
   incidentId String
   incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
@@ -269,4 +270,16 @@ model ProjectAnalyst {
   project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, analystId])
+}
+
+model AnalystVacation {
+  id          String    @id @default(uuid())
+  startDate   DateTime
+  endDate     DateTime
+  description String?
+  type        String
+  analystId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  QAAnalyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
