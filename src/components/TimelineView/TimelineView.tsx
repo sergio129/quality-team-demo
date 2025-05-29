@@ -554,11 +554,40 @@ export function TimelineView({
                                 vacations={vacations.filter(v => v.analystId === analyst.id)}
                             />
                         ))}
-                    </div>
-
-                    {/* Información sobre la fecha seleccionada */}
+                    </div>                    {/* Información sobre la fecha seleccionada */}
                     <div className="mt-4 text-center">
                         <span className="font-semibold">{dateHeader}</span>
+                    </div>
+                    
+                    {/* Leyenda de colores */}
+                    <div className="mt-6 bg-white p-4 rounded-lg border shadow-sm">
+                        <h4 className="font-medium mb-2">Leyenda</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-purple-100 border border-purple-300 mr-2"></div>
+                                <span className="text-sm">Vacaciones</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 mr-2"></div>
+                                <span className="text-sm">Permiso</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-green-100 border border-green-300 mr-2"></div>
+                                <span className="text-sm">Capacitación</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-gray-100 border border-gray-300 mr-2"></div>
+                                <span className="text-sm">Otra ausencia</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-red-50 border border-red-200 mr-2"></div>
+                                <span className="text-sm">Día festivo</span>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-4 h-4 bg-blue-50 border border-blue-200 mr-2"></div>
+                                <span className="text-sm">Hoy</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

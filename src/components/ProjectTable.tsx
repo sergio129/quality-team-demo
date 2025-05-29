@@ -889,16 +889,24 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         <p className="text-red-800 font-medium">Error al cargar los proyectos</p>
                         <p className="text-red-600 mt-1">Por favor, intente nuevamente más tarde</p>
                     </div>
-                </div>            ) : activeView === 'timeline' ? (                <TimelineView
-                    projects={allFilteredProjects} // Pasar todos los proyectos filtrados, no solo los de la página actual
-                    analysts={analysts}
-                    filterAnalista={filterAnalista}
-                    filterEquipo={filterEquipo}
-                    startDate={startDate}
-                    endDate={endDate}
-                    selectedDateFilter={selectedDateFilter}
-                    vacations={vacations} // Pasar las vacaciones de los analistas
-                />
+                </div>            ) : activeView === 'timeline' ? (
+                <>
+                    {/* Mensajes de depuración para vacaciones */}
+                    {console.log(`[ProjectTable] Pasando ${vacations.length} registros de vacaciones a TimelineView`)}
+                    {console.log(`[ProjectTable] Analistas cargados: ${analysts.map(a => a.name).join(', ')}`)}
+                    {vacations.length > 0 && console.log(`[ProjectTable] Ejemplo de vacación: `, JSON.stringify(vacations[0]))}
+                    
+                    <TimelineView
+                        projects={allFilteredProjects} // Pasar todos los proyectos filtrados, no solo los de la página actual
+                        analysts={analysts}
+                        filterAnalista={filterAnalista}
+                        filterEquipo={filterEquipo}
+                        startDate={startDate}
+                        endDate={endDate}
+                        selectedDateFilter={selectedDateFilter}
+                        vacations={vacations} // Pasar las vacaciones de los analistas
+                    />
+                </>
             ) : activeView === 'kanban' ? (
                 <KanbanView
                     projects={allFilteredProjects}
