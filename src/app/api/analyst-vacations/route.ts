@@ -1,23 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { AnalystVacationService } from '@/services/analystVacationService';
-
-// Crear una instancia del servicio para usar en los handlers
-const vacationService = new AnalystVacationService();
+import { prisma } from '@/lib/prisma';
 
 // Handler para GET - Obtener todas las vacaciones o filtrar por analista
-export async function GET(req: NextRequest) {  try {
+export async function GET(req: NextRequest) {
+  try {
     const url = new URL(req.url);
     const analystId = url.searchParams.get('analystId');
     
     let vacations;
-      if (analystId) {
-      vacations = await vacationService.getVacationsByAnalyst(analystId);
-    } else {
-      vacations = await vacationService.getAllVacations();
-    }
     
-    return NextResponse.json(vacations);
+    if (analystId) {
+      // Filtrar por analista
+      vacations = await prisma.analystVacation.findMany({
+        where: { analystId }
+      });
+    } else {
+      // Obtener todas las vacaciones
+      vacations = await prisma.analystVacation.findMany();
+    }
+      // Convertir las fechas a objetos Date para mantener compatibilidad
+    const formattedVacations = vacations.map((v: any) => ({
+      ...v,
+      startDate: new Date(v.startDate),
+      endDate: new Date(v.endDate)
+    }));
+    
+    return NextResponse.json(formattedVacations);
   } catch (error) {
     console.error('Error en GET de vacaciones:', error);
     return NextResponse.json({
