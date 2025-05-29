@@ -220,12 +220,30 @@ const DayCell = memo(({
     analysts: QAAnalyst[];
     analystId: string;
     vacations?: AnalystVacation[];
-}) => {
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+}) => {    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const isColombianHoliday = isHoliday(date);
-    const isNonWorkingDay = isWeekend || isColombianHoliday;    // Verificar si el analista está de vacaciones en esta fecha
+    const isNonWorkingDay = isWeekend || isColombianHoliday;
+    
+    // Verificar si el analista está de vacaciones en esta fecha
     const vacation = isAnalystOnVacation(vacations, analystId, date);
     const isOnVacation = !!vacation;
+    
+    // Determinar si es el primer o último día de vacaciones
+    let isFirstDay = false;
+    let isLastDay = false;
+    
+    if (isOnVacation) {
+        const dateStr = date.toISOString().split('T')[0];
+        const startDate = typeof vacation.startDate === 'string' 
+            ? vacation.startDate.split('T')[0] 
+            : vacation.startDate.toISOString().split('T')[0];
+        const endDate = typeof vacation.endDate === 'string' 
+            ? vacation.endDate.split('T')[0] 
+            : vacation.endDate.toISOString().split('T')[0];
+            
+        isFirstDay = dateStr === startDate;
+        isLastDay = dateStr === endDate;
+    }
     
     // Log para depurar problemas de visualización de vacaciones
     if (isOnVacation) {
@@ -267,30 +285,77 @@ const DayCell = memo(({
         });
     }, [analystProjects, date, isNonWorkingDay]);
 
-    return (
-        <div
+    return (        <div
             className={`w-12 flex-shrink-0 border-r relative
                 ${isNonWorkingDay ? 'bg-gray-100' : ''}
                 ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
                 ${isToday(date) ? 'bg-blue-50' : ''}
-                ${isOnVacation ? 'bg-purple-50' : ''}`}
-            title={isOnVacation ? `Vacaciones: ${vacation?.description || 'Sin descripción'}` : ''}
-        >            {/* Mostrar indicador de vacaciones cuando corresponda */}
-            {isOnVacation && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className={`w-full h-full flex items-center justify-center
+                ${isOnVacation && vacation ? 'bg-purple-50' : ''}`}
+            title={isOnVacation && vacation ? `${
+                vacation.type === 'vacation' ? 'Vacaciones' : 
+                vacation.type === 'training' ? 'Capacitación' : 
+                vacation.type === 'leave' ? 'Permiso' : 
+                'Ausencia'}: ${vacation.description || 'Sin descripción'}` : ''}
+        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && (
+                <div className="absolute inset-0 z-10">
+                    <div className={`w-full h-full 
                         ${vacation?.type === 'vacation' ? 'bg-purple-100' : 
                          vacation?.type === 'training' ? 'bg-green-100' : 
-                         vacation?.type === 'leave' ? 'bg-yellow-100' : 'bg-gray-100'} 
-                        bg-opacity-70`}>
-                        <span className={`text-xs font-medium px-1 py-0.5 bg-white bg-opacity-70 rounded
-                            ${vacation?.type === 'vacation' ? 'text-purple-800' : 
-                             vacation?.type === 'training' ? 'text-green-800' : 
-                             vacation?.type === 'leave' ? 'text-yellow-800' : 'text-gray-800'}`}>
-                            {vacation?.type === 'vacation' ? 'Vacaciones' : 
-                             vacation?.type === 'training' ? 'Capacitación' : 
-                             vacation?.type === 'leave' ? 'Permiso' : 'Ausente'}
-                        </span>
+                         vacation?.type === 'leave' ? 'bg-yellow-100' : 
+                         'bg-gray-100'}`}>
+                        
+                        {/* Línea horizontal para conectar días consecutivos */}
+                        {!isFirstDay && (
+                            <div className={`absolute top-1/2 left-0 w-1/2 h-1
+                                ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
+                                 vacation?.type === 'training' ? 'bg-green-500' : 
+                                 vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                 'bg-gray-500'}`}>
+                            </div>
+                        )}
+                        
+                        {!isLastDay && (
+                            <div className={`absolute top-1/2 right-0 w-1/2 h-1
+                                ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
+                                 vacation?.type === 'training' ? 'bg-green-500' : 
+                                 vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                 'bg-gray-500'}`}>
+                            </div>
+                        )}
+                        
+                        {/* Indicador especial para el primer día */}
+                        {isFirstDay && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 
+                                bg-gradient-to-r from-white to-transparent"></div>
+                        )}
+                        
+                        {/* Indicador especial para el último día */}
+                        {isLastDay && (
+                            <div className="absolute right-0 top-0 bottom-0 w-1 
+                                bg-gradient-to-l from-white to-transparent"></div>
+                        )}
+                        
+                        {/* Indicador central para todos los días */}
+                        {(isFirstDay || isLastDay) ? (
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className={`w-6 h-6 rounded-full border-2 shadow-sm flex items-center justify-center
+                                    ${vacation?.type === 'vacation' ? 'bg-purple-500 border-purple-700' : 
+                                     vacation?.type === 'training' ? 'bg-green-500 border-green-700' : 
+                                     vacation?.type === 'leave' ? 'bg-yellow-500 border-yellow-700' : 
+                                     'bg-gray-500 border-gray-700'}`}>
+                                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div className={`w-3 h-3 rounded-full
+                                    ${vacation?.type === 'vacation' ? 'bg-purple-500' : 
+                                     vacation?.type === 'training' ? 'bg-green-500' : 
+                                     vacation?.type === 'leave' ? 'bg-yellow-500' : 
+                                     'bg-gray-500'}`}>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -562,21 +627,20 @@ export function TimelineView({
                     {/* Leyenda de colores */}
                     <div className="mt-6 bg-white p-4 rounded-lg border shadow-sm">
                         <h4 className="font-medium mb-2">Leyenda</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 bg-purple-100 border border-purple-300 mr-2"></div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">                            <div className="flex items-center">
+                                <div className="w-4 h-4 rounded-full bg-purple-500 border border-purple-700 mr-2"></div>
                                 <span className="text-sm">Vacaciones</span>
                             </div>
                             <div className="flex items-center">
-                                <div className="w-4 h-4 bg-yellow-100 border border-yellow-300 mr-2"></div>
+                                <div className="w-4 h-4 rounded-full bg-yellow-500 border border-yellow-700 mr-2"></div>
                                 <span className="text-sm">Permiso</span>
                             </div>
                             <div className="flex items-center">
-                                <div className="w-4 h-4 bg-green-100 border border-green-300 mr-2"></div>
+                                <div className="w-4 h-4 rounded-full bg-green-500 border border-green-700 mr-2"></div>
                                 <span className="text-sm">Capacitación</span>
                             </div>
                             <div className="flex items-center">
-                                <div className="w-4 h-4 bg-gray-100 border border-gray-300 mr-2"></div>
+                                <div className="w-4 h-4 rounded-full bg-gray-500 border border-gray-700 mr-2"></div>
                                 <span className="text-sm">Otra ausencia</span>
                             </div>
                             <div className="flex items-center">
