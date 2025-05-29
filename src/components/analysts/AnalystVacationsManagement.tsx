@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { QAAnalyst } from '@/models/QAAnalyst';
-import { AnalystVacation } from '@/models/AnalystVacation';
 import { 
   createAnalystVacation, 
   deleteAnalystVacation,
@@ -12,18 +11,60 @@ import { Calendar, X, Info, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/incidents/ConfirmDialog';
 
+// Función para calcular días hábiles entre dos fechas (excluyendo fines de semana)
+function calcularDiasHabiles(startDate: Date, endDate: Date): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  let count = 0;
+  
+  // Establecer ambas fechas a medianoche para comparar solo días
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  // Clonar la fecha de inicio para no modificarla
+  const current = new Date(start);
+  
+  // Iterar día a día
+  while (current <= end) {
+    // Comprobar si el día actual no es sábado (6) ni domingo (0)
+    const dayOfWeek = current.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      count++;
+    }
+    
+    // Avanzar al siguiente día
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return count;
+}
+
+// Función para calcular días calendario entre dos fechas (incluyendo ambos días)
+function calcularDiasCalendario(startDate: Date, endDate: Date): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  // Establecer ambas fechas a medianoche para comparar solo días
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  // Calcular diferencia en milisegundos y convertir a días
+  // Agregar 1 para incluir ambos días (inicio y fin)
+  return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+}
+
 interface AnalystVacationsManagementProps {
   analyst: QAAnalyst;
 }
 
-export function AnalystVacationsManagement({ analyst }: AnalystVacationsManagementProps) {
+export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacationsManagementProps>) {
   const { vacations, isLoading } = useAnalystVacations();
-  const [showForm, setShowForm] = useState(false);
-  const [newVacation, setNewVacation] = useState<Partial<AnalystVacation>>({
+  const [showForm, setShowForm] = useState(false);  const [newVacation, setNewVacation] = useState({
     analystId: analyst.id,
-    type: 'vacation',
-    startDate: new Date(),
-    endDate: new Date()
+    type: 'vacation' as 'vacation' | 'leave' | 'training' | 'other',
+    startDate: new Date().toISOString().split('T')[0], // Formato YYYY-MM-DD para inputs date
+    endDate: new Date().toISOString().split('T')[0],   // Formato YYYY-MM-DD para inputs date
+    description: ''
   });
 
   // Filtrar vacaciones solo para este analista
@@ -40,33 +81,52 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
       timeZone: 'UTC'
     });
   };
-  
-  // Manejar envío del formulario
+    // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      const startDate = new Date(newVacation.startDate);
+      const endDate = new Date(newVacation.endDate);
+      
       // Validar fechas
-      if (new Date(newVacation.startDate!) > new Date(newVacation.endDate!)) {
+      if (startDate > endDate) {
         toast.error('La fecha de inicio debe ser anterior a la fecha de fin');
+        return;
+      }
+      
+      // Validar que no sea una fecha pasada
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Solo validar fechas en el pasado si es de tipo "vacaciones"
+      if (newVacation.type === 'vacation' && startDate < today) {
+        // Permitimos registrar vacaciones pasadas, pero mostramos una advertencia
+        toast.warning('Estás registrando vacaciones con fecha en el pasado');
+      }
+      
+      // Verificar que haya al menos 1 día hábil
+      const diasHabiles = calcularDiasHabiles(startDate, endDate);
+      if (diasHabiles < 1) {
+        toast.error('El período debe incluir al menos un día hábil');
         return;
       }
       
       await createAnalystVacation({
         analystId: analyst.id,
-        startDate: new Date(newVacation.startDate!),
-        endDate: new Date(newVacation.endDate!),
-        description: newVacation.description || '',
-        type: newVacation.type as 'vacation' | 'leave' | 'training' | 'other'
+        startDate,
+        endDate,
+        description: newVacation.description,
+        type: newVacation.type
       });
       
       // Resetear formulario
-      setShowForm(false);
-      setNewVacation({
+      setShowForm(false);      setNewVacation({
         analystId: analyst.id,
-        type: 'vacation',
-        startDate: new Date(),
-        endDate: new Date()
+        type: 'vacation' as const,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date().toISOString().split('T')[0],
+        description: ''
       });
     } catch (error) {
       console.error('Error al crear vacaciones:', error);
@@ -109,12 +169,12 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
 
       {showForm && (
         <form onSubmit={handleSubmit} className="p-4 bg-gray-50 rounded-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">            <div>
+              <label htmlFor="tipoAusencia" className="block text-sm font-medium text-gray-700 mb-1">
                 Tipo de ausencia
               </label>
               <select
+                id="tipoAusencia"
                 value={newVacation.type}
                 onChange={(e) => setNewVacation({ ...newVacation, type: e.target.value as any })}
                 className="w-full border rounded-md px-3 py-2"
@@ -127,12 +187,13 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="descripcionAusencia" className="block text-sm font-medium text-gray-700 mb-1">
                 Descripción (opcional)
               </label>
               <input
+                id="descripcionAusencia"
                 type="text"
-                value={newVacation.description || ''}
+                value={newVacation.description ?? ''}
                 onChange={(e) => setNewVacation({ ...newVacation, description: e.target.value })}
                 placeholder="Ej: Vacaciones de verano"
                 className="w-full border rounded-md px-3 py-2"
@@ -140,35 +201,90 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">            <div>
+              <label htmlFor="fechaInicio" className="block text-sm font-medium text-gray-700 mb-1">
                 Fecha de inicio
               </label>
               <input
+                id="fechaInicio"
                 type="date"
-                value={newVacation.startDate instanceof Date 
-                  ? newVacation.startDate.toISOString().split('T')[0] 
-                  : newVacation.startDate as string}
+                value={newVacation.startDate}
                 onChange={(e) => setNewVacation({ ...newVacation, startDate: e.target.value })}
                 className="w-full border rounded-md px-3 py-2"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="fechaFin" className="block text-sm font-medium text-gray-700 mb-1">
                 Fecha de fin
               </label>
               <input
+                id="fechaFin"
                 type="date"
-                value={newVacation.endDate instanceof Date
-                  ? newVacation.endDate.toISOString().split('T')[0]
-                  : newVacation.endDate as string}
+                value={newVacation.endDate}
                 onChange={(e) => setNewVacation({ ...newVacation, endDate: e.target.value })}
                 className="w-full border rounded-md px-3 py-2"
                 required
               />
             </div>
+          </div>          <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Resumen del período</h4>
+            
+            {newVacation.startDate && newVacation.endDate && (() => {
+              const startDate = new Date(newVacation.startDate);
+              const endDate = new Date(newVacation.endDate);
+              
+              const diasHabiles = calcularDiasHabiles(startDate, endDate);
+              const diasCalendario = calcularDiasCalendario(startDate, endDate);
+              const finesDeSemana = diasCalendario - diasHabiles;
+              
+              // Calcular el porcentaje para la barra visual
+              const porcentajeDiasHabiles = Math.round((diasHabiles / diasCalendario) * 100);
+              
+              // Determinar si el periodo es válido
+              const fechaInvalida = startDate > endDate;
+              
+              return (
+                <div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Días hábiles:</p>
+                      <p className={`text-lg font-semibold ${fechaInvalida ? 'text-red-600' : 'text-blue-600'}`}>
+                        {fechaInvalida ? '0' : diasHabiles}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Días calendario:</p>
+                      <p className="text-lg font-semibold">
+                        {fechaInvalida ? '0' : diasCalendario}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!fechaInvalida && (
+                    <>
+                      <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-600" 
+                          style={{ width: `${porcentajeDiasHabiles}%` }}
+                        ></div>
+                      </div>
+                      
+                      <div className="mt-2 flex justify-between text-sm text-gray-500">
+                        <span>Días hábiles: {diasHabiles}</span>
+                        <span>Fines de semana: {finesDeSemana}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {fechaInvalida && (
+                    <p className="mt-2 text-sm text-red-600 font-medium">
+                      ¡Fechas inválidas! La fecha de inicio debe ser anterior a la fecha de fin.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex justify-end">
@@ -201,8 +317,7 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
             </p>
           </div>
           
-          <div className="overflow-hidden border rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-hidden border rounded-lg">            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -214,6 +329,9 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Período
                   </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Días
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -221,30 +339,53 @@ export function AnalystVacationsManagement({ analyst }: AnalystVacationsManageme
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {analystVacations.map((vacation) => (
-                  <tr key={vacation.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        vacation.type === 'vacation' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : vacation.type === 'training'
-                          ? 'bg-green-100 text-green-800'
-                          : vacation.type === 'leave'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {vacation.type === 'vacation' && 'Vacaciones'}
-                        {vacation.type === 'training' && 'Capacitación'}
-                        {vacation.type === 'leave' && 'Permiso'}
-                        {vacation.type === 'other' && 'Otro'}
-                      </span>
+                  <tr key={vacation.id} className="hover:bg-gray-50">                    <td className="px-4 py-2">
+                      {(() => {
+                        // Determinar la clase para el badge según el tipo
+                        let badgeClass = '';
+                        let badgeLabel = '';
+                        
+                        switch(vacation.type) {
+                          case 'vacation':
+                            badgeClass = 'bg-purple-100 text-purple-800';
+                            badgeLabel = 'Vacaciones';
+                            break;
+                          case 'training':
+                            badgeClass = 'bg-green-100 text-green-800';
+                            badgeLabel = 'Capacitación';
+                            break;
+                          case 'leave':
+                            badgeClass = 'bg-yellow-100 text-yellow-800';
+                            badgeLabel = 'Permiso';
+                            break;
+                          default:
+                            badgeClass = 'bg-gray-100 text-gray-800';
+                            badgeLabel = 'Otro';
+                        }
+                        
+                        return (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
+                            {badgeLabel}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-2 text-sm">
-                      {vacation.description || <span className="text-gray-400 italic">Sin descripción</span>}
-                    </td>
-                    <td className="px-4 py-2">
+                      {vacation.description ?? <span className="text-gray-400 italic">Sin descripción</span>}
+                    </td>                    <td className="px-4 py-2">
                       <div className="flex items-center text-sm">
                         <Calendar className="w-4 h-4 mr-1 text-gray-400" />
                         <span>{formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 text-center">
+                      <div className="flex flex-col items-center text-xs">
+                        <div className="font-semibold text-blue-600">
+                          {calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate))} hábiles
+                        </div>
+                        <div className="text-gray-500">
+                          {calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))} calendario
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-2 text-right">
