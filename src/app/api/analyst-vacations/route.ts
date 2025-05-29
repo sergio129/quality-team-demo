@@ -2,18 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { AnalystVacationService } from '@/services/analystVacationService';
 
-// Crear una instancia del servicio directamente aquí para evitar problemas de importación
+// Crear una instancia del servicio para usar en los handlers
 const vacationService = new AnalystVacationService();
 
 // Handler para GET - Obtener todas las vacaciones o filtrar por analista
-export async function GET(req: NextRequest) {
-  try {
+export async function GET(req: NextRequest) {  try {
     const url = new URL(req.url);
     const analystId = url.searchParams.get('analystId');
     
     let vacations;
-    
-    if (analystId) {
+      if (analystId) {
       vacations = await vacationService.getVacationsByAnalyst(analystId);
     } else {
       vacations = await vacationService.getAllVacations();
@@ -47,9 +45,8 @@ export async function POST(req: NextRequest) {
     
     const endDate = new Date(data.endDate);
     endDate.setUTCHours(0, 0, 0, 0);
-    
-    // Crear el registro usando el servicio de Prisma
-    const newVacation = await analystVacationService.createVacation({
+      // Crear el registro usando el servicio de Prisma
+    const newVacation = await vacationService.createVacation({
       analystId: data.analystId,
       startDate: startDate,
       endDate: endDate,
@@ -76,9 +73,8 @@ export async function DELETE(req: NextRequest) {
         error: 'Se requiere el ID de las vacaciones'
       }, { status: 400 });
     }
-    
-    // Eliminar usando el servicio Prisma
-    await analystVacationService.deleteVacation(data.id);
+      // Eliminar usando el servicio Prisma
+    await vacationService.deleteVacation(data.id);
     
     // Responder con éxito
     return NextResponse.json({ success: true });
