@@ -6,5 +6,21 @@
     "endDate": "2025-07-04T00:00:00.000Z",
     "description": "Vacaciones",
     "type": "vacation"
+  },
+  {
+    "id": "825edd68-532f-4fae-b545-51366369d987",
+    "analystId": "8947b61d-d634-4844-8b30-9100b632d236",
+    "startDate": "2025-06-11T00:00:00.000Z",
+    "endDate": "2025-06-20T00:00:00.000Z",
+    "description": "Vacaciones",
+    "type": "vacation"
+  },
+  {
+    "id": "3f137d82-64c4-4e7f-bb5f-bbe52ae2507a",
+    "analystId": "8947b61d-d634-4844-8b30-9100b632d236",
+    "startDate": "2025-06-24T00:00:00.000Z",
+    "endDate": "2025-06-24T00:00:00.000Z",
+    "description": "Dia de la Familia",
+    "type": "other"
   }
 ]

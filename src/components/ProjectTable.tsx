@@ -896,7 +896,9 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                     filterEquipo={filterEquipo}
                     startDate={startDate}
                     endDate={endDate}
-                    selectedDateFilter={selectedDateFilter}                />
+                    selectedDateFilter={selectedDateFilter}
+                    vacations={vacations} // Pasar las vacaciones de los analistas
+                />
             ) : activeView === 'kanban' ? (
                 <KanbanView
                     projects={allFilteredProjects}
