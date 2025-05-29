@@ -115,17 +115,19 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 start.setHours(0, 0, 0, 0);
                 end = new Date(start);
                 end.setDate(start.getDate() + 6);
-                
-                // Actualizar el tipo de filtro para exportación
-                setExportFilterType('week');
-                break;
-            case 'custom-month':
+                  // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
+                if (exportFilterType !== 'all') {
+                    setExportFilterType('week');
+                }
+                break;            case 'custom-month':
                 // Mes específico seleccionado del año seleccionado
                 start = new Date(selectedYear, selectedMonth, 1);
                 end = new Date(selectedYear, selectedMonth + 1, 0);
                 
-                // Actualizar el tipo de filtro para exportación
-                setExportFilterType('month');
+                // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
+                if (exportFilterType !== 'all') {
+                    setExportFilterType('month');
+                }
                 break;
             case 'month':
             default:
@@ -448,9 +450,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             <option value="year">Exportar anual</option>
                             <option value="all">Exportar todos</option>
                         </select>
-                        
-                        <ExportToExcelButton 
-                            projects={allFilteredProjects} 
+                          <ExportToExcelButton 
+                            projects={exportFilterType === 'all' ? projects : allFilteredProjects} 
                             filterType={exportFilterType}
                         />
                     </div><div className="flex rounded-lg overflow-hidden border">                        <button
