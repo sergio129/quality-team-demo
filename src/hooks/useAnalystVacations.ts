@@ -107,25 +107,37 @@ export async function deleteAnalystVacation(id: string) {
 export function isAnalystOnVacation(vacations: AnalystVacation[], analystId: string, date: Date): AnalystVacation | null {
   if (!vacations || vacations.length === 0) return null;
   
-  const dateToCheck = new Date(date);
-  dateToCheck.setHours(0, 0, 0, 0);
+  // Normalizar la fecha que queremos comprobar (solo la fecha sin hora)
+  const dateToCheck = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  console.log(`Verificando vacaciones para analista ${analystId} en fecha ${dateToCheck.toISOString().split('T')[0]}`);
   
   return vacations.find(vacation => {
     // Solo considerar vacaciones del analista especificado
     if (vacation.analystId !== analystId) return false;
     
-    // Convertir fechas a objetos Date si son strings
-    const startDate = vacation.startDate instanceof Date 
-      ? vacation.startDate 
-      : new Date(vacation.startDate);
-      
-    const endDate = vacation.endDate instanceof Date 
-      ? vacation.endDate 
-      : new Date(vacation.endDate);
+    // Convertir fechas a objetos Date normalizados (sin considerar la hora)
+    let startDate: Date;
+    let endDate: Date;
     
-    // Normalizar horas para comparación de fechas
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+    if (vacation.startDate instanceof Date) {
+      startDate = new Date(vacation.startDate.getFullYear(), vacation.startDate.getMonth(), vacation.startDate.getDate());
+    } else {
+      // Si es string, crear un nuevo Date pero garantizando que es solo la fecha
+      const parts = vacation.startDate.toString().split('T')[0].split('-');
+      startDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+    }
+    
+    if (vacation.endDate instanceof Date) {
+      endDate = new Date(vacation.endDate.getFullYear(), vacation.endDate.getMonth(), vacation.endDate.getDate());
+    } else {
+      // Si es string, crear un nuevo Date pero garantizando que es solo la fecha
+      const parts = vacation.endDate.toString().split('T')[0].split('-');
+      endDate = new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+    }
+    
+    // Comparar solo las fechas sin considerar la hora
+    console.log(`Comparando: ${dateToCheck.toISOString().split('T')[0]} con rango ${startDate.toISOString().split('T')[0]} - ${endDate.toISOString().split('T')[0]}`);
     
     // Verificar si la fecha cae dentro del periodo de vacaciones
     return dateToCheck >= startDate && dateToCheck <= endDate;
