@@ -80,12 +80,11 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
       filters.search === '' || 
       tc.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
       tc.expectedResult?.toLowerCase().includes(filters.search.toLowerCase());
-    
-    // Filtro por estado
-    const statusMatch = filters.status === '' || tc.status === filters.status;
+      // Filtro por estado
+    const statusMatch = filters.status === 'all_status' || tc.status === filters.status;
     
     // Filtro por tipo de prueba
-    const typeMatch = filters.testType === '' || tc.testType === filters.testType;
+    const typeMatch = filters.testType === 'all_types' || tc.testType === filters.testType;
     
     // Filtro por historia de usuario
     const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;

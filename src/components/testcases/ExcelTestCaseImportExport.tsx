@@ -46,13 +46,22 @@ const ExcelTestCaseImportExport = ({
   const [generatedTestCases, setGeneratedTestCases] = useState<Partial<TestCase>[]>([]);
   const [editingTestCaseIndex, setEditingTestCaseIndex] = useState<number | null>(null);
   const [editingTestCase, setEditingTestCase] = useState<Partial<TestCase> | null>(null);
-  const { projects } = useProjects();
-  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
-  const { testPlans } = useTestPlans(selectedProjectId);
+  const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
+    selectedProjectId && selectedProjectId !== 'select_project' ? selectedProjectId : undefined
+  );
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
   const [cycle, setCycle] = useState<number>(1);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [useAI, setUseAI] = useState<boolean>(initialMode === 'ai');
+  
+  // Depuración para ver qué está pasando con los planes de prueba
+  useEffect(() => {
+    console.log('selectedProjectId:', selectedProjectId);
+    console.log('testPlans:', testPlans);
+    console.log('isLoadingPlans:', isLoadingPlans);
+    console.log('isErrorPlans:', isErrorPlans);
+  }, [selectedProjectId, testPlans, isLoadingPlans, isErrorPlans]);
   
   // Efecto para abrir automáticamente el diálogo de importación cuando se inicia en modo AI
   useEffect(() => {
@@ -765,12 +774,11 @@ const ExcelTestCaseImportExport = ({
                     value={selectedProjectId}
                     onValueChange={setSelectedProjectId}
                     disabled={!!projectId}
-                  >
-                    <SelectTrigger id="importProject">
+                  >                    <SelectTrigger id="importProject">
                       <SelectValue placeholder="Seleccionar proyecto" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Seleccionar proyecto</SelectItem>
+                      <SelectItem value="select_project">Seleccionar proyecto</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id || project.idJira} value={project.idJira}>
                           {project.proyecto}
@@ -786,12 +794,11 @@ const ExcelTestCaseImportExport = ({
                     value={selectedTestPlanId}
                     onValueChange={setSelectedTestPlanId}
                     disabled={!selectedProjectId}
-                  >
-                    <SelectTrigger id="importTestPlan">
+                  >                    <SelectTrigger id="importTestPlan">
                       <SelectValue placeholder="Seleccionar plan de prueba" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Seleccionar plan de prueba</SelectItem>
+                      <SelectItem value="select_test_plan">Seleccionar plan de prueba</SelectItem>
                       {testPlans.map((plan) => (
                         <SelectItem key={plan.id} value={plan.id}>
                           {plan.name}
@@ -953,12 +960,11 @@ const ExcelTestCaseImportExport = ({
                   <Select
                     value={selectedProjectId}
                     onValueChange={setSelectedProjectId}
-                  >
-                    <SelectTrigger id="exportProject">
+                  >                    <SelectTrigger id="exportProject">
                       <SelectValue placeholder="Seleccionar proyecto" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Seleccionar proyecto</SelectItem>
+                      <SelectItem value="select_project">Seleccionar proyecto</SelectItem>
                       {projects.map((project) => (
                         <SelectItem key={project.id || project.idJira} value={project.idJira}>
                           {project.proyecto}
