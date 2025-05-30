@@ -1294,11 +1294,9 @@ const ExcelTestCaseImportExport = ({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-
-        {/* Diálogo para vista previa de casos generados con IA */}
+        </Dialog>        {/* Diálogo para vista previa de casos generados con IA */}
         <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-          <DialogContent className="sm:max-w-[800px]">
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Vista Previa de Casos de Prueba Generados</DialogTitle>
             </DialogHeader>
@@ -1472,12 +1470,10 @@ const ExcelTestCaseImportExport = ({
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-
-        {/* Diálogo para edición de caso individual */}
+        </Dialog>        {/* Diálogo para edición de caso individual */}
         {isEditDialogOpen && editingTestCase && (
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent className="sm:max-w-[700px]">
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Editar Caso de Prueba</DialogTitle>
               </DialogHeader>
