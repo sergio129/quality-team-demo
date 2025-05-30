@@ -1,55 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileDown, FileUp, FileText } from 'lucide-react';
+import { FileDown, FileUp, FileText, Sparkles, Edit2, Check, Plus, Trash2 } from 'lucide-react';
 import { createTestCase } from '@/hooks/useTestCases';
 import { TestCase, TestStep } from '@/models/TestCase';
 import { v4 as uuidv4 } from 'uuid';
 import { useProjects } from '@/hooks/useProjects';
+import { useTestPlans } from '@/hooks/useTestCases';
+import { AITestCaseGeneratorService, ExcelRequirementData } from '@/services/aiTestCaseGeneratorService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface ExcelTestCaseImportExportProps {
   projectId?: string;
   testCases?: TestCase[];
+  testPlanId?: string;
+  onRefresh?: () => void;
 }
 
-'use client';
-
-import React from 'react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import { FileDown, FileUp, FileText } from 'lucide-react';
-import { createTestCase } from '@/hooks/useTestCases';
-import { TestCase, TestStep } from '@/models/TestCase';
-import { v4 as uuidv4 } from 'uuid';
-import { useProjects } from '@/hooks/useProjects';
-
-interface ExcelTestCaseImportExportProps {
-  projectId?: string;
-  testCases?: TestCase[];
-}
-
-const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseImportExportProps): JSX.Element => {
+const ExcelTestCaseImportExport = ({ projectId, testCases = [], testPlanId, onRefresh }: ExcelTestCaseImportExportProps): React.JSX.Element => {  
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [generatedTestCases, setGeneratedTestCases] = useState<Partial<TestCase>[]>([]);
+  const [editingTestCaseIndex, setEditingTestCaseIndex] = useState<number | null>(null);
+  const [editingTestCase, setEditingTestCase] = useState<Partial<TestCase> | null>(null);
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const { testPlans } = useTestPlans(selectedProjectId);
+  const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
   const [cycle, setCycle] = useState<number>(1);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [useAI, setUseAI] = useState<boolean>(false);
   
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -70,9 +66,8 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
         ['Total estimacion en Horas', '', '', 'Total estimacion en Dias', ''],
         ['']
       ];
-      
-      // Estadísticas de ciclos
-      const cycleStats = {
+        // Estadísticas de ciclos
+      const cycleStats: Record<string, { disenados: number; exitosos: number; noEjecutados: number; defectos: number }> = {
         'Ciclo 1': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 },
         'Ciclo 2': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 },
         'Ciclo 3': { disenados: 0, exitosos: 0, noEjecutados: 0, defectos: 0 }
@@ -174,8 +169,15 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
-    const reader = new FileReader();
+    setSelectedFile(file);
     
+    if (!useAI) {
+      processFileForImport(file);
+    }
+  };
+  
+  const processFileForImport = async (file: File) => {
+    const reader = new FileReader();
     setIsLoading(true);
     
     reader.onload = async (e) => {
@@ -226,8 +228,7 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
           
           const stepsText = row[stepsColIndex]?.toString() || '';
           const stepsArray = stepsText.split('\n').filter(Boolean);
-          
-          const steps: TestStep[] = stepsArray.map(step => ({
+          const steps: TestStep[] = stepsArray.map((step: string) => ({
             id: uuidv4(),
             description: step,
             expected: ''
@@ -280,6 +281,392 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
     
     reader.readAsArrayBuffer(file);
   };
+
+  // Procesar el archivo para generar casos con IA
+  const processFileForAI = async (file: File) => {
+    const reader = new FileReader();
+    setIsGeneratingAI(true);
+    
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[];
+        
+        // Intento de detección automática del tipo de formato
+        const requirements: ExcelRequirementData[] = [];
+        
+        // Buscar encabezados comunes en diferentes formatos
+        const possibleHeaders = [
+          ['ID Historia', 'Historia', 'HU', 'User Story', 'ID'], 
+          ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title'], 
+          ['Descripción', 'Detalle', 'Description', 'Descripcion'], 
+          ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones']
+        ];
+        
+        // Encontrar la fila de encabezados escaneando las primeras 10 filas
+        let headerRowIndex = -1;
+        let headerMapping: Record<string, number> = {};
+        
+        for (let i = 0; i < Math.min(10, rows.length); i++) {
+          if (!Array.isArray(rows[i])) continue;
+          
+          // Contar cuántos encabezados reconocidos hay en esta fila
+          let matchCount = 0;
+          const rowHeaders = rows[i].map((cell: any) => String(cell || '').trim().toLowerCase());
+          const currentMapping: Record<string, number> = {};
+          
+          // Verificar cada columna en esta fila
+          for (let j = 0; j < rowHeaders.length; j++) {
+            const cellValue = rowHeaders[j];
+            if (!cellValue) continue;
+            
+            // Buscar coincidencias con nuestros encabezados conocidos
+            for (let k = 0; k < possibleHeaders.length; k++) {
+              if (possibleHeaders[k].some(header => 
+                cellValue.includes(header.toLowerCase()) || 
+                cellValue === header.toLowerCase().substring(0, Math.min(header.length, 10))
+              )) {
+                matchCount++;
+                // Guardar el tipo de columna y su índice
+                currentMapping[k.toString()] = j;
+                break;
+              }
+            }
+          }
+          
+          // Si encontramos suficientes coincidencias, consideramos que esta es la fila de encabezados
+          if (matchCount >= 2) { // Al menos ID y Nombre o Descripción
+            headerRowIndex = i;
+            headerMapping = currentMapping;
+            break;
+          }
+        }
+        
+        // Si no encontramos encabezados, intentar otro enfoque
+        if (headerRowIndex === -1) {
+          // Buscar cualquier fila que tenga al menos una celda con "requerimiento", "requisito" o "historia"
+          for (let i = 0; i < Math.min(15, rows.length); i++) {
+            if (!Array.isArray(rows[i])) continue;
+            
+            const rowText = rows[i].join(' ').toLowerCase();
+            if (rowText.includes('requerimiento') || rowText.includes('requisito') || 
+                rowText.includes('historia') || rowText.includes('user story')) {
+              headerRowIndex = i;
+              // Crear un mapeo basado en posición
+              headerMapping = {'0': 0, '1': 1, '2': 2, '3': 3};
+              break;
+            }
+          }
+        }
+        
+        // Si aún no encontramos encabezados, usar un enfoque simplificado
+        if (headerRowIndex === -1) {
+          toast.warning('No se detectaron encabezados claros. Intentando procesamiento simplificado...');
+          headerRowIndex = 0;
+          headerMapping = {'0': 0, '1': 1, '2': 2};
+        }
+        
+        // Procesar los datos desde la fila posterior a la de encabezados
+        for (let i = headerRowIndex + 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || !Array.isArray(row) || row.every(cell => !cell)) continue;
+          
+          // Extraer campos basados en el mapeo detectado
+          const idColIndex = headerMapping['0'];
+          const nameColIndex = headerMapping['1']; 
+          const descColIndex = headerMapping['2'];
+          const criteriaColIndex = headerMapping['3'];
+          const funcDescColIndex = headerMapping['4']; // Opcional
+          
+          // Procesamiento especial para criterios de aceptación
+          let acceptanceCriteria: string[] = [];
+          if (criteriaColIndex !== undefined && row[criteriaColIndex]) {
+            const criteriaText = row[criteriaColIndex]?.toString() || '';
+            
+            // Detectar si hay formato de lista (numeración, viñetas)
+            if (criteriaText.match(/^\d+[\.\)]\s|^[-*•]\s/m)) {
+              acceptanceCriteria = criteriaText
+                .split(/\n/)
+                .map(line => line.trim())
+                .filter(Boolean);
+            } else {
+              // Intentar dividir por puntos si parece ser una lista separada por puntos
+              if (criteriaText.includes('. ') && criteriaText.split('. ').length > 1) {
+                acceptanceCriteria = criteriaText
+                  .split(/\.\s+/)
+                  .map(criteria => criteria.trim())
+                  .filter(Boolean)
+                  .map(criteria => criteria.endsWith('.') ? criteria : criteria + '.');
+              } else {
+                acceptanceCriteria = [criteriaText];
+              }
+            }
+          }
+          
+          const requirement: ExcelRequirementData = {
+            userStoryId: idColIndex !== undefined ? row[idColIndex]?.toString() || '' : '',
+            requirementName: nameColIndex !== undefined ? row[nameColIndex]?.toString() || '' : '',
+            description: descColIndex !== undefined ? row[descColIndex]?.toString() || '' : '',
+            acceptanceCriteria,
+            functionalDescription: funcDescColIndex !== undefined ? row[funcDescColIndex]?.toString() || '' : ''
+          };
+          
+          // Solo añadimos requerimientos con información suficiente
+          if ((requirement.requirementName && requirement.requirementName.trim()) || 
+              (requirement.description && requirement.description.trim())) {
+            requirements.push(requirement);
+          }
+        }
+        
+        if (requirements.length === 0) {
+          toast.error('No se encontraron requerimientos válidos en el archivo.');
+          setIsGeneratingAI(false);
+          return;
+        }
+
+        // Llamar al servicio de IA para generar los casos de prueba
+        const aiResult = await AITestCaseGeneratorService.generateTestCasesWithAI(
+          requirements,
+          {
+            projectId: selectedProjectId,
+            testPlanId: selectedTestPlanId,
+            cycleNumber: Number(cycle),
+            contextualInfo: selectedTestPlanId ? 
+              `Este caso de prueba forma parte del plan de pruebas con ID: ${selectedTestPlanId}. Estos casos pertenecerán al ciclo ${cycle}.` : undefined
+          }
+        );
+        
+        if (aiResult.success && aiResult.data.length > 0) {
+          setGeneratedTestCases(aiResult.data);
+          toast.success(`Se generaron ${aiResult.data.length} casos de prueba con IA.`);
+          setIsAIDialogOpen(true);
+        } else {
+          toast.error(aiResult.error || 'Error al generar casos de prueba con IA.');
+        }
+      } catch (error) {
+        console.error('Error al procesar archivo para IA:', error);
+        toast.error('Error al procesar el archivo para generación con IA');
+      } finally {
+        setIsGeneratingAI(false);
+      }
+    };
+    
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleGenerateAI = async () => {
+    if (!selectedFile || !selectedProjectId) {
+      toast.error('Selecciona un proyecto y un archivo Excel primero.');
+      return;
+    }
+    
+    if (!selectedTestPlanId) {
+      toast.warning('No has seleccionado un plan de prueba. Se recomienda asociar los casos a un plan.');
+    }
+    
+    await processFileForAI(selectedFile);
+  };
+  
+  // Método para mostrar la vista previa de casos generados
+  const handlePreviewGeneratedCases = () => {
+    if (generatedTestCases.length === 0) {
+      toast.error('No hay casos de prueba generados para previsualizar.');
+      return;
+    }
+    
+    // Asegurarnos que todos los casos tengan la información necesaria
+    const casesToPreview = generatedTestCases.map(tc => ({
+      ...tc,
+      projectId: selectedProjectId,
+      testPlanId: selectedTestPlanId || '',
+      cycle: Number(cycle),
+      updatedAt: new Date().toISOString()
+    }));
+    
+    setGeneratedTestCases(casesToPreview);
+    setIsAIDialogOpen(false);
+    setIsPreviewDialogOpen(true);
+  };
+
+  const handleSaveGeneratedCases = async () => {
+    if (generatedTestCases.length === 0) {
+      toast.error('No hay casos de prueba generados para guardar.');
+      return;
+    }
+    
+    if (!selectedProjectId) {
+      toast.error('Selecciona un proyecto para guardar los casos.');
+      return;
+    }
+    
+    // Verificar si se ha seleccionado un plan de prueba
+    if (!selectedTestPlanId) {
+      toast.warning('No has seleccionado un plan de prueba. Los casos se guardarán sin asociarse a un plan específico.');
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      let created = 0;
+      let errors = 0;
+      
+      // Asegurarnos que todos los casos tengan los datos necesarios
+      const casesToSave = generatedTestCases.map(tc => ({
+        ...tc,
+        projectId: selectedProjectId,
+        testPlanId: selectedTestPlanId || '',
+        cycle: Number(cycle),
+        updatedAt: new Date().toISOString()
+      }));
+      
+      // Abrir vista previa si hay muchos casos antes de guardar
+      if (casesToSave.length > 5 && !isPreviewDialogOpen) {
+        setGeneratedTestCases(casesToSave);
+        setIsAIDialogOpen(false);
+        setIsPreviewDialogOpen(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Guardado directo si son pocos casos o ya fue confirmado en la vista previa
+      for (const testCase of casesToSave) {
+        try {
+          await createTestCase(testCase);
+          created++;
+        } catch (error) {
+          console.error('Error al guardar caso de prueba:', error);
+          errors++;
+        }
+      }
+      
+      toast.success(`Guardado completado. ${created} casos creados. ${errors} errores.`);
+      setIsAIDialogOpen(false);
+      setIsPreviewDialogOpen(false);
+      
+      // Si hay una función de refresh, la llamamos para actualizar la vista
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error) {
+      console.error('Error al guardar los casos generados:', error);
+      toast.error('Error al guardar los casos generados');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleDownloadTemplate = () => {
+    try {
+      // Crear datos para la plantilla
+      const templateData = [
+        ['PLANTILLA DE REQUERIMIENTOS PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', ''],
+        [''],
+        ['ID Historia', 'Nombre del Requerimiento', 'Descripción', 'Criterios de Aceptación', 'Descripción Funcional'],
+        ['US-001', 'Login de Usuario', 'El sistema debe permitir que los usuarios inicien sesión con email y contraseña', '1. El usuario debe poder ingresar su email\n2. El usuario debe poder ingresar su contraseña\n3. El sistema debe validar las credenciales\n4. El sistema debe mostrar un mensaje de error si las credenciales son incorrectas', 'El formulario de login debe contener campos para email y contraseña, con validación de formato de email y un botón de "Iniciar Sesión"'],
+        ['US-002', 'Registro de Usuario', 'El sistema debe permitir que los nuevos usuarios se registren', '1. El formulario debe incluir: nombre, email, contraseña y confirmación\n2. Validar que el email no esté ya registrado\n3. La contraseña debe tener al menos 8 caracteres', 'La página de registro debe mostrar el formulario con validaciones en tiempo real y mostrar errores específicos'],
+      ];
+      
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Estilizar algunas celdas
+      if (!ws['!merges']) ws['!merges'] = [];
+      
+      // Merge para el título principal
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } });
+      
+      // Crear libro
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Requerimientos');
+      
+      // Generar archivo Excel
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Guardar archivo
+      saveAs(data, 'plantilla_requerimientos.xlsx');
+      
+      toast.success('Plantilla descargada con éxito');
+    } catch (error) {
+      console.error('Error al descargar plantilla:', error);
+      toast.error('Error al descargar la plantilla');
+    }
+  };
+  
+  const handleDownloadGeneratedCases = () => {
+    if (generatedTestCases.length === 0) {
+      toast.error('No hay casos de prueba generados para descargar.');
+      return;
+    }
+    
+    try {
+      const project = projects.find(p => p.id === selectedProjectId || p.idJira === selectedProjectId);
+      const projectName = project ? project.proyecto : 'casos_prueba';
+      
+      // Formatear datos para el Excel
+      const mainData = [
+        ['CASOS DE PRUEBA GENERADOS POR IA - EQUIPO QUALITY TEAMS', '', '', '', '', '', '', '', '', '', '', '', '', 'version 1.0'],
+        [''],
+        ['Codigo Peticion', project?.idJira || ''],
+        ['Nombre del proyecto', project?.proyecto || ''],
+        ['Fecha Generación', new Date().toLocaleDateString()],
+        [''],
+        ['Total de Casos Generados', generatedTestCases.length.toString()],
+        ['']
+      ];
+      
+      // Encabezados de la tabla de casos
+      mainData.push([
+        'HU', 'ID', 'Nombre del caso de prueba', 'Pasos', 'Resultado esperado', 'Tipo de Prueba', 'Estado', 
+        'Prioridad', 'Categoría', 'Responsable'
+      ]);
+      
+      // Datos de los casos
+      generatedTestCases.forEach(tc => {
+        const pasos = tc.steps?.map(step => step.description).join('\n') || '';
+        
+        mainData.push([
+          tc.userStoryId,
+          tc.codeRef,
+          tc.name,
+          pasos,
+          tc.expectedResult,
+          tc.testType,
+          tc.status,
+          tc.priority,
+          tc.category || '',
+          tc.responsiblePerson || ''
+        ]);
+      });
+      
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(mainData);
+      
+      // Estilizar algunas celdas
+      if (!ws['!merges']) ws['!merges'] = [];
+      
+      // Merge para el título principal
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 13 } });
+      
+      // Crear libro
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Casos IA');
+      
+      // Generar archivo Excel
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Guardar archivo
+      saveAs(data, `${projectName}_casos_prueba_ia.xlsx`);
+      
+      toast.success('Casos descargados con éxito');
+    } catch (error) {
+      console.error('Error al descargar casos generados:', error);
+      toast.error('Error al descargar los casos generados');
+    }
+  };
   
   // Mapear tipo de prueba desde el Excel a los valores del modelo
   const mapTestType = (type: string = ''): TestCase['testType'] => {
@@ -301,9 +688,11 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
     const lowerStatus = status.toLowerCase();
     
     if (lowerStatus.includes('exit')) return 'Exitoso';
-    if (lowerStatus.includes('fall')) return 'Fallido';    if (lowerStatus.includes('bloq')) return 'Bloqueado';
+    if (lowerStatus.includes('fall')) return 'Fallido';
+    if (lowerStatus.includes('bloq')) return 'Bloqueado';
     if (lowerStatus.includes('progres')) return 'En progreso';
-      return 'No ejecutado'; // Valor por defecto
+    
+    return 'No ejecutado'; // Valor por defecto
   }
 
   const renderContent = (): JSX.Element => {
@@ -312,190 +701,655 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [] }: ExcelTestCaseI
         <div className="flex gap-2">
           <Button
             variant="outline"
-          onClick={() => setIsImportDialogOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <FileUp size={16} /> Importar desde Excel
-        </Button>
-        
-        <Button
-          variant="outline"
-          onClick={() => setIsExportDialogOpen(true)}
-          className="flex items-center gap-2"
-          disabled={testCases.length === 0}
-        >
-          <FileDown size={16} /> Exportar a Excel
-        </Button>
-      </div>
-
-      {isImportDialogOpen && (
-        <Dialog 
-          open={true}
-          onOpenChange={setIsImportDialogOpen}
-        >
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Importar Casos de Prueba desde Excel</DialogTitle>
-          </DialogHeader>
+            onClick={() => setIsImportDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <FileUp size={16} /> Importar desde Excel
+          </Button>
           
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="importProject">Proyecto</Label>
-              <Select
-                id="importProject"
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                disabled={!!projectId}
-              >
-                <option value="">Seleccionar proyecto</option>
-                {projects.map((project) => (
-                  <option key={project.id || project.idJira} value={project.idJira}>
-                    {project.proyecto}
-                  </option>
-                ))}
-              </Select>
+          <Button
+            variant="outline"
+            onClick={() => setIsExportDialogOpen(true)}
+            className="flex items-center gap-2"
+            disabled={testCases.length === 0}
+          >
+            <FileDown size={16} /> Exportar a Excel
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              setUseAI(true);
+              setIsImportDialogOpen(true);
+            }}
+            className="flex items-center gap-2"
+          >
+            <Sparkles size={16} /> Generar casos con IA
+          </Button>
+        </div>
+
+        {isImportDialogOpen && (
+          <Dialog 
+            open={true}
+            onOpenChange={setIsImportDialogOpen}
+          >
+            <DialogContent className="sm:max-w-[550px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {useAI ? 'Generar Casos de Prueba con IA' : 'Importar Casos de Prueba desde Excel'}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="importProject">Proyecto</Label>
+                  <Select
+                    value={selectedProjectId}
+                    onValueChange={setSelectedProjectId}
+                    disabled={!!projectId}
+                  >
+                    <SelectTrigger id="importProject">
+                      <SelectValue placeholder="Seleccionar proyecto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Seleccionar proyecto</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id || project.idJira} value={project.idJira}>
+                          {project.proyecto}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="importTestPlan">Plan de Prueba</Label>
+                  <Select
+                    value={selectedTestPlanId}
+                    onValueChange={setSelectedTestPlanId}
+                    disabled={!selectedProjectId}
+                  >
+                    <SelectTrigger id="importTestPlan">
+                      <SelectValue placeholder="Seleccionar plan de prueba" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Seleccionar plan de prueba</SelectItem>
+                      {testPlans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="importCycle">Ciclo</Label>
+                  <Select
+                    value={cycle.toString()}
+                    onValueChange={(value) => setCycle(Number(value))}
+                  >
+                    <SelectTrigger id="importCycle">
+                      <SelectValue placeholder="Seleccionar ciclo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Ciclo 1</SelectItem>
+                      <SelectItem value="2">Ciclo 2</SelectItem>
+                      <SelectItem value="3">Ciclo 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fileUpload">Archivo Excel</Label>
+                  <div 
+                    className={`border-2 border-dashed rounded-md p-6 text-center transition-colors duration-200 ${
+                      isLoading ? 'bg-gray-50' : 'hover:border-primary hover:bg-gray-50'
+                    } ${!selectedProjectId ? 'opacity-50' : 'cursor-pointer'}`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!selectedProjectId || isLoading) return;
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!selectedProjectId || isLoading) return;
+                      
+                      const file = e.dataTransfer.files[0];
+                      if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                        const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                        handleFileUpload(event);
+                      } else {
+                        toast.error('Solo se permiten archivos Excel (.xlsx, .xls)');
+                      }
+                    }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
+                        <p className="text-sm text-gray-600">Procesando archivo...</p>
+                      </>
+                    ) : (
+                      <>
+                        <FileText size={40} className="mx-auto text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-600 mb-2">
+                          {selectedProjectId ? 'Seleccione o arrastre un archivo Excel' : 'Seleccione un proyecto primero'}
+                        </p>
+                        <p className="text-xs text-gray-500 mb-4">
+                          {useAI 
+                            ? 'El archivo debe contener los requerimientos para generar casos de prueba con IA'
+                            : 'El archivo debe seguir el formato estándar de casos de prueba'}
+                        </p>
+                        
+                        <Input
+                          id="fileUpload"
+                          type="file"
+                          accept=".xlsx,.xls"
+                          onChange={handleFileUpload}
+                          disabled={isLoading || !selectedProjectId}
+                          className="hidden"
+                        />
+                        <div className="space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleDownloadTemplate}
+                            disabled={isLoading}
+                            className="mb-2"
+                          >
+                            <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla
+                          </Button>
+                          <label htmlFor="fileUpload">
+                            <Button
+                              type="button" 
+                              variant="outline"
+                              disabled={isLoading || !selectedProjectId}
+                              className="cursor-pointer"
+                            >
+                              Seleccionar archivo
+                            </Button>
+                          </label>
+                          
+                          {useAI && selectedFile && (
+                            <Button
+                              type="button"
+                              onClick={handleGenerateAI}
+                              disabled={isGeneratingAI || !selectedFile || !selectedProjectId}
+                              className="ml-2"
+                            >
+                              {isGeneratingAI ? 'Generando...' : 'Generar casos con IA'}
+                              {!isGeneratingAI && <Sparkles className="h-4 w-4 ml-2" />}
+                            </Button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsImportDialogOpen(false);
+                    setUseAI(false);
+                  }}
+                  disabled={isLoading}
+                >
+                  Cancelar
+                </Button>
+                {!useAI && (
+                  <Button
+                    onClick={async () => {
+                      if (!selectedFile) {
+                        toast.error('Seleccione un archivo primero');
+                        return;
+                      }
+                      await processFileForImport(selectedFile);
+                    }}
+                    disabled={isLoading || !selectedFile || !selectedProjectId}
+                  >
+                    {isLoading ? 'Importando...' : 'Importar'}
+                  </Button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Exportar Casos de Prueba a Excel</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-600">
+                Se exportarán {testCases.length} casos de prueba al formato estándar de Excel.
+              </p>
+              
+              {!projectId && (
+                <div className="space-y-2">
+                  <Label htmlFor="exportProject">Proyecto</Label>
+                  <Select
+                    value={selectedProjectId}
+                    onValueChange={setSelectedProjectId}
+                  >
+                    <SelectTrigger id="exportProject">
+                      <SelectValue placeholder="Seleccionar proyecto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Seleccionar proyecto</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id || project.idJira} value={project.idJira}>
+                          {project.proyecto}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="importCycle">Ciclo</Label>
-              <Select
-                id="importCycle"
-                value={cycle.toString()}
-                onChange={(e) => setCycle(Number(e.target.value))}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsExportDialogOpen(false)}
+                disabled={isLoading}
               >
-                <option value="1">Ciclo 1</option>
-                <option value="2">Ciclo 2</option>
-                <option value="3">Ciclo 3</option>
-              </Select>
-            </div>
-              <div className="space-y-2">
-              <Label htmlFor="fileUpload">Archivo Excel</Label>
-              <div 
-                className={`border-2 border-dashed rounded-md p-6 text-center transition-colors duration-200 ${
-                  isLoading ? 'bg-gray-50' : 'hover:border-primary hover:bg-gray-50'
-                } ${!selectedProjectId ? 'opacity-50' : 'cursor-pointer'}`}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!selectedProjectId || isLoading) return;
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!selectedProjectId || isLoading) return;
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleExportToExcel}
+                disabled={isLoading || (!projectId && !selectedProjectId)}
+              >
+                {isLoading ? 'Exportando...' : 'Exportar a Excel'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo para generación de casos con IA */}
+        <Dialog open={isAIDialogOpen} onOpenChange={setIsAIDialogOpen}>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Casos de Prueba Generados por IA</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-600">
+                Se han generado {generatedTestCases.length} casos de prueba basados en los requerimientos del archivo.
+              </p>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleDownloadGeneratedCases}
+                    className="flex-1"
+                  >
+                    <FileDown className="h-4 w-4 mr-2" /> Descargar Casos
+                  </Button>
                   
-                  const file = e.dataTransfer.files[0];
-                  if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
-                    const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
-                    handleFileUpload(event);
-                  } else {
-                    toast.error('Solo se permiten archivos Excel (.xlsx, .xls)');
+                  <Button
+                    onClick={() => {
+                      // Verificar que haya un plan de prueba seleccionado
+                      if (!selectedTestPlanId) {
+                        toast.warning('No se ha seleccionado un plan de prueba. Se recomienda asociar los casos a un plan específico.');
+                      }
+                      
+                      // Actualizar los casos con plan de prueba e información adicional
+                      const updatedCases = generatedTestCases.map(tc => ({
+                        ...tc,
+                        projectId: selectedProjectId,
+                        testPlanId: selectedTestPlanId || '',
+                        cycle: Number(cycle)
+                      }));
+                      
+                      setGeneratedTestCases(updatedCases);
+                      handleSaveGeneratedCases();
+                    }}
+                    className="flex-1"
+                  >
+                    Guardar Casos en Proyecto
+                  </Button>
+                </div>
+                
+                <Button 
+                  variant="secondary"
+                  onClick={() => {
+                    // Asegurar que los casos tengan la información necesaria
+                    const casesToPreview = generatedTestCases.map(tc => ({
+                      ...tc,
+                      projectId: selectedProjectId,
+                      testPlanId: selectedTestPlanId || '',
+                      cycle: Number(cycle)
+                    }));
+                    
+                    setGeneratedTestCases(casesToPreview);
+                    setIsAIDialogOpen(false);
+                    setIsPreviewDialogOpen(true);
+                  }}
+                >
+                  <Edit2 className="h-4 w-4 mr-2" /> Ver y Editar Casos Generados
+                </Button>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsAIDialogOpen(false)}
+                disabled={isLoading}
+              >
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo para vista previa de casos generados con IA */}
+        <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+          <DialogContent className="sm:max-w-[800px]">
+            <DialogHeader>
+              <DialogTitle>Vista Previa de Casos de Prueba Generados</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-gray-600">
+                A continuación se muestran los casos de prueba que serán creados en el proyecto.
+              </p>
+              
+              <Accordion type="single" collapsible>
+                {generatedTestCases.map((testCase, index) => (
+                  <AccordionItem key={testCase.id} value={`testcase-${testCase.id}`} className="border rounded-md mb-2">
+                    <AccordionTrigger className="p-4 flex items-center justify-between">
+                      <div className="flex-1">
+                        <span className="font-semibold">{testCase.name}</span>
+                        <span className="text-xs text-gray-500">{testCase.codeRef}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTestCaseIndex(index);
+                            setEditingTestCase({...testCase});
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            
+                            // Eliminar el caso generado de la lista
+                            const updatedCases = generatedTestCases.filter((_, i) => i !== index);
+                            setGeneratedTestCases(updatedCases);
+                            
+                            toast.success('Caso de prueba eliminado de la lista');
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 bg-gray-50">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="font-semibold">HU</Label>
+                          <p>{testCase.userStoryId}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">ID</Label>
+                          <p>{testCase.codeRef}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Nombre</Label>
+                          <p>{testCase.name}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Estado</Label>
+                          <p>{testCase.status}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Tipo de Prueba</Label>
+                          <p>{testCase.testType}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Ciclo</Label>
+                          <p>{testCase.cycle}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Prioridad</Label>
+                          <p>{testCase.priority}</p>
+                        </div>
+                        
+                        <div>
+                          <Label className="font-semibold">Categoría</Label>
+                          <p>{testCase.category}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Label className="font-semibold">Pasos</Label>
+                        <Textarea
+                          value={testCase.steps?.map(step => step.description).join('\n')}
+                          readOnly
+                          rows={4}
+                          className="resize-none"
+                        />
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Label className="font-semibold">Resultado Esperado</Label>
+                        <Textarea
+                          value={testCase.expectedResult}
+                          readOnly
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                      
+                      <div className="mt-4">
+                        <Label className="font-semibold">Observaciones</Label>
+                        <Textarea
+                          value={testCase.observations}
+                          onChange={(e) => {
+                            const updatedCases = [...generatedTestCases];
+                            updatedCases[index].observations = e.target.value;
+                            setGeneratedTestCases(updatedCases);
+                          }}
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+            
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsPreviewDialogOpen(false)}
+                disabled={isLoading}
+              >
+                Cerrar
+              </Button>
+              <Button
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    let created = 0;
+                    let errors = 0;
+                    
+                    for (const testCase of generatedTestCases) {
+                      try {
+                        await createTestCase(testCase);
+                        created++;
+                      } catch (error) {
+                        console.error('Error al guardar caso de prueba:', error);
+                        errors++;
+                      }
+                    }
+                    
+                    toast.success(`Guardado completado. ${created} casos creados. ${errors} errores.`);
+                    setIsPreviewDialogOpen(false);
+                    if (onRefresh) {
+                      onRefresh();
+                    }
+                  } catch (error) {
+                    console.error('Error al guardar los casos:', error);
+                    toast.error('Error al guardar los casos');
+                  } finally {
+                    setIsLoading(false);
                   }
                 }}
+                disabled={isLoading || generatedTestCases.length === 0}
               >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-sm text-gray-600">Procesando archivo...</p>
-                  </>
-                ) : (
-                  <>
-                    <FileText size={40} className="mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600 mb-2">
-                      {selectedProjectId ? 'Seleccione o arrastre un archivo Excel' : 'Seleccione un proyecto primero'}
-                    </p>
-                    <p className="text-xs text-gray-500 mb-4">El archivo debe seguir el formato estándar de casos de prueba</p>
-                    
-                    <Input
-                      id="fileUpload"
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleFileUpload}
-                      disabled={isLoading || !selectedProjectId}
-                      className="hidden"
-                    />
-                    <div className="space-x-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleDownloadTemplate}
-                        disabled={isLoading}
-                        className="mb-2"
-                      >
-                        <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla
-                      </Button>
-                      <label htmlFor="fileUpload">
-                        <Button
-                          type="button" 
-                          variant="outline"
-                          disabled={isLoading || !selectedProjectId}
-                          className="cursor-pointer"
-                  >
-                    Seleccionar archivo
-                  </Button>
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsImportDialogOpen(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-          </DialogFooter>      </DialogContent>
-      </Dialog>
+                {isLoading ? 'Guardando...' : 'Guardar Todos los Casos'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle>Exportar Casos de Prueba a Excel</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-gray-600">
-              Se exportarán {testCases.length} casos de prueba al formato estándar de Excel.
-            </p>
-            
-            {!projectId && (
-              <div className="space-y-2">
-                <Label htmlFor="exportProject">Proyecto</Label>
-                <Select
-                  id="exportProject"
-                  value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
-                >
-                  <option value="">Seleccionar proyecto</option>
-                  {projects.map((project) => (
-                    <option key={project.id || project.idJira} value={project.idJira}>
-                      {project.proyecto}
-                    </option>
-                  ))}
-                </Select>
+        {/* Diálogo para edición de caso individual */}
+        {isEditDialogOpen && editingTestCase && (
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[700px]">
+              <DialogHeader>
+                <DialogTitle>Editar Caso de Prueba</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editName">Nombre</Label>
+                    <Input
+                      id="editName"
+                      value={editingTestCase.name || ''}
+                      onChange={(e) => setEditingTestCase({...editingTestCase, name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="editRef">ID de Referencia</Label>
+                    <Input
+                      id="editRef"
+                      value={editingTestCase.codeRef || ''}
+                      onChange={(e) => setEditingTestCase({...editingTestCase, codeRef: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="editHU">Historia de Usuario</Label>
+                    <Input
+                      id="editHU"
+                      value={editingTestCase.userStoryId || ''}
+                      onChange={(e) => setEditingTestCase({...editingTestCase, userStoryId: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="editType">Tipo de Prueba</Label>
+                    <Select
+                      value={editingTestCase.testType || 'Funcional'}
+                      onValueChange={(value) => setEditingTestCase({...editingTestCase, testType: value as TestCase['testType']})}
+                    >
+                      <SelectTrigger id="editType">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Funcional">Funcional</SelectItem>
+                        <SelectItem value="No Funcional">No Funcional</SelectItem>
+                        <SelectItem value="Regresión">Regresión</SelectItem>
+                        <SelectItem value="Exploratoria">Exploratoria</SelectItem>
+                        <SelectItem value="Integración">Integración</SelectItem>
+                        <SelectItem value="Rendimiento">Rendimiento</SelectItem>
+                        <SelectItem value="Seguridad">Seguridad</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="editSteps">Pasos</Label>
+                  <Textarea
+                    id="editSteps"
+                    value={editingTestCase.steps?.map(step => step.description).join('\n') || ''}
+                    onChange={(e) => {
+                      const stepsText = e.target.value;
+                      const stepsArray = stepsText.split('\n').filter(Boolean);
+                      const steps = stepsArray.map(step => ({
+                        id: uuidv4(),
+                        description: step,
+                        expected: ''
+                      }));
+                      setEditingTestCase({...editingTestCase, steps});
+                    }}
+                    rows={4}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="editResult">Resultado Esperado</Label>
+                  <Textarea
+                    id="editResult"
+                    value={editingTestCase.expectedResult || ''}
+                    onChange={(e) => setEditingTestCase({...editingTestCase, expectedResult: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="editObservations">Observaciones</Label>
+                  <Textarea
+                    id="editObservations"
+                    value={editingTestCase.observations || ''}
+                    onChange={(e) => setEditingTestCase({...editingTestCase, observations: e.target.value})}
+                    rows={2}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsExportDialogOpen(false)}
-              disabled={isLoading}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleExportToExcel}
-              disabled={isLoading || (!projectId && !selectedProjectId)}
-            >
-              {isLoading ? 'Exportando...' : 'Exportar a Excel'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>      </div>
+              
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (editingTestCaseIndex !== null) {
+                      const updatedCases = [...generatedTestCases];
+                      updatedCases[editingTestCaseIndex] = editingTestCase;
+                      setGeneratedTestCases(updatedCases);
+                    }
+                    setIsEditDialogOpen(false);
+                    toast.success('Caso de prueba actualizado');
+                  }}
+                >
+                  Guardar Cambios
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     );
   }
 
