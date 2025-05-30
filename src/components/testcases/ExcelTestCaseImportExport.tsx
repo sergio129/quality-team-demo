@@ -429,13 +429,15 @@ const ExcelTestCaseImportExport = ({
           const datosColIndex = headerMapping['8']; // Datos de prueba
           const prioridadColIndex = row.findIndex((cell: any) => 
             cell && typeof cell === 'string' && 
-            /alta|media|baja|high|medium|low|crítica|critical|normal|priority/i.test(cell)
-          ); // Buscar columna de prioridad
+            /alta|media|baja|high|medium|low|crítica|critical|normal|priority/i.test(cell)          ); // Buscar columna de prioridad
+          
           const complejidadColIndex = row.findIndex((cell: any) => 
             cell && typeof cell === 'string' && 
             /alta|media|baja|high|medium|low|complejidad|complexity|complex/i.test(cell)
           ); // Buscar columna de complejidad
-            // Procesamiento especial para criterios de aceptación          let acceptanceCriteria: string[] = [];
+          
+          // Procesamiento especial para criterios de aceptación
+          let acceptanceCriteria: string[] = [];
           if (criteriaColIndex !== undefined && row[criteriaColIndex]) {
             const criteriaText = row[criteriaColIndex]?.toString() || '';
             const cleanText = criteriaText.trim();
