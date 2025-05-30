@@ -11,7 +11,8 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FileDown, FileUp, FileText, Sparkles, Edit2, Check, Plus, Trash2 } from 'lucide-react';
 import { createTestCase } from '@/hooks/useTestCases';
-import { TestCase, TestStep } from '@/models/TestCase';
+import { TestCase as BaseTestCase, TestStep } from '@/models/TestCase';
+import { ExtendedTestCase, PartialExtendedTestCase } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { useProjects } from '@/hooks/useProjects';
 import { useTestPlans } from '@/hooks/useTestCases';
@@ -23,7 +24,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 interface ExcelTestCaseImportExportProps {
   projectId?: string;
-  testCases?: TestCase[];
+  testCases?: BaseTestCase[];
   testPlanId?: string;
   onRefresh?: () => void;
   initialMode?: 'import' | 'export' | 'ai'; // Nueva prop para iniciar en un modo específico
@@ -790,22 +791,44 @@ const ExcelTestCaseImportExport = ({
                 
                 <div className="space-y-2">
                   <Label htmlFor="importTestPlan">Plan de Prueba</Label>
-                  <Select
+                <Select
                     value={selectedTestPlanId}
                     onValueChange={setSelectedTestPlanId}
-                    disabled={!selectedProjectId}
-                  >                    <SelectTrigger id="importTestPlan">
+                    disabled={!selectedProjectId || selectedProjectId === 'select_project'}
+                  ><SelectTrigger id="importTestPlan">
                       <SelectValue placeholder="Seleccionar plan de prueba" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="select_test_plan">Seleccionar plan de prueba</SelectItem>
-                      {testPlans.map((plan) => (
-                        <SelectItem key={plan.id} value={plan.id}>
-                          {plan.name}
+                      {testPlans && testPlans.length > 0 ? (
+                        testPlans.map((plan) => (                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.codeReference}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no_plans" disabled>
+                          No hay planes disponibles
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
+                  
+                  {/* Componente de depuración */}
+                  {isLoadingPlans ? (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                      Cargando planes de prueba...
+                    </div>
+                  ) : isErrorPlans ? (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
+                      Error al cargar planes: {isErrorPlans.toString()}
+                    </div>
+                  ) : testPlans && testPlans.length === 0 && selectedProjectId && selectedProjectId !== 'select_project' ? (
+                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                      No hay planes de prueba para este proyecto. 
+                      <br />
+                      ProjectID: {selectedProjectId}
+                    </div>
+                  ) : null}
                 </div>
                 
                 <div className="space-y-2">
