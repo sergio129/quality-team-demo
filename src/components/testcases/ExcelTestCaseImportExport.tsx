@@ -332,18 +332,20 @@ const ExcelTestCaseImportExport = ({
         const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[];
         
         // Intento de detección automática del tipo de formato
-        const requirements: ExcelRequirementData[] = [];
-          // Buscar encabezados comunes en diferentes formatos
+        const requirements: ExcelRequirementData[] = [];          // Buscar encabezados comunes en diferentes formatos
         const possibleHeaders = [
           // Formato estándar
-          ['ID Historia', 'Historia', 'HU', 'User Story', 'ID'], 
-          ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title'], 
-          ['Descripción', 'Detalle', 'Description', 'Descripcion'], 
-          ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones'],
+          ['ID Historia', 'Historia', 'HU', 'User Story', 'ID', 'Código', 'Codigo', 'Code', 'Story ID', 'ID US', 'US ID'], 
+          ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title', 'Nombre Historia', 'Story Title', 'Nombre US'], 
+          ['Descripción', 'Detalle', 'Description', 'Descripcion', 'Detalles', 'Texto Historia', 'Story Description', 'Desc'], 
+          ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones', 'Criterios Aceptación', 'AC', 'Criterios de Éxito', 'Criterios Aceptacion'],
           // Formato historias de usuario
-          ['Rol', 'Como', 'As a', 'Actor', 'Usuario'],
-          ['Funcionalidad', 'Quiero', 'I want', 'Necesito', 'I need'],
-          ['Razón', 'Resultado', 'Para', 'So that', 'A fin de', 'Con el fin de', 'Beneficio']
+          ['Rol', 'Como', 'As a', 'Actor', 'Usuario', 'Perfil', 'Tipo Usuario', 'Role', 'As an', 'Como un', 'Stakeholder', 'Interesado'], 
+          ['Funcionalidad', 'Quiero', 'I want', 'Necesito', 'I need', 'Deseo', 'Característica', 'Caracteristica', 'Functionality', 'Want to', 'Ability', 'Capacidad', 'Need to'],
+          ['Razón', 'Resultado', 'Para', 'So that', 'A fin de', 'Con el fin de', 'Beneficio', 'Objetivo', 'Reason', 'Benefit', 'Purpose', 'Propósito', 'In order to'],
+          // Formato adicional: Precondiciones y datos
+          ['Precondiciones', 'Precondición', 'Pre-requisitos', 'Prerequisitos', 'Precondition', 'Pre-condition', 'Condiciones previas'],
+          ['Datos de prueba', 'Test Data', 'Datos', 'Ejemplos', 'Escenarios', 'Valores', 'Data']
         ];
         
         // Encontrar la fila de encabezados escaneando las primeras 10 filas
@@ -407,9 +409,7 @@ const ExcelTestCaseImportExport = ({
           toast.warning('No se detectaron encabezados claros. Intentando procesamiento simplificado...');
           headerRowIndex = 0;
           headerMapping = {'0': 0, '1': 1, '2': 2};
-        }
-        
-        // Procesar los datos desde la fila posterior a la de encabezados
+        }          // Procesar los datos desde la fila posterior a la de encabezados
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const row = rows[i];
           if (!row || !Array.isArray(row) || row.every(cell => !cell)) continue;
@@ -421,19 +421,29 @@ const ExcelTestCaseImportExport = ({
           const rolColIndex = headerMapping['4']; // Nuevo formato: Rol
           const funcionalidadColIndex = headerMapping['5']; // Nuevo formato: Funcionalidad
           const razonColIndex = headerMapping['6']; // Nuevo formato: Razón/Resultado
-          const funcDescColIndex = headerMapping['7']; // Opcional
-            // Procesamiento especial para criterios de aceptación
-          let acceptanceCriteria: string[] = [];
+          const precondicionesColIndex = headerMapping['7']; // Precondiciones
+          const datosColIndex = headerMapping['8']; // Datos de prueba
+          const prioridadColIndex = row.findIndex((cell: any) => 
+            cell && typeof cell === 'string' && 
+            /alta|media|baja|high|medium|low|crítica|critical|normal|priority/i.test(cell)
+          ); // Buscar columna de prioridad
+          const complejidadColIndex = row.findIndex((cell: any) => 
+            cell && typeof cell === 'string' && 
+            /alta|media|baja|high|medium|low|complejidad|complexity|complex/i.test(cell)
+          ); // Buscar columna de complejidad
+            // Procesamiento especial para criterios de aceptación          let acceptanceCriteria: string[] = [];
           if (criteriaColIndex !== undefined && row[criteriaColIndex]) {
-            const criteriaText = row[criteriaColIndex]?.toString() || '';            // Implementación inline para extraer criterios de aceptación
+            const criteriaText = row[criteriaColIndex]?.toString() || '';
             const cleanText = criteriaText.trim();
             
-            // Caso 1: Texto ya dividido por líneas con numeración o viñetas
-            if (cleanText.match(/^\d+[\.\)]\s|^[-*•]\s/m)) {
+            // Caso 1: Texto ya dividido por líneas con numeración o viñetas (formato más común)
+            if (cleanText.match(/^\d+[\.\)-]\s|^[-*•]\s/m)) {
               acceptanceCriteria = cleanText
                 .split(/\n/)
                 .map(line => line.trim())
-                .filter(Boolean);
+                .filter(Boolean)
+                // Eliminar números o viñetas del inicio para normalizar
+                .map(line => line.replace(/^\d+[\.\)-]\s+|^[-*•]\s+/, ''));
             }
             // Caso 2: Lista separada por puntos
             else if (cleanText.includes('. ') && cleanText.split('. ').length > 1) {
@@ -443,27 +453,56 @@ const ExcelTestCaseImportExport = ({
                 .filter(Boolean)
                 .map(criteria => criteria.endsWith('.') ? criteria : criteria + '.');
             }
-            // Caso 3: Texto separado por punto y coma
-            else if (cleanText.includes('; ') && cleanText.split('; ').length > 1) {
+            // Caso 3: Texto separado por punto y coma, comas o saltos de línea
+            else if (cleanText.match(/;|,|\n/)) {
+              let separator = /;\s*/;
+              if (cleanText.includes(',') && !cleanText.includes(';')) {
+                separator = /,\s*/;
+              } else if (cleanText.includes('\n') && !cleanText.includes(';') && !cleanText.includes(',')) {
+                separator = /\n+/;
+              }
               acceptanceCriteria = cleanText
-                .split(/;\s+/)
+                .split(separator)
                 .map(criteria => criteria.trim())
                 .filter(Boolean);
-            }
-            // Caso 4: Texto en formato "Criterio: valor"
+            }            // Caso 4: Texto en formato "Criterio: valor" o "Dado/Cuando/Entonces" (Gherkin)
             else {
+              // Primero buscamos formato etiqueta: valor
               const criteriaWithLabels = cleanText.match(/([A-Za-z\s]+):\s*([^\n]+)/g);
-              if (criteriaWithLabels && criteriaWithLabels.length > 1) {
+              
+              // Luego buscamos formato Gherkin (Dado/Cuando/Entonces o Given/When/Then)
+              const gherkinFormat = cleanText.match(/(Dado|Cuando|Entonces|Given|When|Then|And|Y|Pero|But)\s+([^\n]+)/gi);
+              
+              if (criteriaWithLabels && criteriaWithLabels.length >= 1) {
+                // Formato etiqueta: valor
                 acceptanceCriteria = criteriaWithLabels.map(c => c.trim());
-              } else {
+              } 
+              else if (gherkinFormat && gherkinFormat.length >= 1) {
+                // Formato Gherkin - intentamos reconstruir los escenarios
+                if (cleanText.match(/Escenario:|Scenario:|Example:/i)) {
+                  // Si hay múltiples escenarios, intentamos separarlos
+                  const scenarios = cleanText.split(/(?=Escenario:|Scenario:|Example:)/i);
+                  
+                  acceptanceCriteria = scenarios.map(scenario => {
+                    // Limpiar espacios extras y formatear cada escenario
+                    return scenario.trim()
+                      .replace(/\n+/g, ' ')
+                      .replace(/\s{2,}/g, ' ');
+                  }).filter(Boolean);
+                } else {
+                  // Un solo escenario Gherkin sin encabezado explícito
+                  acceptanceCriteria = gherkinFormat.map(c => c.trim());
+                }
+              } 
+              else {
                 // Caso por defecto: considerar todo como un solo criterio
                 acceptanceCriteria = [cleanText];
               }
             }
           }
-          
-          // Detectar si es el formato de historias de usuario (con rol, funcionalidad, razón)
-          const isUserStoryFormat = rolColIndex !== undefined && funcionalidadColIndex !== undefined && row[rolColIndex] && row[funcionalidadColIndex];
+            // Detectar si es el formato de historias de usuario (con rol, funcionalidad, razón)
+          const isUserStoryFormat = rolColIndex !== undefined && funcionalidadColIndex !== undefined && 
+            row[rolColIndex] && row[funcionalidadColIndex];
           
           // Crear nombre y descripción basados en el formato
           let userStoryId = idColIndex !== undefined ? row[idColIndex]?.toString() || '' : '';
@@ -476,28 +515,77 @@ const ExcelTestCaseImportExport = ({
             const funcionalidad = row[funcionalidadColIndex]?.toString() || '';
             const razon = razonColIndex !== undefined ? row[razonColIndex]?.toString() || '' : '';
             
+            // Normalizar los valores para evitar redundancia
+            const rolNormalizado = rol.replace(/^como\s+/i, '').trim();
+            const funcionalidadNormalizada = funcionalidad.replace(/^quiero\s+/i, '').replace(/^necesito\s+/i, '').trim();
+            const razonNormalizada = razon.replace(/^para\s+/i, '').replace(/^a fin de\s+/i, '').trim();
+            
             // Si no hay nombre de requisito pero hay rol+funcionalidad, crearlos
-            if (!requirementName && (rol || funcionalidad)) {
-              requirementName = `${rol} - ${funcionalidad}`.substring(0, 100);
+            if (!requirementName && (rolNormalizado || funcionalidadNormalizada)) {
+              requirementName = rolNormalizado && funcionalidadNormalizada 
+                ? `${rolNormalizado} - ${funcionalidadNormalizada}`.substring(0, 100) 
+                : (rolNormalizado || funcionalidadNormalizada).substring(0, 100);
+            }
+            
+            // Si no hay ID pero tiene uno en la historia, usarlo
+            if (!userStoryId && requirementName.match(/^(HU|US)-\d+/i)) {
+              const match = requirementName.match(/^(HU|US)-\d+/i);
+              if (match) {
+                userStoryId = match[0];
+                // Si el ID está en el nombre, quitarlo del nombre
+                requirementName = requirementName.replace(/^(HU|US)-\d+\s*[-:]\s*/i, '');
+              }
             }
             
             // Construir descripción en formato de historia de usuario
             const userStoryDesc = [
-              `Como ${rol}`,
-              `Quiero ${funcionalidad}`,
-              razon ? `Para ${razon}` : ''
+              `Como ${rolNormalizado}`,
+              `Quiero ${funcionalidadNormalizada}`,
+              razonNormalizada ? `Para ${razonNormalizada}` : ''
             ].filter(Boolean).join('\n');
             
             // Si hay descripción previa, añadir la historia de usuario, sino usar la historia
             description = description ? `${description}\n\n${userStoryDesc}` : userStoryDesc;
           }
+            // Extraer prioridad y complejidad si están disponibles
+          let prioridad = '';
+          if (prioridadColIndex !== -1) {
+            const prioridadText = row[prioridadColIndex]?.toString()?.toLowerCase() || '';
+            if (prioridadText.includes('alta') || prioridadText.includes('high') || prioridadText.includes('crítica')) {
+              prioridad = 'Alta';
+            } else if (prioridadText.includes('media') || prioridadText.includes('medium') || prioridadText.includes('normal')) {
+              prioridad = 'Media';
+            } else if (prioridadText.includes('baja') || prioridadText.includes('low')) {
+              prioridad = 'Baja';
+            }
+          }
+          
+          let complejidad = '';
+          if (complejidadColIndex !== -1) {
+            const complejidadText = row[complejidadColIndex]?.toString()?.toLowerCase() || '';
+            if (complejidadText.includes('alta') || complejidadText.includes('high') || complejidadText.includes('complex')) {
+              complejidad = 'Alta';
+            } else if (complejidadText.includes('media') || complejidadText.includes('medium')) {
+              complejidad = 'Media';
+            } else if (complejidadText.includes('baja') || complejidadText.includes('low') || complejidadText.includes('simple')) {
+              complejidad = 'Baja';
+            }
+          }
+          
+          // Extraer precondiciones y datos de prueba si están disponibles
+          const precondiciones = precondicionesColIndex !== undefined ? row[precondicionesColIndex]?.toString() || '' : '';
+          const datosPrueba = datosColIndex !== undefined ? row[datosColIndex]?.toString() || '' : '';
           
           const requirement: ExcelRequirementData = {
             userStoryId,
             requirementName,
             description,
             acceptanceCriteria,
-            functionalDescription: funcDescColIndex !== undefined ? row[funcDescColIndex]?.toString() || '' : ''
+            functionalDescription: row[descColIndex]?.toString() || '',
+            priority: prioridad,
+            complexity: complejidad,
+            preconditions: precondiciones,
+            testData: datosPrueba
           };
           
           // Solo añadimos requerimientos con información suficiente
@@ -506,11 +594,23 @@ const ExcelTestCaseImportExport = ({
             requirements.push(requirement);
           }
         }
-        
-        if (requirements.length === 0) {
+          if (requirements.length === 0) {
           toast.error('No se encontraron requerimientos válidos en el archivo.');
           setIsGeneratingAI(false);
           return;
+        }
+
+        // Verificar si se encontraron historias en formato user story o requerimientos tradicionales
+        const userStoryCount = requirements.filter(req => 
+          req.description && 
+          (req.description.includes('Como ') || req.description.includes('Quiero ') || req.description.includes('Para '))
+        ).length;
+
+        // Mostrar feedback para que el usuario sepa qué tipo de formato se detectó
+        if (userStoryCount > 0) {
+          toast.info(`Se detectaron ${userStoryCount} historias de usuario en formato "Como/Quiero/Para".`);
+        } else {
+          toast.info(`Se detectaron ${requirements.length} requerimientos en formato tradicional.`);
         }
 
         // Llamar al servicio de IA para generar los casos de prueba
@@ -646,17 +746,20 @@ const ExcelTestCaseImportExport = ({
     } finally {
       setIsLoading(false);
     }
-  };
-    const handleDownloadTemplate = () => {
+  };  const handleDownloadTemplate = () => {
     try {
       // Crear datos para la plantilla
       const templateData = [
-        ['PLANTILLA DE HISTORIAS DE USUARIO PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', '', '', ''],
+        ['PLANTILLA DE HISTORIAS DE USUARIO PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', '', '', '', '', '', ''],
         [''],
-        ['ID', 'Rol', 'Funcionalidad', 'Razón/Resultado', 'Criterios de Aceptación'],
-        ['HU-001', 'Como administrador del sistema', 'Quiero poder gestionar usuarios', 'Para controlar quién tiene acceso al sistema', '1. Poder ver lista de usuarios\n2. Poder crear nuevos usuarios\n3. Poder editar usuarios existentes\n4. Poder desactivar usuarios'],
-        ['HU-002', 'Como usuario registrado', 'Quiero poder restablecer mi contraseña', 'Para recuperar el acceso a mi cuenta cuando olvido mi contraseña', '1. Recibir email con enlace para restablecer contraseña\n2. Enlace debe expirar después de 24 horas\n3. Poder crear una nueva contraseña que cumpla los requisitos de seguridad'],
-        ['HU-003', 'Como analista de calidad', 'Quiero poder generar reportes de test', 'Para evaluar la cobertura y resultado de las pruebas', '1. Filtrar reportes por fecha\n2. Filtrar reportes por proyecto\n3. Exportar reportes en formato Excel\n4. Visualizar gráficos de resultados'],
+        ['INSTRUCCIONES:', 'Complete las columnas según el formato de historia de usuario "Como [rol] Quiero [funcionalidad] Para [razón]"', '', '', '', '', '', '', '', ''],
+        ['También puede agregar una descripción adicional y detallar los criterios de aceptación, precondiciones y datos de prueba para mejorar la generación de casos', '', '', '', '', '', '', '', '', ''],
+        [''],
+        ['ID', 'Rol', 'Funcionalidad', 'Razón/Resultado', 'Criterios de Aceptación', 'Descripción Adicional', 'Prioridad', 'Complejidad', 'Precondiciones', 'Datos de Prueba'],
+        ['HU-001', 'Como administrador del sistema', 'Quiero poder gestionar usuarios', 'Para controlar quién tiene acceso al sistema', '1. Poder ver lista de usuarios\n2. Poder crear nuevos usuarios\n3. Poder editar usuarios existentes\n4. Poder desactivar usuarios', 'El sistema debe permitir la gestión completa del ciclo de vida de usuarios, incluyendo la asignación de roles y permisos.', 'Alta', 'Media', 'Usuario con rol de administrador ya autenticado en el sistema', 'Usuario1 (admin), Usuario2 (normal), Usuario3 (bloqueado)'],
+        ['HU-002', 'Como usuario registrado', 'Quiero poder restablecer mi contraseña', 'Para recuperar el acceso a mi cuenta cuando olvido mi contraseña', '1. Recibir email con enlace para restablecer contraseña\n2. Enlace debe expirar después de 24 horas\n3. Poder crear una nueva contraseña que cumpla los requisitos de seguridad', 'El proceso debe ser seguro y confirmar al usuario cuando se ha cambiado la contraseña correctamente.', 'Media', 'Baja', 'Usuario registrado con email verificado', 'Email: usuario@example.com, Contraseña válida: Abc123!45'],
+        ['HU-003', 'Como analista de calidad', 'Quiero poder generar reportes de test', 'Para evaluar la cobertura y resultado de las pruebas', '1. Filtrar reportes por fecha\n2. Filtrar reportes por proyecto\n3. Exportar reportes en formato Excel\n4. Visualizar gráficos de resultados', 'Los reportes deben incluir métricas de éxito, cobertura y defectos encontrados durante las pruebas.', 'Alta', 'Alta', 'Existen datos de pruebas en el sistema para al menos un proyecto', 'Proyecto: Sistema de Pagos, Fecha: 01/01/2025 al 30/05/2025'],
+        ['HU-004', 'Como usuario del sistema', 'Quiero poder personalizar mi perfil', 'Para ajustar la configuración según mis preferencias', 'Dado que soy un usuario registrado\nCuando accedo a la sección de perfil\nEntonces puedo modificar mi información personal\nY puedo cambiar la configuración de notificaciones\nY puedo seleccionar un tema visual', 'La función debe guardar automáticamente los cambios y aplicarlos inmediatamente.', 'Baja', 'Media', 'Usuario con sesión iniciada', 'Temas disponibles: claro, oscuro, azul; Configuración de notificaciones: email, push, ninguna'],
       ];
       
       // Crear hoja de trabajo
@@ -664,18 +767,32 @@ const ExcelTestCaseImportExport = ({
       
       // Estilizar algunas celdas
       if (!ws['!merges']) ws['!merges'] = [];
-      
-      // Merge para el título principal
-      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } });
+        // Merge para el título principal y las instrucciones
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } });
+      ws['!merges'].push({ s: { r: 2, c: 1 }, e: { r: 2, c: 9 } });
+      ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 9 } });
+        // Configurar anchos de columna para mejor legibilidad
+      ws['!cols'] = [
+        { width: 10 }, // ID
+        { width: 25 }, // Rol
+        { width: 30 }, // Funcionalidad
+        { width: 30 }, // Razón
+        { width: 40 }, // Criterios
+        { width: 40 }, // Descripción
+        { width: 10 }, // Prioridad
+        { width: 10 }, // Complejidad
+        { width: 30 }, // Precondiciones
+        { width: 30 }  // Datos de Prueba
+      ];
       
       // Crear libro
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Requerimientos');
+      XLSX.utils.book_append_sheet(wb, ws, 'Historias de Usuario');
       
       // Generar archivo Excel
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        // Guardar archivo
+      // Guardar archivo
       saveAs(data, 'plantilla_historias_usuario.xlsx');
       
       toast.success('Plantilla de historias de usuario descargada con éxito');
@@ -949,9 +1066,8 @@ const ExcelTestCaseImportExport = ({
                         <FileText size={40} className="mx-auto text-gray-400 mb-2" />
                         <p className="text-sm text-gray-600 mb-2">
                           {selectedProjectId ? 'Seleccione o arrastre un archivo Excel' : 'Seleccione un proyecto primero'}
-                        </p>
-                        <p className="text-xs text-gray-500 mb-4">                          {useAI 
-                            ? 'El archivo debe contener historias de usuario o requerimientos para generar casos de prueba con IA'
+                        </p>                        <p className="text-xs text-gray-500 mb-4">                          {useAI 
+                            ? 'El archivo debe contener historias de usuario (Como/Quiero/Para) o requerimientos tradicionales para generar casos de prueba con IA'
                             : 'El archivo debe seguir el formato estándar de casos de prueba'}
                         </p>
                         
