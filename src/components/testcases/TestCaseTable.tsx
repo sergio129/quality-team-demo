@@ -37,11 +37,11 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const { testCases, isLoading, isError, refreshData } = useTestCases(projectId);
   const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
   const { projects } = useProjects();
-    const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState({
     search: '',
     status: '',
     testType: '',
-    userStory: '',
+    userStory: 'all_stories', // Usar valor no vacío
     testPlanId: testPlanId || ''
   });
     // Este efecto debe declararse después de la inicialización de filteredTestCases
@@ -89,9 +89,13 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
       
       // Filtro por tipo de prueba (corregido para manejar el caso cuando no hay tipo seleccionado)
       const typeMatch = !filters.testType || filters.testType === 'all_types' || tc.testType === filters.testType;
-      
-      // Filtro por historia de usuario
-      const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;
+        // Filtro por historia de usuario
+      const userStoryMatch = 
+        !filters.userStory || 
+        filters.userStory === 'all_stories' || 
+        filters.userStory === 'no_stories' || 
+        filters.userStory === 'no_plan' || 
+        tc.userStoryId === filters.userStory;
       
       return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
     });
@@ -131,15 +135,81 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este caso de prueba?')) {
-      try {
-        await deleteTestCase(id, projectId);
-        toast.success('Caso de prueba eliminado correctamente');
-      } catch (error) {
-        toast.error('Error al eliminar el caso de prueba');
-      }
+  // Variables para dialogo de confirmación
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
+
+  // Eliminación masiva de casos de prueba
+  const handleBulkDelete = () => {
+    // Verificar que haya casos seleccionados
+    if (selectedTestCaseIds.length === 0) {
+      toast.error('No hay casos seleccionados para eliminar');
+      return;
     }
+
+    // Verificar que todos los casos tengan el mismo estado
+    const selectedCases = filteredTestCases.filter(tc => selectedTestCaseIds.includes(tc.id));
+    const firstStatus = selectedCases[0]?.status;
+    const allSameStatus = selectedCases.every(tc => tc.status === firstStatus);
+    
+    if (!allSameStatus) {
+      setBulkDeleteError('No se pueden eliminar casos que tienen estados diferentes. Todos deben tener el mismo estado.');
+      setIsDeleteDialogOpen(true);
+      setIsBulkDelete(true);
+      return;
+    }
+
+    // Preparar la eliminación masiva
+    setIsBulkDelete(true);
+    setBulkDeleteError(null);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirmar eliminación de casos
+  const confirmDelete = async () => {
+    try {
+      if (isBulkDelete && selectedTestCaseIds.length > 0) {
+        // Eliminar varios casos
+        const results = await Promise.allSettled(
+          selectedTestCaseIds.map(id => deleteTestCase(id, projectId))
+        );
+        
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+        
+        if (failed === 0) {
+          toast.success(`${successful} casos de prueba eliminados correctamente`);
+        } else {
+          toast.warning(`${successful} casos eliminados, pero ${failed} casos no se pudieron eliminar`);
+        }
+        
+        // Limpiar selección
+        setSelectedTestCaseIds([]);
+      } else if (deletingId) {
+        // Eliminar un solo caso
+        await deleteTestCase(deletingId, projectId);
+        toast.success('Caso de prueba eliminado correctamente');
+      }
+      
+      // Refrescar datos y cerrar diálogo
+      refreshData();
+      setIsDeleteDialogOpen(false);
+      setDeletingId(null);
+      setIsBulkDelete(false);
+      setBulkDeleteError(null);
+    } catch (error) {
+      toast.error('Error al eliminar el caso de prueba');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    // Usar el nuevo diálogo de confirmación en lugar de window.confirm
+    setDeletingId(id);
+    setIsBulkDelete(false);
+    setBulkDeleteError(null);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleViewDetails = (testCase: TestCase) => {
@@ -291,26 +361,34 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </span>
           )}
         </div>        <Select
-          id="hu-select"
           value={filters.userStory}
-          onChange={e => setFilters(prev => ({ ...prev, userStory: e.target.value }))}
+          onValueChange={(value) => setFilters(prev => ({ ...prev, userStory: value }))}
           disabled={!filters.testPlanId || uniqueUserStories.length === 0}
-          className={!filters.testPlanId ? "bg-gray-50 text-gray-400" : "border-blue-200 focus:border-blue-400"}
         >
-          {!filters.testPlanId ? (
-            <option value="">Seleccione un plan primero</option>
-          ) : uniqueUserStories.length === 0 ? (
-            <option value="">No hay historias en este plan</option>
-          ) : (
-            <>
-              <option value="">Todas las historias de usuario</option>
-              {uniqueUserStories.map((userStory) => (
-                <option key={userStory} value={userStory}>
-                  {userStory}
-                </option>
-              ))}
-            </>
-          )}
+          <SelectTrigger className={!filters.testPlanId ? "bg-gray-50 text-gray-400" : "border-blue-200 focus:border-blue-400"}>
+            <SelectValue placeholder={
+              !filters.testPlanId 
+              ? "Seleccione un plan primero" 
+              : uniqueUserStories.length === 0 
+                ? "No hay historias en este plan" 
+                : "Seleccionar historia"
+            } />
+          </SelectTrigger>          <SelectContent>
+            {!filters.testPlanId ? (
+              <SelectItem value="no_plan">Seleccione un plan primero</SelectItem>
+            ) : uniqueUserStories.length === 0 ? (
+              <SelectItem value="no_stories">No hay historias en este plan</SelectItem>
+            ) : (
+              <>
+                <SelectItem value="all_stories">Todas las historias de usuario</SelectItem>
+                {uniqueUserStories.map((userStory) => (
+                  <SelectItem key={userStory} value={userStory}>
+                    {userStory}
+                  </SelectItem>
+                ))}
+              </>
+            )}
+          </SelectContent>
         </Select>
       </div>
 
@@ -341,14 +419,22 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </span>
           )}
         </div>
-        
-        <div>
+          <div className="flex gap-2">
           <Button 
             variant="outline"
             onClick={() => setIsBulkAssignDialogOpen(true)}
           >
             Asignación masiva
           </Button>
+          
+          {selectedTestCaseIds.length > 0 && (
+            <Button 
+              variant="destructive"
+              onClick={handleBulkDelete}
+            >
+              Eliminar seleccionados
+            </Button>
+          )}
         </div>
       </div>
       
@@ -452,11 +538,13 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                       <span className="text-amber-600 font-medium">Sin asignar</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right space-x-2" onClick={e => e.stopPropagation()}>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(testCase)}>
+                  <TableCell className="text-right space-x-2" onClick={e => e.stopPropagation()}>                    <Button variant="outline" size="sm" onClick={() => handleEdit(testCase)}>
                       Editar
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(testCase.id)}>
+                    <Button variant="outline" size="sm" onClick={(e) => {
+                      e.stopPropagation(); // Evitar que se dispare la acción de detalles
+                      handleDelete(testCase.id);
+                    }}>
                       Eliminar
                     </Button>
                   </TableCell>
@@ -496,7 +584,61 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           projectId={projectId}
         />
       )}
-        {/* Al hacer clic en el botón "Generar con IA", abrimos el diálogo y activamos el modo de IA */}
+
+      {/* Diálogo de confirmación para eliminar casos de prueba */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {isBulkDelete 
+                ? bulkDeleteError 
+                  ? 'No se puede eliminar' 
+                  : `Eliminar ${selectedTestCaseIds.length} casos de prueba`
+                : 'Eliminar caso de prueba'
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {bulkDeleteError ? (
+                <div className="text-red-600 mt-2">
+                  {bulkDeleteError}
+                </div>
+              ) : (
+                <>
+                  {isBulkDelete ? (
+                    <span>
+                      ¿Estás seguro de que deseas eliminar los {selectedTestCaseIds.length} casos de prueba seleccionados? 
+                      Esta acción no se puede deshacer.
+                    </span>
+                  ) : (
+                    <span>
+                      ¿Estás seguro de que deseas eliminar este caso de prueba? 
+                      Esta acción no se puede deshacer.
+                    </span>
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsDeleteDialogOpen(false);
+              setDeletingId(null);
+              setBulkDeleteError(null);
+            }}>
+              Cancelar
+            </Button>
+            
+            {!bulkDeleteError && (
+              <Button variant="destructive" onClick={confirmDelete}>
+                Eliminar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+        
+      {/* Al hacer clic en el botón "Generar con IA", abrimos el diálogo y activamos el modo de IA */}
       {isAIDialogOpen && (
         <Dialog
           open={isAIDialogOpen}
