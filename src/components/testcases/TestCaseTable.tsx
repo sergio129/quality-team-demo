@@ -37,20 +37,6 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const { testCases, isLoading, isError, refreshData } = useTestCases(projectId);
   const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
   const { projects } = useProjects();
-  
-  // Refrescar automáticamente los datos al montar el componente
-  useEffect(() => {
-    console.log("Componente TestCaseTable montado. Actualizando datos...");
-    refreshData();
-    
-    // Refrescar cada 30 segundos para asegurarnos de tener datos actualizados
-    const refreshInterval = setInterval(() => {
-      console.log("Actualizando datos periódicamente...");
-      refreshData();
-    }, 30000);
-    
-    return () => clearInterval(refreshInterval);
-  }, [refreshData]);
     const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -58,21 +44,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
     userStory: '',
     testPlanId: testPlanId || ''
   });
-  
-  // Efecto para reiniciar filtros cuando cambian los casos de prueba
-  useEffect(() => {
-    if (testCases.length > 0 && filteredTestCases.length === 0) {
-      // Si hay casos pero ninguno se muestra, resetear los filtros
-      console.log('Reiniciando filtros porque hay casos pero ninguno se está mostrando');
-      setFilters({
-        search: '',
-        status: '',
-        testType: '',
-        userStory: '',
-        testPlanId: ''
-      });
-    }
-  }, [testCases, filteredTestCases]);
+    // Este efecto debe declararse después de la inicialización de filteredTestCases
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTestCase, setEditingTestCase] = useState<TestCase | null>(null);
@@ -96,7 +68,6 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const uniqueUserStories = useMemo(() => {
     return [...new Set(testCasesBySelectedPlan.map(tc => tc.userStoryId).filter(Boolean))].sort();
   }, [testCasesBySelectedPlan]);
-
   // Filtrar casos de prueba según los filtros
   const filteredTestCases = useMemo(() => {
     // Verificamos si los casos de prueba están vacíos pero no en carga
@@ -125,6 +96,34 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
       return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
     });
   }, [testCases, filters, isLoading]);
+  // Efecto para reiniciar filtros cuando cambian los casos de prueba
+  useEffect(() => {
+    if (testCases.length > 0 && filteredTestCases.length === 0) {
+      // Si hay casos pero ninguno se muestra, resetear los filtros
+      console.log('Reiniciando filtros porque hay casos pero ninguno se está mostrando');
+      setFilters({
+        search: '',
+        status: '',
+        testType: '',
+        userStory: '',
+        testPlanId: ''
+      });
+    }
+  }, [testCases, filteredTestCases]);
+  
+  // Refrescar automáticamente los datos al montar el componente
+  useEffect(() => {
+    console.log("Componente TestCaseTable montado. Actualizando datos...");
+    refreshData();
+    
+    // Refrescar cada 30 segundos para asegurarnos de tener datos actualizados
+    const refreshInterval = setInterval(() => {
+      console.log("Actualizando datos periódicamente...");
+      refreshData();
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [refreshData]);
 
   // Manejo de edición y eliminación
   const handleEdit = (testCase: TestCase) => {
