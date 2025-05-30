@@ -42,21 +42,31 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
       project.estado?.toLowerCase().includes(searchLower)
     );
   }, [cellProjects, searchTerm]);
-
   // Obtener estado en formato legible y su clase CSS
   const getStatusInfo = (project: any) => {
+    // Usar estado real del proyecto o calcular uno si no existe
     const estado = project.estado || project.estadoCalculado || 'Por Iniciar';
     
-    let statusClass = 'bg-gray-100 text-gray-800';
-    if (estado.includes('Progreso') || estado === 'En Progreso') {
-      statusClass = 'bg-blue-100 text-blue-800';
-    } else if (estado.includes('Certificado') || estado === 'Completado' || estado === 'Terminado') {
-      statusClass = 'bg-green-100 text-green-800';
-    } else if (estado.includes('Iniciar') || estado === 'Por Iniciar') {
-      statusClass = 'bg-yellow-100 text-yellow-800';
+    // Convertir a minúsculas para comparaciones no sensibles a mayúsculas
+    const estadoLower = estado.toLowerCase();
+    
+    let statusClass = 'bg-gray-100 text-gray-800'; // Estilo por defecto
+
+    // Clasificación de estados para un mapeo de colores consistente
+    if (estadoLower.includes('progreso') || estadoLower === 'en proceso' || estadoLower === 'en progreso' || estadoLower === 'pruebas' || estadoLower === 'actualizacion') {
+      statusClass = 'bg-blue-100 text-blue-800'; // Azul para estados en progreso
+    } else if (estadoLower.includes('certificado') || estadoLower === 'completado' || estadoLower === 'terminado' || estadoLower === 'finalizado') {
+      statusClass = 'bg-green-100 text-green-800'; // Verde para estados completados
+    } else if (estadoLower.includes('iniciar') || estadoLower === 'por iniciar' || estadoLower === 'pendiente') {
+      statusClass = 'bg-yellow-100 text-yellow-800'; // Amarillo para estados pendientes
+    } else if (estadoLower === 'retrasado') {
+      statusClass = 'bg-red-100 text-red-800'; // Rojo para estados retrasados
     }
     
-    return { text: estado, className: statusClass };
+    // Normalizar la visualización del estado con primera letra mayúscula
+    const displayEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+    
+    return { text: displayEstado, className: statusClass };
   };
 
   // Formatear fecha para visualización
