@@ -50,8 +50,8 @@ const ExcelTestCaseImportExport = ({
     selectedProjectId && selectedProjectId !== 'select_project' ? selectedProjectId : undefined
   );
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
-  const [cycle, setCycle] = useState<number>(1);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cycle, setCycle] = useState<number>(1);  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [useAI, setUseAI] = useState<boolean>(initialMode === 'ai');
   
   // Depuración para ver qué está pasando con los planes de prueba
@@ -187,11 +187,15 @@ const ExcelTestCaseImportExport = ({
       setIsLoading(false);
     }
   };
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
     setSelectedFile(file);
+    setSelectedFileName(file.name); // Guardamos el nombre para mostrarlo en la interfaz
+    
+    // Mostramos una notificación del archivo seleccionado
+    toast.success(`Archivo seleccionado: ${file.name}`);
     
     // Si no estamos usando IA, procesamos inmediatamente el archivo
     // De lo contrario, solo guardamos la referencia al archivo para procesarlo después
@@ -1069,17 +1073,14 @@ const ExcelTestCaseImportExport = ({
                         </p>                        <p className="text-xs text-gray-500 mb-4">                          {useAI 
                             ? 'El archivo debe contener historias de usuario (Como/Quiero/Para) o requerimientos tradicionales para generar casos de prueba con IA'
                             : 'El archivo debe seguir el formato estándar de casos de prueba'}
-                        </p>
-                        
-                        <Input
+                        </p>                          <Input
                           id="fileUpload"
                           type="file"
                           accept=".xlsx,.xls"
                           onChange={handleFileUpload}
                           disabled={isLoading || !selectedProjectId}
                           className="hidden"
-                        />
-                        <div className="space-x-2">
+                        />                        <div className="space-x-2">
                           <Button
                             type="button"
                             variant="outline"
@@ -1089,23 +1090,36 @@ const ExcelTestCaseImportExport = ({
                           >
                             <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla Historias Usuario
                           </Button>
-                          <label htmlFor="fileUpload">
-                            <Button
-                              type="button" 
-                              variant="outline"
-                              disabled={isLoading || !selectedProjectId}
-                              className="cursor-pointer"
-                            >
-                              Seleccionar archivo
-                            </Button>
-                          </label>
+                          {/* Usando un Button que abra el input de archivo mediante JavaScript */}
+                          <Button
+                            type="button" 
+                            variant="outline"
+                            disabled={isLoading || !selectedProjectId}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              // Usar JavaScript para disparar el evento click en el input
+                              const fileInput = document.getElementById('fileUpload') as HTMLInputElement;
+                              if (fileInput) {
+                                fileInput.click();
+                              }
+                            }}
+                          >
+                            <FileUp className="h-4 w-4 mr-2" /> Seleccionar archivo
+                          </Button>
+                            {/* Mostrar el nombre del archivo si se ha seleccionado */}
+                          {selectedFile && (
+                            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm flex items-center">
+                              <FileText className="h-4 w-4 mr-2 text-blue-500" />
+                              <span className="text-blue-700">{selectedFileName}</span>
+                            </div>
+                          )}
                           
                           {useAI && selectedFile && (
                             <Button
                               type="button"
                               onClick={handleGenerateAI}
                               disabled={isGeneratingAI || !selectedFile || !selectedProjectId}
-                              className="ml-2"
+                              className="ml-2 mt-2"
                             >
                               {isGeneratingAI ? 'Generando...' : 'Generar casos con IA'}
                               {!isGeneratingAI && <Sparkles className="h-4 w-4 ml-2" />}
