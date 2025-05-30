@@ -41,14 +41,12 @@ const ExcelTestCaseImportExport = ({
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(initialMode === 'export');
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);  const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [generatedTestCases, setGeneratedTestCases] = useState<Partial<TestCase>[]>([]);
+  const [generatedTestCases, setGeneratedTestCases] = useState<PartialExtendedTestCase[]>([]);
   const [editingTestCaseIndex, setEditingTestCaseIndex] = useState<number | null>(null);
-  const [editingTestCase, setEditingTestCase] = useState<Partial<TestCase> | null>(null);
-  const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
-  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
+  const [editingTestCase, setEditingTestCase] = useState<PartialExtendedTestCase | null>(null);
+  const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
     selectedProjectId && selectedProjectId !== 'select_project' ? selectedProjectId : undefined
   );
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
@@ -189,19 +187,29 @@ const ExcelTestCaseImportExport = ({
       setIsLoading(false);
     }
   };
-  
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
     setSelectedFile(file);
     
+    // Si no estamos usando IA, procesamos inmediatamente el archivo
+    // De lo contrario, solo guardamos la referencia al archivo para procesarlo después
     if (!useAI) {
-      processFileForImport(file);
+      if (selectedProjectId && selectedProjectId !== 'select_project') {
+        processFileForImport(file);
+      } else {
+        toast.warning('Selecciona un proyecto antes de procesar el archivo');
+      }
     }
   };
-  
-  const processFileForImport = async (file: File) => {
+    const processFileForImport = async (file: File) => {
+    // Verificar que los parámetros necesarios estén presentes
+    if (!selectedProjectId || selectedProjectId === 'select_project') {
+      toast.error('Selecciona un proyecto válido primero.');
+      return;
+    }
+    
     const reader = new FileReader();
     setIsLoading(true);
     
@@ -209,6 +217,10 @@ const ExcelTestCaseImportExport = ({
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
+        
+        if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+          throw new Error("El archivo Excel no contiene hojas de cálculo");
+        }
         
         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[];
@@ -321,13 +333,17 @@ const ExcelTestCaseImportExport = ({
         
         // Intento de detección automática del tipo de formato
         const requirements: ExcelRequirementData[] = [];
-        
-        // Buscar encabezados comunes en diferentes formatos
+          // Buscar encabezados comunes en diferentes formatos
         const possibleHeaders = [
+          // Formato estándar
           ['ID Historia', 'Historia', 'HU', 'User Story', 'ID'], 
           ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title'], 
           ['Descripción', 'Detalle', 'Description', 'Descripcion'], 
-          ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones']
+          ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones'],
+          // Formato historias de usuario
+          ['Rol', 'Como', 'As a', 'Actor', 'Usuario'],
+          ['Funcionalidad', 'Quiero', 'I want', 'Necesito', 'I need'],
+          ['Razón', 'Resultado', 'Para', 'So that', 'A fin de', 'Con el fin de', 'Beneficio']
         ];
         
         // Encontrar la fila de encabezados escaneando las primeras 10 filas
@@ -397,43 +413,89 @@ const ExcelTestCaseImportExport = ({
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const row = rows[i];
           if (!row || !Array.isArray(row) || row.every(cell => !cell)) continue;
-          
-          // Extraer campos basados en el mapeo detectado
+            // Extraer campos basados en el mapeo detectado
           const idColIndex = headerMapping['0'];
           const nameColIndex = headerMapping['1']; 
           const descColIndex = headerMapping['2'];
           const criteriaColIndex = headerMapping['3'];
-          const funcDescColIndex = headerMapping['4']; // Opcional
-          
-          // Procesamiento especial para criterios de aceptación
+          const rolColIndex = headerMapping['4']; // Nuevo formato: Rol
+          const funcionalidadColIndex = headerMapping['5']; // Nuevo formato: Funcionalidad
+          const razonColIndex = headerMapping['6']; // Nuevo formato: Razón/Resultado
+          const funcDescColIndex = headerMapping['7']; // Opcional
+            // Procesamiento especial para criterios de aceptación
           let acceptanceCriteria: string[] = [];
           if (criteriaColIndex !== undefined && row[criteriaColIndex]) {
-            const criteriaText = row[criteriaColIndex]?.toString() || '';
+            const criteriaText = row[criteriaColIndex]?.toString() || '';            // Implementación inline para extraer criterios de aceptación
+            const cleanText = criteriaText.trim();
             
-            // Detectar si hay formato de lista (numeración, viñetas)
-            if (criteriaText.match(/^\d+[\.\)]\s|^[-*•]\s/m)) {
-              acceptanceCriteria = criteriaText
+            // Caso 1: Texto ya dividido por líneas con numeración o viñetas
+            if (cleanText.match(/^\d+[\.\)]\s|^[-*•]\s/m)) {
+              acceptanceCriteria = cleanText
                 .split(/\n/)
                 .map(line => line.trim())
                 .filter(Boolean);
-            } else {
-              // Intentar dividir por puntos si parece ser una lista separada por puntos
-              if (criteriaText.includes('. ') && criteriaText.split('. ').length > 1) {
-                acceptanceCriteria = criteriaText
-                  .split(/\.\s+/)
-                  .map(criteria => criteria.trim())
-                  .filter(Boolean)
-                  .map(criteria => criteria.endsWith('.') ? criteria : criteria + '.');
+            }
+            // Caso 2: Lista separada por puntos
+            else if (cleanText.includes('. ') && cleanText.split('. ').length > 1) {
+              acceptanceCriteria = cleanText
+                .split(/\.\s+/)
+                .map(criteria => criteria.trim())
+                .filter(Boolean)
+                .map(criteria => criteria.endsWith('.') ? criteria : criteria + '.');
+            }
+            // Caso 3: Texto separado por punto y coma
+            else if (cleanText.includes('; ') && cleanText.split('; ').length > 1) {
+              acceptanceCriteria = cleanText
+                .split(/;\s+/)
+                .map(criteria => criteria.trim())
+                .filter(Boolean);
+            }
+            // Caso 4: Texto en formato "Criterio: valor"
+            else {
+              const criteriaWithLabels = cleanText.match(/([A-Za-z\s]+):\s*([^\n]+)/g);
+              if (criteriaWithLabels && criteriaWithLabels.length > 1) {
+                acceptanceCriteria = criteriaWithLabels.map(c => c.trim());
               } else {
-                acceptanceCriteria = [criteriaText];
+                // Caso por defecto: considerar todo como un solo criterio
+                acceptanceCriteria = [cleanText];
               }
             }
           }
           
+          // Detectar si es el formato de historias de usuario (con rol, funcionalidad, razón)
+          const isUserStoryFormat = rolColIndex !== undefined && funcionalidadColIndex !== undefined && row[rolColIndex] && row[funcionalidadColIndex];
+          
+          // Crear nombre y descripción basados en el formato
+          let userStoryId = idColIndex !== undefined ? row[idColIndex]?.toString() || '' : '';
+          let requirementName = nameColIndex !== undefined ? row[nameColIndex]?.toString() || '' : '';
+          let description = descColIndex !== undefined ? row[descColIndex]?.toString() || '' : '';
+          
+          // Si es formato de historia de usuario, construir descripción usando ese formato
+          if (isUserStoryFormat) {
+            const rol = row[rolColIndex]?.toString() || '';
+            const funcionalidad = row[funcionalidadColIndex]?.toString() || '';
+            const razon = razonColIndex !== undefined ? row[razonColIndex]?.toString() || '' : '';
+            
+            // Si no hay nombre de requisito pero hay rol+funcionalidad, crearlos
+            if (!requirementName && (rol || funcionalidad)) {
+              requirementName = `${rol} - ${funcionalidad}`.substring(0, 100);
+            }
+            
+            // Construir descripción en formato de historia de usuario
+            const userStoryDesc = [
+              `Como ${rol}`,
+              `Quiero ${funcionalidad}`,
+              razon ? `Para ${razon}` : ''
+            ].filter(Boolean).join('\n');
+            
+            // Si hay descripción previa, añadir la historia de usuario, sino usar la historia
+            description = description ? `${description}\n\n${userStoryDesc}` : userStoryDesc;
+          }
+          
           const requirement: ExcelRequirementData = {
-            userStoryId: idColIndex !== undefined ? row[idColIndex]?.toString() || '' : '',
-            requirementName: nameColIndex !== undefined ? row[nameColIndex]?.toString() || '' : '',
-            description: descColIndex !== undefined ? row[descColIndex]?.toString() || '' : '',
+            userStoryId,
+            requirementName,
+            description,
             acceptanceCriteria,
             functionalDescription: funcDescColIndex !== undefined ? row[funcDescColIndex]?.toString() || '' : ''
           };
@@ -480,14 +542,18 @@ const ExcelTestCaseImportExport = ({
     
     reader.readAsArrayBuffer(file);
   };
-
   const handleGenerateAI = async () => {
-    if (!selectedFile || !selectedProjectId) {
-      toast.error('Selecciona un proyecto y un archivo Excel primero.');
+    if (!selectedFile) {
+      toast.error('Selecciona un archivo Excel primero.');
       return;
     }
     
-    if (!selectedTestPlanId) {
+    if (!selectedProjectId || selectedProjectId === 'select_project') {
+      toast.error('Selecciona un proyecto válido primero.');
+      return;
+    }
+    
+    if (!selectedTestPlanId || selectedTestPlanId === 'select_test_plan') {
       toast.warning('No has seleccionado un plan de prueba. Se recomienda asociar los casos a un plan.');
     }
     
@@ -581,16 +647,16 @@ const ExcelTestCaseImportExport = ({
       setIsLoading(false);
     }
   };
-  
-  const handleDownloadTemplate = () => {
+    const handleDownloadTemplate = () => {
     try {
       // Crear datos para la plantilla
       const templateData = [
-        ['PLANTILLA DE REQUERIMIENTOS PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', ''],
+        ['PLANTILLA DE HISTORIAS DE USUARIO PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', '', '', ''],
         [''],
-        ['ID Historia', 'Nombre del Requerimiento', 'Descripción', 'Criterios de Aceptación', 'Descripción Funcional'],
-        ['US-001', 'Login de Usuario', 'El sistema debe permitir que los usuarios inicien sesión con email y contraseña', '1. El usuario debe poder ingresar su email\n2. El usuario debe poder ingresar su contraseña\n3. El sistema debe validar las credenciales\n4. El sistema debe mostrar un mensaje de error si las credenciales son incorrectas', 'El formulario de login debe contener campos para email y contraseña, con validación de formato de email y un botón de "Iniciar Sesión"'],
-        ['US-002', 'Registro de Usuario', 'El sistema debe permitir que los nuevos usuarios se registren', '1. El formulario debe incluir: nombre, email, contraseña y confirmación\n2. Validar que el email no esté ya registrado\n3. La contraseña debe tener al menos 8 caracteres', 'La página de registro debe mostrar el formulario con validaciones en tiempo real y mostrar errores específicos'],
+        ['ID', 'Rol', 'Funcionalidad', 'Razón/Resultado', 'Criterios de Aceptación'],
+        ['HU-001', 'Como administrador del sistema', 'Quiero poder gestionar usuarios', 'Para controlar quién tiene acceso al sistema', '1. Poder ver lista de usuarios\n2. Poder crear nuevos usuarios\n3. Poder editar usuarios existentes\n4. Poder desactivar usuarios'],
+        ['HU-002', 'Como usuario registrado', 'Quiero poder restablecer mi contraseña', 'Para recuperar el acceso a mi cuenta cuando olvido mi contraseña', '1. Recibir email con enlace para restablecer contraseña\n2. Enlace debe expirar después de 24 horas\n3. Poder crear una nueva contraseña que cumpla los requisitos de seguridad'],
+        ['HU-003', 'Como analista de calidad', 'Quiero poder generar reportes de test', 'Para evaluar la cobertura y resultado de las pruebas', '1. Filtrar reportes por fecha\n2. Filtrar reportes por proyecto\n3. Exportar reportes en formato Excel\n4. Visualizar gráficos de resultados'],
       ];
       
       // Crear hoja de trabajo
@@ -609,11 +675,10 @@ const ExcelTestCaseImportExport = ({
       // Generar archivo Excel
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        // Guardar archivo
+      saveAs(data, 'plantilla_historias_usuario.xlsx');
       
-      // Guardar archivo
-      saveAs(data, 'plantilla_requerimientos.xlsx');
-      
-      toast.success('Plantilla descargada con éxito');
+      toast.success('Plantilla de historias de usuario descargada con éxito');
     } catch (error) {
       console.error('Error al descargar plantilla:', error);
       toast.error('Error al descargar la plantilla');
@@ -794,15 +859,17 @@ const ExcelTestCaseImportExport = ({
                 <Select
                     value={selectedTestPlanId}
                     onValueChange={setSelectedTestPlanId}
-                    disabled={!selectedProjectId || selectedProjectId === 'select_project'}
-                  ><SelectTrigger id="importTestPlan">
-                      <SelectValue placeholder="Seleccionar plan de prueba" />
+                    disabled={!selectedProjectId || selectedProjectId === 'select_project' || isLoadingPlans}
+                  >
+                    <SelectTrigger id="importTestPlan">
+                      <SelectValue placeholder={isLoadingPlans ? "Cargando planes..." : "Seleccionar plan de prueba"} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="select_test_plan">Seleccionar plan de prueba</SelectItem>
                       {testPlans && testPlans.length > 0 ? (
-                        testPlans.map((plan) => (                          <SelectItem key={plan.id} value={plan.id}>
-                            {plan.codeReference}
+                        testPlans.map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.codeReference || `Plan ${plan.id.substring(0, 6)}`}
                           </SelectItem>
                         ))
                       ) : (
@@ -883,9 +950,8 @@ const ExcelTestCaseImportExport = ({
                         <p className="text-sm text-gray-600 mb-2">
                           {selectedProjectId ? 'Seleccione o arrastre un archivo Excel' : 'Seleccione un proyecto primero'}
                         </p>
-                        <p className="text-xs text-gray-500 mb-4">
-                          {useAI 
-                            ? 'El archivo debe contener los requerimientos para generar casos de prueba con IA'
+                        <p className="text-xs text-gray-500 mb-4">                          {useAI 
+                            ? 'El archivo debe contener historias de usuario o requerimientos para generar casos de prueba con IA'
                             : 'El archivo debe seguir el formato estándar de casos de prueba'}
                         </p>
                         
@@ -905,7 +971,7 @@ const ExcelTestCaseImportExport = ({
                             disabled={isLoading}
                             className="mb-2"
                           >
-                            <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla
+                            <FileText className="h-4 w-4 mr-2" /> Descargar Plantilla Historias Usuario
                           </Button>
                           <label htmlFor="fileUpload">
                             <Button
@@ -947,16 +1013,19 @@ const ExcelTestCaseImportExport = ({
                 >
                   Cancelar
                 </Button>
-                {!useAI && (
-                  <Button
+                {!useAI && (                  <Button
                     onClick={async () => {
                       if (!selectedFile) {
                         toast.error('Seleccione un archivo primero');
                         return;
                       }
+                      if (!selectedProjectId || selectedProjectId === 'select_project') {
+                        toast.error('Seleccione un proyecto primero');
+                        return;
+                      }
                       await processFileForImport(selectedFile);
                     }}
-                    disabled={isLoading || !selectedFile || !selectedProjectId}
+                    disabled={isLoading || !selectedFile || !selectedProjectId || selectedProjectId === 'select_project'}
                   >
                     {isLoading ? 'Importando...' : 'Importar'}
                   </Button>
