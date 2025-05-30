@@ -19,12 +19,34 @@ export function useTestCases(projectId?: string, testPlanId?: string) {
     endpoint += `${endpoint.includes('?') ? '&' : '?'}testPlanId=${testPlanId}`;
   }
   
-  const { data, error, isLoading } = useSWR<TestCase[]>(endpoint, fetcher);
+  // Configuración más agresiva para la revalidación de caché
+  const { data, error, isLoading, mutate: refreshData } = useSWR<TestCase[]>(
+    endpoint, 
+    fetcher,
+    {
+      revalidateOnFocus: true,
+      revalidateOnMount: true,
+      revalidateIfStale: true,
+      dedupingInterval: 2000 // Reducido para recargar más frecuentemente
+    }
+  );
+
+  // Añadir logs para depuración
+  if (data) {
+    console.log(`Cargados ${data.length} casos de prueba desde ${endpoint}`);
+  }
+  
+  // Incluir una función para forzar refresco
+  const forceRefresh = () => {
+    console.log(`Forzando actualización de datos desde ${endpoint}`);
+    refreshData();
+  };
 
   return {
     testCases: data || [],
     isLoading,
     isError: error,
+    refreshData: forceRefresh
   };
 }
 

@@ -34,17 +34,45 @@ interface TestCaseTableProps {
 }
 
 export default function TestCaseTable({ projectId, testPlanId }: TestCaseTableProps) {
-  const { testCases, isLoading, isError } = useTestCases(projectId);
+  const { testCases, isLoading, isError, refreshData } = useTestCases(projectId);
   const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
   const { projects } = useProjects();
   
-  const [filters, setFilters] = useState({
+  // Refrescar automáticamente los datos al montar el componente
+  useEffect(() => {
+    console.log("Componente TestCaseTable montado. Actualizando datos...");
+    refreshData();
+    
+    // Refrescar cada 30 segundos para asegurarnos de tener datos actualizados
+    const refreshInterval = setInterval(() => {
+      console.log("Actualizando datos periódicamente...");
+      refreshData();
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [refreshData]);
+    const [filters, setFilters] = useState({
     search: '',
     status: '',
     testType: '',
     userStory: '',
     testPlanId: testPlanId || ''
   });
+  
+  // Efecto para reiniciar filtros cuando cambian los casos de prueba
+  useEffect(() => {
+    if (testCases.length > 0 && filteredTestCases.length === 0) {
+      // Si hay casos pero ninguno se muestra, resetear los filtros
+      console.log('Reiniciando filtros porque hay casos pero ninguno se está mostrando');
+      setFilters({
+        search: '',
+        status: '',
+        testType: '',
+        userStory: '',
+        testPlanId: ''
+      });
+    }
+  }, [testCases, filteredTestCases]);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTestCase, setEditingTestCase] = useState<TestCase | null>(null);
@@ -59,8 +87,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
     // Reiniciar el filtro de historia de usuario al cambiar de plan
     setFilters(prev => ({ ...prev, userStory: '' }));
   }, [filters.testPlanId]);
-  
-  // Filtrar casos de prueba primero por el plan seleccionado
+    // Filtrar casos de prueba primero por el plan seleccionado
   const testCasesBySelectedPlan = useMemo(() => {
     return testCases.filter(tc => !filters.testPlanId || tc.testPlanId === filters.testPlanId);
   }, [testCases, filters.testPlanId]);
@@ -71,26 +98,33 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   }, [testCasesBySelectedPlan]);
 
   // Filtrar casos de prueba según los filtros
-  const filteredTestCases = testCases.filter((tc) => {
-    // Filtro por plan de pruebas
-    const planMatch = !filters.testPlanId || tc.testPlanId === filters.testPlanId;
+  const filteredTestCases = useMemo(() => {
+    // Verificamos si los casos de prueba están vacíos pero no en carga
+    if (testCases.length === 0 && !isLoading) {
+      console.log('No hay casos de prueba cargados para filtrar');
+    }
     
-    // Filtro de búsqueda por texto (nombre o descripción)
-    const searchMatch = 
-      filters.search === '' || 
-      tc.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
-      tc.expectedResult?.toLowerCase().includes(filters.search.toLowerCase());
-      // Filtro por estado
-    const statusMatch = filters.status === 'all_status' || tc.status === filters.status;
-    
-    // Filtro por tipo de prueba
-    const typeMatch = filters.testType === 'all_types' || tc.testType === filters.testType;
-    
-    // Filtro por historia de usuario
-    const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;
-    
-    return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
-  });
+    return testCases.filter((tc) => {
+      // Filtro por plan de pruebas
+      const planMatch = !filters.testPlanId || tc.testPlanId === filters.testPlanId;
+      
+      // Filtro de búsqueda por texto (nombre o descripción)
+      const searchMatch = 
+        filters.search === '' || 
+        tc.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+        tc.expectedResult?.toLowerCase().includes(filters.search.toLowerCase());
+      // Filtro por estado (corregido para manejar el caso cuando no hay estado seleccionado)
+      const statusMatch = !filters.status || filters.status === 'all_status' || tc.status === filters.status;
+      
+      // Filtro por tipo de prueba (corregido para manejar el caso cuando no hay tipo seleccionado)
+      const typeMatch = !filters.testType || filters.testType === 'all_types' || tc.testType === filters.testType;
+      
+      // Filtro por historia de usuario
+      const userStoryMatch = filters.userStory === '' || tc.userStoryId === filters.userStory;
+      
+      return planMatch && searchMatch && statusMatch && typeMatch && userStoryMatch;
+    });
+  }, [testCases, filters, isLoading]);
 
   // Manejo de edición y eliminación
   const handleEdit = (testCase: TestCase) => {
@@ -126,16 +160,30 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const casesWithoutResponsible = testCases.filter(tc => !tc.responsiblePerson || tc.responsiblePerson === '-').length;
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Casos de Prueba</h2>
-          <p className="text-gray-500">{projectName}</p>
-          {casesWithoutResponsible > 0 && (
-            <p className="text-amber-600 text-sm mt-1">
-              {casesWithoutResponsible} caso(s) sin persona responsable asignada
-            </p>
-          )}
+    <div className="space-y-4">      <div className="flex justify-between items-center">
+        <div className="flex items-start gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Casos de Prueba</h2>
+            <p className="text-gray-500">{projectName}</p>
+            {casesWithoutResponsible > 0 && (
+              <p className="text-amber-600 text-sm mt-1">
+                {casesWithoutResponsible} caso(s) sin persona responsable asignada
+              </p>
+            )}
+          </div>
+          
+          <button
+            onClick={() => {
+              refreshData();
+              toast.success('Actualizando casos de prueba...');
+            }}
+            className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded px-3 py-1 mt-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+            </svg>
+            Actualizar
+          </button>
         </div>
         
         <div className="flex space-x-2">
@@ -312,10 +360,34 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
       ) : isError ? (
         <div className="bg-red-100 text-red-700 p-4 rounded-md">
           Error al cargar los casos de prueba. Intente nuevamente.
-        </div>
-      ) : filteredTestCases.length === 0 ? (
+        </div>      ) : filteredTestCases.length === 0 ? (
         <div className="text-center p-8 border rounded-md">
           <p className="text-gray-500">No hay casos de prueba que coincidan con los filtros.</p>
+          {testCases.length > 0 && (
+            <div className="mt-4 text-left p-4 bg-blue-50 rounded-md">
+              <p className="text-sm font-medium text-blue-700">Información de diagnóstico:</p>
+              <ul className="text-xs text-blue-600 mt-2 space-y-1">
+                <li>Total de casos en base de datos: {testCases.length}</li>
+                <li>Filtro de plan actual: {filters.testPlanId || 'Ninguno'}</li>
+                <li>Filtro de estado: {filters.status || 'Ninguno'}</li>
+                <li>Filtro de tipo: {filters.testType || 'Ninguno'}</li>
+                <li>Filtro de HU: {filters.userStory || 'Ninguno'}</li>
+                <li>Búsqueda: {filters.search || 'Ninguna'}</li>
+              </ul>
+              <button 
+                className="mt-3 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 py-1 px-2 rounded"
+                onClick={() => setFilters({
+                  search: '',
+                  status: '',
+                  testType: '',
+                  userStory: '',
+                  testPlanId: ''
+                })}
+              >
+                Resetear todos los filtros
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="border rounded-md overflow-auto max-h-[65vh]">
