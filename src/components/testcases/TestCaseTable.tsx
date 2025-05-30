@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select-radix';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -20,10 +20,13 @@ import TestCaseForm from './TestCaseForm';
 import TestCaseDetailsDialog from './TestCaseDetailsDialog';
 import TestCaseStatusChanger from './TestCaseStatusChanger';
 import BulkAssignmentDialog from './BulkAssignmentDialog';
+import ExcelTestCaseImportExport from './ExcelTestCaseImportExport';
 import { useTestCases, useTestPlans, deleteTestCase } from '@/hooks/useTestCases';
 import { useProjects } from '@/hooks/useProjects';
 import { TestCase } from '@/models/TestCase';
 import SelectTestPlan from './SelectTestPlan';
+import { Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 interface TestCaseTableProps {
   projectId?: string;
@@ -49,6 +52,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
   const [selectedTestCaseIds, setSelectedTestCaseIds] = useState<string[]>([]);
   const [isBulkAssignDialogOpen, setIsBulkAssignDialogOpen] = useState(false);
+  const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   
   // Efecto para limpiar el filtro de historia de usuario cuando cambia el plan de prueba
   useEffect(() => {
@@ -141,17 +145,27 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               Cargando planes...
             </Button>
           ) : testPlans?.length > 0 ? (
-            <Button 
-              onClick={() => {
-                setEditingTestCase(null);
-                setIsFormOpen(true);
-              }}
-            >
-              Nuevo Caso de Prueba
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => {
+                  setEditingTestCase(null);
+                  setIsFormOpen(true);
+                }}
+              >
+                Nuevo Caso de Prueba
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => setIsAIDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Sparkles size={16} /> Generar con IA
+              </Button>
+            </div>
           ) : (
             <Button 
-              variant="outline" 
+              variant="outline"
               disabled
               title="Debe crear un plan de pruebas primero"
             >
@@ -178,36 +192,34 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
           />
         </div>
-        
-        <div className="space-y-2">
+          <div className="space-y-2">
           <label htmlFor="status-select" className="text-sm font-medium">Estado</label>
-          <Select
-            id="status-select"
-            value={filters.status}
-            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-          >
-            <option value="">Todos los estados</option>
-            <option value="No ejecutado">No ejecutado</option>
-            <option value="Exitoso">Exitoso</option>
-            <option value="Fallido">Fallido</option>
-            <option value="Bloqueado">Bloqueado</option>
-            <option value="En progreso">En progreso</option>
+          <Select value={filters.status} onValueChange={value => setFilters(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger id="status-select">
+              <SelectValue placeholder="Seleccionar estado" />
+            </SelectTrigger>
+            <SelectContent>              <SelectItem value="all_status">Todos los estados</SelectItem>
+              <SelectItem value="No ejecutado">No ejecutado</SelectItem>
+              <SelectItem value="Exitoso">Exitoso</SelectItem>
+              <SelectItem value="Fallido">Fallido</SelectItem>
+              <SelectItem value="Bloqueado">Bloqueado</SelectItem>
+              <SelectItem value="En progreso">En progreso</SelectItem>
+            </SelectContent>
           </Select>
-        </div>        <div className="space-y-2">
-          <label htmlFor="type-select" className="text-sm font-medium">Tipo de prueba</label>
-          <Select
-            id="type-select"
-            value={filters.testType}
-            onChange={e => setFilters(prev => ({ ...prev, testType: e.target.value }))}
-          >
-            <option value="">Todos los tipos</option>
-            <option value="Funcional">Funcional</option>
-            <option value="No Funcional">No Funcional</option>
-            <option value="Regresión">Regresión</option>
-            <option value="Exploratoria">Exploratoria</option>
-            <option value="Integración">Integración</option>
-            <option value="Rendimiento">Rendimiento</option>
-            <option value="Seguridad">Seguridad</option>
+        </div><div className="space-y-2">          <label htmlFor="type-select" className="text-sm font-medium">Tipo de prueba</label>
+          <Select value={filters.testType} onValueChange={value => setFilters(prev => ({ ...prev, testType: value }))}>
+            <SelectTrigger id="type-select">
+              <SelectValue placeholder="Seleccionar tipo" />
+            </SelectTrigger>
+            <SelectContent>              <SelectItem value="all_types">Todos los tipos</SelectItem>
+              <SelectItem value="Funcional">Funcional</SelectItem>
+              <SelectItem value="No Funcional">No Funcional</SelectItem>
+              <SelectItem value="Regresión">Regresión</SelectItem>
+              <SelectItem value="Exploratoria">Exploratoria</SelectItem>
+              <SelectItem value="Integración">Integración</SelectItem>
+              <SelectItem value="Rendimiento">Rendimiento</SelectItem>
+              <SelectItem value="Seguridad">Seguridad</SelectItem>
+            </SelectContent>
           </Select>
         </div>
         
@@ -406,14 +418,53 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           }}
           testCase={selectedTestCase}
         />
-      )}      {/* Diálogo de asignación masiva */}
-      {isBulkAssignDialogOpen && (
+      )}      {/* Diálogo de asignación masiva */}      {isBulkAssignDialogOpen && (
         <BulkAssignmentDialog
           isOpen={isBulkAssignDialogOpen}
           onClose={() => setIsBulkAssignDialogOpen(false)}
           selectedTestCaseIds={selectedTestCaseIds}
           projectId={projectId}
         />
+      )}
+        {/* Al hacer clic en el botón "Generar con IA", abrimos el diálogo y activamos el modo de IA */}
+      {isAIDialogOpen && (
+        <Dialog
+          open={isAIDialogOpen}
+          onOpenChange={(isOpen) => {
+            setIsAIDialogOpen(isOpen);
+          }}
+        >
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Generar Casos de Prueba con IA</DialogTitle>
+              <DialogDescription>
+                Importa requisitos desde Excel y genéralos automáticamente con IA
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4">
+              {/* 
+                Renderizamos el componente ExcelTestCaseImportExport, 
+                pero no mostramos sus botones propios ya que los manejamos en este diálogo 
+              */}
+              <ExcelTestCaseImportExport 
+                projectId={projectId}
+                testPlanId={testPlanId}
+                initialMode="ai"
+                onRefresh={() => {
+                  // Cerrar el diálogo después de importar
+                  setIsAIDialogOpen(false);
+                }}
+              />
+            </div>
+            
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setIsAIDialogOpen(false)}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

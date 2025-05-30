@@ -18,4 +18,12 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
 Select.displayName = "Select";
 
-export { Select };
+// Componentes adicionales para compatibilidad con la API de SelectContent, etc.
+const SelectContent = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const SelectItem = ({ value, children, ...props }: { value: string; children: React.ReactNode; [key: string]: any }) => (
+  <option value={value} {...props}>{children}</option>
+);
+const SelectTrigger = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const SelectValue = ({ placeholder }: { placeholder: string }) => <>{placeholder}</>;
+
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue };

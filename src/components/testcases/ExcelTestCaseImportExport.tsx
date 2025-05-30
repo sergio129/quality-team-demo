@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select-radix';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
@@ -26,11 +26,18 @@ interface ExcelTestCaseImportExportProps {
   testCases?: TestCase[];
   testPlanId?: string;
   onRefresh?: () => void;
+  initialMode?: 'import' | 'export' | 'ai'; // Nueva prop para iniciar en un modo específico
 }
 
-const ExcelTestCaseImportExport = ({ projectId, testCases = [], testPlanId, onRefresh }: ExcelTestCaseImportExportProps): React.JSX.Element => {  
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+const ExcelTestCaseImportExport = ({ 
+  projectId, 
+  testCases = [], 
+  testPlanId, 
+  onRefresh,
+  initialMode 
+}: ExcelTestCaseImportExportProps): React.JSX.Element => {  
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(initialMode === 'import');
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(initialMode === 'export');
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -45,7 +52,15 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [], testPlanId, onRe
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
   const [cycle, setCycle] = useState<number>(1);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [useAI, setUseAI] = useState<boolean>(false);
+  const [useAI, setUseAI] = useState<boolean>(initialMode === 'ai');
+  
+  // Efecto para abrir automáticamente el diálogo de importación cuando se inicia en modo AI
+  useEffect(() => {
+    if (initialMode === 'ai') {
+      setUseAI(true);
+      setIsImportDialogOpen(true);
+    }
+  }, [initialMode]);
   
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -698,35 +713,38 @@ const ExcelTestCaseImportExport = ({ projectId, testCases = [], testPlanId, onRe
   const renderContent = (): JSX.Element => {
     return (
       <div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsImportDialogOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <FileUp size={16} /> Importar desde Excel
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => setIsExportDialogOpen(true)}
-            className="flex items-center gap-2"
-            disabled={testCases.length === 0}
-          >
-            <FileDown size={16} /> Exportar a Excel
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => {
-              setUseAI(true);
-              setIsImportDialogOpen(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <Sparkles size={16} /> Generar casos con IA
-          </Button>
-        </div>
+        {/* Solo mostrar los botones si no se especificó un modo inicial */}
+        {!initialMode && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <FileUp size={16} /> Importar desde Excel
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => setIsExportDialogOpen(true)}
+              className="flex items-center gap-2"
+              disabled={testCases.length === 0}
+            >
+              <FileDown size={16} /> Exportar a Excel
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUseAI(true);
+                setIsImportDialogOpen(true);
+              }}
+              className="flex items-center gap-2"
+            >
+              <Sparkles size={16} /> Generar casos con IA
+            </Button>
+          </div>
+        )}
 
         {isImportDialogOpen && (
           <Dialog 
