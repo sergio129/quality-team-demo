@@ -57,7 +57,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   // Efecto para limpiar el filtro de historia de usuario cuando cambia el plan de prueba
   useEffect(() => {
     // Reiniciar el filtro de historia de usuario al cambiar de plan
-    setFilters(prev => ({ ...prev, userStory: '' }));
+    setFilters(prev => ({ ...prev, userStory: 'all_stories' }));
   }, [filters.testPlanId]);
     // Filtrar casos de prueba primero por el plan seleccionado
   const testCasesBySelectedPlan = useMemo(() => {
@@ -104,12 +104,11 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   useEffect(() => {
     if (testCases.length > 0 && filteredTestCases.length === 0) {
       // Si hay casos pero ninguno se muestra, resetear los filtros
-      console.log('Reiniciando filtros porque hay casos pero ninguno se está mostrando');
-      setFilters({
+      console.log('Reiniciando filtros porque hay casos pero ninguno se está mostrando');      setFilters({
         search: '',
         status: '',
         testType: '',
-        userStory: '',
+        userStory: 'all_stories', // Usar valor no vacío
         testPlanId: ''
       });
     }
