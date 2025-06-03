@@ -1,6 +1,6 @@
 'use client';
 
-import { QAAnalyst } from '@/models/QAAnalyst';
+import { QAAnalyst, QARole } from '@/models/QAAnalyst';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -248,11 +248,11 @@ export function DataTable() {
                       </div>
                     </TableCell>
                     <TableCell>{analyst.email}</TableCell>
-                    <TableCell>{getCellNames(analyst.cellIds)}</TableCell>
-                    <TableCell>
+                    <TableCell>{getCellNames(analyst.cellIds)}</TableCell>                    <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        analyst.role === 'Senior' ? 'bg-purple-100 text-purple-800' :
-                        analyst.role === 'Semi Senior' ? 'bg-blue-100 text-blue-800' :
+                        analyst.role === 'QA Leader' ? 'bg-indigo-100 text-indigo-800' :
+                        analyst.role === 'QA Senior' ? 'bg-purple-100 text-purple-800' :
+                        analyst.role === 'QA Analyst' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {analyst.role}

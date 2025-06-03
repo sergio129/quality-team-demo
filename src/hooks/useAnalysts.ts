@@ -1,6 +1,6 @@
 import useSWR, { mutate } from 'swr';
 import { fetcher } from '@/lib/fetcher';
-import { QAAnalyst, Skill, Certification } from '@/models/QAAnalyst';
+import { QAAnalyst, Skill, Certification, QARole } from '@/models/QAAnalyst';
 import { toast } from 'sonner';
 
 // API endpoints
@@ -19,7 +19,7 @@ export type AnalystFormData = {
   name: string;
   email: string;
   cellIds: string[];
-  role: string;
+  role: QARole;
   color?: string;
   skills?: Skill[];
   certifications?: Certification[];

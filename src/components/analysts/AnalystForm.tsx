@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from "react";
-import { QAAnalyst, Skill, Certification } from "@/models/QAAnalyst";
+import { QAAnalyst, Skill, Certification, QARole } from "@/models/QAAnalyst";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +15,13 @@ import { z } from 'zod';
 import { createAnalyst, updateAnalyst, CellInfo } from "@/hooks/useAnalysts";
 
 // Esquema de validación con zod
-const analystSchema = z.object({
-  name: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres' }),
+const analystSchema = z.object({  name: z.string().min(3, { message: 'El nombre debe tener al menos 3 caracteres' }),
   email: z.string().email({ message: 'Ingrese un correo electrónico válido' }),
   cellIds: z.array(z.string()).min(1, { message: 'Debe seleccionar al menos una célula' }),
-  role: z.string().min(1, { message: 'Debe seleccionar un rol' }),
+  role: z.enum(['QA Analyst', 'QA Senior', 'QA Leader'], { 
+    required_error: 'Debe seleccionar un rol',
+    invalid_type_error: 'Rol inválido'
+  }),
   color: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, { message: 'Color inválido, debe ser formato hexadecimal' }).optional(),
   skills: z.array(
     z.object({
@@ -158,16 +160,15 @@ export function AnalystForm({ analyst, onSuccess, cells: initialCells }: Analyst
             </div>      
 
             <div className="space-y-1">
-              <Label htmlFor="role" className="text-xs">Rol</Label>
-              <select
+              <Label htmlFor="role" className="text-xs">Rol</Label>              <select
                 id="role"
                 {...register('role')}
                 className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Seleccionar rol</option>
-                <option value="Senior">Senior</option>
-                <option value="Semi Senior">Semi Senior</option>
-                <option value="Junior">Junior</option>
+                <option value="QA Analyst">QA Analyst</option>
+                <option value="QA Senior">QA Senior</option>
+                <option value="QA Leader">QA Leader</option>
               </select>
               {errors.role && (
                 <p className="text-xs text-red-500 mt-1">{errors.role.message}</p>
