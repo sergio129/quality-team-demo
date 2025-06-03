@@ -197,9 +197,8 @@ export default function KanbanView({
         return '';
     }
   };
-
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext onDragEnd={handleDragEnd} isCombineEnabled={false}>
       <div className="flex flex-col space-y-4">
         {/* Mensaje de período seleccionado */}
         {startDate && (
