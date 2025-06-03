@@ -9,6 +9,27 @@ Sistema de gestión de calidad para equipos de pruebas de software.
 - Cálculo de métricas de calidad
 - Exportación a Excel y PDF
 - Gestión de equipos y analistas
+- Generación automática de casos de prueba con IA
+
+## Configuración de variables de entorno
+
+### Variables de API para IA
+
+Para la generación automática de casos de prueba con IA, necesitas configurar una API key:
+
+1. Crea un archivo `.env.local` en la raíz del proyecto (este archivo está en .gitignore)
+2. Agrega tu API key de OpenAI, Groq o Anthropic:
+   ```
+   # OpenAI API key (por defecto)
+   NEXT_PUBLIC_OPENAI_API_KEY=sk-tu-clave-api-aqui
+   
+   # O alternativamente, Groq
+   # NEXT_PUBLIC_GROQ_API_KEY=gsk_tu-clave-api-aqui
+   
+   # O Claude (Anthropic)
+   # NEXT_PUBLIC_ANTHROPIC_API_KEY=sk-ant-tu-clave-api-aqui
+   ```
+3. **IMPORTANTE**: Nunca agregues API keys directamente en el código fuente
 
 ## Migración a PostgreSQL
 
