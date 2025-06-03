@@ -160,15 +160,14 @@ export class IncidentPrismaService {
             
             // Crear incidente en la base de datos
             const etiquetas = incident.etiquetas || [];
-            
-            const createdIncident = await prisma.incident.create({
+              const createdIncident = await prisma.incident.create({
                 data: {
                     id: newId,
                     estado: incident.estado || 'Abierto',
                     prioridad: incident.prioridad || 'Media',
                     descripcion: incident.descripcion || '',
                     fechaCreacion: incident.fechaCreacion || new Date(),
-                    fechaReporte: incident.fechaReporte || new Date(),
+                    fechaReporte: incident.fechaReporte ? new Date(incident.fechaReporte) : new Date(),
                     fechaSolucion: incident.fechaSolucion,
                     diasAbierto: calculateDaysOpen(
                         incident.fechaCreacion || new Date(),
@@ -276,8 +275,7 @@ export class IncidentPrismaService {
             if (incident.celula) {
                 cellId = await this.findCellIdByName(incident.celula);
             }
-            
-            // Actualizar incidente
+              // Actualizar incidente
             const updatedIncident = await prisma.incident.update({
                 where: { id },
                 data: {
@@ -285,7 +283,7 @@ export class IncidentPrismaService {
                     prioridad: incident.prioridad,
                     descripcion: incident.descripcion,
                     fechaCreacion: fechaCreacion,
-                    fechaReporte: incident.fechaReporte,
+                    fechaReporte: incident.fechaReporte ? new Date(incident.fechaReporte) : undefined,
                     fechaSolucion: fechaSolucion,
                     diasAbierto: diasAbierto,
                     esErroneo: incident.esErroneo,

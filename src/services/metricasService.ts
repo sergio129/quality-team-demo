@@ -160,7 +160,6 @@ export class MetricasService {
       return [];
     }
   }
-
   /**
    * Obtener métricas consolidadas por proyecto
    */
@@ -168,27 +167,37 @@ export class MetricasService {
     try {
       const proyectos = await projectService.getAllProjects();
       const incidentes = await incidentService.getAll();
+      const todosCasosPrueba = await testCaseService.getAllTestCases();
       const metricas: MetricasProyecto[] = [];
+
+      // Agrupar casos por proyecto
+      const casosPorProyecto = new Map<string, any[]>();
+      todosCasosPrueba.forEach(caso => {
+        const proyectoId = caso.projectId;
+        if (!casosPorProyecto.has(proyectoId)) {
+          casosPorProyecto.set(proyectoId, []);
+        }
+        casosPorProyecto.get(proyectoId)!.push(caso);
+      });
 
       for (const proyecto of proyectos) {
         try {
           // Contar incidentes del proyecto
           const incidentesProyecto = incidentes.filter(inc => 
-            inc.idJira?.includes(proyecto.idJira) || 
+            inc.idJira?.includes(proyecto.idJira || '') || 
             inc.cliente === proyecto.proyecto
           );
           
           // Obtener casos de prueba del proyecto
-          const casosPrueba = await testCaseService.getTestCasesByProject(proyecto.id);
-          const stats = await testCaseService.getTestCaseStatsByProject(proyecto.id);
+          const casosPrueba = casosPorProyecto.get(proyecto.id || '') || [];
           
           // Calcular avance de calidad (% de casos exitosos)
           const totalEjecutados = casosPrueba.filter(c => c.status !== 'No ejecutado').length;
-          const exitosos = stats.statusStats?.['Exitoso'] || 0;
+          const exitosos = casosPrueba.filter(c => c.status === 'Exitoso').length;
           const avanceCalidad = totalEjecutados > 0 ? Math.round((exitosos / totalEjecutados) * 100) : 0;
 
           metricas.push({
-            proyecto: proyecto.proyecto || proyecto.idJira,
+            proyecto: proyecto.proyecto || proyecto.idJira || 'Sin nombre',
             estado: proyecto.estado || 'En progreso',
             incidentes: incidentesProyecto.length,
             casosPrueba: casosPrueba.length,
@@ -204,7 +213,7 @@ export class MetricasService {
       console.error('Error obteniendo métricas consolidadas:', error);
       return [];
     }
-  }  /**
+  }/**
    * Obtener resumen de métricas principales
    */
   async getResumenMetricas() {
