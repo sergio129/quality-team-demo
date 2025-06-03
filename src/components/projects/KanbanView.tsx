@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Project } from '@/models/Project';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { Calendar, Clock, CheckCircle, AlertCircle, XCircle, Users, User, FileText } from 'lucide-react';
 import { changeProjectStatus } from '@/hooks/useProjects';
@@ -196,9 +196,8 @@ export default function KanbanView({
       default:
         return '';
     }
-  };
-  return (
-    <DragDropContext onDragEnd={handleDragEnd} isCombineEnabled={false}>
+  };  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex flex-col space-y-4">
         {/* Mensaje de período seleccionado */}
         {startDate && (
