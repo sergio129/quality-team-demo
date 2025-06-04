@@ -19,10 +19,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   
   // Usar el hook para obtener todos los proyectos
   const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useProjects();
-  
-  // Fecha simulada para desarrollo (o fecha actual para producción)
-  // NOTA: En ambiente de producción, usar: const today = new Date();
-  const today = new Date("2025-05-16"); // Fecha simulada para desarrollo
+    // Usar la fecha actual del sistema
+  const today = new Date(); // Fecha actual
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   // Filtrar todos los proyectos asignados al analista (independiente de la fecha)
@@ -44,23 +42,26 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       return isAssignedToAnalyst;
     });
   }, [analystId, allProjects, analyst]);
-  
-  // Filtrar solo los proyectos del mes actual para cálculos de carga y visualización
+    // Filtrar proyectos actuales y próximos para cálculos de carga y visualización
   const projects = useMemo(() => {
     return allAnalystProjects.filter(project => {
-      // Verificar si el proyecto está en el mes actual
+      // Incluir todos los proyectos activos independientemente de la fecha de entrega
+      if (project.estado === 'En Progreso' || project.estado === 'Por Iniciar') {
+        return true;
+      }
+      
+      // Verificar si el proyecto tiene fecha de entrega
       if (project.fechaEntrega) {
         const entregaDate = new Date(project.fechaEntrega);
+        const threeMonthsFromNow = new Date();
+        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3); // Mostrar proyectos hasta 3 meses en el futuro
         
-        // Proyecto pertenece al mes actual si su fecha de entrega está en el mes actual
-        return (
-          entregaDate.getMonth() === currentMonth && 
-          entregaDate.getFullYear() === currentYear
-        );
+        // Incluir proyectos del mes actual o proyectos futuros hasta 3 meses adelante
+        return entregaDate <= threeMonthsFromNow;
       }
       return false;
     });
-  }, [allAnalystProjects, currentMonth, currentYear]);
+  }, [allAnalystProjects]);
   
   // Obtener datos del analista
   useEffect(() => {
@@ -109,20 +110,45 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           // Estado desconocido, usar el estado original
           updatedProject.estadoCalculado = p.estado;
         }
-      }
-      // Si no tiene estado definido, calcularlo automáticamente
+      }      // Si no tiene estado definido, calcularlo automáticamente
       else {
         // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
         if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
           updatedProject.estadoCalculado = 'Certificado';
         }
-        // Si la fecha de entrega es en el futuro, está "Por Iniciar"
-        else if (new Date(p.fechaEntrega) > today) {
-          updatedProject.estadoCalculado = 'Por Iniciar';
+        // Si tiene fecha de inicio definida
+        else if (p.fechaInicio) {
+          const fechaInicio = new Date(p.fechaInicio);
+          // Si la fecha de inicio es futura, está "Por Iniciar"
+          if (fechaInicio > today) {
+            updatedProject.estadoCalculado = 'Por Iniciar';
+          }
+          // Si ya pasó la fecha de inicio pero no la de entrega, está "En Progreso"
+          else if (p.fechaEntrega && new Date(p.fechaEntrega) > today) {
+            updatedProject.estadoCalculado = 'En Progreso';
+          }
+          // Si ya pasó la fecha de entrega y no tiene certificación, está "En Progreso" (con retraso)
+          else {
+            updatedProject.estadoCalculado = 'En Progreso';
+          }
         }
-        // De lo contrario, está "En Progreso"
+        // Si no tiene fecha de inicio pero tiene fecha de entrega
+        else if (p.fechaEntrega) {
+          const fechaEntrega = new Date(p.fechaEntrega);
+          // Si la fecha de entrega es en más de 7 días, podemos asumir "Por Iniciar"
+          const sevenDaysFromNow = new Date();
+          sevenDaysFromNow.setDate(today.getDate() + 7);
+          
+          if (fechaEntrega > sevenDaysFromNow) {
+            updatedProject.estadoCalculado = 'Por Iniciar';
+          } else {
+            // Si la entrega es próxima o ya pasó, está "En Progreso"
+            updatedProject.estadoCalculado = 'En Progreso';
+          }
+        }
+        // Sin fechas definidas, asumimos "Por Iniciar" como valor seguro
         else {
-          updatedProject.estadoCalculado = 'En Progreso';
+          updatedProject.estadoCalculado = 'Por Iniciar';
         }
       }
       
