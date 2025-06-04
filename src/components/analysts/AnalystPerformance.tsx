@@ -50,10 +50,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
   const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
-  const [stats, setStats] = useState<AnalystStats | null>(null);
   const [timeFrame, setTimeFrame] = useState<'week' | 'month' | 'year'>('month');
-  const [loading, setLoading] = useState<boolean>(true);
 
+  // Obtenemos los datos del analista
   useEffect(() => {
     const fetchAnalyst = async () => {
       try {
@@ -68,26 +67,10 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
     };
 
     fetchAnalyst();
-  }, [analystId]);  const { stats: analystStats, isLoading: statsLoading } = useAnalystStats(analystId, timeFrame);
+  }, [analystId]);
   
-  useEffect(() => {
-    if (analystStats) {
-      setStats(analystStats);
-      setLoading(false);
-    } else {
-      setLoading(statsLoading);
-    }
-  }, [analystStats, statsLoading]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-    };
-
-    if (analystId && analyst) {
-      fetchStats();
-    }
-  }, [analystId, timeFrame, analyst]);
+  // Obtenemos las estadísticas directamente del hook
+  const { stats, isLoading: loading } = useAnalystStats(analystId, timeFrame);
   if (!analyst) {
     return <div>Cargando información del analista...</div>;
   }

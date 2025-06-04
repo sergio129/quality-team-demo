@@ -63,7 +63,7 @@ export function useAnalystStats(analystId: string, timeFrame: 'week' | 'month' |
  */
 import { Incident } from '@/models/Incident';
 import { addDays, subDays, subMonths, subYears, format } from 'date-fns';
-import { es } from 'date-fns/locale';
+
 
 /**
  * Función para generar datos de actividad desde los incidentes reales
@@ -71,14 +71,11 @@ import { es } from 'date-fns/locale';
 function generateActivityDataFromIncidents(incidents: Incident[], timeFrame: string): { date: string; count: number }[] {
   const today = new Date();
   let days = 7;
-  let interval = 'day';
   
   if (timeFrame === 'month') {
     days = 30;
-    interval = 'day';
   } else if (timeFrame === 'year') {
     days = 12;
-    interval = 'month';
   }
   
   // Crear un mapa para contar incidentes por fecha
@@ -100,7 +97,7 @@ function generateActivityDataFromIncidents(incidents: Incident[], timeFrame: str
     incidents.forEach(incident => {
       const date = new Date(incident.fechaReporte);
       const monthName = months[date.getMonth()];
-      activityMap.set(monthName, (activityMap.get(monthName) || 0) + 1);
+      activityMap.set(monthName, (activityMap.get(monthName) ?? 0) + 1);
     });
   } else {
     // Para semana/mes, inicializar con los días en formato DD/MM
@@ -118,7 +115,7 @@ function generateActivityDataFromIncidents(incidents: Incident[], timeFrame: str
       // Solo contar si está dentro del rango de fechas que nos interesa
       if (date >= startDate && date <= today) {
         const formattedDate = format(date, 'dd/MM');
-        activityMap.set(formattedDate, (activityMap.get(formattedDate) || 0) + 1);
+        activityMap.set(formattedDate, (activityMap.get(formattedDate) ?? 0) + 1);
       }
     });
   }
