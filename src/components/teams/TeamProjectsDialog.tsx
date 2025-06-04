@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Team } from '@/models/Team';
 import { useProjects } from '@/hooks/useProjects';
@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { getJiraUrl } from '@/utils/jiraUtils';
 
 interface TeamProjectsDialogProps {
-  team: Team;
-  isOpen: boolean;
-  onClose: () => void;
+  readonly team: Team;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
 }
 
 export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialogProps) {
@@ -119,11 +119,14 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
     
     return { text: displayEstado, className: statusClass };
   };
-
   // Formatear fecha para visualización
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return '-';
-    return new Date(date).toLocaleDateString('es-ES');
+    return new Date(date).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -170,10 +173,9 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
                     const status = getStatusInfo(project);
                     
                     return (
-                      <TableRow key={`${project.id || project.idJira}-${index}`}>
-                        <TableCell>
+                      <TableRow key={`${project.id ?? project.idJira}-${index}`}>                        <TableCell>
                           <a 
-                            href={getJiraUrl(project.idJira)} 
+                            href={getJiraUrl(project.idJira) ?? '#'} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
@@ -209,7 +211,7 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(project.fechaEntrega)}</TableCell>
-                        <TableCell>{project.analista || project.analistaProducto || '-'}</TableCell>
+                        <TableCell>{project.analistaProducto ?? '-'}</TableCell>
                       </TableRow>
                     );
                   })}
