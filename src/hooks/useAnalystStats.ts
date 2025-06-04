@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
-import { QAAnalyst, QARole } from '@/models/QAAnalyst';
+import { QAAnalyst } from '@/models/QAAnalyst';
 
 // Tipos para las estadísticas
 interface AnalystStats {
@@ -41,7 +41,7 @@ export function useAnalystStats(analystId: string, timeFrame: 'week' | 'month' |
   );
   
   const isLoading = incidentsLoading || analystLoading;
-  const error = incidentsError || analystError;
+  const error = incidentsError ?? analystError;
   
   // Calculamos las estadísticas solo si tenemos todos los datos necesarios
   let data: AnalystStats | undefined;
@@ -61,8 +61,8 @@ export function useAnalystStats(analystId: string, timeFrame: 'week' | 'month' |
 /**
  * Función para calcular estadísticas reales basadas en incidentes de la base de datos
  */
-import { Incident, BugType } from '@/models/Incident';
-import { addDays, subDays, subMonths, subYears, format, isWithinInterval } from 'date-fns';
+import { Incident } from '@/models/Incident';
+import { addDays, subDays, subMonths, subYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 /**
