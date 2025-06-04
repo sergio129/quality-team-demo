@@ -133,8 +133,7 @@ export function ChangeProjectStatusDialog({ project, onClose, isOpen }: ChangePr
                     </Button>
                   ))}
                 </div>
-                
-                {status === 'Certificado' && (
+                  {availableStatuses.includes('Certificado') && (
                   <p className="text-xs text-gray-600 mt-1">
                     Al cambiar a Certificado, se registrará la fecha de certificación actual.
                   </p>

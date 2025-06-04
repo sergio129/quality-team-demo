@@ -14,9 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { EditTeamDialog } from './EditTeamDialog';
 import { TeamMembersDialog } from './TeamMembersDialog';
+import { TeamProjectsDialog } from './TeamProjectsDialog';
+import { TeamFilter } from './TeamFilter';
+import { ExportTeams } from './ExportTeams';
 import { toast } from 'sonner';
 import { useTeams, deleteTeam } from '@/hooks/useTeams';
 import { useAnalysts } from '@/hooks/useAnalysts';
+import { useProjects } from '@/hooks/useProjects';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Team, 'name' | 'description'>;
@@ -26,6 +30,8 @@ export function DataTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false);
+  const [isProjectsDialogOpen, setIsProjectsDialogOpen] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState('all');
   
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,6 +44,7 @@ export function DataTable() {
   // Usar SWR para obtener datos
   const { teams, isLoading, isError, error } = useTeams();
   const { analysts } = useAnalysts();
+  const { projects } = useProjects(); // Obtener proyectos para calcular carga de trabajo
 
   useEffect(() => {
     // Resetear a la primera página cuando cambia el término de búsqueda
@@ -69,8 +76,7 @@ export function DataTable() {
       }
     });
   }, []);
-  
-  // Filtramos y ordenamos equipos con useMemo para optimizar
+    // Filtramos y ordenamos equipos con useMemo para optimizar
   const filteredAndSortedTeams = useMemo(() => {
     if (!teams) return [];
     
@@ -87,12 +93,46 @@ export function DataTable() {
       return 0;
     });
     
-    // Luego filtramos
-    return sortedData.filter(team =>
+    // Aplicamos filtros por estado de proyectos
+    let filteredByStatus = sortedData;
+    if (currentFilter !== 'all') {
+      filteredByStatus = sortedData.filter(team => {
+        const teamProjects = projects.filter(p => p.equipo === team.name);
+        
+        switch (currentFilter) {
+          case 'active':
+            return teamProjects.some(p => 
+              p.estadoCalculado === 'En Progreso' || 
+              p.estado?.toLowerCase().includes('progreso')
+            );
+          case 'delayed':
+            return teamProjects.some(p => 
+              p.estado?.toLowerCase() === 'retrasado' ||
+              (p.diasRetraso && p.diasRetraso > 0)
+            );
+          case 'empty':
+            return teamProjects.length === 0;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Luego filtramos por búsqueda
+    return filteredByStatus.filter(team =>
       team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (team.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
-  }, [teams, sortField, sortDirection, searchTerm]);
+  }, [teams, sortField, sortDirection, searchTerm, currentFilter, projects]);
+
+  // Calcula la carga de trabajo para cada equipo
+  const getTeamWorkload = useCallback((teamName: string) => {
+    // Contar proyectos activos asignados al equipo
+    return projects.filter(project => 
+      project.equipo === teamName && 
+      (project.estadoCalculado === 'En Progreso' || project.estado === 'en progreso')
+    ).length;
+  }, [projects]);
 
   // Lógica de paginación
   const paginationInfo = useMemo(() => {
@@ -129,22 +169,48 @@ export function DataTable() {
     setSelectedTeam(null);
   }, []);
 
+  const handleOpenProjectsDialog = useCallback((team: Team) => {
+    setSelectedTeam(team);
+    setIsProjectsDialogOpen(true);
+  }, []);
+
+  const handleCloseProjectsDialog = useCallback(() => {
+    setIsProjectsDialogOpen(false);
+    setSelectedTeam(null);
+  }, []);
+  const handleFilterChange = useCallback((filter: string) => {
+    setCurrentFilter(filter);
+    setCurrentPage(1); // Resetear a la primera página cuando cambia el filtro
+  }, []);
+
   return (
     <div>
       {selectedTeam && (
-        <TeamMembersDialog
-          team={selectedTeam}
-          isOpen={isMembersDialogOpen}
-          onClose={handleCloseMembersDialog}
-        />
-      )}
-
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Buscar equipos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+        <>
+          <TeamMembersDialog
+            team={selectedTeam}
+            isOpen={isMembersDialogOpen}
+            onClose={handleCloseMembersDialog}
+          />
+          <TeamProjectsDialog
+            team={selectedTeam}
+            isOpen={isProjectsDialogOpen}
+            onClose={handleCloseProjectsDialog}
+          />
+        </>
+      )}      <div className="flex flex-col md:flex-row justify-between gap-4 py-4">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Buscar equipos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
+          />
+          <ExportTeams teams={filteredAndSortedTeams} />
+        </div>
+        <TeamFilter 
+          onFilterChange={handleFilterChange}
+          currentFilter={currentFilter}
         />
       </div>
       
@@ -200,6 +266,7 @@ export function DataTable() {
                     </div>
                   </TableHead>
                   <TableHead>Miembros</TableHead>
+                  <TableHead>Carga de trabajo</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -235,7 +302,35 @@ export function DataTable() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">                      <Button
+                    <TableCell>
+                      <div className="flex items-center">
+                        <div className="mr-2 w-16 bg-gray-200 rounded-full h-2.5">
+                          <div 
+                            className={`h-2.5 rounded-full ${
+                              getTeamWorkload(team.name) > 5 
+                                ? 'bg-red-500' 
+                                : getTeamWorkload(team.name) > 3 
+                                  ? 'bg-yellow-500' 
+                                  : 'bg-green-500'
+                            }`} 
+                            style={{ width: `${Math.min(100, getTeamWorkload(team.name) * 20)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm">
+                          {getTeamWorkload(team.name)} proyecto{getTeamWorkload(team.name) !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mr-2"
+                        onClick={() => handleOpenProjectsDialog(team)}
+                      >
+                        Ver Proyectos
+                      </Button>
+                      <Button
                         variant="outline"
                         size="sm"
                         className="mr-2"

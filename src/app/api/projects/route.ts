@@ -277,12 +277,19 @@ export async function PUT(req: NextRequest) {
             if (!safeProject.analistas || !Array.isArray(safeProject.analistas)) {
                 safeProject.analistas = [];
             }
-            
-            // Mantener consistencia entre estado y estadoCalculado
+              // Mantener consistencia entre estado y estadoCalculado
             if (safeProject.estado) {
                 safeProject.estadoCalculado = safeProject.estado;
             } else if (safeProject.estadoCalculado) {
                 safeProject.estado = safeProject.estadoCalculado;
+            }
+            
+            // Detectar certificación: Si se está estableciendo el estado a "Certificado" y no hay fecha de certificación,
+            // establecer la fecha de certificación a la fecha actual
+            if ((safeProject.estado === 'Certificado' || safeProject.estadoCalculado === 'Certificado') && 
+                !safeProject.fechaCertificacion) {
+                console.log('[API] Estableciendo fecha de certificación automáticamente');
+                safeProject.fechaCertificacion = new Date();
             }
             
             // Intentar actualizar el proyecto
