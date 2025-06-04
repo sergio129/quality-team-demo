@@ -5,7 +5,7 @@ import { QAAnalyst, QARole } from '@/models/QAAnalyst';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
-import { useAnalystStats, generateDemoStats } from '@/hooks/useAnalystStats';
+import { useAnalystStats } from '@/hooks/useAnalystStats';
 import {
   ResponsiveContainer,
   BarChart,

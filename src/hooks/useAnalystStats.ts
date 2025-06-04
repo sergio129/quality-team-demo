@@ -290,56 +290,5 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
   return baseStats;
 }
 
-/**
- * Generar datos de actividad para el gráfico de actividad reciente
- */
-function generateActivityData(timeFrame: string): { date: string; count: number }[] {
-  const result = [];
-  let days = 7;
-  
-  if (timeFrame === 'month') days = 30;
-  if (timeFrame === 'year') days = 12; // Usar meses en lugar de días para el año
-  
-  // Obtener la fecha actual
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  // Generar etiquetas apropiadas según el período de tiempo
-  for (let i = 0; i < days; i++) {
-    let label;
-    let date;
-    
-    if (timeFrame === 'year') {
-      // Para año, usar nombres de mes empezando desde 12 meses atrás
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      // Calcular el mes correspondiente (partiendo de 12 meses atrás hasta el mes actual)
-      const monthIndex = (currentMonth - 11 + i + 12) % 12;
-      label = months[monthIndex];
-      date = new Date(monthIndex <= currentMonth ? currentYear : currentYear - 1, monthIndex, 1);
-    } else if (timeFrame === 'month') {
-      // Para mes, mostrar últimos 30 días
-      date = new Date(today);
-      date.setDate(today.getDate() - (29 - i)); // Mostrar desde hace 29 días hasta hoy
-      label = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-    } else {
-      // Para semana, mostrar últimos 7 días
-      date = new Date(today);
-      date.setDate(today.getDate() - (6 - i)); // Mostrar desde hace 6 días hasta hoy
-      label = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-    }
-    
-    // Generar un número consistente pero que parezca aleatorio basado en la fecha
-    // Esto evita que los datos cambien en cada renderizado pero mantiene la apariencia aleatoria
-    const hash = date.getDate() + date.getMonth() * 31;
-    const pseudoRandom = (hash * 9301 + 49297) % 233280;
-    const normalizedValue = Math.floor((pseudoRandom / 233280) * 10) + 1;
-    
-    result.push({
-      date: label,
-      count: normalizedValue
-    });
-  }
-  
-  return result;
-}
+// Esta función ha sido reemplazada por generateActivityDataFromIncidents
+// que utiliza datos reales de incidentes
