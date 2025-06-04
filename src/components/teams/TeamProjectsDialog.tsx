@@ -38,25 +38,86 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
       project.celula?.toLowerCase().includes(searchLower)
     );
   }, [teamProjects, searchTerm]);
-
+  
   // Obtener estado en formato legible y su clase CSS
   const getStatusInfo = (project: any) => {
-    const estado = project.estado || project.estadoCalculado || 'Por Iniciar';
-    const estadoLower = estado.toLowerCase();
+    // Prioridad de estados: 1. estado (valor manual), 2. estadoCalculado (automático), 3. fallback
+    // Si ambos están presentes, preferimos mostrar el estado manual, excepto en casos especiales
+    const estadoManual = project.estado;
+    const estadoCalculado = project.estadoCalculado;
     
-    let statusClass = 'bg-gray-100 text-gray-800'; // Default
-
-    if (estadoLower.includes('progreso') || estadoLower === 'en proceso') {
-      statusClass = 'bg-blue-100 text-blue-800';
-    } else if (estadoLower.includes('certificado') || estadoLower === 'completado') {
-      statusClass = 'bg-green-100 text-green-800';
-    } else if (estadoLower.includes('iniciar') || estadoLower === 'pendiente') {
-      statusClass = 'bg-yellow-100 text-yellow-800';
-    } else if (estadoLower === 'retrasado') {
-      statusClass = 'bg-red-100 text-red-800';
+    // Lógica de selección de estado a mostrar basada en prioridades
+    let estado = 'Por Iniciar'; // Estado por defecto si no hay nada más
+    
+    if (estadoManual && estadoCalculado === 'Certificado') {
+      // Caso especial: Si está certificado, siempre mostramos "Certificado"
+      estado = 'Certificado';
+    } else if (estadoManual) {
+      // Si hay estado manual, lo usamos
+      estado = estadoManual;
+    } else if (estadoCalculado) {
+      // Si no hay manual pero sí calculado, usamos el calculado
+      estado = estadoCalculado;
     }
     
-    return { text: estado, className: statusClass };
+    // Convertir a minúsculas para comparaciones no sensibles a mayúsculas
+    const estadoLower = estado.toLowerCase();
+    
+    let statusClass = 'bg-gray-100 text-gray-800'; // Estilo por defecto - gris
+
+    // Clasificación mejorada de estados para un mapeo de colores consistente
+    if (estadoLower.includes('certificado') || estadoLower === 'completado' || 
+        estadoLower === 'terminado' || estadoLower === 'finalizado') {
+      // Verde para estados completados/certificados
+      statusClass = 'bg-green-100 text-green-800'; 
+    } else if (estadoLower === 'retrasado') {
+      // Rojo para estados retrasados
+      statusClass = 'bg-red-100 text-red-800'; 
+    } else if (estadoLower.includes('progreso') || estadoLower === 'en proceso' || 
+               estadoLower === 'en progreso' || estadoLower === 'pruebas' || 
+               estadoLower === 'actualizacion') {
+      // Azul para estados en progreso
+      statusClass = 'bg-blue-100 text-blue-800'; 
+    } else if (estadoLower.includes('iniciar') || estadoLower === 'por iniciar' || 
+               estadoLower === 'pendiente') {
+      // Amarillo para estados pendientes
+      statusClass = 'bg-yellow-100 text-yellow-800';
+    }
+    
+    // Normalizar la visualización del estado con primera letra mayúscula
+    // y arreglar casos comunes para consistencia visual
+    let displayEstado = '';
+    
+    switch (estadoLower) {
+      case 'en progreso':
+      case 'en proceso':
+        displayEstado = 'En Progreso';
+        break;
+      case 'por iniciar':
+      case 'pendiente':
+        displayEstado = 'Por Iniciar';
+        break;
+      case 'certificado':
+      case 'completado':
+      case 'terminado':
+      case 'finalizado':
+        displayEstado = 'Certificado';
+        break;
+      case 'retrasado':
+        displayEstado = 'Retrasado';
+        break;
+      case 'pruebas':
+        displayEstado = 'En Pruebas';
+        break;
+      case 'actualizacion':
+        displayEstado = 'Actualización';
+        break;
+      default:
+        // Para cualquier otro estado, simplemente aplicamos mayúscula inicial
+        displayEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+    }
+    
+    return { text: displayEstado, className: statusClass };
   };
 
   // Formatear fecha para visualización
@@ -130,11 +191,22 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{project.celula}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
-                            {status.text}
-                          </span>
+                        <TableCell>{project.celula}</TableCell>                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
+                              {status.text}
+                            </span>
+                            {project.fechaCertificacion && status.text === 'Certificado' && (
+                              <span className="text-xs text-gray-500" title={`Certificado el ${formatDate(project.fechaCertificacion)}`}>
+                                ✓
+                              </span>
+                            )}
+                            {project.diasRetraso > 0 && (
+                              <span className="text-xs text-red-500" title={`${project.diasRetraso} días de retraso`}>
+                                ({project.diasRetraso}d)
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>{formatDate(project.fechaEntrega)}</TableCell>
                         <TableCell>{project.analista || project.analistaProducto || '-'}</TableCell>

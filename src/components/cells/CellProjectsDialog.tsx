@@ -196,9 +196,21 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                           </div>
                         </TableCell>                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
-                              {status.text}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
+                                {status.text}
+                              </span>
+                              {project.fechaCertificacion && status.text === 'Certificado' && (
+                                <span className="text-xs text-gray-500" title={`Certificado el ${formatDate(project.fechaCertificacion)}`}>
+                                  ✓
+                                </span>
+                              )}
+                              {project.diasRetraso > 0 && (
+                                <span className="text-xs text-red-500" title={`${project.diasRetraso} días de retraso`}>
+                                  ({project.diasRetraso}d)
+                                </span>
+                              )}
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="sm"
