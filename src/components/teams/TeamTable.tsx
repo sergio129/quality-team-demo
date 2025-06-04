@@ -124,13 +124,17 @@ export function DataTable() {
       (team.description?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
   }, [teams, sortField, sortDirection, searchTerm, currentFilter, projects]);
-
   // Calcula la carga de trabajo para cada equipo
   const getTeamWorkload = useCallback((teamName: string) => {
-    // Contar proyectos activos asignados al equipo
+    // Contar proyectos activos asignados al equipo (tanto "Por Iniciar" como "En Progreso")
     return projects.filter(project => 
       project.equipo === teamName && 
-      (project.estadoCalculado === 'En Progreso' || project.estado === 'en progreso')
+      (
+        project.estadoCalculado === 'En Progreso' || 
+        project.estadoCalculado === 'Por Iniciar' || 
+        project.estado === 'en progreso' || 
+        project.estado?.toLowerCase().includes('iniciar')
+      )
     ).length;
   }, [projects]);
 
