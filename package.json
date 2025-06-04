@@ -1,9 +1,11 @@
 {
   "name": "quality-team",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
+  "private": true,  "scripts": {
     "dev": "next dev",
+    "dev:verbose": "next dev --verbose",
+    "dev:debug": "NODE_OPTIONS='--inspect' next dev",
+    "dev:legacy": "next dev --experimental-compile",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
