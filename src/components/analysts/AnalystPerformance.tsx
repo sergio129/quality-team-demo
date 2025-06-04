@@ -137,125 +137,146 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
               <p className="text-xl font-bold text-amber-600">{stats.avgResolutionTime.toFixed(1)}</p>
             </div>
             
-            {/* Métricas específicas para QA Leader */}
-            {isQALeader && stats.leadershipMetrics && (
-              <>
-                <div className="bg-indigo-50 p-3 rounded-lg text-center w-32">
-                  <p className="text-xs text-gray-500">Revisiones</p>
-                  <p className="text-xl font-bold text-indigo-600">{stats.leadershipMetrics.reviewsCompleted}</p>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-lg text-center w-32">
-                  <p className="text-xs text-gray-500">Capacitaciones</p>
-                  <p className="text-xl font-bold text-purple-600">{stats.leadershipMetrics.trainingsLed}</p>
-                </div>
-                <div className="bg-pink-50 p-3 rounded-lg text-center w-32">
-                  <p className="text-xs text-gray-500">Propuestas</p>
-                  <p className="text-xl font-bold text-pink-600">{stats.leadershipMetrics.improvementProposals}</p>
-                </div>
-              </>
+            {/* Métricas específicas para QA Leader */}            {isQALeader && stats.leadershipMetrics && stats.leadershipMetrics.processEfficiency > 0 && (
+              <div className="bg-indigo-50 p-3 rounded-lg text-center w-32">
+                <p className="text-xs text-gray-500">Eficiencia de proceso</p>
+                <p className="text-xl font-bold text-indigo-600">{stats.leadershipMetrics.processEfficiency}%</p>
+              </div>
             )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">          {/* Gráfico por prioridad */}
           <Card className="p-4">
             <h3 className="text-sm font-medium mb-2">Incidentes por prioridad</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stats.byPriority}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {stats.byPriority.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="h-48">            {stats.byPriority.some(item => item.value > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.byPriority}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {stats.byPriority.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-400 text-sm">No hay datos de prioridad disponibles</p>
+                </div>
+              )}
             </div>
           </Card>
 
           {/* Gráfico por tipo de bug */}
           <Card className="p-4">
             <h3 className="text-sm font-medium mb-2">Incidentes por tipo</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.byType}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-48">            {stats.byType.some(item => item.value > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.byType}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-400 text-sm">No hay datos de tipos de incidente disponibles</p>
+                </div>
+              )}
             </div>
           </Card>{/* Gráfico actividad reciente */}
           <Card className="p-4">
             <h3 className="text-sm font-medium mb-2">Actividad reciente</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.lastMonthActivity}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>            </div>
+            <div className="h-48">            {stats.lastMonthActivity.some(item => item.count > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.lastMonthActivity}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} domain={[0, 'dataMax + 1']} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#82ca9d" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-400 text-sm">No hay datos de actividad reciente disponibles</p>
+                </div>
+              )}</div>
           </Card>
-          
-          {/* Métricas específicas para QA Leader: Rendimiento del equipo */}
+            {/* Métricas específicas para QA Leader: Rendimiento del equipo */}
           {isQALeader && stats.teamMetrics && (
             <Card className="p-4">
               <h3 className="text-sm font-medium mb-2">Rendimiento del equipo</h3>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={stats.teamMetrics.membersPerformance}
-                    layout="vertical"
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} />
-                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
-                    <Tooltip formatter={(value) => [`${value}%`, 'Rendimiento']} />
-                    <Bar dataKey="performance" fill="#8884d8" barSize={20}>
-                      {stats.teamMetrics.membersPerformance.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={entry.performance > 75 ? '#00C49F' : entry.performance > 50 ? '#FFBB28' : '#FF8042'} 
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex justify-around mt-2 text-center">
-                <div>
-                  <div className="text-sm font-medium text-indigo-600">{stats.teamMetrics.teamSize}</div>
-                  <div className="text-xs text-gray-500">Miembros</div>
+              
+              {stats.teamMetrics.membersPerformance.length > 0 ? (
+                <>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={stats.teamMetrics.membersPerformance}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Rendimiento']} />
+                        <Bar dataKey="performance" fill="#8884d8" barSize={20}>
+                          {stats.teamMetrics.membersPerformance.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={entry.performance > 75 ? '#00C49F' : entry.performance > 50 ? '#FFBB28' : '#FF8042'} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="flex justify-around mt-2 text-center">
+                    <div>
+                      <div className="text-sm font-medium text-indigo-600">{stats.teamMetrics.teamSize}</div>
+                      <div className="text-xs text-gray-500">Miembros</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-green-600">{stats.teamMetrics.teamEfficiency}%</div>
+                      <div className="text-xs text-gray-500">Eficiencia</div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-amber-600">{stats.teamMetrics.teamCoverage}%</div>
+                      <div className="text-xs text-gray-500">Cobertura</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="h-48 flex items-center justify-center">
+                  <p className="text-gray-400 text-sm">No hay datos suficientes de rendimiento del equipo</p>
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-green-600">{stats.teamMetrics.teamEfficiency}%</div>
-                  <div className="text-xs text-gray-500">Eficiencia</div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-amber-600">{stats.teamMetrics.teamCoverage}%</div>
-                  <div className="text-xs text-gray-500">Cobertura</div>
-                </div>
+              )}
+            </Card>
+          )}
+          
+          {isQALeader && !stats.teamMetrics && (
+            <Card className="p-4">
+              <h3 className="text-sm font-medium mb-2">Rendimiento del equipo</h3>
+              <div className="h-48 flex items-center justify-center">
+                <p className="text-gray-400 text-sm">No hay datos de equipo disponibles</p>
               </div>
             </Card>
           )}
           
-          {/* Eficiencia de proceso para QA Leaders */}
-          {isQALeader && stats.leadershipMetrics && (
+          {/* Eficiencia de proceso para QA Leaders */}          {isQALeader && stats.leadershipMetrics && stats.leadershipMetrics.processEfficiency > 0 && (
             <Card className="p-4">
               <h3 className="text-sm font-medium mb-2">Eficiencia de procesos</h3>
               <div className="h-48 flex items-center justify-center">
@@ -303,6 +324,14 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
                     </text>
                   </svg>
                 </div>
+              </div>
+            </Card>
+          )}
+          {isQALeader && (!stats.leadershipMetrics || stats.leadershipMetrics.processEfficiency <= 0) && (
+            <Card className="p-4">
+              <h3 className="text-sm font-medium mb-2">Eficiencia de procesos</h3>
+              <div className="h-48 flex items-center justify-center">
+                <p className="text-gray-400 text-sm">Datos de eficiencia no disponibles</p>
               </div>
             </Card>
           )}

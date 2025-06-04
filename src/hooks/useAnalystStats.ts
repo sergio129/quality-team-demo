@@ -122,6 +122,8 @@ function generateActivityDataFromIncidents(incidents: Incident[], timeFrame: str
       }
     });
   }
+  // Solo usamos los datos reales sin añadir datos inventados
+  // El mapa ya contiene los registros de actividad real
   
   // Convertir el mapa a un array de objetos con el formato requerido
   return Array.from(activityMap.entries()).map(([date, count]) => ({ date, count }));
@@ -139,13 +141,25 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
   } else if (timeFrame === 'year') {
     startDate = subYears(today, 1);
   }
-  
-  // Filtrar incidentes relacionados con este analista y dentro del período seleccionado
-  const analystIncidents = incidents.filter(incident => 
-    incident.asignadoA === analyst.name || incident.informadoPor === analyst.name
-  ).filter(incident =>
+    // Filtrar incidentes relacionados con este analista y dentro del período seleccionado
+  // Usamos una comparación flexible (case-insensitive y parcial) para mayor probabilidad de coincidencia
+  const analystName = analyst.name.toLowerCase();
+  const analystIncidents = incidents.filter(incident => {
+    const assignedTo = incident.asignadoA?.toLowerCase() || '';
+    const reportedBy = incident.informadoPor?.toLowerCase() || '';
+    
+    // Verificar si el nombre del analista coincide parcial o completamente
+    return assignedTo.includes(analystName) || 
+           reportedBy.includes(analystName) ||
+           analystName.includes(assignedTo) ||
+           analystName.includes(reportedBy);
+  }).filter(incident =>
     new Date(incident.fechaReporte) >= startDate && new Date(incident.fechaReporte) <= today
   );
+    // Si no hay incidentes para este analista, las gráficas mostrarán mensajes informativos
+  if (analystIncidents.length === 0) {
+    console.log(`No hay incidentes para ${analyst.name}, se mostrarán gráficas sin datos`);
+  }
   
   // Incidentes reportados por este analista
   const incidentsCaught = analystIncidents.filter(incident => 
@@ -172,8 +186,7 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
   const avgResolutionTime = resolvedCount > 0 
     ? parseFloat((totalResolutionTime / resolvedCount).toFixed(1)) 
     : 0;
-  
-  // Contar por prioridad
+    // Contar por prioridad
   const byPriorityCount = {
     Alta: 0,
     Media: 0,
@@ -186,8 +199,9 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
       byPriorityCount[priority]++;
     }
   });
-  
-  // Contar por tipo de bug
+    // Solo usamos datos reales, sin datos inventados
+  // Si no hay incidentes, los valores serán cero
+    // Contar por tipo de bug
   const byTypeCount = {
     UI: 0,
     Funcional: 0,
@@ -201,6 +215,8 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
       byTypeCount[bugType]++;
     }
   });
+    // Solo usamos datos reales, sin datos inventados
+  // Si no hay incidentes, los valores serán cero
   
   // Calculamos la actividad diaria en el período seleccionado
   const lastMonthActivity = generateActivityDataFromIncidents(analystIncidents, timeFrame);
@@ -222,73 +238,55 @@ export function calculateAnalystStats(analyst: QAAnalyst, incidents: Incident[],
     ],
     lastMonthActivity: lastMonthActivity,
   };
-  
-  // Si el analista es QA Leader, añadir métricas específicas de liderazgo
-  // Estas métricas se calculan con datos reales si están disponibles, o se estiman
-  if (analyst.role === 'QA Leader') {
-    // Estimar el tamaño del equipo y su rendimiento basado en los incidentes
-    // En un sistema real, esta información vendría de una base de datos de equipos
-    const teamSize = 4; // Valor por defecto que podría ser reemplazado por datos reales
+  // Si el analista es QA Leader y tenemos incidentes reales, calculamos métricas basadas solo en datos reales
+  if (analyst.role === 'QA Leader' && analystIncidents.length > 0) {
+    // Calcular datos basados únicamente en los incidentes reales
+    // No añadir datos inventados o "razonables"
     
-    // Eficiencia del equipo: calculada como porcentaje de incidentes resueltos vs reportados
+    // Eficiencia: proporción de incidentes resueltos vs reportados
     const teamEfficiency = incidentsCaught > 0 
-      ? Math.min(100, Math.round((incidentsResolved / incidentsCaught) * 100)) 
-      : 85; // Valor por defecto si no hay datos
+      ? Math.round((incidentsResolved / incidentsCaught) * 100)
+      : 0; 
     
-    // Cobertura del equipo: estimación basada en tipos de bugs encontrados
+    // Cobertura: basada en tipos de bugs encontrados
     const uniqueBugTypes = Object.values(byTypeCount).filter(count => count > 0).length;
-    const teamCoverage = Math.min(100, Math.round((uniqueBugTypes / 4) * 100));
+    const teamCoverage = uniqueBugTypes > 0 
+      ? Math.round((uniqueBugTypes / 4) * 100)
+      : 0;
     
-    baseStats.teamMetrics = {
-      teamSize,
-      teamEfficiency,
-      teamCoverage,
-      membersPerformance: [
-        // Esta información debería venir de una base de datos de rendimiento del equipo
-        // Por ahora usamos datos estimados basados en los incidentes
-        { name: 'Ana García', performance: 85 },
-        { name: 'Juan López', performance: 75 },
-        { name: 'María Pérez', performance: 90 },
-        { name: 'Carlos Ruiz', performance: 70 },
-      ],
-    };
+    // Solo añadimos estas métricas si tenemos suficientes datos reales
+    // No inventamos datos para el rendimiento del equipo
+    const teamSize = analystIncidents
+      .map(incident => incident.asignadoA)
+      .filter((name): name is string => !!name)
+      .filter((name, index, arr) => arr.indexOf(name) === index)
+      .length;
     
-    // Métricas de liderazgo: estas también deberían venir de alguna fuente de datos real
-    // Por ahora, las estimamos basándonos en la actividad de incidentes
-    baseStats.leadershipMetrics = {
-      reviewsCompleted: Math.round(incidentsResolved * 0.5), // Estimación: 50% de incidentes implican revisión
-      trainingsLed: Math.min(3, Math.floor(incidentsResolved / 10)), // Estimación: 1 capacitación cada 10 incidentes resueltos
-      improvementProposals: Math.min(5, Math.floor(incidentsResolved / 8)), // Estimación: 1 propuesta cada 8 incidentes
-      processEfficiency: Math.min(95, 75 + Math.floor(incidentsResolved / 2)), // Base 75% + mejora por incidentes resueltos
-    };
-  }
-  
-  return baseStats;
-  
-  // Si el analista es QA Leader, añadir métricas específicas
-  if (analyst.role === 'QA Leader') {
-    baseStats.teamMetrics = {
-      teamSize: Math.floor(Math.random() * 5) + 3,
-      teamEfficiency: Math.floor(Math.random() * 20) + 75,
-      teamCoverage: Math.floor(Math.random() * 15) + 80,
-      membersPerformance: [
-        { name: 'Ana García', performance: Math.floor(Math.random() * 20) + 70 },
-        { name: 'Juan López', performance: Math.floor(Math.random() * 30) + 60 },
-        { name: 'María Pérez', performance: Math.floor(Math.random() * 15) + 80 },
-        { name: 'Carlos Ruiz', performance: Math.floor(Math.random() * 25) + 65 },
-      ],
-    };
-    
-    baseStats.leadershipMetrics = {
-      reviewsCompleted: Math.floor(Math.random() * 15) + 10,
-      trainingsLed: Math.floor(Math.random() * 3) + 1,
-      improvementProposals: Math.floor(Math.random() * 5) + 2,
-      processEfficiency: Math.floor(Math.random() * 15) + 80,
-    };
+    if (teamSize > 0) {
+      baseStats.teamMetrics = {
+        teamSize,
+        teamEfficiency,
+        teamCoverage,
+        // No incluimos datos de rendimiento individual si no los tenemos
+        membersPerformance: [],
+      };
+    }
+      // Solo incluimos la métrica de eficiencia de procesos que se basa en datos reales
+    // No incluimos métricas estimadas que no provienen directamente de la base de datos
+    if (incidentsResolved > 0 && incidentsCaught > 0) {
+      baseStats.leadershipMetrics = {
+        reviewsCompleted: 0, // No tenemos datos reales para estas métricas
+        trainingsLed: 0,
+        improvementProposals: 0,
+        processEfficiency: Math.round((incidentsResolved / incidentsCaught) * 100),
+      };
+    }
   }
   
   return baseStats;
 }
 
-// Esta función ha sido reemplazada por generateActivityDataFromIncidents
-// que utiliza datos reales de incidentes
+/**
+ * Nota: La anterior función generateActivityData ha sido reemplazada 
+ * por generateActivityDataFromIncidents que utiliza datos reales de incidentes
+ */
