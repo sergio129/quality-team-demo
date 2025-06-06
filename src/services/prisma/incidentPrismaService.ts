@@ -37,6 +37,21 @@ export class IncidentPrismaService {
     }
 
     private async findCellIdByName(name: string): Promise<string> {
+        // Verificar si el parámetro es un UUID (posible ID)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name);
+        
+        if (isUuid) {
+            // Si parece ser un UUID, buscar directamente por ID
+            const cellById = await prisma.cell.findUnique({
+                where: { id: name }
+            });
+            
+            if (cellById) {
+                return cellById.id;
+            }
+        }
+        
+        // Buscar por nombre (comportamiento original)
         const cell = await prisma.cell.findFirst({
             where: {
                 name: {
@@ -45,9 +60,11 @@ export class IncidentPrismaService {
                 }
             }
         });
+        
         if (!cell) {
             throw new Error(`Célula no encontrada: ${name}`);
         }
+        
         return cell.id;
     }
 
@@ -214,10 +231,8 @@ export class IncidentPrismaService {
                 asignadoA: createdIncident.asignadoA_text || createdIncident.asignadoA?.name || '',
                 idJira: createdIncident.idJira,
                 tipoBug: createdIncident.tipoBug || undefined,
-                areaAfectada: createdIncident.areaAfectada || undefined,
-                celula: createdIncident.cell?.name || '',
+                areaAfectada: createdIncident.areaAfectada || undefined,                celula: createdIncident.cell?.name || '',
                 informadoPor: createdIncident.informadoPor?.name || '',
-                asignadoA: createdIncident.asignadoA?.name || '',
                 etiquetas: createdIncident.etiquetas.map((tag: any) => tag.name)
             };
         } catch (error) {
@@ -226,6 +241,9 @@ export class IncidentPrismaService {
         }
     }    async update(id: string, incident: Partial<Incident>): Promise<Incident | null> {
         try {
+            console.log('Actualizando incidente:', id);
+            console.log('Datos recibidos:', JSON.stringify(incident, null, 2));
+            
             // Verificar si el incidente existe
             const existingIncident = await prisma.incident.findUnique({
                 where: { id },
@@ -233,8 +251,11 @@ export class IncidentPrismaService {
             });
             
             if (!existingIncident) {
+                console.log('Incidente no encontrado:', id);
                 return null;
             }
+            
+            console.log('Incidente existente:', JSON.stringify(existingIncident, null, 2));
             
             // Actualizar etiquetas si es necesario
             if (incident.etiquetas) {
@@ -271,9 +292,15 @@ export class IncidentPrismaService {
               if (incident.asignadoA) {
                 asignadoAId = await this.findOrCreateAnalystByName(incident.asignadoA);
             }
-            
-            if (incident.celula) {
-                cellId = await this.findCellIdByName(incident.celula);
+              if (incident.celula) {
+                try {
+                    console.log(`Buscando célula por: "${incident.celula}"`);
+                    cellId = await this.findCellIdByName(incident.celula);
+                    console.log(`Célula encontrada con ID: ${cellId}`);
+                } catch (error) {
+                    console.error('Error al buscar ID de célula:', error);
+                    throw error;
+                }
             }
               // Actualizar incidente
             const updatedIncident = await prisma.incident.update({
@@ -323,9 +350,12 @@ export class IncidentPrismaService {
                 informadoPor: updatedIncident.informadoPor?.name || '',
                 asignadoA: updatedIncident.asignadoA?.name || '',
                 etiquetas: updatedIncident.etiquetas.map((tag: { name: string }) => tag.name)
-            };
-        } catch (error) {
+            };        } catch (error) {
             console.error('Error updating incident in database:', error);
+            // Reescribimos el error para asegurarnos que se incluya en la respuesta de la API
+            if (error instanceof Error) {
+                throw new Error(`Error al actualizar el incidente: ${error.message}`);
+            }
             throw error;
         }
     }
@@ -424,8 +454,7 @@ export class IncidentPrismaService {
                 });
                 
                 console.log(`Archivo adjuntado al incidente ${incidentId}: ${createdFile.id}`);
-                return createdFile.id;
-            } catch (createError) {
+                return createdFile.id;            } catch (createError: any) {
                 console.error('Error específico al crear el archivo:', createError);
                   // Intentar acceder directamente a la base de datos usando executeRaw si el modelo no está disponible
                 // Esto es una solución temporal y debería ser reemplazada por una migración adecuada
@@ -441,7 +470,7 @@ export class IncidentPrismaService {
                 const now = new Date().toISOString();
                 
                 console.log(`Intento alternativo de guardar archivo para el incidente ${incidentId}`);
-                throw new Error(`No se pudo crear el archivo en la base de datos. Error: ${createError.message}`);
+                throw new Error(`No se pudo crear el archivo en la base de datos. Error: ${createError.message || 'Desconocido'}`);
             }
         } catch (error) {
             console.error('Error al adjuntar archivo al incidente:', error);

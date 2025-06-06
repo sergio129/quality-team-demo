@@ -273,7 +273,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     if (allAnalystProjects.length > 0) {
       return (
         <div className="py-4 text-center">
-          <p className="text-gray-600 mb-2">No hay proyectos asignados a este analista en el mes actual</p>
+          <p className="text-gray-600 mb-2">No hay proyectos actuales o próximos asignados a este analista</p>
           <p className="text-sm text-gray-500">
             (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en otros períodos)
           </p>
@@ -309,12 +309,11 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           }`}>{availabilityPercentage}%</p>
           <p className="text-xs text-gray-500">para proyectos</p>
         </div>
-      </div>      {/* Lista de proyectos activos */}
-      <div className="space-y-3">
+      </div>      {/* Lista de proyectos activos */}      <div className="space-y-3">
         <h3 className="text-sm font-medium border-b pb-1">
           Proyectos Asignados 
           <span className="text-gray-500 ml-2 text-xs">
-            {new Date(currentYear, currentMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+            Actuales y próximos
           </span>
         </h3>
         

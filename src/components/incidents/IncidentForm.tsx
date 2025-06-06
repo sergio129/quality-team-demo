@@ -13,6 +13,7 @@ import AsyncSelect from 'react-select/async';
 import { useJiraIdSuggestions, JiraOption } from '@/hooks/useJiraIdSuggestions';
 import IncidentImageUploader from './IncidentImageUploader';
 import "./styles.css";
+import { useCells } from '@/hooks/useCells';
 
 interface IncidentFormProps {
     isOpen: boolean;
@@ -42,18 +43,40 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
         historialEstados: []
     });
     
-    const [incidentSaved, setIncidentSaved] = useState(false);
-
-    useEffect(() => {
-        if (incident) {
-            setFormData(incident);
-        }
-    }, [incident]);
-
-    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
+    const [incidentSaved, setIncidentSaved] = useState(false);    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
+    const { cells, isLoading: isLoadingCells } = useCells(); // Usar el hook para cargar células
     const { searchJiraIds, loading } = useJiraIdSuggestions();
     const [error, setError] = useState<string>('');
     const [etiqueta, setEtiqueta] = useState('');
+
+    useEffect(() => {
+        if (incident && cells) {
+            if (incident.celula) {
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(incident.celula);
+                
+                if (isUuid) {
+                    // Es un ID, usarlo directamente
+                    setFormData({
+                        ...incident
+                    });
+                } else {
+                    // Es un nombre, buscar la célula correspondiente
+                    const matchingCell = cells.find(cell => cell.name === incident.celula);
+                    if (matchingCell) {
+                        setFormData({
+                            ...incident,
+                            celula: matchingCell.id
+                        });
+                    } else {
+                        // Si no encontramos la célula, solo establecer los datos normales
+                        setFormData(incident);
+                    }
+                }
+            } else {
+                setFormData(incident);
+            }
+        }
+    }, [incident, cells]);
 
     useEffect(() => {
         fetch('/api/analysts')
@@ -200,13 +223,12 @@ export function IncidentForm({ isOpen, onClose, onSubmit, incident }: IncidentFo
                                         onChange={handleChange}
                                         required
                                         className="w-full mt-1 bg-white border-gray-300"
-                                    >
-                                        <option value="">Seleccionar célula...</option>
-                                        <option value="Servicio Virtuales">Servicio Virtuales</option>
-                                        <option value="KCRM">KCRM</option>
-                                        <option value="Suramericana">Suramericana</option>
-                                        <option value="Comdata">Comdata</option>
-                                        <option value="IVR">IVR</option>
+                                    >                                        <option value="">Seleccionar célula...</option>
+                                        {cells.map((cell) => (
+                                            <option key={cell.id} value={cell.id}>
+                                                {cell.name}
+                                            </option>
+                                        ))}
                                     </Select>
                                 </div>
 
