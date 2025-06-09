@@ -284,14 +284,12 @@ export class IncidentPrismaService {
             let informadoPorId = existingIncident.informadoPorId;
             let asignadoAId = existingIncident.asignadoAId;
             let cellId = existingIncident.celula;
-            
-            // Solo buscar IDs si se proporcionaron nuevos nombres
+              // Solo buscar IDs si se proporcionaron nuevos nombres
             if (incident.informadoPor) {
                 informadoPorId = await this.findAnalystIdByName(incident.informadoPor);
             }
-              if (incident.asignadoA) {
-                asignadoAId = await this.findOrCreateAnalystByName(incident.asignadoA);
-            }
+            // Para asignadoA, no creamos relaciones, solo guardamos el texto
+            // asignadoAId se mantendrá como null o el valor existente
               if (incident.celula) {
                 try {
                     console.log(`Buscando célula por: "${incident.celula}"`);
@@ -317,11 +315,13 @@ export class IncidentPrismaService {
                     aplica: incident.aplica,
                     cliente: incident.cliente,
                     idJira: incident.idJira,
-                    tipoBug: incident.tipoBug,
-                    areaAfectada: incident.areaAfectada,
+                    tipoBug: incident.tipoBug,                    areaAfectada: incident.areaAfectada,
                     celula: cellId, // Use the resolved cell ID
                     informadoPorId: informadoPorId, // Use the resolved analyst IDs
-                    asignadoAId: asignadoAId
+                    // Almacenamos directamente el nombre del responsable asignado en el campo asignadoA_text
+                    asignadoA_text: incident.asignadoA || '',
+                    // Ya no utilizamos la relación asignadoAId
+                    asignadoAId: null
                 },
                 include: {
                     etiquetas: true,
@@ -345,10 +345,9 @@ export class IncidentPrismaService {
                 cliente: updatedIncident.cliente,
                 idJira: updatedIncident.idJira,
                 tipoBug: updatedIncident.tipoBug || undefined,
-                areaAfectada: updatedIncident.areaAfectada || undefined,
-                celula: updatedIncident.cell?.name || '',
+                areaAfectada: updatedIncident.areaAfectada || undefined,                celula: updatedIncident.cell?.name || '',
                 informadoPor: updatedIncident.informadoPor?.name || '',
-                asignadoA: updatedIncident.asignadoA?.name || '',
+                asignadoA: updatedIncident.asignadoA_text || '',
                 etiquetas: updatedIncident.etiquetas.map((tag: { name: string }) => tag.name)
             };        } catch (error) {
             console.error('Error updating incident in database:', error);
