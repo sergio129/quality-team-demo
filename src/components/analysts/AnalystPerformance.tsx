@@ -68,28 +68,30 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
     };
 
     fetchAnalyst();
-  }, [analystId]);
-  useEffect(() => {
+  }, [analystId]);  useEffect(() => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // Para propósitos de demostración, usaremos datos generados
-        // En producción, descomentar el código para usar la API real
-        /*
+        // Usar datos reales de la API
         const response = await fetch(`/api/analysts/${analystId}/stats?timeframe=${timeFrame}`);
         if (response.ok) {
           const data = await response.json();
           setStats(data);
+        } else {
+          console.error('Error en la respuesta de la API:', response.status);
+          // Solo usar datos de demostración como fallback en caso de error
+          if (analyst) {
+            const demoStats = generateDemoStats(analyst, timeFrame);
+            setStats(demoStats);
+          }
         }
-        */
-        
-        // Generar datos de demostración (incluyendo métricas específicas de QA Leader si aplica)
+      } catch (error) {
+        console.error('Error fetching analyst stats:', error);
+        // Solo usar datos de demostración como fallback en caso de error
         if (analyst) {
           const demoStats = generateDemoStats(analyst, timeFrame);
           setStats(demoStats);
         }
-      } catch (error) {
-        console.error('Error fetching analyst stats:', error);
       } finally {
         setLoading(false);
       }
