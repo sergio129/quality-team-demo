@@ -34,11 +34,19 @@ export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const incidentId = formData.get('incidentId') as string;
-        const file = formData.get('file') || formData.get('image') as File; // Aceptamos 'file' o 'image' para mantener compatibilidad
+        const uploadedFile = formData.get('file') || formData.get('image');
 
-        if (!incidentId || !file) {
+        if (!incidentId || !uploadedFile) {
             return NextResponse.json({ error: 'Se requiere el ID del incidente y el archivo' }, { status: 400 });
         }
+
+        // Verificar que uploadedFile es de tipo File
+        if (!(uploadedFile instanceof Blob)) {
+            return NextResponse.json({ error: 'El archivo proporcionado no es válido' }, { status: 400 });
+        }
+        
+        // Ahora podemos tratar uploadedFile como un File
+        const file = uploadedFile as File;
         
         // Validar tamaño máximo de 10 MB
         if (file.size > 10 * 1024 * 1024) {
@@ -50,8 +58,9 @@ export async function POST(request: Request) {
         const fileBytes = await file.arrayBuffer();
         const buffer = Buffer.from(fileBytes);
         
+        // Preparar los datos del archivo para guardar
         const fileData = {
-            fileName: file.name,
+            fileName: file instanceof File ? file.name : 'archivo.dat',
             fileType: file.type || 'application/octet-stream', // Tipo por defecto si no se especifica
             fileSize: file.size,
             data: buffer.toString('base64')
