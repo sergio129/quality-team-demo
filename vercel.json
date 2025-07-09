@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "buildCommand": "npm run setup-db && npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "VERCEL_ENV": "production"
+  }
+}

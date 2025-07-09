@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "setup-db": "node prisma/setup-database.js",
+    "postinstall": "prisma generate",
     "sonar": "node_modules\\.bin\\sonar-scanner.bat",
     "sonar:run": "node scripts/run-sonar-analysis.js",
     "sonar:docker": "node scripts/sonar-docker.js",
