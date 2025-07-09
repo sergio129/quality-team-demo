@@ -139,6 +139,17 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
   
   console.log(`Cambiando estado del proyecto: ${projectIdJira} a ${nuevoEstado}`);
   
+  // Ajustar la fecha de certificación si el nuevo estado es "Certificado"
+  let updates: any = {
+    estado: nuevoEstado,
+    estadoCalculado: nuevoEstado
+  };
+  
+  // Si el estado es Certificado, actualizamos la fecha de certificación
+  if (nuevoEstado === 'Certificado') {
+    updates.fechaCertificacion = new Date();
+  }
+  
   return toast.promise(
     async () => {
       // Optimistic update - actualiza inmediatamente la caché SWR antes de enviar la solicitud
@@ -151,8 +162,7 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
           if (project.idJira === projectIdJira || project.id === id) {
             return {
               ...project,
-              estado: nuevoEstado,
-              estadoCalculado: nuevoEstado
+              ...updates
             };
           }
           return project;
@@ -162,14 +172,13 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
         mutate(PROJECTS_API, optimisticData, false);
       }
       
-      // Enviar la solicitud real al servidor - CORREGIDO: usar estructura plana sin anidamiento
+      // Enviar la solicitud real al servidor - Estructura plana con todos los campos de actualización
       const response = await fetch(PROJECTS_API, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           idJira: projectIdJira,
-          estado: nuevoEstado,
-          estadoCalculado: nuevoEstado
+          ...updates
         }),
       });
 

@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function Navigation() {  const pathname = usePathname();
-  const links = [
+export function Navigation() {  const pathname = usePathname();  const links = [
     { href: '/proyectos', label: 'Proyectos' },
     { href: '/incidents', label: 'Incidentes' },
     { href: '/casos-prueba', label: 'Casos de Prueba' },
     { href: '/equipos', label: 'Equipos' },
     { href: '/celulas', label: 'Células' },
     { href: '/analistas', label: 'Analistas QA' },
+    { href: '/dashboard-metricas', label: 'Métricas y Gráficos' },
   ];
 
   return (

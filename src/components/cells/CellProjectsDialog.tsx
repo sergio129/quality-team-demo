@@ -41,30 +41,83 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
       project.descripcion?.toLowerCase().includes(searchLower) ||
       project.estado?.toLowerCase().includes(searchLower)
     );
-  }, [cellProjects, searchTerm]);
-  // Obtener estado en formato legible y su clase CSS
+  }, [cellProjects, searchTerm]);  // Obtener estado en formato legible y su clase CSS
   const getStatusInfo = (project: any) => {
-    // Usar estado real del proyecto o calcular uno si no existe
-    const estado = project.estado || project.estadoCalculado || 'Por Iniciar';
+    // Prioridad de estados: 1. estado (valor manual), 2. estadoCalculado (automático), 3. fallback
+    // Si ambos están presentes, preferimos mostrar el estado manual, excepto en casos especiales
+    const estadoManual = project.estado;
+    const estadoCalculado = project.estadoCalculado;
+    
+    // Lógica de selección de estado a mostrar basada en prioridades
+    let estado = 'Por Iniciar'; // Estado por defecto si no hay nada más
+    
+    if (estadoManual && estadoCalculado === 'Certificado') {
+      // Caso especial: Si está certificado, siempre mostramos "Certificado"
+      estado = 'Certificado';
+    } else if (estadoManual) {
+      // Si hay estado manual, lo usamos
+      estado = estadoManual;
+    } else if (estadoCalculado) {
+      // Si no hay manual pero sí calculado, usamos el calculado
+      estado = estadoCalculado;
+    }
     
     // Convertir a minúsculas para comparaciones no sensibles a mayúsculas
     const estadoLower = estado.toLowerCase();
     
-    let statusClass = 'bg-gray-100 text-gray-800'; // Estilo por defecto
+    let statusClass = 'bg-gray-100 text-gray-800'; // Estilo por defecto - gris
 
-    // Clasificación de estados para un mapeo de colores consistente
-    if (estadoLower.includes('progreso') || estadoLower === 'en proceso' || estadoLower === 'en progreso' || estadoLower === 'pruebas' || estadoLower === 'actualizacion') {
-      statusClass = 'bg-blue-100 text-blue-800'; // Azul para estados en progreso
-    } else if (estadoLower.includes('certificado') || estadoLower === 'completado' || estadoLower === 'terminado' || estadoLower === 'finalizado') {
-      statusClass = 'bg-green-100 text-green-800'; // Verde para estados completados
-    } else if (estadoLower.includes('iniciar') || estadoLower === 'por iniciar' || estadoLower === 'pendiente') {
-      statusClass = 'bg-yellow-100 text-yellow-800'; // Amarillo para estados pendientes
+    // Clasificación mejorada de estados para un mapeo de colores consistente
+    if (estadoLower.includes('certificado') || estadoLower === 'completado' || 
+        estadoLower === 'terminado' || estadoLower === 'finalizado') {
+      // Verde para estados completados/certificados
+      statusClass = 'bg-green-100 text-green-800'; 
     } else if (estadoLower === 'retrasado') {
-      statusClass = 'bg-red-100 text-red-800'; // Rojo para estados retrasados
+      // Rojo para estados retrasados
+      statusClass = 'bg-red-100 text-red-800'; 
+    } else if (estadoLower.includes('progreso') || estadoLower === 'en proceso' || 
+               estadoLower === 'en progreso' || estadoLower === 'pruebas' || 
+               estadoLower === 'actualizacion') {
+      // Azul para estados en progreso
+      statusClass = 'bg-blue-100 text-blue-800'; 
+    } else if (estadoLower.includes('iniciar') || estadoLower === 'por iniciar' || 
+               estadoLower === 'pendiente') {
+      // Amarillo para estados pendientes
+      statusClass = 'bg-yellow-100 text-yellow-800';
     }
     
     // Normalizar la visualización del estado con primera letra mayúscula
-    const displayEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+    // y arreglar casos comunes para consistencia visual
+    let displayEstado = '';
+    
+    switch (estadoLower) {
+      case 'en progreso':
+      case 'en proceso':
+        displayEstado = 'En Progreso';
+        break;
+      case 'por iniciar':
+      case 'pendiente':
+        displayEstado = 'Por Iniciar';
+        break;
+      case 'certificado':
+      case 'completado':
+      case 'terminado':
+      case 'finalizado':
+        displayEstado = 'Certificado';
+        break;
+      case 'retrasado':
+        displayEstado = 'Retrasado';
+        break;
+      case 'pruebas':
+        displayEstado = 'En Pruebas';
+        break;
+      case 'actualizacion':
+        displayEstado = 'Actualización';
+        break;
+      default:
+        // Para cualquier otro estado, simplemente aplicamos mayúscula inicial
+        displayEstado = estado.charAt(0).toUpperCase() + estado.slice(1).toLowerCase();
+    }
     
     return { text: displayEstado, className: statusClass };
   };
@@ -143,9 +196,21 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                           </div>
                         </TableCell>                        <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
-                              {status.text}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className={`px-2 py-1 rounded-full text-xs ${status.className}`}>
+                                {status.text}
+                              </span>
+                              {project.fechaCertificacion && status.text === 'Certificado' && (
+                                <span className="text-xs text-gray-500" title={`Certificado el ${formatDate(project.fechaCertificacion)}`}>
+                                  ✓
+                                </span>
+                              )}
+                              {project.diasRetraso > 0 && (
+                                <span className="text-xs text-red-500" title={`${project.diasRetraso} días de retraso`}>
+                                  ({project.diasRetraso}d)
+                                </span>
+                              )}
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="sm"

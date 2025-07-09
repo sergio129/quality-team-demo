@@ -46,8 +46,29 @@ export async function PUT(request: Request) {
         const { id, incident } = await request.json();
         const updatedIncident = await incidentService.update(id, incident);
         return NextResponse.json(updatedIncident);
-    } catch (error) {
-        return NextResponse.json({ error: 'Error al actualizar incidencia' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Error detallado al actualizar incidencia:', error);
+        
+        // Errores específicos que podemos manejar mejor
+        if (error.message && error.message.includes('Analista no encontrado')) {
+            return NextResponse.json({ 
+                error: 'Error al actualizar incidencia: No se encontró el analista especificado',
+                details: error.message 
+            }, { status: 400 });
+        }
+        
+        if (error.message && error.message.includes('Célula no encontrada')) {
+            return NextResponse.json({ 
+                error: 'Error al actualizar incidencia: No se encontró la célula especificada',
+                details: error.message 
+            }, { status: 400 });
+        }
+        
+        // Error general
+        return NextResponse.json({ 
+            error: 'Error al actualizar incidencia',
+            details: error.message || 'Error desconocido'
+        }, { status: 500 });
     }
 }
 
