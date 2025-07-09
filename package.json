@@ -6,7 +6,7 @@
     "dev:verbose": "next dev --verbose",
     "dev:debug": "NODE_OPTIONS='--inspect' next dev",
     "dev:legacy": "next dev --experimental-compile",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start",
     "lint": "next lint",
     "setup-db": "node prisma/setup-database.js",
