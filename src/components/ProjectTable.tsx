@@ -1011,7 +1011,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             </span>
         )}
     </div>
-</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {if (!project.idJira) {toast.error('No se puede editar un proyecto sin ID de Jira');return;}setEditingProject(project);setNewProject(project);setShowForm(true);}} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar'}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
+</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {if (!project.idJira) {toast.error('No se puede editar un proyecto sin ID de Jira');return;}setEditingProject(project);setNewProject(project);setShowForm(true);}} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar', onClick: () => {}}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
 ))}
 </tbody>
                     </table>
