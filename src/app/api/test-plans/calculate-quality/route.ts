@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { testCaseService } from '@/services/testCaseService';
+import { TestCase, TestPlan } from '@/models/TestCase';
 
 export async function GET(request: Request) {
   try {
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
 }
 
 // Función para calcular la calidad de las pruebas
-function calculateTestQuality(testPlan, testCases) {
+function calculateTestQuality(testPlan: TestPlan, testCases: TestCase[]) {
   // Si no hay casos de prueba asociados, devolver -1 (que se interpretará como N/A en la interfaz)
   if (!testCases || testCases.length === 0) {
     return -1;
