@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cp tsconfig.vercel.json tsconfig.json && npm run build",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
   "ignoreCommand": "if [ -f ./scripts/sincronizarDatos.ts ]; then echo 'Ignorando archivos de scripts'; fi",
