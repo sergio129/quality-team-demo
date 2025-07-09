@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { incidentService } from '@/services/incidentService';
 import { QAAnalystService } from '@/services/qaAnalystService';
 
 const analystService = new QAAnalystService();
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    // Esperar el objeto params antes de acceder a sus propiedades
-    const { id } = await params;
+    // Extraer el ID de la URL en lugar de los parámetros
+    const urlParts = request.url.split('/');
+    // Obtenemos la parte antes de 'stats' que debe ser el ID
+    const id = urlParts[urlParts.indexOf('stats') - 1];
     const searchParams = new URL(request.url).searchParams;
     const timeframe = searchParams.get('timeframe') || 'month';
     

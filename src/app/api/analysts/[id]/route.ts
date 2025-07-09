@@ -1,15 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { QAAnalystService } from '@/services/qaAnalystService';
 
 const analystService = new QAAnalystService();
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest) {
   try {
-    // Esperar el objeto params antes de acceder a sus propiedades
-    const { id } = await params;
+    // Extraer el ID de la URL en lugar de los parámetros
+    const id = request.url.split('/').pop() as string;
+    
+    // Validación
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID de analista requerido' },
+        { status: 400 }
+      );
+    }
     
     const analyst = await analystService.getAnalystById(id);
     if (!analyst) {
@@ -18,6 +23,7 @@ export async function GET(
     
     return NextResponse.json(analyst);
   } catch (error) {
+    console.error('Error al obtener analista:', error);
     return NextResponse.json({ error: 'Error getting analyst' }, { status: 500 });
   }
 }

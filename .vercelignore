@@ -1,0 +1,3 @@
+scripts/
+*.ts
+!src/**/*.ts
