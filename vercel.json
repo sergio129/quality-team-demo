@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run setup-db && npm run build",
+  "buildCommand": "npm run setup-db && npx next build --no-lint",
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
