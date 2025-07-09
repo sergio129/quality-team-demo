@@ -940,35 +940,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 </>
             ) : activeView === 'kanban' ? (
                 <KanbanView
-                    projects={allFilteredProjects}
-                    onEditProject={(project) => {
-                        if (!project.idJira) {
-                            toast.error('No se puede editar un proyecto sin ID de Jira');
-                            return;
-                        }
-                        setEditingProject(project);
-                        setNewProject(project);
-                        setShowForm(true);
-                    }}
-                    onDeleteProject={(project) => {
-                        if (!project.idJira) {
-                            toast.error('No se puede eliminar un proyecto sin ID de Jira');
-                            return;
-                        }
-                        toast.info('¿Estás seguro?', {
-                            action: {
-                                label: 'Eliminar',
-                                onClick: () => handleDelete(project.idJira)
-                            },
-                            description: 'Esta acción no se puede deshacer',
-                            cancel: {
-                                label: 'Cancelar',
-                                onClick: () => {}
-                            }
-                        });                    }}
-                    onChangeStatus={(project) => openStatusDialog(project)}
-                />            ) : activeView === 'kanban' ? (
-                <KanbanView
                     projects={allFilteredProjects} // Usar todos los proyectos filtrados, sin paginación
                     startDate={startDate}
                     endDate={endDate}
@@ -997,7 +968,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 label: 'Cancelar',
                                 onClick: () => {}
                             }
-                        });
+                        });                    
                     }}
                     onChangeStatus={(project) => openStatusDialog(project)}
                 />
