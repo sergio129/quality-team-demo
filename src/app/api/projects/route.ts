@@ -2,31 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { projectService } from '@/services/projectService';
 import { testCaseService } from '@/services/testCaseService';
 import { v4 as uuidv4 } from 'uuid';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 export async function GET(req: NextRequest) {
-    const url = new URL(req.url);
-    const analystId = url.searchParams.get('analystId');
-    const analystName = url.searchParams.get('analystName');
-    const monthFilter = url.searchParams.get('month');
-    const yearFilter = url.searchParams.get('year');
+    try {
+        // Verificar autenticación
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        }
+        
+        const url = new URL(req.url);
+        const analystId = url.searchParams.get('analystId') || session.user.analystId;
+        const analystName = url.searchParams.get('analystName');
+        const monthFilter = url.searchParams.get('month');
+        const yearFilter = url.searchParams.get('year');
+        const role = url.searchParams.get('role') || session.user.role;
+        
+        // Use our service with role-based filtering
+        const projects = await projectService.getAllProjects({
+            analystId: analystId || undefined,
+            role: role
+        });
+        
+        // Filtrado inicial de proyectos
+        let filteredProjects = projects;
     
-    const projects = await projectService.getAllProjects();
-    
-    // Filtrado inicial de proyectos
-    let filteredProjects = projects;
-    
-    // Si se proporciona un ID de analista o nombre, filtrar los proyectos
-    if (analystId || analystName) {
+    // Si se proporciona un nombre de analista (para compatibilidad), filtrar los proyectos
+    if (analystName) {
         filteredProjects = filteredProjects.filter(project => {
-            // Buscar por ID en el array de analistas
-            const matchesById = analystId && project.analistas && 
-                Array.isArray(project.analistas) && 
-                project.analistas.includes(analystId);
-                
             // Buscar por nombre en el campo analistaProducto
-            const matchesByName = analystName && project.analistaProducto === analystName;
-            
-            return matchesById || matchesByName;
+            return project.analistaProducto === analystName;
         });
     }    // Si se proporciona mes y año, filtrar por fecha
     if (monthFilter && yearFilter) {
@@ -70,10 +77,26 @@ export async function GET(req: NextRequest) {
     }
     
     return NextResponse.json(filteredProjects);
+    
+    } catch (error) {
+        console.error('[API] Error al obtener proyectos:', error);
+        return NextResponse.json({ error: 'Error al obtener proyectos' }, { status: 500 });
+    }
 }
 
 export async function POST(req: NextRequest) {
     try {
+        // Verificar autenticación
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+        }
+        
+        // Solo los administradores (QA Leader) pueden crear proyectos
+        if (session.user.role !== 'QA Leader') {
+            return NextResponse.json({ error: "No tienes permiso para crear proyectos" }, { status: 403 });
+        }
+        
         const project = await req.json();
         console.log('[API] Datos recibidos para crear proyecto:', JSON.stringify(project, null, 2));
         

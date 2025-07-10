@@ -35,6 +35,7 @@
     "sync-db": "node scripts/syncDatabase.js"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
@@ -51,6 +52,7 @@
     "@types/file-saver": "^2.0.7",
     "@types/react-select": "^5.0.1",
     "@types/uuid": "^10.0.0",
+    "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.9",
     "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
@@ -64,6 +66,7 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.510.0",
     "next": "^15.1.6",
+    "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.0",
@@ -85,6 +88,7 @@
     "@eslint/eslintrc": "^3",
     "@prisma/client": "^6.8.2",
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

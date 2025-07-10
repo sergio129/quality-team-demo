@@ -21,10 +21,24 @@ export interface ProjectStats {
 }
 
 /**
- * Hook para obtener todos los proyectos
+ * Hook para obtener todos los proyectos, aplicando filtros basados en el rol del usuario
  */
 export function useProjects() {
-  const { data, error, isLoading } = useSWR<Project[]>(PROJECTS_API, fetcher);
+  // Obtener la sesión del usuario usando useSession de next-auth/react
+  const { data: session } = useSWR('/api/auth/session', fetcher);
+  
+  // Construir la URL con los parámetros del usuario actual si están disponibles
+  let url = PROJECTS_API;
+  
+  if (session?.user) {
+    url = `${PROJECTS_API}?role=${session.user.role}`;
+    
+    if (session.user.analystId) {
+      url += `&analystId=${session.user.analystId}`;
+    }
+  }
+  
+  const { data, error, isLoading } = useSWR<Project[]>(url, fetcher);
 
   return {
     projects: data || [],

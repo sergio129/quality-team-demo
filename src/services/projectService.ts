@@ -3,6 +3,7 @@ import { ProjectFileService } from './file/projectFileService';
 import { ProjectPrismaService } from './prisma/projectPrismaService';
 import { ProjectPrismaServiceDebug } from './prisma/projectPrismaService.debug';
 import { migrationConfig } from '@/config/migration';
+import { GetProjectsOptions } from './projectServiceTypes';
 
 export class ProjectService {
     private fileService: ProjectFileService;
@@ -22,13 +23,26 @@ export class ProjectService {
         }
     }
 
-    async getAllProjects(): Promise<Project[]> {
+    async getAllProjects(options?: GetProjectsOptions): Promise<Project[]> {
         try {
-            const result = this.usePostgres 
-                ? await this.prismaService.getAllProjects() 
-                : await this.fileService.getAllProjects();
+            if (this.usePostgres) {
+                return await this.prismaService.getAllProjects(options);
+            } else {
+                // File storage doesn't support filtering by analyst
+                // In a real app, you would implement filtering here as well
+                const projects = await this.fileService.getAllProjects();
                 
-            return result;
+                // If filtering by analyst ID is requested and not admin
+                if (options?.analystId && options?.role !== 'QA Leader') {
+                    // Apply the filter manually for file storage
+                    return projects.filter(project => 
+                        project.analistas && 
+                        project.analistas.includes(options.analystId!)
+                    );
+                }
+                
+                return projects;
+            }
         } catch (error) {
             console.error(`[ProjectService] Error in getAllProjects:`, error);
             // En caso de error con PostgreSQL, intentar con archivos

@@ -1,17 +1,79 @@
 import { Project } from '@/models/Project';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { GetProjectsOptions } from '@/services/projectServiceTypes';
 
 export class ProjectPrismaService {
-    async getAllProjects(): Promise<Project[]> {
+    async getAllProjects(options?: GetProjectsOptions): Promise<Project[]> {
         try {
+            // If user is QA Leader, return all projects
+            if (options?.role === 'QA Leader' || !options?.analystId) {
+                // Admin or no specific filter requested
+                const projects = await prisma.project.findMany({
+                    include: {
+                        team: true,
+                        cell: true,
+                        analysts: {
+                            include: {
+                                analyst: true
+                            }
+                        }
+                    }
+                });
+                return this.mapProjects(projects);
+            }
+            
+            // For QA Analyst or QA Senior, filter to only show their assigned projects
             const projects = await prisma.project.findMany({
+                where: {
+                    analysts: {
+                        some: {
+                            analystId: options.analystId
+                        }
+                    }
+                },
                 include: {
                     team: true,
                     cell: true,
                     analysts: {
                         include: {
                             analyst: true
+                        }
+                    }
+                }
+            });
+            return this.mapProjects(projects);
+        } catch (error) {
+            console.error('Error fetching projects from database:', error);
+            throw error;
+        }
+    }
+    
+    // Helper method to map Prisma projects to our Project model
+    private mapProjects(projects: any[]): Project[] {
+        return projects.map((project: any) => ({
+            id: project.id,
+            idJira: project.idJira,
+            nombre: project.nombre || undefined,
+            proyecto: project.proyecto,
+            equipo: project.team?.name || project.equipoId,
+            celula: project.cell?.name || project.celulaId,
+            horas: project.horas || 0,
+            dias: project.dias || 0,
+            horasEstimadas: project.horasEstimadas || undefined,                
+            estado: project.estado || this.calcularEstadoProyecto(project),
+            estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
+            descripcion: project.descripcion || undefined,
+            fechaInicio: project.fechaInicio || undefined,
+            fechaFin: project.fechaFin || undefined,
+            fechaEntrega: project.fechaEntrega,
+            fechaRealEntrega: project.fechaRealEntrega || undefined,
+            fechaCertificacion: project.fechaCertificacion || undefined,
+            diasRetraso: project.diasRetraso,
+            analistaProducto: project.analistaProducto,
+            planTrabajo: project.planTrabajo,
+            analistas: project.analysts.map((a: any) => a.analystId)
+        }));
                         }
                     }
                 }

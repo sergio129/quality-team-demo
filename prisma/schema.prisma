@@ -25,6 +25,7 @@ model QAAnalyst {
   skills          Skill[]
   specialties     Specialty[]
   teams           TeamAnalyst[]
+  user            User?
 }
 
 model Skill {
@@ -282,4 +283,17 @@ model AnalystVacation {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   QAAnalyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id               String     @id @default(uuid())
+  email            String     @unique
+  password         String
+  name             String
+  isActive         Boolean    @default(true)
+  lastLogin        DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  analyst          QAAnalyst? @relation(fields: [analystId], references: [id])
+  analystId        String?    @unique
 }
