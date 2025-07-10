@@ -65,7 +65,7 @@ export function AnalystForm({ analyst, onSuccess, cells: initialCells }: Analyst
       name: analyst?.name || '',
       email: analyst?.email || '',
       cellIds: analyst?.cellIds || [],
-      role: analyst?.role || '',
+      role: analyst?.role || 'QA Analyst',
       color: analyst?.color || '#3B82F6',
       skills: analyst?.skills || [],
       certifications: analyst?.certifications || [],
