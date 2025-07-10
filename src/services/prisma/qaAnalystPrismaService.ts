@@ -1,4 +1,4 @@
-import { QAAnalyst } from '@/models/QAAnalyst';
+import { QAAnalyst, QARole } from '@/models/QAAnalyst';
 import { prisma } from '@/lib/prisma';
 
 export class QAAnalystPrismaService {
@@ -19,14 +19,18 @@ export class QAAnalystPrismaService {
       
       // Transformar los datos del formato de la base de datos al formato de la aplicación
       return dbAnalysts.map(dbAnalyst => {
+        const qaRole = this.mapDatabaseRoleToQARole(dbAnalyst.role);
         return {
           id: dbAnalyst.id,
           name: dbAnalyst.name,
           email: dbAnalyst.email,
-          role: dbAnalyst.role,
+          role: qaRole,
           color: dbAnalyst.color || undefined,
           availability: dbAnalyst.availability || 100,
-          skills: dbAnalyst.skills.map(skill => skill.name),
+          skills: dbAnalyst.skills.map(skill => ({
+            name: skill.name,
+            level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+          })),
           certifications: dbAnalyst.certifications.map(cert => ({
             name: cert.name,
             issuer: cert.issuer,
@@ -39,6 +43,19 @@ export class QAAnalystPrismaService {
     } catch (error) {
       console.error('Error fetching analysts from database:', error);
       throw error;
+    }
+  }
+  
+  // Helper method to ensure role is one of the valid QARole types
+  private mapDatabaseRoleToQARole(role: string): QARole {
+    switch(role) {
+      case 'QA Analyst':
+      case 'QA Senior':
+      case 'QA Leader':
+        return role as QARole;
+      default:
+        // Default role if the database has an unexpected value
+        return 'QA Analyst';
     }
   }
   
@@ -63,24 +80,24 @@ export class QAAnalystPrismaService {
         data: {
           name: analyst.name,
           email: analyst.email,
-          role: analyst.role || 'Junior',
+          role: analyst.role, // Assuming role is already a valid string from QARole type
           color: analyst.color,
           availability: analyst.availability || 100,
           skills: {
-            create: analyst.skills.map(skill => ({
-              name: skill,
-              level: 'Intermedio'
+            create: (analyst.skills || []).map(skillName => ({
+              name: typeof skillName === 'string' ? skillName : skillName.name,
+              level: typeof skillName === 'string' ? 'Intermedio' : skillName.level
             }))
           },
           certifications: {
-            create: analyst.certifications.map(cert => ({
+            create: (analyst.certifications || []).map(cert => ({
               name: cert.name,
               issuer: cert.issuer || 'Desconocido',
               date: cert.date ? new Date(cert.date) : new Date()
             }))
           },
           specialties: {
-            create: analyst.specialties.map(spec => ({
+            create: (analyst.specialties || []).map(spec => ({
               name: spec
             }))
           },
@@ -96,7 +113,11 @@ export class QAAnalystPrismaService {
           skills: true,
           certifications: true,
           specialties: true,
-          cells: true
+          cells: {
+            include: {
+              cell: true
+            }
+          }
         }
       });
       
@@ -105,10 +126,13 @@ export class QAAnalystPrismaService {
         id: createdAnalyst.id,
         name: createdAnalyst.name,
         email: createdAnalyst.email,
-        role: createdAnalyst.role,
+        role: this.mapDatabaseRoleToQARole(createdAnalyst.role),
         color: createdAnalyst.color || undefined,
         availability: createdAnalyst.availability || 100,
-        skills: createdAnalyst.skills.map(skill => skill.name),
+        skills: createdAnalyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: createdAnalyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -144,7 +168,7 @@ export class QAAnalystPrismaService {
       const updateData: any = {};
       if (analyst.name) updateData.name = analyst.name;
       if (analyst.email) updateData.email = analyst.email;
-      if (analyst.role) updateData.role = analyst.role;
+      if (analyst.role) updateData.role = analyst.role; // Role is already a valid string from QARole type
       if (analyst.color !== undefined) updateData.color = analyst.color;
       if (analyst.availability !== undefined) updateData.availability = analyst.availability;
       
@@ -168,11 +192,11 @@ export class QAAnalystPrismaService {
         });
         
         // Crear nuevas skills
-        await Promise.all(analyst.skills.map(skill => 
+        await Promise.all((analyst.skills || []).map(skillItem => 
           prisma.skill.create({
             data: {
-              name: skill,
-              level: 'Intermedio',
+              name: typeof skillItem === 'string' ? skillItem : skillItem.name,
+              level: typeof skillItem === 'string' ? 'Intermedio' : skillItem.level,
               analyst: { connect: { id } }
             }
           })
@@ -211,7 +235,7 @@ export class QAAnalystPrismaService {
           prisma.specialty.create({
             data: {
               name: spec,
-              analyst: { connect: { id } }
+              analysts: { connect: { id } } // Using 'analysts' instead of 'analyst' to match Prisma schema
             }
           })
         ));
@@ -255,10 +279,13 @@ export class QAAnalystPrismaService {
         id: refreshedAnalyst.id,
         name: refreshedAnalyst.name,
         email: refreshedAnalyst.email,
-        role: refreshedAnalyst.role,
+        role: this.mapDatabaseRoleToQARole(refreshedAnalyst.role),
         color: refreshedAnalyst.color || undefined,
         availability: refreshedAnalyst.availability || 100,
-        skills: refreshedAnalyst.skills.map(skill => skill.name),
+        skills: refreshedAnalyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: refreshedAnalyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -400,10 +427,13 @@ export class QAAnalystPrismaService {
         id: analyst.id,
         name: analyst.name,
         email: analyst.email,
-        role: analyst.role,
+        role: this.mapDatabaseRoleToQARole(analyst.role),
         color: analyst.color || undefined,
         availability: analyst.availability || 100,
-        skills: analyst.skills.map(skill => skill.name),
+        skills: analyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: analyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -441,10 +471,13 @@ export class QAAnalystPrismaService {
           id: analyst.id,
           name: analyst.name,
           email: analyst.email,
-          role: analyst.role,
+          role: this.mapDatabaseRoleToQARole(analyst.role),
           color: analyst.color || undefined,
           availability: analyst.availability || 100,
-          skills: analyst.skills.map(skill => skill.name),
+          skills: analyst.skills.map(skill => ({
+            name: skill.name,
+            level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+          })),
           certifications: analyst.certifications.map(cert => ({
             name: cert.name,
             issuer: cert.issuer,

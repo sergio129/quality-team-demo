@@ -115,9 +115,21 @@ export class ProjectService {
     }
 
     async updateProjectStatus(idJira: string, status: string): Promise<boolean> {
+        // Convert status to a valid estadoCalculado value
+        let estadoCalculado: 'Por Iniciar' | 'En Progreso' | 'Certificado' | undefined;
+        
+        // Map the status string to one of the valid enum values
+        if (status === 'Por Iniciar' || status === 'Pendiente' || status === 'pendiente') {
+            estadoCalculado = 'Por Iniciar';
+        } else if (status === 'En Progreso' || status === 'en_progreso') {
+            estadoCalculado = 'En Progreso';
+        } else if (status === 'Certificado' || status === 'completado') {
+            estadoCalculado = 'Certificado';
+        }
+        
         return await this.updateProject(idJira, { 
             estado: status, 
-            estadoCalculado: status 
+            estadoCalculado: estadoCalculado 
         });
     }
 }

@@ -1,7 +1,20 @@
-import { QAAnalyst } from '@/models/QAAnalyst';
+import { QAAnalyst, QARole, Skill } from '@/models/QAAnalyst';
 import { prisma } from '@/lib/prisma';
 
 export class QAAnalystService {
+  // Helper method to ensure role is one of the valid QARole types
+  private mapDatabaseRoleToQARole(role: string): QARole {
+    switch(role) {
+      case 'QA Analyst':
+      case 'QA Senior':
+      case 'QA Leader':
+        return role as QARole;
+      default:
+        // Default role if the database has an unexpected value
+        return 'QA Analyst';
+    }
+  }
+
   async getAllAnalysts(): Promise<QAAnalyst[]> {
     try {
       const dbAnalysts = await prisma.qAAnalyst.findMany({
@@ -23,10 +36,13 @@ export class QAAnalystService {
           id: dbAnalyst.id,
           name: dbAnalyst.name,
           email: dbAnalyst.email,
-          role: dbAnalyst.role,
+          role: this.mapDatabaseRoleToQARole(dbAnalyst.role),
           color: dbAnalyst.color || undefined,
           availability: dbAnalyst.availability || 100,
-          skills: dbAnalyst.skills.map(skill => skill.name),
+          skills: dbAnalyst.skills.map(skill => ({
+            name: skill.name,
+            level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+          })),
           certifications: dbAnalyst.certifications.map(cert => ({
             name: cert.name,
             issuer: cert.issuer,
@@ -63,24 +79,24 @@ export class QAAnalystService {
         data: {
           name: analyst.name,
           email: analyst.email,
-          role: analyst.role || 'Junior',
+          role: analyst.role || 'QA Analyst',
           color: analyst.color,
           availability: analyst.availability || 100,
           skills: {
-            create: analyst.skills.map(skill => ({
-              name: skill,
-              level: 'Intermedio'
+            create: (analyst.skills || []).map(skillItem => ({
+              name: typeof skillItem === 'string' ? skillItem : skillItem.name,
+              level: typeof skillItem === 'string' ? 'Intermedio' : skillItem.level
             }))
           },
           certifications: {
-            create: analyst.certifications.map(cert => ({
+            create: (analyst.certifications || []).map(cert => ({
               name: cert.name,
               issuer: cert.issuer || 'Desconocido',
               date: cert.date ? new Date(cert.date) : new Date()
             }))
           },
           specialties: {
-            create: analyst.specialties.map(spec => ({
+            create: (analyst.specialties || []).map(spec => ({
               name: spec
             }))
           },
@@ -105,10 +121,13 @@ export class QAAnalystService {
         id: createdAnalyst.id,
         name: createdAnalyst.name,
         email: createdAnalyst.email,
-        role: createdAnalyst.role,
+        role: this.mapDatabaseRoleToQARole(createdAnalyst.role),
         color: createdAnalyst.color || undefined,
         availability: createdAnalyst.availability || 100,
-        skills: createdAnalyst.skills.map(skill => skill.name),
+        skills: createdAnalyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: createdAnalyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -168,11 +187,11 @@ export class QAAnalystService {
         });
         
         // Crear nuevas skills
-        await Promise.all(analyst.skills.map(skill => 
+        await Promise.all((analyst.skills || []).map(skillItem => 
           prisma.skill.create({
             data: {
-              name: skill,
-              level: 'Intermedio',
+              name: typeof skillItem === 'string' ? skillItem : skillItem.name,
+              level: typeof skillItem === 'string' ? 'Intermedio' : skillItem.level,
               analyst: { connect: { id } }
             }
           })
@@ -207,11 +226,11 @@ export class QAAnalystService {
         });
         
         // Crear nuevas specialties
-        await Promise.all(analyst.specialties.map(spec => 
+        await Promise.all((analyst.specialties || []).map(spec => 
           prisma.specialty.create({
             data: {
               name: spec,
-              analyst: { connect: { id } }
+              analysts: { connect: { id } }
             }
           })
         ));
@@ -255,10 +274,13 @@ export class QAAnalystService {
         id: refreshedAnalyst.id,
         name: refreshedAnalyst.name,
         email: refreshedAnalyst.email,
-        role: refreshedAnalyst.role,
+        role: this.mapDatabaseRoleToQARole(refreshedAnalyst.role),
         color: refreshedAnalyst.color || undefined,
         availability: refreshedAnalyst.availability || 100,
-        skills: refreshedAnalyst.skills.map(skill => skill.name),
+        skills: refreshedAnalyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: refreshedAnalyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -306,10 +328,13 @@ export class QAAnalystService {
         id: analyst.id,
         name: analyst.name,
         email: analyst.email,
-        role: analyst.role,
+        role: this.mapDatabaseRoleToQARole(analyst.role),
         color: analyst.color || undefined,
         availability: analyst.availability || 100,
-        skills: analyst.skills.map(skill => skill.name),
+        skills: analyst.skills.map(skill => ({
+          name: skill.name,
+          level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+        })),
         certifications: analyst.certifications.map(cert => ({
           name: cert.name,
           issuer: cert.issuer,
@@ -347,10 +372,13 @@ export class QAAnalystService {
           id: analyst.id,
           name: analyst.name,
           email: analyst.email,
-          role: analyst.role,
+          role: this.mapDatabaseRoleToQARole(analyst.role),
           color: analyst.color || undefined,
           availability: analyst.availability || 100,
-          skills: analyst.skills.map(skill => skill.name),
+          skills: analyst.skills.map(skill => ({
+            name: skill.name,
+            level: skill.level as 'Básico' | 'Intermedio' | 'Avanzado' | 'Experto'
+          })),
           certifications: analyst.certifications.map(cert => ({
             name: cert.name,
             issuer: cert.issuer,

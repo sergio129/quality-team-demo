@@ -152,7 +152,7 @@ export class ProjectService {
             }
             if (projectToUpdate.horasEstimadas !== undefined) {
                 projectToUpdate.horasEstimadas = projectToUpdate.horasEstimadas !== null ? 
-                    Number(projectToUpdate.horasEstimadas) : null;
+                    Number(projectToUpdate.horasEstimadas) : undefined;
             }
             
             const result = this.usePostgres
@@ -217,15 +217,26 @@ export class ProjectService {
             const project = await this.getProjectById(projectId);
             if (!project) return false;
             
+            // Map the status string to one of the valid enum values
+            let estadoCalculado: 'Por Iniciar' | 'En Progreso' | 'Certificado' | undefined;
+            
+            if (newStatus === 'Por Iniciar' || newStatus === 'Pendiente' || newStatus === 'pendiente') {
+                estadoCalculado = 'Por Iniciar';
+            } else if (newStatus === 'En Progreso' || newStatus === 'en_progreso') {
+                estadoCalculado = 'En Progreso';
+            } else if (newStatus === 'Certificado' || newStatus === 'completado') {
+                estadoCalculado = 'Certificado';
+            }
+            
             // Actualizar solo los campos de estado
             const updateData: Partial<Project> = {
                 estado: newStatus,
-                estadoCalculado: newStatus
+                estadoCalculado: estadoCalculado
             };
             
             // Si el estado es "Certificado" y no tiene fecha de certificación, establecerla
             if (newStatus === 'Certificado' && !project.fechaCertificacion) {
-                updateData.fechaCertificacion = new Date().toISOString();
+                updateData.fechaCertificacion = new Date();
             }
             
             return await this.updateProject(projectId, updateData);

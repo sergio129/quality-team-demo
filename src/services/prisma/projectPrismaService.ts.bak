@@ -1,6 +1,5 @@
 import { Project } from '@/models/Project';
 import { prisma } from '@/lib/prisma';
-import crypto from 'crypto';
 
 export class ProjectPrismaService {
     async getAllProjects(): Promise<Project[]> {
@@ -25,8 +24,7 @@ export class ProjectPrismaService {
                 celula: project.cell?.name || project.celulaId,
                 horas: project.horas || 0,
                 dias: project.dias || 0,
-                horasEstimadas: project.horasEstimadas || undefined,                
-                estado: project.estado || this.calcularEstadoProyecto(project),
+                horasEstimadas: project.horasEstimadas || undefined,                estado: project.estado || this.calcularEstadoProyecto(project),
                 estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
                 descripcion: project.descripcion || undefined,
                 fechaInicio: project.fechaInicio || undefined,
@@ -43,9 +41,7 @@ export class ProjectPrismaService {
             console.error('Error fetching projects from database:', error);
             throw error;
         }
-    }    
-    
-    async saveProject(project: Project): Promise<boolean> {
+    }    async saveProject(project: Project): Promise<boolean> {
         try {
             console.log(`[ProjectPrismaService] Guardando proyecto en base de datos: ${project.idJira}`);
             
@@ -142,11 +138,10 @@ export class ProjectPrismaService {
             console.error('[ProjectPrismaService] Error al guardar proyecto en la base de datos:', error);
             throw error;
         }
-    }    
-    
-    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
+    }    async updateProject(idJira: string, project: Partial<Project>): Promise<boolean> {
         try {
             console.log(`[ProjectPrismaService] Iniciando actualización del proyecto ${idJira}`);
+            console.log(`[ProjectPrismaService] Datos de actualización:`, JSON.stringify(project, null, 2));
             
             if (!idJira) {
                 console.error(`[ProjectPrismaService] Error: idJira es requerido para la actualización`);
@@ -184,23 +179,21 @@ export class ProjectPrismaService {
                     updateData.horasEstimadas = project.horasEstimadas !== null ? 
                         Number(project.horasEstimadas) || 0 : null;
                 }
-                
-                // Campos de texto simples
+                  // Campos de texto simples
                 if (project.estado !== undefined) {
                     console.log(`[ProjectPrismaService] Actualizando estado de '${existingProject.estado || 'sin estado'}' a '${project.estado}'`);
                     updateData.estado = project.estado;
                 }
-                
                 if (project.estadoCalculado !== undefined) {
                     console.log(`[ProjectPrismaService] Actualizando estadoCalculado de '${existingProject.estadoCalculado || 'sin estado'}' a '${project.estadoCalculado}'`);
                     updateData.estadoCalculado = project.estadoCalculado;
                 }
-                
                 if (project.descripcion !== undefined) updateData.descripcion = project.descripcion;
                 if (project.analistaProducto !== undefined) updateData.analistaProducto = project.analistaProducto;
                 if (project.planTrabajo !== undefined) updateData.planTrabajo = project.planTrabajo;
                 
                 // Manejo seguro de fechas
+                // La conversión a Date ya debería estar hecha en el servicio llamante
                 if (project.fechaInicio !== undefined) updateData.fechaInicio = project.fechaInicio;
                 if (project.fechaFin !== undefined) updateData.fechaFin = project.fechaFin;
                 if (project.fechaEntrega !== undefined) updateData.fechaEntrega = project.fechaEntrega;
@@ -209,6 +202,7 @@ export class ProjectPrismaService {
                 
                 // Actualizar referencias a equipo o célula
                 if (project.equipo !== undefined) {
+                    // Verificar si es un ID o un nombre
                     try {
                         const team = await prisma.team.findFirst({
                             where: {
@@ -223,6 +217,7 @@ export class ProjectPrismaService {
                             updateData.equipoId = team.id;
                             console.log(`[ProjectPrismaService] Usando equipo: ${team.name} (${team.id})`);
                         } else {
+                            // Si no se encuentra, mantener el valor original
                             console.log(`[ProjectPrismaService] No se encontró el equipo: ${project.equipo}, manteniendo el actual`);
                             updateData.equipoId = existingProject.equipoId;
                         }
@@ -234,6 +229,7 @@ export class ProjectPrismaService {
                 
                 if (project.celula !== undefined) {
                     try {
+                        // Verificar si es un ID o un nombre
                         const cell = await prisma.cell.findFirst({
                             where: {
                                 OR: [
@@ -247,6 +243,7 @@ export class ProjectPrismaService {
                             updateData.celulaId = cell.id;
                             console.log(`[ProjectPrismaService] Usando célula: ${cell.name} (${cell.id})`);
                         } else {
+                            // Si no se encuentra, mantener el valor original
                             console.log(`[ProjectPrismaService] No se encontró la célula: ${project.celula}, manteniendo la actual`);
                             updateData.celulaId = existingProject.celulaId;
                         }
@@ -256,76 +253,103 @@ export class ProjectPrismaService {
                     }
                 }
                 
-                console.log(`[ProjectPrismaService] Datos a actualizar:`, updateData);
-                
-                // Verificar si hay datos para actualizar
+                console.log(`[ProjectPrismaService] Datos a actualizar:`, updateData);                // Verificar si hay datos para actualizar
                 if (Object.keys(updateData).length === 0) {
                     console.log(`[ProjectPrismaService] No hay datos para actualizar en el proyecto ${idJira}`);
                     return true; // No hay nada que actualizar, pero no es un error
                 }
                 
                 // Actualizar el proyecto usando el ID interno
-                const result = await prisma.project.update({
-                    where: { id: existingProject.id },
-                    data: updateData
-                });
+                try {
+                    const result = await prisma.project.update({
+                        where: { id: existingProject.id },
+                        data: updateData
+                    });
+                    
+                    console.log(`[ProjectPrismaService] Proyecto ${idJira} actualizado correctamente:`, result.id);
+                    return true;
+                } catch (updateError: any) {
+                    console.error(`[ProjectPrismaService] Error al actualizar el proyecto en la base de datos:`, updateError);
+                    throw new Error(`Error al actualizar el proyecto en la base de datos: ${updateError?.message || 'Error desconocido'}`);
+                }
                 
-                console.log(`[ProjectPrismaService] Proyecto ${idJira} actualizado correctamente:`, result.id);
-                
-                // Manejar los analistas si se proporcionaron
+                // Si se proporcionan analistas, actualizar las relaciones dentro del bloque try
                 if (project.analistas !== undefined) {
-                    try {
-                        // Eliminar todas las relaciones existentes
-                        await prisma.projectAnalyst.deleteMany({
-                            where: { projectId: existingProject.id }
-                        });
-                        
-                        // Crear nuevas relaciones si hay analistas
-                        const analistasArray = project.analistas;
-                        if (Array.isArray(analistasArray) && analistasArray.length > 0) {
-                            for (const analystId of analistasArray) {
-                                try {
-                                    // Primero verificar que el analista existe
-                                    const analyst = await prisma.qAAnalyst.findUnique({
-                                        where: { id: analystId }
+                    // Eliminar todas las relaciones existentes
+                    await prisma.projectAnalyst.deleteMany({
+                        where: { projectId: existingProject.id }
+                    });
+                    
+                    // Crear nuevas relaciones si hay analistas
+                    const analistasArray = project.analistas;
+                    if (Array.isArray(analistasArray) && analistasArray.length > 0) {
+                        for (const analystId of analistasArray) {
+                            try {
+                                // Primero verificar que el analista existe
+                                const analyst = await prisma.qAAnalyst.findUnique({
+                                    where: { id: analystId }
+                                });
+                                
+                                if (analyst) {
+                                    await prisma.projectAnalyst.create({
+                                        data: {
+                                            projectId: existingProject.id,
+                                            analystId: analyst.id
+                                        }
                                     });
-                                    
-                                    if (analyst) {
-                                        await prisma.projectAnalyst.create({
-                                            data: {
-                                                projectId: existingProject.id,
-                                                analystId: analyst.id
-                                            }
-                                        });
-                                    } else {
-                                        console.log(`[ProjectPrismaService] Analista no encontrado: ${analystId}, omitiendo`);
-                                    }
-                                } catch (analystError) {
-                                    console.error(`[ProjectPrismaService] Error al asignar el analista ${analystId}:`, analystError);
-                                    // Continuar con el siguiente analista
+                                } else {
+                                    console.log(`[ProjectPrismaService] Analista no encontrado: ${analystId}, omitiendo`);
                                 }
+                            } catch (analystError) {
+                                console.error(`[ProjectPrismaService] Error al asignar el analista ${analystId}:`, analystError);
                             }
                         }
-                    } catch (analystErr) {
-                        console.error('[ProjectPrismaService] Error al gestionar los analistas del proyecto:', analystErr);
-                        // No propagamos el error para no bloquear la actualización principal
                     }
                 }
                 
-                return true;
-                
-            } catch (error) {
-                console.error(`[ProjectPrismaService] Error procesando datos del proyecto:`, error);
-                throw error;
+            } catch (dataErr) {
+                console.error(`[ProjectPrismaService] Error procesando datos del proyecto:`, dataErr);
+                throw dataErr;
+            }
+                    
+                    // Crear nuevas relaciones si hay analistas
+                    const analistasArray = project.analistas;
+                    if (Array.isArray(analistasArray) && analistasArray.length > 0) {
+                        for (const analystId of analistasArray) {
+                            try {
+                                // Primero verificar que el analista existe
+                                const analyst = await prisma.qAAnalyst.findUnique({
+                                    where: { id: analystId }
+                                });
+                                
+                                if (analyst) {
+                                    await prisma.projectAnalyst.create({
+                                        data: {
+                                            project: { connect: { id: existingProject?.id } },
+                                            analyst: { connect: { id: analystId } }
+                                        }
+                                    });
+                                } else {
+                                    console.log(`[ProjectPrismaService] Analista no encontrado: ${analystId}, omitiendo`);
+                                }
+                            } catch (e) {
+                                console.error(`[ProjectPrismaService] Error al vincular analista ${analystId}:`, e);
+                                // Continuar con el siguiente analista
+                            }
+                        }
+                    }
+                } catch (analysterr) {
+                    console.error(`[ProjectPrismaService] Error actualizando analistas:`, analysterr);
+                    // No fallamos la operación completa por los analistas
+                }
             }
             
+            return true;
         } catch (error) {
             console.error(`[ProjectPrismaService] Error updating project ${idJira}:`, error);
             throw error;
         }
-    }    
-    
-    async deleteProject(idJira: string): Promise<boolean> {
+    }    async deleteProject(idJira: string): Promise<boolean> {
         try {
             // Verificar si el proyecto existe y obtener su ID interno
             const project = await prisma.project.findFirst({
@@ -397,8 +421,7 @@ export class ProjectPrismaService {
         // Por defecto, si no podemos determinar el estado
         return "pendiente";
     }
-      
-    // Método para calcular el estado calculado del proyecto
+      // Método para calcular el estado calculado del proyecto
     private calcularEstadoCalculado(project: any): 'Por Iniciar' | 'En Progreso' | 'Certificado' {
         // Si ya tiene un estado calculado definido, usarlo
         if (project.estadoCalculado) return project.estadoCalculado as any;
@@ -418,59 +441,5 @@ export class ProjectPrismaService {
         
         // Por defecto
         return "Por Iniciar";
-    }
-
-    async getProjectById(idJiraOrId: string): Promise<Project | null> {
-        try {
-            // Buscar por idJira o id regular
-            const project = await prisma.project.findFirst({
-                where: {
-                    OR: [
-                        { idJira: idJiraOrId },
-                        { id: idJiraOrId }
-                    ]
-                },
-                include: {
-                    team: true,
-                    cell: true,
-                    analysts: {
-                        include: {
-                            analyst: true
-                        }
-                    }
-                }
-            });
-
-            if (!project) {
-                return null;
-            }
-
-            return {
-                id: project.id,
-                idJira: project.idJira,
-                nombre: project.nombre || undefined,
-                proyecto: project.proyecto,
-                equipo: project.team?.name || project.equipoId,
-                celula: project.cell?.name || project.celulaId,
-                horas: project.horas || 0,
-                dias: project.dias || 0,
-                horasEstimadas: project.horasEstimadas || undefined,                
-                estado: project.estado || this.calcularEstadoProyecto(project),
-                estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
-                descripcion: project.descripcion || undefined,
-                fechaInicio: project.fechaInicio || undefined,
-                fechaFin: project.fechaFin || undefined,
-                fechaEntrega: project.fechaEntrega,
-                fechaRealEntrega: project.fechaRealEntrega || undefined,
-                fechaCertificacion: project.fechaCertificacion || undefined,
-                diasRetraso: project.diasRetraso,
-                analistaProducto: project.analistaProducto,
-                planTrabajo: project.planTrabajo,
-                analistas: project.analysts.map((a: any) => a.analystId)
-            };
-        } catch (error) {
-            console.error('Error getting project by ID from database:', error);
-            return null;
-        }
     }
 }
