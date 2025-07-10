@@ -17,7 +17,7 @@ const userFormSchema = z.object({
     .min(6, { message: "La contraseña debe tener al menos 6 caracteres" })
     .optional()
     .or(z.literal("")),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
   analystId: z.string().optional(),
 });
 
@@ -47,7 +47,7 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       name: user?.name || "",
       password: "",
       isActive: user?.isActive !== undefined ? user.isActive : true,
-      analystId: user?.analystId || undefined,
+      analystId: user?.analystId || "",
     },
   });
 
@@ -55,6 +55,7 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   useEffect(() => {
     const fetchUnassignedAnalysts = async () => {
       try {
+        // Obtener los analistas no asignados
         const response = await fetch("/api/users/unassigned-analysts");
         if (!response.ok) {
           throw new Error("Error al obtener analistas disponibles");
@@ -62,13 +63,45 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         
         let analysts = await response.json();
         
-        // If editing, we need to include the current assigned analyst in the options
-        if (isEditMode && user?.analyst) {
+        // Si estamos en modo edición y hay un analista asignado al usuario
+        if (isEditMode && user?.analystId) {
+          // Verificar si el analista actual ya está en la lista
           const analystExists = analysts.some((a: QAAnalyst) => a.id === user.analystId);
+          
+          // Si no existe en la lista, necesitamos agregarlo
           if (!analystExists) {
-            analysts = [...analysts, user.analyst];
+            // Si tenemos los detalles del analista en el objeto usuario
+            if (user.analyst) {
+              analysts = [...analysts, user.analyst];
+            } 
+            // Si no tenemos los detalles, necesitamos buscarlos
+            else {
+              try {
+                const analystResponse = await fetch(`/api/qa-analysts/${user.analystId}`);
+                if (analystResponse.ok) {
+                  const currentAnalyst = await analystResponse.json();
+                  analysts = [...analysts, currentAnalyst];
+                } else {
+                  // Si hay un error, podemos agregar un placeholder
+                  analysts = [...analysts, { 
+                    id: user.analystId, 
+                    name: "Analista asignado actualmente" 
+                  }];
+                }
+              } catch (analystError) {
+                console.error("Error fetching current analyst:", analystError);
+                // Agregar placeholder en caso de error
+                analysts = [...analysts, { 
+                  id: user.analystId, 
+                  name: "Analista asignado actualmente" 
+                }];
+              }
+            }
           }
         }
+        
+        // Ordenar alfabéticamente por nombre
+        analysts = analysts.sort((a, b) => a.name.localeCompare(b.name));
         
         setUnassignedAnalysts(analysts);
       } catch (error) {
@@ -86,12 +119,13 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       setIsLoading(true);
 
       // Remove empty password if no value provided
-      if (!data.password) {
-        delete data.password;
+      const userData = { ...data };
+      if (!userData.password) {
+        delete userData.password;
       }
 
       // Create or update user
-      const url = isEditMode ? `/api/users/${user.id}` : "/api/users";
+      const url = isEditMode ? `/api/users/${user!.id}` : "/api/users";
       const method = isEditMode ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -99,7 +133,7 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(userData),
       });
 
       if (!response.ok) {
@@ -182,7 +216,7 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           <option value="">-- Seleccionar analista --</option>
           {unassignedAnalysts.map((analyst) => (
             <option key={analyst.id} value={analyst.id}>
-              {analyst.name} - {analyst.role}
+              {analyst.name}
             </option>
           ))}
         </select>

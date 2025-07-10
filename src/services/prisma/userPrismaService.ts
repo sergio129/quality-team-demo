@@ -212,14 +212,22 @@ export class UserPrismaService {
 
   async getUnassignedAnalysts() {
     try {
-      // Buscar analistas que no tengan usuario asociado
-      const analysts = await prisma.qAAnalyst.findMany({
-        where: {
-          user: null
+      // Enfoque directo y más confiable: obtener todos los analistas
+      // y luego filtrar aquellos sin usuarios asignados
+      const allAnalysts = await prisma.qAAnalyst.findMany({
+        include: {
+          user: true
         }
       });
       
-      return analysts;
+      // Filtrar manualmente para evitar problemas con la relación
+      const unassignedAnalysts = allAnalysts.filter(analyst => !analyst.user);
+      
+      // Limpiar el objeto para no enviar datos innecesarios
+      return unassignedAnalysts.map(analyst => {
+        const { user, ...analystData } = analyst;
+        return analystData;
+      });
     } catch (error) {
       console.error('Error getting unassigned analysts:', error);
       throw error;
