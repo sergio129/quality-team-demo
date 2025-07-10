@@ -1,4 +1,4 @@
-export const getJiraUrl = (idJira: string) => {
+export const getJiraUrl = (idJira: string | null | undefined) => {
     // Si el ID está vacío o es inválido, retornar null
     if (!idJira || idJira === 'undefined' || idJira === 'null') return null;
     
