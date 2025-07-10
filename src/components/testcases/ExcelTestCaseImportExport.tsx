@@ -123,8 +123,8 @@ const ExcelTestCaseImportExport = ({
         const incidentesPercent = stats.disenados ? Math.round((stats.defectos / stats.disenados) * 100) : 0;
         
         mainData.push([
-          '', '', cycle, stats.disenados, stats.exitosos, stats.noEjecutados, 
-          stats.defectos, `${exitosoPercent}%`, `${incidentesPercent}%`
+          '', '', cycle, String(stats.disenados), String(stats.exitosos), String(stats.noEjecutados), 
+          String(stats.defectos), `${exitosoPercent}%`, `${incidentesPercent}%`
         ]);
       }
       
@@ -141,13 +141,13 @@ const ExcelTestCaseImportExport = ({
         const pasos = tc.steps?.map(step => step.description).join('\n') || '';
         
         mainData.push([
-          tc.userStoryId,
-          tc.codeRef,
-          tc.name,
+          tc.userStoryId || '',
+          tc.codeRef || '',
+          tc.name || '',
           pasos,
-          tc.expectedResult,
-          tc.testType,
-          tc.status,
+          tc.expectedResult || '',
+          tc.testType || '',
+          tc.status || '',
           tc.cycle === 1 && tc.defects?.length ? tc.defects.join('\n') : '',
           tc.cycle === 2 && tc.defects?.length ? tc.defects.join('\n') : '',
           tc.cycle === 3 && tc.defects?.length ? tc.defects.join('\n') : '',
@@ -261,7 +261,7 @@ const ExcelTestCaseImportExport = ({
         const responsibleColIndex = getColIndex('Responsable');
         
         // Importar casos de prueba
-        const testCases: Partial<TestCase>[] = [];
+        const testCases: Partial<BaseTestCase>[] = [];
         
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const row = rows[i];
@@ -275,7 +275,7 @@ const ExcelTestCaseImportExport = ({
             expected: ''
           }));
           
-          const testCase: Partial<TestCase> = {
+          const testCase: Partial<BaseTestCase> = {
             id: uuidv4(),
             projectId: selectedProjectId,
             userStoryId: row[huColIndex]?.toString() || '',
@@ -443,21 +443,20 @@ const ExcelTestCaseImportExport = ({
             const cleanText = criteriaText.trim();
             
             // Caso 1: Texto ya dividido por líneas con numeración o viñetas (formato más común)
-            if (cleanText.match(/^\d+[\.\)-]\s|^[-*•]\s/m)) {
-              acceptanceCriteria = cleanText
-                .split(/\n/)
-                .map(line => line.trim())
-                .filter(Boolean)
-                // Eliminar números o viñetas del inicio para normalizar
-                .map(line => line.replace(/^\d+[\.\)-]\s+|^[-*•]\s+/, ''));
+            if (cleanText.match(/^\d+[\.\)-]\s|^[-*•]\s/m)) {        acceptanceCriteria = cleanText
+          .split(/\n/)
+          .map((line: string) => line.trim())
+          .filter(Boolean)
+          // Eliminar números o viñetas del inicio para normalizar
+          .map((line: string) => line.replace(/^\d+[\.\)-]\s+|^[-*•]\s+/, ''));
             }
             // Caso 2: Lista separada por puntos
             else if (cleanText.includes('. ') && cleanText.split('. ').length > 1) {
               acceptanceCriteria = cleanText
                 .split(/\.\s+/)
-                .map(criteria => criteria.trim())
+                .map((criteria: string) => criteria.trim())
                 .filter(Boolean)
-                .map(criteria => criteria.endsWith('.') ? criteria : criteria + '.');
+                .map((criteria: string) => criteria.endsWith('.') ? criteria : criteria + '.');
             }
             // Caso 3: Texto separado por punto y coma, comas o saltos de línea
             else if (cleanText.match(/;|,|\n/)) {
@@ -469,7 +468,7 @@ const ExcelTestCaseImportExport = ({
               }
               acceptanceCriteria = cleanText
                 .split(separator)
-                .map(criteria => criteria.trim())
+                .map((criteria: string) => criteria.trim())
                 .filter(Boolean);
             }            // Caso 4: Texto en formato "Criterio: valor" o "Dado/Cuando/Entonces" (Gherkin)
             else {
@@ -481,7 +480,7 @@ const ExcelTestCaseImportExport = ({
               
               if (criteriaWithLabels && criteriaWithLabels.length >= 1) {
                 // Formato etiqueta: valor
-                acceptanceCriteria = criteriaWithLabels.map(c => c.trim());
+                acceptanceCriteria = criteriaWithLabels.map((c: string) => c.trim());
               } 
               else if (gherkinFormat && gherkinFormat.length >= 1) {
                 // Formato Gherkin - intentamos reconstruir los escenarios
@@ -489,7 +488,7 @@ const ExcelTestCaseImportExport = ({
                   // Si hay múltiples escenarios, intentamos separarlos
                   const scenarios = cleanText.split(/(?=Escenario:|Scenario:|Example:)/i);
                   
-                  acceptanceCriteria = scenarios.map(scenario => {
+                  acceptanceCriteria = scenarios.map((scenario: string) => {
                     // Limpiar espacios extras y formatear cada escenario
                     return scenario.trim()
                       .replace(/\n+/g, ' ')
@@ -497,7 +496,7 @@ const ExcelTestCaseImportExport = ({
                   }).filter(Boolean);
                 } else {
                   // Un solo escenario Gherkin sin encabezado explícito
-                  acceptanceCriteria = gherkinFormat.map(c => c.trim());
+                  acceptanceCriteria = gherkinFormat.map((c: string) => c.trim());
                 }
               } 
               else {
@@ -674,7 +673,7 @@ const ExcelTestCaseImportExport = ({
     }
     
     // Asegurarnos que todos los casos tengan la información necesaria
-    const casesToPreview = generatedTestCases.map(tc => ({
+    const casesToPreview = generatedTestCases.map((tc: PartialExtendedTestCase) => ({
       ...tc,
       projectId: selectedProjectId,
       testPlanId: selectedTestPlanId || '',
@@ -710,7 +709,7 @@ const ExcelTestCaseImportExport = ({
       let errors = 0;
       
       // Asegurarnos que todos los casos tengan los datos necesarios
-      const casesToSave = generatedTestCases.map(tc => ({
+      const casesToSave = generatedTestCases.map((tc: PartialExtendedTestCase) => ({
         ...tc,
         projectId: selectedProjectId,
         testPlanId: selectedTestPlanId || '',
@@ -841,14 +840,14 @@ const ExcelTestCaseImportExport = ({
         const pasos = tc.steps?.map(step => step.description).join('\n') || '';
         
         mainData.push([
-          tc.userStoryId,
-          tc.codeRef,
-          tc.name,
+          tc.userStoryId || '',
+          tc.codeRef || '',
+          tc.name || '',
           pasos,
-          tc.expectedResult,
-          tc.testType,
-          tc.status,
-          tc.priority,
+          tc.expectedResult || '',
+          tc.testType || '',
+          tc.status || '',
+          tc.priority || '',
           tc.category || '',
           tc.responsiblePerson || ''
         ]);
@@ -882,7 +881,7 @@ const ExcelTestCaseImportExport = ({
   };
   
   // Mapear tipo de prueba desde el Excel a los valores del modelo
-  const mapTestType = (type: string = ''): TestCase['testType'] => {
+  const mapTestType = (type: string = ''): BaseTestCase['testType'] => {
     const lowerType = type.toLowerCase();
     
     if (lowerType.includes('funcional')) return 'Funcional';
@@ -897,7 +896,7 @@ const ExcelTestCaseImportExport = ({
   };
   
   // Mapear estado desde el Excel a los valores del modelo
-  const mapStatus = (status: string = ''): TestCase['status'] => {
+  const mapStatus = (status: string = ''): BaseTestCase['status'] => {
     const lowerStatus = status.toLowerCase();
     
     if (lowerStatus.includes('exit')) return 'Exitoso';
@@ -1511,7 +1510,7 @@ const ExcelTestCaseImportExport = ({
                     <Label htmlFor="editType">Tipo de Prueba</Label>
                     <Select
                       value={editingTestCase.testType || 'Funcional'}
-                      onValueChange={(value) => setEditingTestCase({...editingTestCase, testType: value as TestCase['testType']})}
+                      onValueChange={(value) => setEditingTestCase({...editingTestCase, testType: value as BaseTestCase['testType']})}
                     >
                       <SelectTrigger id="editType">
                         <SelectValue />

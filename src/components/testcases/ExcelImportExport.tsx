@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileDown } from 'lucide-react';
+import { FileDown, FileUp, FileText } from 'lucide-react';
 import { TestCase, TestStep } from '@/models/TestCase';
 import { useProjects } from '@/hooks/useProjects';
+import { v4 as uuidv4 } from 'uuid';
+import { createTestCase } from '@/hooks/useTestCases';
 
 interface ExcelImportExportProps {
   projectId?: string;
@@ -19,9 +22,11 @@ interface ExcelImportExportProps {
 
 export default function ExcelImportExport({ projectId, testCases = [] }: ExcelImportExportProps) {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
+  const [cycle, setCycle] = useState(1);
   const handleExportToExcel = () => {
     setIsLoading(true);
     
@@ -198,6 +203,7 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
         const typeColIndex = getColIndex('Tipo de Prueba');
         const statusColIndex = getColIndex('Estado');
         const responsibleColIndex = getColIndex('Responsable');
+        const cycleColIndex = getColIndex('Ciclo');
         
         // Importar casos de prueba
         const testCases: Partial<TestCase>[] = [];
@@ -210,7 +216,7 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
           const stepsText = row[stepsColIndex]?.toString() || '';
           const stepsArray = stepsText.split('\n').filter(Boolean);
           
-          const steps: TestStep[] = stepsArray.map(step => ({
+          const steps: TestStep[] = stepsArray.map((step: string) => ({
             id: uuidv4(),
             description: step,
             expected: ''
@@ -226,7 +232,7 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
             expectedResult: row[resultColIndex]?.toString() || '',
             testType: mapTestType(row[typeColIndex]?.toString()),
             status: mapStatus(row[statusColIndex]?.toString()),
-            cycle: Number(cycle),
+            cycle: cycleColIndex !== -1 && row[cycleColIndex] ? Number(row[cycleColIndex]) : 1, // Valor por defecto 1 si no se encuentra
             defects: [],
             evidences: [],
             responsiblePerson: row[responsibleColIndex]?.toString() || '',
@@ -348,6 +354,54 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
     if (lowerStatus.includes('progres')) return 'En progreso';
     
     return 'No ejecutado'; // Valor por defecto
+  };
+  
+  // Función para descargar una plantilla de Excel vacía
+  const handleDownloadTemplate = () => {
+    try {
+      // Crear datos para la plantilla
+      const templateData = [
+        ['FORMATO DE CONSTRUCCION CASOS DE PRUEBAS EQUIPO QUALITY TEAMS', '', '', '', '', '', '', '', '', '', '', '', '', 'version 1.0'],
+        [''],
+        ['Codigo Peticion', ''],
+        ['Nombre del proyecto', ''],
+        ['Fecha Inicio producto', ''],
+        ['Fecha Fin Producto', ''],
+        [''],
+        ['Total estimacion en Horas', '', '', 'Total estimacion en Dias', ''],
+        [''],
+        [''],
+        ['HU', 'ID', 'Nombre del caso de prueba', 'Pasos', 'Resultado esperado', 'Tipo de Prueba', 'Estado', 'Responsable'],
+        // Filas de ejemplo
+        ['HU-001', 'CP-001', 'Caso de prueba ejemplo', 'Paso 1\nPaso 2\nPaso 3', 'El sistema muestra...', 'Funcional', 'No ejecutado', ''],
+        ['', '', '', '', '', '', '', '']
+      ];
+      
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Estilizar algunas celdas
+      if (!ws['!merges']) ws['!merges'] = [];
+      
+      // Merge para el título principal
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 13 } });
+      
+      // Crear libro
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Casos de Prueba');
+      
+      // Generar archivo Excel
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      // Guardar archivo
+      saveAs(data, `plantilla_casos_prueba.xlsx`);
+      
+      toast.success('Plantilla descargada correctamente');
+    } catch (error) {
+      console.error('Error al descargar la plantilla:', error);
+      toast.error('Error al descargar la plantilla');
+    }
   };
 
   return (
