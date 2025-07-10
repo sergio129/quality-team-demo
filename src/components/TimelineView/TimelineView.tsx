@@ -255,9 +255,7 @@ const DayCell = memo(({
             
             // Comprobar si el día anterior también estaba dentro del período de vacaciones
             const prevDateStr = prevDate.toISOString().split('T')[0];
-            const startDateStr = typeof vacation.startDate === 'string' 
-                ? vacation.startDate.split('T')[0] 
-                : vacation.startDate.toISOString().split('T')[0];
+            const startDateStr = vacation.startDate.toISOString().split('T')[0];
                 
             // Es el primer día laborable después de días no laborables si:
             // 1. El día anterior era no laborable
@@ -280,9 +278,7 @@ const DayCell = memo(({
             
             // Comprobar si el día siguiente también está dentro del período de vacaciones
             const nextDateStr = nextDate.toISOString().split('T')[0];
-            const endDateStr = typeof vacation.endDate === 'string' 
-                ? vacation.endDate.split('T')[0] 
-                : vacation.endDate.toISOString().split('T')[0];
+            const endDateStr = vacation.endDate.toISOString().split('T')[0];
                 
             // Es el último día laborable antes de días no laborables si:
             // 1. El día siguiente es no laborable
@@ -295,12 +291,8 @@ const DayCell = memo(({
       // Log para depurar problemas de visualización de vacaciones
     if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
-        const startDate = typeof vacation.startDate === 'string' ? 
-            vacation.startDate.split('T')[0] : 
-            vacation.startDate.toISOString().split('T')[0];
-        const endDate = typeof vacation.endDate === 'string' ? 
-            vacation.endDate.split('T')[0] : 
-            vacation.endDate.toISOString().split('T')[0];
+        const startDate = vacation.startDate.toISOString().split('T')[0];
+        const endDate = vacation.endDate.toISOString().split('T')[0];
             
         console.log(`[${analystId}] Está de ${vacation.type} en ${dateStr}: ${startDate} - ${endDate}`);
     }
