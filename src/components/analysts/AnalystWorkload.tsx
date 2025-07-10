@@ -30,10 +30,6 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     return allProjects.filter(project => {
       // Verificar si el proyecto está asignado al analista de cualquier forma posible
       const isAssignedToAnalyst = 
-        // Por ID en el campo analista (si existe)
-        (project.analista && project.analista === analystId) ||
-        // Por nombre en el campo analista (si existe)
-        (analyst && project.analista && project.analista === analyst.name) ||
         // Por nombre de analista en el campo analistaProducto
         (analyst && project.analistaProducto && project.analistaProducto === analyst.name) ||
         // Por ID de analista en un array de analistas (si existe)
