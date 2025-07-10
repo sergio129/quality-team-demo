@@ -103,8 +103,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
         } else if (p.estado.toLowerCase().includes('iniciar')) {
           updatedProject.estadoCalculado = 'Por Iniciar';
         } else {
-          // Estado desconocido, usar el estado original
-          updatedProject.estadoCalculado = p.estado;
+          // Estado desconocido, asignar un valor por defecto compatible con el tipo
+          updatedProject.estadoCalculado = 'Por Iniciar';
         }
       }      // Si no tiene estado definido, calcularlo automáticamente
       else {
@@ -340,7 +340,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
                             'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {project.estado || project.estadoCalculado}
+                          {project.estadoCalculado}
                         </span>
                       </span>
                     </div>
