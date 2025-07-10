@@ -5,22 +5,19 @@ import { authOptions } from "@/lib/authOptions";
 
 const userService = new UserPrismaService();
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
 // GET handler - get user by id
-export async function GET(_: NextRequest, { params }: RouteContext) {
+export async function GET(request: NextRequest) {
   try {
+    // Extraer el ID directamente de la URL
+    const id = request.url.split('/').pop() as string;
+    
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "QA Leader") {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const user = await userService.getUserById(params.id);
+    const user = await userService.getUserById(id);
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
@@ -33,8 +30,11 @@ export async function GET(_: NextRequest, { params }: RouteContext) {
 }
 
 // PUT handler - update user
-export async function PUT(request: NextRequest, { params }: RouteContext) {
+export async function PUT(request: NextRequest) {
   try {
+    // Extraer el ID directamente de la URL
+    const id = request.url.split('/').pop() as string;
+    
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "QA Leader") {
@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
     }
     
     const userData = await request.json();
-    const updatedUser = await userService.updateUser(params.id, userData);
+    const updatedUser = await userService.updateUser(id, userData);
 
     if (!updatedUser) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
@@ -56,15 +56,18 @@ export async function PUT(request: NextRequest, { params }: RouteContext) {
 }
 
 // DELETE handler - delete user
-export async function DELETE(_: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest) {
   try {
+    // Extraer el ID directamente de la URL
+    const id = request.url.split('/').pop() as string;
+    
     // Check authentication
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "QA Leader") {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    const deleted = await userService.deleteUser(params.id);
+    const deleted = await userService.deleteUser(id);
     if (!deleted) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
