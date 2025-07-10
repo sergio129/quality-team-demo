@@ -74,37 +74,6 @@ export class ProjectPrismaService {
             planTrabajo: project.planTrabajo,
             analistas: project.analysts.map((a: any) => a.analystId)
         }));
-                        }
-                    }
-                }
-            });
-              return projects.map((project: any) => ({
-                id: project.id,
-                idJira: project.idJira,
-                nombre: project.nombre || undefined,
-                proyecto: project.proyecto,
-                equipo: project.team?.name || project.equipoId,
-                celula: project.cell?.name || project.celulaId,
-                horas: project.horas || 0,
-                dias: project.dias || 0,
-                horasEstimadas: project.horasEstimadas || undefined,                
-                estado: project.estado || this.calcularEstadoProyecto(project),
-                estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
-                descripcion: project.descripcion || undefined,
-                fechaInicio: project.fechaInicio || undefined,
-                fechaFin: project.fechaFin || undefined,
-                fechaEntrega: project.fechaEntrega,
-                fechaRealEntrega: project.fechaRealEntrega || undefined,
-                fechaCertificacion: project.fechaCertificacion || undefined,
-                diasRetraso: project.diasRetraso,
-                analistaProducto: project.analistaProducto,
-                planTrabajo: project.planTrabajo,
-                analistas: project.analysts.map((a: any) => a.analystId)
-            }));
-        } catch (error) {
-            console.error('Error fetching projects from database:', error);
-            throw error;
-        }
     }    
     
     async saveProject(project: Project): Promise<boolean> {
