@@ -101,7 +101,7 @@ export default function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         }
         
         // Ordenar alfabéticamente por nombre
-        analysts = analysts.sort((a, b) => a.name.localeCompare(b.name));
+        analysts = analysts.sort((a: QAAnalyst, b: QAAnalyst) => a.name.localeCompare(b.name));
         
         setUnassignedAnalysts(analysts);
       } catch (error) {

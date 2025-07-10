@@ -116,42 +116,45 @@ export class ProjectPrismaService {
     // Helper method to map Prisma projects to our Project model
     private mapProjects(projects: any[]): Project[] {
         try {
-            return projects.map((project: any) => {
-                // Verificar que el proyecto existe
-                if (!project) {
-                    console.error('[mapProjects] Encontrado un proyecto nulo o indefinido');
-                    return null;
-                }
-                
-                // Asegurarse de que analysts existe
-                const analysts = project.analysts || [];
-                
-                // Mapear el proyecto
-                return {
-                    id: project.id,
-                    idJira: project.idJira || '',
-                    nombre: project.nombre || undefined,
-                    proyecto: project.proyecto || '',
-                    equipo: project.team?.name || project.equipoId || '',
-                    celula: project.cell?.name || project.celulaId || '',
-                    horas: project.horas || 0,
-                    dias: project.dias || 0,
-                    horasEstimadas: project.horasEstimadas || undefined,                
-                    estado: project.estado || this.calcularEstadoProyecto(project),
-                    estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
-                    descripcion: project.descripcion || undefined,
-                    fechaInicio: project.fechaInicio || undefined,
-                    fechaFin: project.fechaFin || undefined,
-                    fechaEntrega: project.fechaEntrega || new Date(),
-                    fechaRealEntrega: project.fechaRealEntrega || undefined,
-                    fechaCertificacion: project.fechaCertificacion || undefined,
-                    diasRetraso: project.diasRetraso || 0,
-                    analistaProducto: project.analistaProducto || '',
-                    planTrabajo: project.planTrabajo || '',
-                    // Extraer IDs de analistas de forma segura
-                    analistas: analysts.map((a: any) => a?.analystId).filter(Boolean)
-                };
-            }).filter(Boolean); // Filtrar cualquier nulo que pudiera haberse producido
+            // Filter out null or undefined projects first, then map
+            return projects
+                .filter((project: any): project is any => {
+                    if (!project) {
+                        console.error('[mapProjects] Encontrado un proyecto nulo o indefinido');
+                        return false;
+                    }
+                    return true;
+                })
+                .map((project: any): Project => {
+                    // Asegurarse de que analysts existe
+                    const analysts = project.analysts || [];
+                    
+                    // Mapear el proyecto
+                    return {
+                        id: project.id,
+                        idJira: project.idJira || '',
+                        nombre: project.nombre || undefined,
+                        proyecto: project.proyecto || '',
+                        equipo: project.team?.name || project.equipoId || '',
+                        celula: project.cell?.name || project.celulaId || '',
+                        horas: project.horas || 0,
+                        dias: project.dias || 0,
+                        horasEstimadas: project.horasEstimadas || undefined,                
+                        estado: project.estado || this.calcularEstadoProyecto(project),
+                        estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
+                        descripcion: project.descripcion || undefined,
+                        fechaInicio: project.fechaInicio || undefined,
+                        fechaFin: project.fechaFin || undefined,
+                        fechaEntrega: project.fechaEntrega || new Date(),
+                        fechaRealEntrega: project.fechaRealEntrega || undefined,
+                        fechaCertificacion: project.fechaCertificacion || undefined,
+                        diasRetraso: project.diasRetraso || 0,
+                        analistaProducto: project.analistaProducto || '',
+                        planTrabajo: project.planTrabajo || '',
+                        // Extraer IDs de analistas de forma segura
+                        analistas: analysts.map((a: any) => a?.analystId).filter(Boolean)
+                    };
+                }); // No longer need the filter(Boolean) since we filtered null projects at the start
         } catch (error) {
             console.error('[mapProjects] Error mapeando proyectos:', error);
             return []; // Devolver array vacío en caso de error

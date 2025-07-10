@@ -4,6 +4,7 @@ import { testCaseService } from '@/services/testCaseService';
 import { v4 as uuidv4 } from 'uuid';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
     try {

@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import { UserPrismaService } from "@/services/prisma/userPrismaService";
 import { NextAuthOptions } from "next-auth";
@@ -14,7 +13,8 @@ const loginSchema = z.object({
 });
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Removido el adaptador Prisma debido a incompatibilidad de tipos
+  // En su lugar, usamos solo JWT para sesiones
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours

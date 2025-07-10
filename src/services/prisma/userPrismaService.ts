@@ -3,18 +3,46 @@ import { User } from '@/models/User';
 import { compareSync, hashSync } from 'bcryptjs';
 
 export class UserPrismaService {
+  // ──────────────────────────────────────────────────────────────────────────────
+  // GET ALL USERS
+  // ──────────────────────────────────────────────────────────────────────────────
   async getAllUsers(): Promise<User[]> {
     try {
       const users = await prisma.user.findMany({
         include: {
-          analyst: true
-        }
+          analyst: true,
+        },
       });
-      
-      // No devolver las contraseñas
+
       return users.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
+        const userWithoutNulls: Record<string, any> = {};
+
+        Object.entries(user).forEach(([key, value]) => {
+          if (key === 'password') {
+            return; // omit password
+          } else if (key === 'analyst') {
+            return; // handled separately
+          }
+          userWithoutNulls[key] = value === null ? undefined : value;
+        });
+
+        if (user.analyst) {
+          const analystWithoutNulls: Record<string, any> = {};
+
+          Object.entries(user.analyst).forEach(([key, value]) => {
+            analystWithoutNulls[key] = value === null ? undefined : value;
+          });
+
+          analystWithoutNulls.cellIds = [];
+          analystWithoutNulls.role =
+            user.analyst.role as 'QA Analyst' | 'QA Senior' | 'QA Leader';
+
+          userWithoutNulls.analyst = analystWithoutNulls;
+        } else {
+          userWithoutNulls.analyst = undefined;
+        }
+
+        return userWithoutNulls as User;
       });
     } catch (error) {
       console.error('Error getting all users:', error);
@@ -22,72 +50,106 @@ export class UserPrismaService {
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // GET USER BY ID
+  // ──────────────────────────────────────────────────────────────────────────────
   async getUserById(id: string): Promise<User | null> {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
-        include: {
-          analyst: true
-        }
+        include: { analyst: true },
       });
 
       if (!user) return null;
-      
-      // No devolver la contraseña
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+
+      const userWithoutNulls: Record<string, any> = {};
+      Object.entries(user).forEach(([key, value]) => {
+        if (key === 'password' || key === 'analyst') return;
+        userWithoutNulls[key] = value === null ? undefined : value;
+      });
+
+      if (user.analyst) {
+        const analystWithoutNulls: Record<string, any> = {};
+        Object.entries(user.analyst).forEach(([key, value]) => {
+          analystWithoutNulls[key] = value === null ? undefined : value;
+        });
+        analystWithoutNulls.cellIds = [];
+        analystWithoutNulls.role =
+          user.analyst.role as 'QA Analyst' | 'QA Senior' | 'QA Leader';
+
+        userWithoutNulls.analyst = analystWithoutNulls;
+      } else {
+        userWithoutNulls.analyst = undefined;
+      }
+
+      return userWithoutNulls as User;
     } catch (error) {
       console.error('Error getting user by ID:', error);
       throw error;
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // GET USER BY EMAIL
+  // ──────────────────────────────────────────────────────────────────────────────
   async getUserByEmail(email: string): Promise<User | null> {
     try {
       const user = await prisma.user.findUnique({
         where: { email },
-        include: {
-          analyst: true
-        }
+        include: { analyst: true },
       });
-      
+
       if (!user) return null;
 
-      // Aquí mantenemos la contraseña porque puede ser necesaria para autenticación
-      return user;
+      const userWithoutNulls: Record<string, any> = {};
+      Object.entries(user).forEach(([key, value]) => {
+        if (key === 'analyst') return;
+        userWithoutNulls[key] = value === null ? undefined : value;
+      });
+
+      if (user.analyst) {
+        const analystWithoutNulls: Record<string, any> = {};
+        Object.entries(user.analyst).forEach(([key, value]) => {
+          analystWithoutNulls[key] = value === null ? undefined : value;
+        });
+        analystWithoutNulls.cellIds = [];
+        analystWithoutNulls.role =
+          user.analyst.role as 'QA Analyst' | 'QA Senior' | 'QA Leader';
+
+        userWithoutNulls.analyst = analystWithoutNulls;
+      } else {
+        userWithoutNulls.analyst = undefined;
+      }
+
+      return userWithoutNulls as User;
     } catch (error) {
       console.error('Error getting user by email:', error);
       throw error;
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // CREATE USER
+  // ──────────────────────────────────────────────────────────────────────────────
   async createUser(userData: Partial<User>): Promise<User | null> {
     try {
       if (!userData.email || !userData.password || !userData.name) {
         throw new Error('Email, password and name are required');
       }
 
-      // Comprobar si el email ya existe
       const existingUser = await prisma.user.findUnique({
-        where: { email: userData.email }
+        where: { email: userData.email },
       });
+      if (existingUser) throw new Error('Email already exists');
 
-      if (existingUser) {
-        throw new Error('Email already exists');
-      }
-
-      // Verificar si el analista ya tiene un usuario asociado
       if (userData.analystId) {
         const existingUserWithAnalyst = await prisma.user.findUnique({
-          where: { analystId: userData.analystId }
+          where: { analystId: userData.analystId },
         });
-
-        if (existingUserWithAnalyst) {
+        if (existingUserWithAnalyst)
           throw new Error('This analyst already has a user account');
-        }
       }
 
-      // Encriptar contraseña
       const hashedPassword = hashSync(userData.password, 10);
 
       const newUser = await prisma.user.create({
@@ -95,85 +157,114 @@ export class UserPrismaService {
           email: userData.email,
           password: hashedPassword,
           name: userData.name,
-          isActive: userData.isActive !== undefined ? userData.isActive : true,
-          analystId: userData.analystId || null
+          isActive:
+            userData.isActive !== undefined ? userData.isActive : true,
+          analystId: userData.analystId || null,
         },
-        include: {
-          analyst: true
-        }
+        include: { analyst: true },
       });
 
-      // No devolver la contraseña
-      const { password, ...userWithoutPassword } = newUser;
-      return userWithoutPassword;
+      const userWithoutNulls: Record<string, any> = {};
+      Object.entries(newUser).forEach(([key, value]) => {
+        if (key === 'password' || key === 'analyst') return;
+        userWithoutNulls[key] = value === null ? undefined : value;
+      });
+
+      if (newUser.analyst) {
+        const analystWithoutNulls: Record<string, any> = {};
+        Object.entries(newUser.analyst).forEach(([key, value]) => {
+          analystWithoutNulls[key] = value === null ? undefined : value;
+        });
+        analystWithoutNulls.cellIds = [];
+        analystWithoutNulls.role =
+          newUser.analyst.role as 'QA Analyst' | 'QA Senior' | 'QA Leader';
+
+        userWithoutNulls.analyst = analystWithoutNulls;
+      } else {
+        userWithoutNulls.analyst = undefined;
+      }
+
+      return userWithoutNulls as User;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
     }
   }
 
-  async updateUser(id: string, userData: Partial<User>): Promise<User | null> {
+  // ──────────────────────────────────────────────────────────────────────────────
+  // UPDATE USER
+  // ──────────────────────────────────────────────────────────────────────────────
+  async updateUser(
+    id: string,
+    userData: Partial<User>,
+  ): Promise<User | null> {
     try {
-      // Verificar si el usuario existe
-      const existingUser = await prisma.user.findUnique({
-        where: { id }
-      });
+      const existingUser = await prisma.user.findUnique({ where: { id } });
+      if (!existingUser) throw new Error('User not found');
 
-      if (!existingUser) {
-        throw new Error('User not found');
-      }
-
-      // Preparar datos para actualización
       const updateData: any = {};
-      
       if (userData.email) updateData.email = userData.email;
       if (userData.name) updateData.name = userData.name;
-      if (userData.isActive !== undefined) updateData.isActive = userData.isActive;
-      
-      // Si hay nueva contraseña, encriptarla
+      if (userData.isActive !== undefined)
+        updateData.isActive = userData.isActive;
+
       if (userData.password) {
         updateData.password = hashSync(userData.password, 10);
       }
 
-      // Si hay cambio en el analista vinculado
       if (userData.analystId !== undefined) {
-        // Si se está asignando un analista
         if (userData.analystId) {
-          // Verificar si el analista ya tiene un usuario
           const existingUserWithAnalyst = await prisma.user.findUnique({
-            where: { analystId: userData.analystId }
+            where: { analystId: userData.analystId },
           });
-
-          if (existingUserWithAnalyst && existingUserWithAnalyst.id !== id) {
+          if (
+            existingUserWithAnalyst &&
+            existingUserWithAnalyst.id !== id
+          ) {
             throw new Error('This analyst already has a user account');
           }
         }
-        
         updateData.analystId = userData.analystId;
       }
 
       const updatedUser = await prisma.user.update({
         where: { id },
         data: updateData,
-        include: {
-          analyst: true
-        }
+        include: { analyst: true },
       });
 
-      // No devolver la contraseña
-      const { password, ...userWithoutPassword } = updatedUser;
-      return userWithoutPassword;
+      const { password, lastLogin, analyst, analystId, ...rest } = updatedUser;
+      const transformedAnalyst = analyst
+        ? {
+            ...analyst,
+            cellIds: [],
+            role: analyst.role as
+              | 'QA Analyst'
+              | 'QA Senior'
+              | 'QA Leader',
+            color: analyst.color || undefined,
+            availability: analyst.availability || undefined,
+          }
+        : undefined;
+
+      return {
+        ...rest,
+        lastLogin: lastLogin || undefined,
+        analyst: transformedAnalyst,
+        analystId: analystId || undefined,
+      };
     } catch (error) {
       console.error('Error updating user:', error);
       throw error;
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // DELETE USER
+  // ──────────────────────────────────────────────────────────────────────────────
   async deleteUser(id: string): Promise<boolean> {
     try {
-      await prisma.user.delete({
-        where: { id }
-      });
+      await prisma.user.delete({ where: { id } });
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -181,53 +272,63 @@ export class UserPrismaService {
     }
   }
 
-  async validateCredentials(email: string, password: string): Promise<User | null> {
+  // ──────────────────────────────────────────────────────────────────────────────
+  // VALIDATE CREDENTIALS
+  // ──────────────────────────────────────────────────────────────────────────────
+  async validateCredentials(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
     try {
       const user = await this.getUserByEmail(email);
-      
-      if (!user || !user.password) {
-        return null;
-      }
+      if (!user || !user.password) return null;
 
       const passwordValid = compareSync(password, user.password);
-      
-      if (!passwordValid) {
-        return null;
-      }
+      if (!passwordValid) return null;
 
-      // Actualizar último login
       await prisma.user.update({
         where: { id: user.id },
-        data: { lastLogin: new Date() }
+        data: { lastLogin: new Date() },
       });
 
-      // No devolver la contraseña
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+      const { password: _, lastLogin, analyst, analystId, ...rest } = user;
+      const transformedAnalyst = analyst
+        ? {
+            ...analyst,
+            cellIds: [],
+            role: analyst.role as
+              | 'QA Analyst'
+              | 'QA Senior'
+              | 'QA Leader',
+            color: analyst.color || undefined,
+            availability: analyst.availability || undefined,
+          }
+        : undefined;
+
+      return {
+        ...rest,
+        lastLogin: lastLogin || undefined,
+        analyst: transformedAnalyst,
+        analystId: analystId || undefined,
+      };
     } catch (error) {
       console.error('Error validating credentials:', error);
       throw error;
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // GET UNASSIGNED ANALYSTS
+  // ──────────────────────────────────────────────────────────────────────────────
   async getUnassignedAnalysts() {
     try {
-      // Enfoque directo y más confiable: obtener todos los analistas
-      // y luego filtrar aquellos sin usuarios asignados
       const allAnalysts = await prisma.qAAnalyst.findMany({
-        include: {
-          user: true
-        }
+        include: { user: true },
       });
-      
-      // Filtrar manualmente para evitar problemas con la relación
-      const unassignedAnalysts = allAnalysts.filter(analyst => !analyst.user);
-      
-      // Limpiar el objeto para no enviar datos innecesarios
-      return unassignedAnalysts.map(analyst => {
-        const { user, ...analystData } = analyst;
-        return analystData;
-      });
+
+      return allAnalysts
+        .filter(analyst => !analyst.user)
+        .map(({ user, ...analystData }) => analystData);
     } catch (error) {
       console.error('Error getting unassigned analysts:', error);
       throw error;
