@@ -15,36 +15,46 @@ const adminOnlyRoutes = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  try {
+    const { pathname } = request.nextUrl;
+    
+    // Allow public routes
+    if (publicRoutes.some(route => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // Apply audit middleware to API routes - TEMPORARILY DISABLED
+    // if (pathname.startsWith('/api/')) {
+    //   return auditMiddleware(request);
+    // }
+
+    // Check for auth token
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET 
+    });
+
+    // Redirect to login if not authenticated
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', encodeURI(request.url));
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Check role-based access for admin-only routes
+    const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));
+    if (isAdminRoute && token.role !== 'QA Leader') {
+      // Redirect to home if not authorized
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
     return NextResponse.next();
+  } catch (error) {
+    console.error('Middleware error:', error);
+    // En caso de error, redirigir al login
+    const fallbackUrl = new URL('/login', request.url);
+    return NextResponse.redirect(fallbackUrl);
   }
-
-  // Apply audit middleware to API routes - TEMPORARILY DISABLED
-  // if (pathname.startsWith('/api/')) {
-  //   return auditMiddleware(request);
-  // }
-
-  // Check for auth token
-  const token = await getToken({ req: request });
-
-  // Redirect to login if not authenticated
-  if (!token) {
-    const url = new URL('/login', request.url);
-    url.searchParams.set('callbackUrl', encodeURI(request.url));
-    return NextResponse.redirect(url);
-  }
-
-  // Check role-based access for admin-only routes
-  const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));
-  if (isAdminRoute && token.role !== 'QA Leader') {
-    // Redirect to home if not authorized
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  return NextResponse.next();
 }
 
 export const config = {

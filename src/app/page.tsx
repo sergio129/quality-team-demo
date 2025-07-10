@@ -1,15 +1,22 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/authOptions';
 
 export default async function Home() {
-  // Obtener información del usuario autenticado
-  const user = await getCurrentUser();
-  
-  // Si no hay usuario autenticado, redirigir al login
-  if (!user) {
-    redirect('/login');
+  try {
+    // Obtener la sesión directamente para evitar problemas de importación
+    const session = await getServerSession(authOptions);
+    
+    // Si no hay usuario autenticado, redirigir al login
+    if (!session?.user) {
+      return redirect('/login');
+    }
+    
+    // Si hay un usuario autenticado, redirigir a la página de proyectos
+    return redirect('/proyectos');
+  } catch (error) {
+    console.error("Error en la página principal:", error);
+    // En caso de error, redirigir al login
+    return redirect('/login');
   }
-  
-  // Si hay un usuario autenticado, redirigir a la página de proyectos
-  redirect('/proyectos');
 }
