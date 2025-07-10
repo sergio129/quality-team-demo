@@ -275,7 +275,7 @@ export function AnalystForm({ analyst, onSuccess, cells: initialCells }: Analyst
               name="skills"
               control={control}
               render={({ field }) => (
-                <SkillsManager skills={field.value} onChange={field.onChange} />
+                <SkillsManager skills={field.value || []} onChange={field.onChange} />
               )}
             />
           </div>
