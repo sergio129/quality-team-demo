@@ -236,12 +236,8 @@ const DayCell = memo(({
     
     if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
-        const startDate = typeof vacation.startDate === 'string' 
-            ? vacation.startDate.split('T')[0] 
-            : vacation.startDate.toISOString().split('T')[0];
-        const endDate = typeof vacation.endDate === 'string' 
-            ? vacation.endDate.split('T')[0] 
-            : vacation.endDate.toISOString().split('T')[0];
+        const startDate = vacation.startDate.toISOString().split('T')[0];
+        const endDate = vacation.endDate.toISOString().split('T')[0];
             
         isFirstDay = dateStr === startDate;
         isLastDay = dateStr === endDate;
