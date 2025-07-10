@@ -8,7 +8,7 @@ async function updateTestPlans() {
     console.log('Iniciando actualización de planes de prueba...');
     
     // Obtener todos los planes de prueba
-    const testPlans = await testCaseService.getTestPlans();
+    const testPlans = await testCaseService.getAllTestPlans();
     console.log(`Encontrados ${testPlans.length} planes de prueba para actualizar`);
     
     // Procesar cada plan
