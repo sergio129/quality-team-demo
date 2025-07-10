@@ -1,4 +1,4 @@
-import { Incident, IncidentImage } from '@/models/Incident';
+import { Incident, IncidentImage, BugType, AreaAfectada } from '@/models/Incident';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
 import crypto from 'crypto';
@@ -230,8 +230,8 @@ export class IncidentPrismaService {
                 // Usamos el campo de texto directo para el responsable asignado
                 asignadoA: createdIncident.asignadoA_text || createdIncident.asignadoA?.name || '',
                 idJira: createdIncident.idJira,
-                tipoBug: createdIncident.tipoBug || undefined,
-                areaAfectada: createdIncident.areaAfectada || undefined,                celula: createdIncident.cell?.name || '',
+                tipoBug: createdIncident.tipoBug as BugType || undefined,
+                areaAfectada: createdIncident.areaAfectada as AreaAfectada || undefined,                celula: createdIncident.cell?.name || '',
                 informadoPor: createdIncident.informadoPor?.name || '',
                 etiquetas: createdIncident.etiquetas.map((tag: any) => tag.name)
             };
@@ -344,8 +344,8 @@ export class IncidentPrismaService {
                 aplica: updatedIncident.aplica,
                 cliente: updatedIncident.cliente,
                 idJira: updatedIncident.idJira,
-                tipoBug: updatedIncident.tipoBug || undefined,
-                areaAfectada: updatedIncident.areaAfectada || undefined,                celula: updatedIncident.cell?.name || '',
+                tipoBug: updatedIncident.tipoBug as BugType || undefined,
+                areaAfectada: updatedIncident.areaAfectada as AreaAfectada || undefined,                celula: updatedIncident.cell?.name || '',
                 informadoPor: updatedIncident.informadoPor?.name || '',
                 asignadoA: updatedIncident.asignadoA_text || '',
                 etiquetas: updatedIncident.etiquetas.map((tag: { name: string }) => tag.name)

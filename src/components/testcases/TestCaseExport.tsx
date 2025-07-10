@@ -583,7 +583,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         body: tableData,
         theme: 'striped', // Tema con filas alternadas
         headStyles: {
-          fillColor: primaryColor,
+          fillColor: [primaryColor[0], primaryColor[1], primaryColor[2]],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 8, // Fuente más pequeña para encabezados

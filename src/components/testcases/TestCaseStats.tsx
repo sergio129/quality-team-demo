@@ -49,7 +49,6 @@ export default function TestCaseStats({ projectId, testPlanId }: TestCaseStatsPr
             <Progress 
               value={(stats.statusStats?.Exitoso || 0) / (stats.totalCases || 1) * 100} 
               className="h-2 mt-2 bg-gray-200"
-              indicatorClassName="bg-green-500"
             />
           </CardContent>
         </Card>
@@ -63,7 +62,6 @@ export default function TestCaseStats({ projectId, testPlanId }: TestCaseStatsPr
             <Progress 
               value={(stats.statusStats?.Fallido || 0) / (stats.totalCases || 1) * 100} 
               className="h-2 mt-2 bg-gray-200"
-              indicatorClassName="bg-red-500"
             />
           </CardContent>
         </Card>
@@ -77,7 +75,6 @@ export default function TestCaseStats({ projectId, testPlanId }: TestCaseStatsPr
             <Progress 
               value={(stats.statusStats?.['No ejecutado'] || 0) / (stats.totalCases || 1) * 100} 
               className="h-2 mt-2 bg-gray-200"
-              indicatorClassName="bg-gray-400"
             />
           </CardContent>
         </Card>

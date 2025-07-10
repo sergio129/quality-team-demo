@@ -154,7 +154,7 @@ export default function TestCaseEvidence({ testCase, onSaved }: TestCaseEvidence
         ['Evidencias -'],
         [''],
         ['N° Caso', testCase.codeRef],
-        ['Fecha:', new Date(newEvidence.date).toLocaleDateString()],
+        ['Fecha:', new Date(newEvidence.date || new Date()).toLocaleDateString()],
         ['Nombre Tester:', newEvidence.tester],
         [''],
         ['Descripción'],

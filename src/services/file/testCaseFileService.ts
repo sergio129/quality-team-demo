@@ -120,8 +120,8 @@ class TestCaseFileService {
         };
       }
 
-      const cycleStats = {};
-      const statsByType = {};
+      const cycleStats: Record<number, { designed: number; successful: number; notExecuted: number; defects: number }> = {};
+      const statsByType: Record<string, number> = {};
       const statsByStatus = {
         'No ejecutado': 0,
         'Exitoso': 0,

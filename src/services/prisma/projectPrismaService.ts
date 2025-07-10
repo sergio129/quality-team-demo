@@ -111,23 +111,26 @@ export class ProjectPrismaService {
                 fechaCertificacion: project.fechaCertificacion,
                 diasRetraso: project.diasRetraso || 0,
                 analistaProducto: project.analistaProducto || '',
-                planTrabajo: project.planTrabajo || '',
-                analysts: {
-                    create: []
-                }
+                planTrabajo: project.planTrabajo || ''
             };
             
-            // Agregar analistas si existen
-            if (project.analistas && Array.isArray(project.analistas) && project.analistas.length > 0) {
-                projectData.analysts.create = project.analistas.map(analystId => ({
-                    analystId
-                }));
-            }
-            
-            // Crear el proyecto
+            // Crear el proyecto primero
             const result = await prisma.project.create({
                 data: projectData
             });
+            
+            // Agregar analistas si existen después de crear el proyecto
+            if (project.analistas && Array.isArray(project.analistas) && project.analistas.length > 0) {
+                // Crear las relaciones de los analistas con el proyecto
+                await Promise.all(project.analistas.map(async (analystId) => {
+                    return prisma.projectAnalyst.create({
+                        data: {
+                            projectId: result.id,
+                            analystId
+                        }
+                    });
+                }));
+            }
             
             console.log(`[ProjectPrismaService] Proyecto creado correctamente con ID: ${result.id}`);
             return true;
@@ -273,13 +276,20 @@ export class ProjectPrismaService {
                 console.error(`[ProjectPrismaService] Error procesando datos del proyecto:`, dataErr);
                 throw dataErr;
             }
-              // Si se proporcionan analistas, actualizar las relaciones
-            if (project.analistas !== undefined) {
+                            
+            // Manejo de analistas movido dentro del bloque try principal para evitar error de null
+            if (project.analistas !== undefined && existingProject) {
                 try {
-                    // Eliminar todas las relaciones existentes
-                    await prisma.projectAnalyst.deleteMany({
-                        where: { projectId: existingProject.id }
-                    });
+                    // Verificar que existingProject no sea null antes de usarlo
+                    if (existingProject) {
+                        // Eliminar todas las relaciones existentes
+                        await prisma.projectAnalyst.deleteMany({
+                            where: { projectId: existingProject.id }
+                        });
+                    } else {
+                        console.error('[ProjectPrismaService] No se puede actualizar analistas - proyecto no encontrado');
+                        return false; // Salir si el proyecto no existe
+                    }
                     
                     // Crear nuevas relaciones si hay analistas
                     const analistasArray = project.analistas;
@@ -294,7 +304,7 @@ export class ProjectPrismaService {
                                 if (analyst) {
                                     await prisma.projectAnalyst.create({
                                         data: {
-                                            project: { connect: { id: existingProject.id } },
+                                            project: { connect: { id: existingProject?.id } },
                                             analyst: { connect: { id: analystId } }
                                         }
                                     });

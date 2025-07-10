@@ -115,7 +115,9 @@ export class MetricasService {
 
       // Generar métricas para cada proyecto
       for (const proyecto of proyectos) {
-        const casosPrueba = casosPorProyecto.get(proyecto.id) || [];
+        // Usar idJira como clave alternativa si id no está disponible
+        const proyectoKey = proyecto.id || proyecto.idJira;
+        const casosPrueba = casosPorProyecto.get(proyectoKey) || [];
         
         const total = casosPrueba.length;
         const ejecutados = casosPrueba.filter(c => c.status !== 'No ejecutado').length;
