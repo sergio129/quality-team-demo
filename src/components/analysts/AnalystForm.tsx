@@ -165,7 +165,6 @@ export function AnalystForm({ analyst, onSuccess, cells: initialCells }: Analyst
                 {...register('role')}
                 className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background file:border-0 file:bg-transparent file:text-xs file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Seleccionar rol</option>
                 <option value="QA Analyst">QA Analyst</option>
                 <option value="QA Senior">QA Senior</option>
                 <option value="QA Leader">QA Leader</option>
@@ -288,7 +287,7 @@ export function AnalystForm({ analyst, onSuccess, cells: initialCells }: Analyst
               name="certifications"
               control={control}
               render={({ field }) => (
-                <CertificationsManager certifications={field.value} onChange={field.onChange} />
+                <CertificationsManager certifications={field.value || []} onChange={field.onChange} />
               )}
             />
           </div>
