@@ -8,15 +8,28 @@ import { Download } from 'lucide-react';
 
 interface ExportToExcelButtonProps {
   projects: Project[];
-  filterType: 'week' | 'month' | 'year' | 'all';
+  filterType?: 'week' | 'month' | 'year' | 'all';
+  exportFilterType?: 'week' | 'month' | 'year' | 'all';
+  setExportFilterType?: (value: 'week' | 'month' | 'year' | 'all') => void;
+  filterEquipo?: string;
+  filterAnalista?: string;
+  filterEstado?: string;
+  filterCelula?: string;
+  searchTerm?: string;
+  filterAtrasado?: string | boolean;
+  startDate?: Date | null;
+  endDate?: Date | null;
   className?: string;
 }
 
 const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({ 
   projects, 
   filterType,
+  exportFilterType,
   className = ''
 }) => {
+  // Usamos exportFilterType si está disponible, si no, usamos filterType
+  const actualFilterType = exportFilterType || filterType || 'all';
   // Función para formatear fechas en el formato deseado para Excel
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return '';
@@ -33,7 +46,8 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
     const formattedDate = currentDate.toISOString().split('T')[0];
     
     let filterName = '';
-    switch (filterType) {
+    const activeFilterType = exportFilterType || filterType || 'all';
+    switch (activeFilterType) {
       case 'week':
         filterName = 'Semanal';
         break;

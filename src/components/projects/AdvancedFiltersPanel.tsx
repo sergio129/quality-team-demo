@@ -338,7 +338,7 @@ export default function AdvancedFiltersPanel({
       {/* Botón de exportación a Excel */}
       <div className="mt-4">
         <ExportToExcelButton 
-          projects={projects}
+          projects={projects || []}
           filterEquipo={filterEquipo}
           filterAnalista={filterAnalista}
           filterEstado={filterEstado}

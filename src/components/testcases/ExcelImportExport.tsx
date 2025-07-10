@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FileDown } from 'lucide-react';
-import { TestCase } from '@/models/TestCase';
+import { TestCase, TestStep } from '@/models/TestCase';
 import { useProjects } from '@/hooks/useProjects';
 
 interface ExcelImportExportProps {
@@ -86,8 +86,8 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
         const incidentesPercent = stats.disenados ? Math.round((stats.defectos / stats.disenados) * 100) : 0;
         
         mainData.push([
-          '', '', cycle, stats.disenados, stats.exitosos, stats.noEjecutados, 
-          stats.defectos, `${exitosoPercent}%`, `${incidentesPercent}%`
+          '', '', cycle, String(stats.disenados), String(stats.exitosos), String(stats.noEjecutados), 
+          String(stats.defectos), `${exitosoPercent}%`, `${incidentesPercent}%`
         ]);
       }
       

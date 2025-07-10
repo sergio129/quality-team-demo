@@ -229,7 +229,7 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                           </div>
                         </TableCell>
                         <TableCell>{formatDate(project.fechaEntrega)}</TableCell>
-                        <TableCell>{project.analista || project.analistaProducto || '-'}</TableCell>
+                        <TableCell>{project.analistaProducto || '-'}</TableCell>
                       </TableRow>
                     );
                   })}

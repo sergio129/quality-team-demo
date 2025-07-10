@@ -4,16 +4,16 @@
  * que ambas implementaciones retornan los mismos resultados.
  */
 
-const { QAAnalystService } = require('../src/services/qaAnalystService');
-const { TeamService } = require('../src/services/teamService');
-const { CellService } = require('../src/services/cellService');
-const { testCaseService } = require('../src/services/testCaseService');
-const { testPlanService } = require('../src/services/testPlanService');
-const { incidentService } = require('../src/services/incidentService');
-const { projectService } = require('../src/services/projectService');
-const { PrismaClient } = require('@prisma/client');
-const fs = require('fs/promises');
-const path = require('path');
+import { QAAnalystService } from '../src/services/qaAnalystService';
+import { TeamService } from '../src/services/teamService';
+import { CellService } from '../src/services/cellService';
+import { testCaseService } from '../src/services/testCaseService';
+import { testPlanService } from '../src/services/testPlanService';
+import { incidentService } from '../src/services/incidentService';
+import { projectService } from '../src/services/projectService';
+import { PrismaClient } from '@prisma/client';
+import fs from 'fs/promises';
+import path from 'path';
 
 // Configurar temporalmente las variables de entorno para este script
 process.env.MIGRATION_LOGGING = 'true';
