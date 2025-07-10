@@ -1,13 +1,21 @@
-import { getSession } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import LoginForm from "@/components/auth/LoginForm";
+import { authOptions } from "@/lib/authOptions";
+
+export const dynamic = 'force-dynamic';
 
 export default async function LoginPage() {
-  // Redirect to home if already logged in
-  const session = await getSession();
-  
-  if (session) {
-    redirect("/");
+  try {
+    // Redirect to home if already logged in
+    const session = await getServerSession(authOptions);
+    
+    if (session) {
+      return redirect("/");
+    }
+  } catch (error) {
+    console.error("Error al verificar la sesión:", error);
+    // Continuamos para mostrar el formulario de login
   }
   
   return (

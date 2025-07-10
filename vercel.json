@@ -6,5 +6,10 @@
   "env": {
     "VERCEL_ENV": "production",
     "NEXT_TYPECHECK": "false"
-  }
+  },
+  "routes": [
+    { "src": "/", "dest": "/login" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/login", "status": 404 }
+  ]
 }
