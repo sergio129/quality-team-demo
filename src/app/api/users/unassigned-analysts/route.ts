@@ -1,7 +1,7 @@
 import { UserPrismaService } from "@/services/prisma/userPrismaService";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 
 const userService = new UserPrismaService();
 

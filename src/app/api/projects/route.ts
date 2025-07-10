@@ -3,7 +3,7 @@ import { projectService } from '@/services/projectService';
 import { testCaseService } from '@/services/testCaseService';
 import { v4 as uuidv4 } from 'uuid';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/authOptions';
 
 export async function GET(req: NextRequest) {
     try {
