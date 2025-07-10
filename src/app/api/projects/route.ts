@@ -20,11 +20,40 @@ export async function GET(req: NextRequest) {
         const yearFilter = url.searchParams.get('year');
         const role = url.searchParams.get('role') || session.user.role;
         
-        // Use our service with role-based filtering
+        console.log(`[API:Projects] Request from user: ${session.user.name}`);
+        console.log(`[API:Projects] User role: ${session.user.role}`);
+        console.log(`[API:Projects] Analyst ID: ${analystId || 'No asignado'}`);
+        
+        // Usar nuestro servicio con filtrado basado en rol
         const projects = await projectService.getAllProjects({
             analystId: analystId || undefined,
             role: role
         });
+        
+        console.log(`[API:Projects] Found ${projects.length} projects`);
+        
+        if (projects.length === 0 && analystId) {
+            // Si no hay proyectos y tenemos un analystId, verificar si el analista existe
+            console.log(`[API:Projects] No projects found for analyst ${analystId}, checking analyst...`);
+            
+            try {
+                const analyst = await prisma.qAAnalyst.findUnique({
+                    where: { id: analystId },
+                    include: {
+                        projects: true
+                    }
+                });
+                
+                if (analyst) {
+                    console.log(`[API:Projects] Analyst found: ${analyst.name}`);
+                    console.log(`[API:Projects] Analyst has ${analyst.projects.length} project relations`);
+                } else {
+                    console.log(`[API:Projects] Analyst not found with ID: ${analystId}`);
+                }
+            } catch (error) {
+                console.error(`[API:Projects] Error checking analyst:`, error);
+            }
+        }
         
         // Filtrado inicial de proyectos
         let filteredProjects = projects;

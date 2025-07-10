@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import useSWR, { mutate } from 'swr';
 import { toast } from 'sonner';
 import { fetcher } from '@/lib/fetcher';
@@ -24,25 +25,50 @@ export interface ProjectStats {
  * Hook para obtener todos los proyectos, aplicando filtros basados en el rol del usuario
  */
 export function useProjects() {
-  // Obtener la sesión del usuario usando useSession de next-auth/react
+  // Obtener la sesión del usuario
   const { data: session } = useSWR('/api/auth/session', fetcher);
   
   // Construir la URL con los parámetros del usuario actual si están disponibles
-  let url = PROJECTS_API;
-  
-  if (session?.user) {
-    url = `${PROJECTS_API}?role=${session.user.role}`;
+  const urlKey = useMemo(() => {
+    // Si no tenemos sesión, retornamos null para evitar la petición
+    if (!session?.user) return null;
     
-    if (session.user.analystId) {
-      url += `&analystId=${session.user.analystId}`;
+    let url = PROJECTS_API;
+    const params = new URLSearchParams();
+    
+    // Añadir parámetros de role
+    if (session.user.role) {
+      params.append('role', session.user.role);
     }
-  }
+    
+    // Añadir analystId si existe
+    if (session.user.analystId) {
+      params.append('analystId', session.user.analystId);
+    }
+    
+    // No añadir timestamp para evitar ciclos infinitos de revalidación
+    // params.append('_t', Date.now().toString());
+    
+    // Construir URL final con parámetros
+    url = `${PROJECTS_API}?${params.toString()}`;
+    return url;
+  }, [session]); // Dependencia en session para recalcular cuando cambie
   
-  const { data, error, isLoading } = useSWR<Project[]>(url, fetcher);
+  // Usar una clave estable para SWR
+  const { data, error, isLoading } = useSWR<Project[]>(
+    urlKey, // Solo hace la petición si urlKey no es null
+    fetcher,
+    { 
+      revalidateOnFocus: false, // Evita revalidar en focus para prevenir ciclos
+      revalidateOnReconnect: false, // Evita revalidar en reconexiones
+      dedupingInterval: 10000, // 10 segundos para deduplicar peticiones
+      errorRetryCount: 2 // Limitar reintentos
+    }
+  );
 
   return {
     projects: data || [],
-    isLoading,
+    isLoading: isLoading || !session, // Considerar loading si la sesión no está cargada
     isError: error,
   };
 }

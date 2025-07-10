@@ -6,9 +6,12 @@ import { GetProjectsOptions } from '@/services/projectServiceTypes';
 export class ProjectPrismaService {
     async getAllProjects(options?: GetProjectsOptions): Promise<Project[]> {
         try {
-            // If user is QA Leader, return all projects
+            console.log(`[ProjectPrismaService] Getting projects with options:`, options);
+            
+            // Si el usuario es QA Leader o no se especifica un analista, devolver todos los proyectos
             if (options?.role === 'QA Leader' || !options?.analystId) {
-                // Admin or no specific filter requested
+                console.log(`[ProjectPrismaService] Getting all projects (admin or no filter)`);
+                // Admin o sin filtro específico
                 const projects = await prisma.project.findMany({
                     include: {
                         team: true,
@@ -23,12 +26,18 @@ export class ProjectPrismaService {
                 return this.mapProjects(projects);
             }
             
-            // For QA Analyst or QA Senior, filter to only show their assigned projects
+            // Para QA Analyst o QA Senior, filtrar para mostrar solo sus proyectos asignados
+            console.log(`[ProjectPrismaService] Getting projects for analyst: ${options.analystId}`);
+            
+            // Intentar obtener el ID como UUID válido o texto
+            const analystId = options.analystId;
+            
+            // Consulta con filtro específico por analista
             const projects = await prisma.project.findMany({
                 where: {
                     analysts: {
                         some: {
-                            analystId: options.analystId
+                            analystId: analystId
                         }
                     }
                 },
@@ -42,6 +51,44 @@ export class ProjectPrismaService {
                     }
                 }
             });
+            
+            console.log(`[ProjectPrismaService] Found ${projects.length} projects for analyst ${options.analystId}`);
+            
+            if (projects.length === 0) {
+                // Intentar con consulta alternativa si no se encuentran proyectos
+                console.log(`[ProjectPrismaService] No projects found, trying alternative query...`);
+                
+                // Intentar buscar directamente el analista para confirmar que existe
+                const analyst = await prisma.qAAnalyst.findUnique({
+                    where: { id: analystId },
+                    include: {
+                        projects: {
+                            include: {
+                                project: {
+                                    include: {
+                                        team: true,
+                                        cell: true,
+                                        analysts: {
+                                            include: {
+                                                analyst: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                if (analyst) {
+                    console.log(`[ProjectPrismaService] Found analyst with ${analyst.projects.length} projects`);
+                    const projectsFromAnalyst = analyst.projects.map(pa => pa.project);
+                    return this.mapProjects(projectsFromAnalyst);
+                } else {
+                    console.log(`[ProjectPrismaService] Analyst not found with ID: ${analystId}`);
+                }
+            }
+            
             return this.mapProjects(projects);
         } catch (error) {
             console.error('Error fetching projects from database:', error);
@@ -51,30 +98,48 @@ export class ProjectPrismaService {
     
     // Helper method to map Prisma projects to our Project model
     private mapProjects(projects: any[]): Project[] {
-        return projects.map((project: any) => ({
-            id: project.id,
-            idJira: project.idJira,
-            nombre: project.nombre || undefined,
-            proyecto: project.proyecto,
-            equipo: project.team?.name || project.equipoId,
-            celula: project.cell?.name || project.celulaId,
-            horas: project.horas || 0,
-            dias: project.dias || 0,
-            horasEstimadas: project.horasEstimadas || undefined,                
-            estado: project.estado || this.calcularEstadoProyecto(project),
-            estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
-            descripcion: project.descripcion || undefined,
-            fechaInicio: project.fechaInicio || undefined,
-            fechaFin: project.fechaFin || undefined,
-            fechaEntrega: project.fechaEntrega,
-            fechaRealEntrega: project.fechaRealEntrega || undefined,
-            fechaCertificacion: project.fechaCertificacion || undefined,
-            diasRetraso: project.diasRetraso,
-            analistaProducto: project.analistaProducto,
-            planTrabajo: project.planTrabajo,
-            analistas: project.analysts.map((a: any) => a.analystId)
-        }));
-    }    
+        try {
+            return projects.map((project: any) => {
+                // Verificar que el proyecto existe
+                if (!project) {
+                    console.error('[mapProjects] Encontrado un proyecto nulo o indefinido');
+                    return null;
+                }
+                
+                // Asegurarse de que analysts existe
+                const analysts = project.analysts || [];
+                
+                // Mapear el proyecto
+                return {
+                    id: project.id,
+                    idJira: project.idJira || '',
+                    nombre: project.nombre || undefined,
+                    proyecto: project.proyecto || '',
+                    equipo: project.team?.name || project.equipoId || '',
+                    celula: project.cell?.name || project.celulaId || '',
+                    horas: project.horas || 0,
+                    dias: project.dias || 0,
+                    horasEstimadas: project.horasEstimadas || undefined,                
+                    estado: project.estado || this.calcularEstadoProyecto(project),
+                    estadoCalculado: project.estadoCalculado as any || this.calcularEstadoCalculado(project),
+                    descripcion: project.descripcion || undefined,
+                    fechaInicio: project.fechaInicio || undefined,
+                    fechaFin: project.fechaFin || undefined,
+                    fechaEntrega: project.fechaEntrega || new Date(),
+                    fechaRealEntrega: project.fechaRealEntrega || undefined,
+                    fechaCertificacion: project.fechaCertificacion || undefined,
+                    diasRetraso: project.diasRetraso || 0,
+                    analistaProducto: project.analistaProducto || '',
+                    planTrabajo: project.planTrabajo || '',
+                    // Extraer IDs de analistas de forma segura
+                    analistas: analysts.map((a: any) => a?.analystId).filter(Boolean)
+                };
+            }).filter(Boolean); // Filtrar cualquier nulo que pudiera haberse producido
+        } catch (error) {
+            console.error('[mapProjects] Error mapeando proyectos:', error);
+            return []; // Devolver array vacío en caso de error
+        }
+    }
     
     async saveProject(project: Project): Promise<boolean> {
         try {
