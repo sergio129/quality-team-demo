@@ -26,14 +26,26 @@ export class ProjectPrismaService {
                 return this.mapProjects(projects);
             }
             
-            // Para QA Analyst o QA Senior, filtrar para mostrar solo sus proyectos asignados
+            // Para QA Analyst o QA Senior, filtrar para mostrar sus proyectos
             console.log(`[ProjectPrismaService] Getting projects for analyst: ${options.analystId}`);
             
             // Intentar obtener el ID como UUID válido o texto
             const analystId = options.analystId;
             
-            // Consulta con filtro específico por analista
-            const projects = await prisma.project.findMany({
+            // Primero, obtener el nombre del analista
+            const analista = await prisma.qAAnalyst.findUnique({
+                where: { id: analystId }
+            });
+            
+            if (!analista) {
+                console.log(`[ProjectPrismaService] No se encontró el analista con ID: ${analystId}`);
+                return [];
+            }
+            
+            console.log(`[ProjectPrismaService] Analista encontrado: ${analista.name}`);
+            
+            // 1. Proyectos por relación en la tabla ProjectAnalyst
+            const projectsByRelation = await prisma.project.findMany({
                 where: {
                     analysts: {
                         some: {
@@ -52,44 +64,49 @@ export class ProjectPrismaService {
                 }
             });
             
-            console.log(`[ProjectPrismaService] Found ${projects.length} projects for analyst ${options.analystId}`);
+            console.log(`[ProjectPrismaService] Proyectos por relación: ${projectsByRelation.length}`);
             
-            if (projects.length === 0) {
-                // Intentar con consulta alternativa si no se encuentran proyectos
-                console.log(`[ProjectPrismaService] No projects found, trying alternative query...`);
-                
-                // Intentar buscar directamente el analista para confirmar que existe
-                const analyst = await prisma.qAAnalyst.findUnique({
-                    where: { id: analystId },
-                    include: {
-                        projects: {
-                            include: {
-                                project: {
-                                    include: {
-                                        team: true,
-                                        cell: true,
-                                        analysts: {
-                                            include: {
-                                                analyst: true
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+            // 2. Proyectos por campo analistaProducto
+            const projectsByAnalystName = await prisma.project.findMany({
+                where: {
+                    analistaProducto: analista.name
+                },
+                include: {
+                    team: true,
+                    cell: true,
+                    analysts: {
+                        include: {
+                            analyst: true
                         }
                     }
-                });
-                
-                if (analyst) {
-                    console.log(`[ProjectPrismaService] Found analyst with ${analyst.projects.length} projects`);
-                    const projectsFromAnalyst = analyst.projects.map(pa => pa.project);
-                    return this.mapProjects(projectsFromAnalyst);
-                } else {
-                    console.log(`[ProjectPrismaService] Analyst not found with ID: ${analystId}`);
+                }
+            });
+            
+            console.log(`[ProjectPrismaService] Proyectos por analistaProducto: ${projectsByAnalystName.length}`);
+            
+            // Combinar resultados eliminando duplicados por ID
+            const allProjectIds = new Set();
+            const allProjects = [];
+            
+            // Añadir proyectos por relación
+            for (const project of projectsByRelation) {
+                if (!allProjectIds.has(project.id)) {
+                    allProjectIds.add(project.id);
+                    allProjects.push(project);
                 }
             }
             
-            return this.mapProjects(projects);
+            // Añadir proyectos por nombre de analista
+            for (const project of projectsByAnalystName) {
+                if (!allProjectIds.has(project.id)) {
+                    allProjectIds.add(project.id);
+                    allProjects.push(project);
+                }
+            }
+            
+            console.log(`[ProjectPrismaService] Total proyectos combinados: ${allProjects.length}`);
+            
+            return this.mapProjects(allProjects);
         } catch (error) {
             console.error('Error fetching projects from database:', error);
             throw error;
