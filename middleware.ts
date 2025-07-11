@@ -23,6 +23,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Special handling for root path
+    if (pathname === '/') {
+      // We'll let the homepage component handle redirection based on auth status
+      return NextResponse.next();
+    }
+
     // Apply audit middleware to API routes - TEMPORARILY DISABLED
     // if (pathname.startsWith('/api/')) {
     //   return auditMiddleware(request);
@@ -36,24 +42,26 @@ export async function middleware(request: NextRequest) {
 
     // Redirect to login if not authenticated
     if (!token) {
+      console.log('Middleware: No token found, redirecting to login');
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', encodeURI(request.url));
       return NextResponse.redirect(loginUrl);
     }
 
+    console.log('Middleware: Token found, role:', token.role);
+
     // Check role-based access for admin-only routes
     const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));
     if (isAdminRoute && token.role !== 'QA Leader') {
       // Redirect to home if not authorized
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/proyectos', request.url));
     }
 
     return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-    // En caso de error, redirigir al login
-    const fallbackUrl = new URL('/login', request.url);
-    return NextResponse.redirect(fallbackUrl);
+    // En caso de error, permitir que el componente de página maneje la redirección
+    return NextResponse.next();
   }
 }
 

@@ -52,8 +52,15 @@ export default function LoginForm() {
       }
 
       toast.success("¡Inicio de sesión exitoso!");
-      router.push(callbackUrl);
-      router.refresh();
+      
+      // Mostrar la URL a la que se redirige (para debug)
+      console.log("Redirigiendo a:", callbackUrl);
+      
+      // Esperar un momento para asegurar que la sesión se establezca
+      setTimeout(() => {
+        router.push(callbackUrl === "/" ? "/proyectos" : callbackUrl);
+        router.refresh();
+      }, 500);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Error al iniciar sesión");

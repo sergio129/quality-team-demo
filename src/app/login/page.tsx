@@ -10,8 +10,11 @@ export default async function LoginPage() {
     // Redirect to home if already logged in
     const session = await getServerSession(authOptions);
     
+    console.log("Login page: Session check:", session ? "Session exists" : "No session");
+    
     if (session) {
-      return redirect("/");
+      console.log("Login page: User already logged in, redirecting to proyectos");
+      return redirect("/proyectos");
     }
   } catch (error) {
     console.error("Error al verificar la sesión:", error);
