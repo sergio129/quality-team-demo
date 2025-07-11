@@ -19,8 +19,20 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search } from 'lucide-react';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function TestCasesPage() {
+  // Hooks de autenticación
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
   const { projects } = useProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTestPlanId, setSelectedTestPlanId] = useState<string>('');
@@ -45,6 +57,23 @@ export default function TestCasesPage() {
   });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Verificar autenticación antes de mostrar contenido
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay sesión, no mostrar nada (se redirigirá)
+  if (!session) {
+    return null;
+  }
   
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
