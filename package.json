@@ -10,6 +10,7 @@
     "build": "next build --no-lint",
     "start": "next start",
     "lint": "next lint",
+    "setup:auth": "powershell -ExecutionPolicy Bypass -File scripts/setup-auth-variables.ps1",
     "setup-db": "node prisma/setup-database.js",
     "postinstall": "prisma generate",
     "sonar": "node_modules\\.bin\\sonar-scanner.bat",

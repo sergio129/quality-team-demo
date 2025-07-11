@@ -40,6 +40,7 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
       
+      console.log("Login Form: Attempting to sign in with credentials");
       const result = await signIn("credentials", {
         redirect: false,
         email: data.email,
@@ -47,20 +48,28 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
+        console.error("Login error:", result.error);
         toast.error("Credenciales incorrectas");
+        return;
+      }
+
+      if (!result?.ok) {
+        console.error("Login result not OK:", result);
+        toast.error("Error al iniciar sesión");
         return;
       }
 
       toast.success("¡Inicio de sesión exitoso!");
       
       // Mostrar la URL a la que se redirige (para debug)
-      console.log("Redirigiendo a:", callbackUrl);
+      const redirectUrl = callbackUrl === "/" ? "/proyectos" : callbackUrl;
+      console.log("Redirigiendo a:", redirectUrl);
       
       // Esperar un momento para asegurar que la sesión se establezca
       setTimeout(() => {
-        router.push(callbackUrl === "/" ? "/proyectos" : callbackUrl);
-        router.refresh();
-      }, 500);
+        // Force hard navigation to ensure cookies are properly set
+        window.location.href = redirectUrl;
+      }, 1000);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Error al iniciar sesión");

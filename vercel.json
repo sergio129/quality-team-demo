@@ -5,9 +5,15 @@
   "framework": "nextjs",
   "env": {
     "VERCEL_ENV": "production",
-    "NEXT_TYPECHECK": "false"
+    "NEXT_TYPECHECK": "false",
+    "NEXTAUTH_URL": "${URL}",
+    "NODE_ENV": "production"
   },
   "routes": [
-    { "handle": "filesystem" }
+    { "handle": "filesystem" },
+    {
+      "src": "/api/auth/(.*)",
+      "continue": true
+    }
   ]
 }
