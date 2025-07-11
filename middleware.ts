@@ -16,14 +16,18 @@ export async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     
+    // Log para debug
+    console.log(`Middleware: Processing ${pathname}`);
+    
     // Allow public routes
     if (publicRoutes.some(route => pathname.startsWith(route))) {
+      console.log(`Middleware: ${pathname} is public, allowing`);
       return NextResponse.next();
     }
 
     // Special handling for root path
     if (pathname === '/') {
-      // We'll let the homepage component handle redirection based on auth status
+      console.log('Middleware: Root path, allowing');
       return NextResponse.next();
     }
 
@@ -40,8 +44,11 @@ export async function middleware(request: NextRequest) {
         secret: process.env.NEXTAUTH_SECRET || "ClaveGeneradaParaDesarrolloLocalNoUsarEnProduccion123"
       });
 
+      console.log(`Middleware: Token for ${pathname}:`, token ? 'exists' : 'null');
+
       // Redirect to login if not authenticated
       if (!token) {
+        console.log(`Middleware: No token, redirecting ${pathname} to login`);
         const loginUrl = new URL('/login', request.url);
         return NextResponse.redirect(loginUrl);
       }
@@ -49,9 +56,12 @@ export async function middleware(request: NextRequest) {
       // Check role-based access for admin-only routes
       const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));
       if (isAdminRoute && token.role !== 'QA Leader') {
+        console.log(`Middleware: ${pathname} requires admin role, redirecting`);
         // Redirect to home if not authorized
         return NextResponse.redirect(new URL('/proyectos', request.url));
       }
+      
+      console.log(`Middleware: ${pathname} access granted`);
     } catch (tokenError) {
       console.error('Middleware: Error getting token:', tokenError);
       // In case of token error, redirect to login
@@ -62,8 +72,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-    // En caso de error, permitir que el componente de página maneje la redirección
-    return NextResponse.next();
+    // En caso de error, redirigir a login en lugar de permitir acceso
+    const loginUrl = new URL('/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
 }
 

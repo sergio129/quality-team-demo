@@ -1,5 +1,6 @@
 import { IncidentTable } from '@/components/incidents/IncidentTable';
 
+
 export default function IncidentsPage() {
     return (
         <div className="container mx-auto py-8 px-4">            <div className="flex justify-between items-center mb-6">
