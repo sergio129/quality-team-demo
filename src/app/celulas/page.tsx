@@ -1,8 +1,38 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect } from 'react';
 import { DataTable } from '@/components/cells/CellTable';
 import { AddCellButton } from '@/components/cells/AddCellButton';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function CellsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  // Mostrar loading mientras se verifica la sesión
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay sesión, no mostrar nada (se redirigirá)
+  if (!session) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid gap-6">
