@@ -19,11 +19,12 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
     error: "/login",
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "production",
   providers: [
     CredentialsProvider({
       name: "Credentials",
