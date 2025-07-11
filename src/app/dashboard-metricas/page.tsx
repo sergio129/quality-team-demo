@@ -1,14 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IncidentesMetricas } from '@/components/Charts/IncidentesMetricas';
 import { CasosPruebaMetricas } from '@/components/Charts/CasosPruebaMetricas';
 import { MetricasCalidadChart } from '@/components/Charts/MetricasCalidadChart';
 import { useResumenMetricas, useMetricasIncidentes, useMetricasCasosPrueba } from '@/hooks/useMetricas';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardMetricas() {
   const [pestanaActiva, setPestanaActiva] = useState<'incidentes' | 'casos' | 'general'>('general');
   
+  // Hooks de autenticación
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
   // Obtener datos reales
   const { resumen, isLoading: isLoadingResumen } = useResumenMetricas();
   const { metricasIncidentes, isLoading: isLoadingIncidentes } = useMetricasIncidentes(6);
@@ -16,6 +28,23 @@ export default function DashboardMetricas() {
   const meses = metricasIncidentes.map(d => d.mes);
   const incidentesPorMes = metricasIncidentes.map(d => d.total);
   const casosPorMes = metricasCasosPrueba.map(c => c.total);
+
+  // Verificar autenticación antes de mostrar loading de datos
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay sesión, no mostrar nada (se redirigirá)
+  if (!session) {
+    return null;
+  }
 
   // Mostrar loading si algún dato principal está cargando
   if (isLoadingResumen || isLoadingIncidentes || isLoadingCasos) {
