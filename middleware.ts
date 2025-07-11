@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-// Temporarily disabled audit middleware for performance
-// import { auditMiddleware } from './src/middleware/auditMiddleware';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/login', '/api/auth', '/favicon.ico'];
+const publicRoutes = ['/login', '/api/auth', '/favicon.ico', '/_next', '/images', '/api/debug'];
 // Define routes that should only be accessible by QA Leader (admin)
 const adminOnlyRoutes = [
   '/analistas', 
@@ -34,34 +32,19 @@ export async function middleware(request: NextRequest) {
     //   return auditMiddleware(request);
     // }
 
-    // Check for auth token with detailed logging
-    console.log('Middleware: Checking auth token for path:', pathname);
-    
-    // Log environment information for debugging
-    if (process.env.VERCEL_ENV === 'production') {
-      console.log('Middleware: Running in Vercel production environment');
-      console.log('Middleware: NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-      // Don't log the actual secret, just whether it exists
-      console.log('Middleware: NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET);
-    }
-    
+    // Usar una clave simple para desarrollo
     let token;
     try {
       token = await getToken({ 
         req: request,
-        // Ensure we have a fallback secret in case the env var is missing
-        secret: process.env.NEXTAUTH_SECRET || "fallback_secret_for_development_only"
+        secret: process.env.NEXTAUTH_SECRET || "ClaveGeneradaParaDesarrolloLocalNoUsarEnProduccion123"
       });
 
       // Redirect to login if not authenticated
       if (!token) {
-        console.log('Middleware: No token found, redirecting to login');
         const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('callbackUrl', encodeURI(request.url));
         return NextResponse.redirect(loginUrl);
       }
-      
-      console.log('Middleware: Token found, role:', token.role);
 
       // Check role-based access for admin-only routes
       const isAdminRoute = adminOnlyRoutes.some(route => pathname.startsWith(route));

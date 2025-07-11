@@ -40,36 +40,17 @@ export default function LoginForm() {
     try {
       setIsLoading(true);
       
-      console.log("Login Form: Attempting to sign in with credentials");
-      const result = await signIn("credentials", {
-        redirect: false,
+      // Uso simple de signIn con redirección directa - esta es la forma más confiable
+      await signIn("credentials", {
+        redirect: true,
         email: data.email,
         password: data.password,
+        callbackUrl: "/proyectos" // Siempre redirigir a proyectos después del login
       });
-
-      if (result?.error) {
-        console.error("Login error:", result.error);
-        toast.error("Credenciales incorrectas");
-        return;
-      }
-
-      if (!result?.ok) {
-        console.error("Login result not OK:", result);
-        toast.error("Error al iniciar sesión");
-        return;
-      }
-
-      toast.success("¡Inicio de sesión exitoso!");
       
-      // Mostrar la URL a la que se redirige (para debug)
-      const redirectUrl = callbackUrl === "/" ? "/proyectos" : callbackUrl;
-      console.log("Redirigiendo a:", redirectUrl);
+      // NextAuth se encargará de la redirección
+      toast.success("Iniciando sesión...");
       
-      // Esperar un momento para asegurar que la sesión se establezca
-      setTimeout(() => {
-        // Force hard navigation to ensure cookies are properly set
-        window.location.href = redirectUrl;
-      }, 1000);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Error al iniciar sesión");

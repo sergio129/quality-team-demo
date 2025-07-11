@@ -12,19 +12,27 @@ const loginSchema = z.object({
   password: z.string().min(6, { message: "Contraseña debe tener al menos 6 caracteres" }),
 });
 
+// Generamos una clave secreta por defecto para desarrollo
+// En producción, DEBE configurarse NEXTAUTH_SECRET en las variables de entorno
+const generateSecret = () => {
+  if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET;
+  
+  console.warn('¡ADVERTENCIA! No se ha configurado NEXTAUTH_SECRET. Usando una clave generada por defecto. NO usar en producción.');
+  return 'ClaveGeneradaParaDesarrolloLocalNoUsarEnProduccion123';
+};
+
 export const authOptions: NextAuthOptions = {
-  // Removido el adaptador Prisma debido a incompatibilidad de tipos
-  // En su lugar, usamos solo JWT para sesiones
+  // Configuración simplificada usando JWT
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: generateSecret(),
   pages: {
     signIn: "/login",
     error: "/login",
   },
-  debug: process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "production",
+  debug: process.env.NODE_ENV === "development",
   providers: [
     CredentialsProvider({
       name: "Credentials",

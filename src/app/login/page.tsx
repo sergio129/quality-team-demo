@@ -6,19 +6,12 @@ import { authOptions } from "@/lib/authOptions";
 export const dynamic = 'force-dynamic';
 
 export default async function LoginPage() {
-  try {
-    // Redirect to home if already logged in
-    const session = await getServerSession(authOptions);
-    
-    console.log("Login page: Session check:", session ? "Session exists" : "No session");
-    
-    if (session) {
-      console.log("Login page: User already logged in, redirecting to proyectos");
-      return redirect("/proyectos");
-    }
-  } catch (error) {
-    console.error("Error al verificar la sesión:", error);
-    // Continuamos para mostrar el formulario de login
+  // Verificar si el usuario ya está autenticado
+  const session = await getServerSession(authOptions);
+  
+  // Si ya hay sesión, redirigir a proyectos
+  if (session) {
+    return redirect("/proyectos");
   }
   
   return (
