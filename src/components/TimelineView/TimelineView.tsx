@@ -120,8 +120,13 @@ const ProjectItem = memo(({
         
         const currentDate = new Date(date);
         
+        // Comparar fechas usando strings para evitar problemas de tiempo
+        const currentDateStr = currentDate.toISOString().split('T')[0];
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
         // Verificar si la fecha actual está dentro del rango del proyecto
-        if (currentDate < startDate || currentDate > endDate) {
+        if (currentDateStr < startDateStr || currentDateStr > endDateStr) {
             return null;
         }
         
@@ -137,12 +142,13 @@ const ProjectItem = memo(({
             
             // Encontrar el índice del día actual en el array de días laborales
             const dayIndex = workingDates.findIndex(workingDate => 
-                workingDate.toDateString() === currentDate.toDateString()
+                workingDate.toISOString().split('T')[0] === currentDateStr
             );
             
             // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
             if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
-                return project.horasPorDia[dayIndex];
+                const hours = project.horasPorDia[dayIndex];
+                return hours;
             }
         } else {
             // Fallback: Distribución simple basada en las horas totales y días laborales

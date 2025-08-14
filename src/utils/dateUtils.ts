@@ -13,9 +13,10 @@ export const isHoliday = (date: Date): boolean => {
 
 /**
  * Verifica si una fecha es un día no laborable (fin de semana o festivo)
+ * IMPORTANTE: Usa la MISMA lógica que el calendario visual
  */
 export const isNonWorkingDay = (date: Date): boolean => {
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0=Domingo, 6=Sábado
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6; // 0=Domingo, 6=Sábado (LOCAL, igual que el calendario)
     const isColombianHoliday = isHoliday(date);
     return isWeekend || isColombianHoliday;
 };
@@ -68,22 +69,29 @@ export const getHolidayInfo = (date: Date) => {
 
 /**
  * Obtiene un array con todas las fechas laborales entre dos fechas (excluyendo fines de semana y festivos)
+ * IMPORTANTE: Usa fechas locales para sincronizar exactamente con el calendario visual
  */
 export const getWorkingDatesArray = (startDate: Date, endDate: Date): Date[] => {
     const workingDates: Date[] = [];
-    const currentDate = new Date(startDate);
     
-    // Normalizar para evitar problemas con horas/minutos/segundos
-    currentDate.setHours(0, 0, 0, 0);
-    const normalizedEndDate = new Date(endDate);
-    normalizedEndDate.setHours(23, 59, 59, 999);
+    // Crear fechas usando tiempo local (igual que el calendario)
+    const currentDate = new Date(
+        startDate.getFullYear(), 
+        startDate.getMonth(), 
+        startDate.getDate()
+    );
+    const finalDate = new Date(
+        endDate.getFullYear(), 
+        endDate.getMonth(), 
+        endDate.getDate()
+    );
     
-    while (currentDate <= normalizedEndDate) {
+    while (currentDate <= finalDate) {
         if (!isNonWorkingDay(new Date(currentDate))) {
             workingDates.push(new Date(currentDate));
         }
         
-        // Avanzar al siguiente día
+        // Avanzar al siguiente día usando tiempo local
         currentDate.setDate(currentDate.getDate() + 1);
     }
     
