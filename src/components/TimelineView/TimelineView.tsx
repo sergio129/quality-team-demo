@@ -110,10 +110,14 @@ const ProjectItem = memo(({
     
     // Calcular las horas para este día específico
     const hoursForThisDay = useMemo(() => {
-        if (!project.horasPorDia || !project.fechaEntrega || !project.fechaCertificacion) return null;
+        if (!project.fechaEntrega) return null;
         
         const startDate = new Date(project.fechaEntrega);
-        const endDate = new Date(project.fechaCertificacion);
+        // Si hay fechaCertificacion, usarla como fecha final, si no, usar una fecha calculada
+        const endDate = project.fechaCertificacion 
+            ? new Date(project.fechaCertificacion)
+            : new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
+        
         const currentDate = new Date(date);
         
         // Verificar si la fecha actual está dentro del rango del proyecto
@@ -126,21 +130,40 @@ const ProjectItem = memo(({
             return null;
         }
         
-        // Obtener todos los días laborales del proyecto
-        const workingDates = getWorkingDatesArray(startDate, endDate);
-        
-        // Encontrar el índice del día actual en el array de días laborales
-        const dayIndex = workingDates.findIndex(workingDate => 
-            workingDate.toDateString() === currentDate.toDateString()
-        );
-        
-        // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
-        if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
-            return project.horasPorDia[dayIndex];
+        // Si el proyecto tiene horasPorDia definido, usar esa distribución
+        if (project.horasPorDia && project.horasPorDia.length > 0) {
+            // Obtener todos los días laborales del proyecto
+            const workingDates = getWorkingDatesArray(startDate, endDate);
+            
+            // Encontrar el índice del día actual en el array de días laborales
+            const dayIndex = workingDates.findIndex(workingDate => 
+                workingDate.toDateString() === currentDate.toDateString()
+            );
+            
+            // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
+            if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
+                return project.horasPorDia[dayIndex];
+            }
+        } else {
+            // Fallback: Distribución simple basada en las horas totales y días laborales
+            if (project.horas > 0) {
+                const workingDates = getWorkingDatesArray(startDate, endDate);
+                if (workingDates.length > 0) {
+                    // Verificar si el día actual está en los días laborales
+                    const isCurrentDayWorking = workingDates.some(workingDate => 
+                        workingDate.toDateString() === currentDate.toDateString()
+                    );
+                    
+                    if (isCurrentDayWorking) {
+                        // Distribución simple: horas totales / días laborales
+                        return Math.round((project.horas / workingDates.length) * 10) / 10; // Redondear a 1 decimal
+                    }
+                }
+            }
         }
         
         return null;
-    }, [project.horasPorDia, project.fechaEntrega, project.fechaCertificacion, date]);
+    }, [project.horasPorDia, project.fechaEntrega, project.fechaCertificacion, project.dias, project.horas, date]);
 
     const projectStyle = useMemo(() => {
         const today = new Date();

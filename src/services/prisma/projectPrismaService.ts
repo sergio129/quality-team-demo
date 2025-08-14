@@ -222,6 +222,7 @@ export class ProjectPrismaService {
                 horas: project.horas || 0,
                 dias: project.dias || 0,
                 horasEstimadas: project.horasEstimadas,
+                horasPorDia: project.horasPorDia || [],
                 estado: project.estado || 'pendiente',
                 estadoCalculado: project.estadoCalculado || 'Por Iniciar',
                 descripcion: project.descripcion,
@@ -300,6 +301,12 @@ export class ProjectPrismaService {
                 if (project.horasEstimadas !== undefined) {
                     updateData.horasEstimadas = project.horasEstimadas !== null ? 
                         Number(project.horasEstimadas) || 0 : null;
+                }
+                
+                // Manejo del array de horas por día
+                if (project.horasPorDia !== undefined) {
+                    updateData.horasPorDia = project.horasPorDia;
+                    console.log(`[ProjectPrismaService] Actualizando horasPorDia:`, project.horasPorDia);
                 }
                 
                 // Campos de texto simples
