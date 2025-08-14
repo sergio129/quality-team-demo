@@ -112,20 +112,29 @@ const ProjectItem = memo(({
     const hoursForThisDay = useMemo(() => {
         if (!project.fechaEntrega) return null;
         
+        // Asegurar que fechaEntrega es un objeto Date
+        const fechaEntregaDate = new Date(project.fechaEntrega);
+        if (isNaN(fechaEntregaDate.getTime())) return null;
+        
         // Crear fechas locales para evitar problemas de timezone
         const startDate = new Date(
-            project.fechaEntrega.getFullYear(), 
-            project.fechaEntrega.getMonth(), 
-            project.fechaEntrega.getDate()
+            fechaEntregaDate.getFullYear(), 
+            fechaEntregaDate.getMonth(), 
+            fechaEntregaDate.getDate()
         );
         
         let endDate: Date;
         if (project.fechaCertificacion) {
-            endDate = new Date(
-                project.fechaCertificacion.getFullYear(), 
-                project.fechaCertificacion.getMonth(), 
-                project.fechaCertificacion.getDate()
-            );
+            const fechaCertificacionDate = new Date(project.fechaCertificacion);
+            if (!isNaN(fechaCertificacionDate.getTime())) {
+                endDate = new Date(
+                    fechaCertificacionDate.getFullYear(), 
+                    fechaCertificacionDate.getMonth(), 
+                    fechaCertificacionDate.getDate()
+                );
+            } else {
+                endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
+            }
         } else {
             endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
         }
