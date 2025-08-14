@@ -8,6 +8,7 @@ export interface Project {
     horas: number;
     dias: number;
     horasEstimadas?: number;
+    horasPorDia?: number[]; // Array de horas distribuidas por día [día1, día2, día3, ...]
     estado?: string;
     estadoCalculado?: 'Por Iniciar' | 'En Progreso' | 'Certificado';  // Estado calculado automáticamente
     descripcion?: string;

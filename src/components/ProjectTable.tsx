@@ -780,6 +780,97 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 />
                                 {errors.fechaCertificacion && <p className="text-red-500 text-sm">{errors.fechaCertificacion}</p>}
                             </div>
+
+                            {/* Distribución de Horas */}
+                            {newProject.horas && newProject.fechaEntrega && newProject.fechaCertificacion && (
+                                <div className="space-y-2 border-t pt-4">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Distribución de Horas por Día
+                                        <span className="text-blue-600 ml-2 text-xs">
+                                            ({(() => {
+                                                const startDate = new Date(newProject.fechaEntrega);
+                                                const endDate = new Date(newProject.fechaCertificacion);
+                                                const timeDiff = endDate.getTime() - startDate.getTime();
+                                                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                                                return daysDiff;
+                                            })()} días)
+                                        </span>
+                                    </label>
+                                    {(() => {
+                                        const startDate = new Date(newProject.fechaEntrega);
+                                        const endDate = new Date(newProject.fechaCertificacion);
+                                        const timeDiff = endDate.getTime() - startDate.getTime();
+                                        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                                        const totalHours = newProject.horas;
+                                        
+                                        // Calcular distribución automática
+                                        const hoursPerDay = Math.floor(totalHours / daysDiff);
+                                        const remainingHours = totalHours % daysDiff;
+                                        const distribution = Array(daysDiff).fill(hoursPerDay);
+                                        for (let i = 0; i < remainingHours; i++) {
+                                            distribution[i]++;
+                                        }
+
+                                        // Inicializar horasPorDia si no existe
+                                        if (!newProject.horasPorDia) {
+                                            setNewProject(prev => ({ ...prev, horasPorDia: distribution }));
+                                        }
+
+                                        return (
+                                            <div className="space-y-2">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                    {(newProject.horasPorDia || distribution).map((hours, index) => {
+                                                        const currentDate = new Date(startDate);
+                                                        currentDate.setDate(startDate.getDate() + index);
+                                                        return (
+                                                            <div key={index} className="space-y-1">
+                                                                <label className="text-xs text-gray-600">
+                                                                    Día {index + 1} ({currentDate.toLocaleDateString('es-ES', { 
+                                                                        month: 'short', 
+                                                                        day: 'numeric' 
+                                                                    })})
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.5"
+                                                                    value={hours}
+                                                                    onChange={(e) => {
+                                                                        const newDistribution = [...(newProject.horasPorDia || distribution)];
+                                                                        newDistribution[index] = parseFloat(e.target.value) || 0;
+                                                                        setNewProject(prev => ({ ...prev, horasPorDia: newDistribution }));
+                                                                    }}
+                                                                    className="w-full p-1 text-xs border rounded"
+                                                                    placeholder="0"
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="text-gray-600">
+                                                        Total distribuido: {(newProject.horasPorDia || distribution).reduce((sum, h) => sum + (h || 0), 0)} horas
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setNewProject(prev => ({ ...prev, horasPorDia: distribution }));
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                                    >
+                                                        Redistribuir automáticamente
+                                                    </button>
+                                                </div>
+                                                {Math.abs((newProject.horasPorDia || distribution).reduce((sum, h) => sum + (h || 0), 0) - totalHours) > 0.1 && (
+                                                    <p className="text-orange-600 text-xs">
+                                                        ⚠️ La suma de horas distribuidas no coincide con el total del proyecto
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                             
                             {/* Días de Retraso (calculado automáticamente) */}
                             <div className="space-y-2">

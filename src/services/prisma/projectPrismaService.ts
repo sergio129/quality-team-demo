@@ -151,6 +151,7 @@ export class ProjectPrismaService {
                         diasRetraso: project.diasRetraso || 0,
                         analistaProducto: project.analistaProducto || '',
                         planTrabajo: project.planTrabajo || '',
+                        horasPorDia: project.horasPorDia || undefined,
                         // Extraer IDs de analistas de forma segura
                         analistas: analysts.map((a: any) => a?.analystId).filter(Boolean)
                     };
@@ -221,6 +222,7 @@ export class ProjectPrismaService {
                 horas: project.horas || 0,
                 dias: project.dias || 0,
                 horasEstimadas: project.horasEstimadas,
+                horasPorDia: project.horasPorDia || undefined,
                 estado: project.estado || 'pendiente',
                 estadoCalculado: project.estadoCalculado || 'Por Iniciar',
                 descripcion: project.descripcion,
@@ -299,6 +301,11 @@ export class ProjectPrismaService {
                 if (project.horasEstimadas !== undefined) {
                     updateData.horasEstimadas = project.horasEstimadas !== null ? 
                         Number(project.horasEstimadas) || 0 : null;
+                }
+
+                // Manejo para el array de horas por día
+                if (project.horasPorDia !== undefined) {
+                    updateData.horasPorDia = project.horasPorDia;
                 }
                 
                 // Campos de texto simples

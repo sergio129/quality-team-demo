@@ -8,7 +8,7 @@ datasource db {
 }
 
 model QAAnalyst {
-  id              String            @id @default(uuid())
+  id              String            @id @default(uuid()) @db.Uuid
   name            String
   email           String            @unique
   role            String
@@ -16,6 +16,7 @@ model QAAnalyst {
   availability    Int?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+  department      String            @default("QA")
   cells           AnalystCell[]
   AnalystVacation AnalystVacation[]
   certifications  Certification[]
@@ -32,7 +33,7 @@ model Skill {
   id        String    @id @default(uuid())
   name      String
   level     String
-  analystId String
+  analystId String    @db.Uuid
   analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
@@ -42,44 +43,46 @@ model Certification {
   issuer     String
   date       DateTime
   expiryDate DateTime?
-  analystId  String
+  analystId  String    @db.Uuid
   analyst    QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
 model Specialty {
   id        String    @id @default(uuid())
   name      String
-  analystId String
+  analystId String    @db.Uuid
   analysts  QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
 model Team {
-  id          String        @id @default(uuid())
-  name        String
-  description String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  cells       Cell[]
-  projects    Project[]
-  analysts    TeamAnalyst[]
+  id                 String               @id @default(uuid())
+  name               String
+  description        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  cells              Cell[]
+  DevelopmentProject DevelopmentProject[]
+  projects           Project[]
+  analysts           TeamAnalyst[]
 }
 
 model Cell {
-  id          String        @id @default(uuid())
-  name        String
-  description String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  teamId      String
-  analysts    AnalystCell[]
-  team        Team          @relation(fields: [teamId], references: [id])
-  incidents   Incident[]
-  projects    Project[]
+  id                 String               @id @default(uuid())
+  name               String
+  description        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  teamId             String
+  analysts           AnalystCell[]
+  team               Team                 @relation(fields: [teamId], references: [id])
+  DevelopmentProject DevelopmentProject[]
+  incidents          Incident[]
+  projects           Project[]
 }
 
 model AnalystCell {
   id        String    @id @default(uuid())
-  analystId String
+  analystId String    @db.Uuid
   cellId    String
   analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
   cell      Cell      @relation(fields: [cellId], references: [id], onDelete: Cascade)
@@ -90,7 +93,7 @@ model AnalystCell {
 model TeamAnalyst {
   id        String    @id @default(uuid())
   teamId    String
-  analystId String
+  analystId String    @db.Uuid
   analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
   team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
@@ -186,8 +189,8 @@ model Incident {
   tipoBug          String?
   areaAfectada     String?
   celula           String
-  informadoPorId   String
-  asignadoAId      String?
+  informadoPorId   String           @db.Uuid
+  asignadoAId      String?          @db.Uuid
   asignadoA_text   String?
   testCases        DefectRelation[]
   asignadoA        QAAnalyst?       @relation("AssignedTo", fields: [asignadoAId], references: [id])
@@ -258,6 +261,7 @@ model Project {
   updatedAt          DateTime         @updatedAt
   equipoId           String           @map("equipo")
   celulaId           String           @map("celula")
+  horasPorDia        Float[]
   cell               Cell             @relation(fields: [celulaId], references: [id])
   team               Team             @relation(fields: [equipoId], references: [id])
   analysts           ProjectAnalyst[]
@@ -266,7 +270,7 @@ model Project {
 model ProjectAnalyst {
   id        String    @id @default(uuid())
   projectId String
-  analystId String
+  analystId String    @db.Uuid
   analyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
   project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -279,21 +283,61 @@ model AnalystVacation {
   endDate     DateTime
   description String?
   type        String
-  analystId   String
+  analystId   String    @db.Uuid
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   QAAnalyst   QAAnalyst @relation(fields: [analystId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id               String     @id @default(uuid())
-  email            String     @unique
-  password         String
-  name             String
-  isActive         Boolean    @default(true)
-  lastLogin        DateTime?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  analyst          QAAnalyst? @relation(fields: [analystId], references: [id])
-  analystId        String?    @unique
+  id        String     @id @default(uuid()) @db.Uuid
+  email     String     @unique @db.VarChar(255)
+  password  String     @db.VarChar(255)
+  name      String     @db.VarChar(255)
+  isActive  Boolean    @default(true)
+  lastLogin DateTime?  @db.Timestamptz(6)
+  createdAt DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime   @default(now()) @updatedAt @db.Timestamptz(6)
+  analystId String?    @unique @db.Uuid
+  analyst   QAAnalyst? @relation(fields: [analystId], references: [id])
+
+  @@index([analystId])
+  @@index([email])
+}
+
+model DevelopmentProject {
+  id                String    @id
+  name              String
+  description       String
+  repository        String?
+  technology        String[]
+  status            String    @default("Planning")
+  priority          String    @default("Medium")
+  startDate         DateTime
+  expectedEndDate   DateTime
+  actualEndDate     DateTime?
+  teamId            String
+  cellId            String
+  leadDeveloperId   String
+  developers        String[]
+  budget            Float?
+  estimatedHours    Int
+  actualHours       Int?
+  progress          Int       @default(0)
+  bugs              Int       @default(0)
+  features          Int       @default(0)
+  completedFeatures Int       @default(0)
+  codeQuality       Int       @default(0)
+  testCoverage      Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime
+  createdBy         String
+  jiraCode          String
+  Cell              Cell      @relation(fields: [cellId], references: [id])
+  Team              Team      @relation(fields: [teamId], references: [id])
+
+  @@index([cellId])
+  @@index([leadDeveloperId])
+  @@index([status])
+  @@index([teamId])
 }

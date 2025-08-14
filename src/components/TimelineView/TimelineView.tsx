@@ -106,7 +106,27 @@ const ProjectItem = memo(({
     );
     
     const analystColor = assignedAnalyst?.color ?? '#3B82F6'; // Azul como color por defecto
-      const projectStyle = useMemo(() => {
+    
+    // Calcular las horas para este día específico
+    const hoursForThisDay = useMemo(() => {
+        if (!project.horasPorDia || !project.fechaEntrega) return null;
+        
+        const startDate = new Date(project.fechaEntrega);
+        const currentDate = new Date(date);
+        
+        // Calcular el índice del día
+        const timeDiff = currentDate.getTime() - startDate.getTime();
+        const dayIndex = Math.floor(timeDiff / (1000 * 3600 * 24));
+        
+        // Verificar si está dentro del rango
+        if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
+            return project.horasPorDia[dayIndex];
+        }
+        
+        return null;
+    }, [project.horasPorDia, project.fechaEntrega, date]);
+
+    const projectStyle = useMemo(() => {
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
         
@@ -176,15 +196,20 @@ const ProjectItem = memo(({
             });
         };
 
+        // Agregar información de horas si está disponible
+        const hoursInfo = hoursForThisDay !== null && hoursForThisDay > 0 
+            ? `\n⏱️ Horas para hoy: ${hoursForThisDay}h` 
+            : '';
+
         return `
 ${project.proyecto}
 ID: ${project.idJira}
 Estado: ${estado}
 Fecha Entrega: ${formatDate(project.fechaEntrega)}
 ${project.fechaCertificacion ? `Fecha Certificación: ${formatDate(project.fechaCertificacion)}` : ''}
-${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
+${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${hoursInfo}
 `.trim();
-    }, [project]);
+    }, [project, hoursForThisDay]);
 
     const jiraUrl = getJiraUrl(project.idJira);
 
@@ -198,7 +223,14 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
                 className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block"
                 style={projectStyle}
             >
-                {project.idJira}
+                <div className="flex flex-col items-center">
+                    <span>{project.idJira}</span>
+                    {hoursForThisDay !== null && hoursForThisDay > 0 && (
+                        <span className="text-[10px] font-semibold opacity-75">
+                            {hoursForThisDay}h
+                        </span>
+                    )}
+                </div>
             </a>
         );
     }
@@ -209,7 +241,14 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}
             className="mx-1 text-xs p-1 rounded shadow-sm block"
             style={projectStyle}
         >
-            {project.idJira}
+            <div className="flex flex-col items-center">
+                <span>{project.idJira}</span>
+                {hoursForThisDay !== null && hoursForThisDay > 0 && (
+                    <span className="text-[10px] font-semibold opacity-75">
+                        {hoursForThisDay}h
+                    </span>
+                )}
+            </div>
         </span>
     );
 });
