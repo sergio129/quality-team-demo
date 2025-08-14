@@ -113,20 +113,18 @@ const ProjectItem = memo(({
         if (!project.fechaEntrega) return null;
         
         // Crear fechas locales para evitar problemas de timezone
-        const fechaEntregaParts = project.fechaEntrega.split('-');
         const startDate = new Date(
-            parseInt(fechaEntregaParts[0]), 
-            parseInt(fechaEntregaParts[1]) - 1, 
-            parseInt(fechaEntregaParts[2])
+            project.fechaEntrega.getFullYear(), 
+            project.fechaEntrega.getMonth(), 
+            project.fechaEntrega.getDate()
         );
         
         let endDate: Date;
         if (project.fechaCertificacion) {
-            const fechaCertParts = project.fechaCertificacion.split('-');
             endDate = new Date(
-                parseInt(fechaCertParts[0]), 
-                parseInt(fechaCertParts[1]) - 1, 
-                parseInt(fechaCertParts[2])
+                project.fechaCertificacion.getFullYear(), 
+                project.fechaCertificacion.getMonth(), 
+                project.fechaCertificacion.getDate()
             );
         } else {
             endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
@@ -134,13 +132,8 @@ const ProjectItem = memo(({
         
         const currentDate = new Date(date);
         
-        // Comparar fechas usando strings para evitar problemas de tiempo
-        const currentDateStr = currentDate.toISOString().split('T')[0];
-        const startDateStr = startDate.toISOString().split('T')[0];
-        const endDateStr = endDate.toISOString().split('T')[0];
-        
         // Verificar si la fecha actual está dentro del rango del proyecto
-        if (currentDateStr < startDateStr || currentDateStr > endDateStr) {
+        if (currentDate < startDate || currentDate > endDate) {
             return null;
         }
         
@@ -156,13 +149,12 @@ const ProjectItem = memo(({
             
             // Encontrar el índice del día actual en el array de días laborales
             const dayIndex = workingDates.findIndex(workingDate => 
-                workingDate.toISOString().split('T')[0] === currentDateStr
+                workingDate.toDateString() === currentDate.toDateString()
             );
             
             // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
             if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
-                const hours = project.horasPorDia[dayIndex];
-                return hours;
+                return project.horasPorDia[dayIndex];
             }
         } else {
             // Fallback: Distribución simple basada en las horas totales y días laborales
