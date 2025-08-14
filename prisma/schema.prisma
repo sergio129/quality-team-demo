@@ -243,7 +243,7 @@ model Project {
   horas              Int
   dias               Int
   horasEstimadas     Int?
-  horasPorDia        Float[]?         // Array de horas distribuidas por día
+  horasPorDia        Float[]          // Array de horas distribuidas por día
   estado             String?
   estadoCalculado    String?
   descripcion        String?
