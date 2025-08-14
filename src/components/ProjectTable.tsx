@@ -15,6 +15,7 @@ import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
+import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
 
 const HOURS_PER_DAY = 9;
 
@@ -790,45 +791,51 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                             ({(() => {
                                                 const startDate = new Date(newProject.fechaEntrega);
                                                 const endDate = new Date(newProject.fechaCertificacion);
-                                                const timeDiff = endDate.getTime() - startDate.getTime();
-                                                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-                                                return daysDiff;
-                                            })()} días)
+                                                const workingDates = getWorkingDatesArray(startDate, endDate);
+                                                return workingDates.length;
+                                            })()} días laborales)
                                         </span>
                                     </label>
                                     {(() => {
                                         const startDate = new Date(newProject.fechaEntrega);
                                         const endDate = new Date(newProject.fechaCertificacion);
-                                        const timeDiff = endDate.getTime() - startDate.getTime();
-                                        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                                        const workingDates = getWorkingDatesArray(startDate, endDate);
                                         const totalHours = newProject.horas;
                                         
-                                        // Calcular distribución automática
-                                        const hoursPerDay = Math.floor(totalHours / daysDiff);
-                                        const remainingHours = totalHours % daysDiff;
-                                        const distribution = Array(daysDiff).fill(hoursPerDay);
+                                        // Calcular distribución automática solo para días laborales
+                                        const workingDaysCount = workingDates.length;
+                                        const hoursPerDay = Math.floor(totalHours / workingDaysCount);
+                                        const remainingHours = totalHours % workingDaysCount;
+                                        const distribution = Array(workingDaysCount).fill(hoursPerDay);
                                         for (let i = 0; i < remainingHours; i++) {
                                             distribution[i]++;
                                         }
 
-                                        // Inicializar horasPorDia si no existe
-                                        if (!newProject.horasPorDia) {
+                                        // Inicializar horasPorDia si no existe o si el tamaño cambió
+                                        if (!newProject.horasPorDia || newProject.horasPorDia.length !== workingDaysCount) {
                                             setNewProject(prev => ({ ...prev, horasPorDia: distribution }));
                                         }
 
                                         return (
                                             <div className="space-y-2">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                                    {(newProject.horasPorDia || distribution).map((hours, index) => {
-                                                        const currentDate = new Date(startDate);
-                                                        currentDate.setDate(startDate.getDate() + index);
+                                                    {workingDates.map((currentDate, index) => {
+                                                        const hours = (newProject.horasPorDia || distribution)[index];
+                                                        const dayName = currentDate.toLocaleDateString('es-ES', { weekday: 'short' });
+                                                        const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+                                                        const isHoliday = isNonWorkingDay(currentDate) && !isWeekend;
+                                                        
                                                         return (
                                                             <div key={index} className="space-y-1">
-                                                                <label className="text-xs text-gray-600">
-                                                                    Día {index + 1} ({currentDate.toLocaleDateString('es-ES', { 
-                                                                        month: 'short', 
-                                                                        day: 'numeric' 
-                                                                    })})
+                                                                <label className="text-xs text-gray-600 flex flex-col">
+                                                                    <span>Día {index + 1}</span>
+                                                                    <span className="text-xs">
+                                                                        {dayName} {currentDate.toLocaleDateString('es-ES', { 
+                                                                            month: 'short', 
+                                                                            day: 'numeric' 
+                                                                        })}
+                                                                        {isHoliday && <span className="text-red-500 ml-1">🎉</span>}
+                                                                    </span>
                                                                 </label>
                                                                 <input
                                                                     type="number"
@@ -866,6 +873,21 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                                         ⚠️ La suma de horas distribuidas no coincide con el total del proyecto
                                                     </p>
                                                 )}
+                                                
+                                                {/* Información adicional sobre días excluidos */}
+                                                {(() => {
+                                                    const totalDaysInRange = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+                                                    const excludedDays = totalDaysInRange - workingDaysCount;
+                                                    
+                                                    if (excludedDays > 0) {
+                                                        return (
+                                                            <p className="text-gray-500 text-xs bg-gray-50 p-2 rounded">
+                                                                ℹ️ Se excluyeron {excludedDays} día(s) no laborales (fines de semana y festivos)
+                                                            </p>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })()}
                                             </div>
                                         );
                                     })()}

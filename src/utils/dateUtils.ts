@@ -65,3 +65,27 @@ export const formatDate = (date: Date | string | null | undefined) => {
 export const getHolidayInfo = (date: Date) => {
     return holidays.isHoliday(date);
 };
+
+/**
+ * Obtiene un array con todas las fechas laborales entre dos fechas (excluyendo fines de semana y festivos)
+ */
+export const getWorkingDatesArray = (startDate: Date, endDate: Date): Date[] => {
+    const workingDates: Date[] = [];
+    const currentDate = new Date(startDate);
+    
+    // Normalizar para evitar problemas con horas/minutos/segundos
+    currentDate.setHours(0, 0, 0, 0);
+    const normalizedEndDate = new Date(endDate);
+    normalizedEndDate.setHours(23, 59, 59, 999);
+    
+    while (currentDate <= normalizedEndDate) {
+        if (!isNonWorkingDay(new Date(currentDate))) {
+            workingDates.push(new Date(currentDate));
+        }
+        
+        // Avanzar al siguiente día
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return workingDates;
+};

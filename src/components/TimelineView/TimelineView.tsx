@@ -6,6 +6,7 @@ import { AnalystVacation } from '@/models/AnalystVacation';
 import { useState, useEffect, useMemo, useCallback, memo, ReactNode } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { isAnalystOnVacation } from '@/hooks/useAnalystVacations';
+import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
 import Holidays from 'date-holidays';
 
 // Inicializar la instancia de Holidays para Colombia
@@ -109,22 +110,37 @@ const ProjectItem = memo(({
     
     // Calcular las horas para este día específico
     const hoursForThisDay = useMemo(() => {
-        if (!project.horasPorDia || !project.fechaEntrega) return null;
+        if (!project.horasPorDia || !project.fechaEntrega || !project.fechaCertificacion) return null;
         
         const startDate = new Date(project.fechaEntrega);
+        const endDate = new Date(project.fechaCertificacion);
         const currentDate = new Date(date);
         
-        // Calcular el índice del día
-        const timeDiff = currentDate.getTime() - startDate.getTime();
-        const dayIndex = Math.floor(timeDiff / (1000 * 3600 * 24));
+        // Verificar si la fecha actual está dentro del rango del proyecto
+        if (currentDate < startDate || currentDate > endDate) {
+            return null;
+        }
         
-        // Verificar si está dentro del rango
+        // Verificar si el día actual es laborable
+        if (isNonWorkingDay(currentDate)) {
+            return null;
+        }
+        
+        // Obtener todos los días laborales del proyecto
+        const workingDates = getWorkingDatesArray(startDate, endDate);
+        
+        // Encontrar el índice del día actual en el array de días laborales
+        const dayIndex = workingDates.findIndex(workingDate => 
+            workingDate.toDateString() === currentDate.toDateString()
+        );
+        
+        // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
         if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
             return project.horasPorDia[dayIndex];
         }
         
         return null;
-    }, [project.horasPorDia, project.fechaEntrega, date]);
+    }, [project.horasPorDia, project.fechaEntrega, project.fechaCertificacion, date]);
 
     const projectStyle = useMemo(() => {
         const today = new Date();
