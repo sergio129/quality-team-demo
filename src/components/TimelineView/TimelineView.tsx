@@ -112,11 +112,25 @@ const ProjectItem = memo(({
     const hoursForThisDay = useMemo(() => {
         if (!project.fechaEntrega) return null;
         
-        const startDate = new Date(project.fechaEntrega);
-        // Si hay fechaCertificacion, usarla como fecha final, si no, usar una fecha calculada
-        const endDate = project.fechaCertificacion 
-            ? new Date(project.fechaCertificacion)
-            : new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
+        // Crear fechas locales para evitar problemas de timezone
+        const fechaEntregaParts = project.fechaEntrega.split('-');
+        const startDate = new Date(
+            parseInt(fechaEntregaParts[0]), 
+            parseInt(fechaEntregaParts[1]) - 1, 
+            parseInt(fechaEntregaParts[2])
+        );
+        
+        let endDate: Date;
+        if (project.fechaCertificacion) {
+            const fechaCertParts = project.fechaCertificacion.split('-');
+            endDate = new Date(
+                parseInt(fechaCertParts[0]), 
+                parseInt(fechaCertParts[1]) - 1, 
+                parseInt(fechaCertParts[2])
+            );
+        } else {
+            endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
+        }
         
         const currentDate = new Date(date);
         
