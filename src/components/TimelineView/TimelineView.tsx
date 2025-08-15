@@ -112,37 +112,34 @@ const ProjectItem = memo(({
     const hoursForThisDay = useMemo(() => {
         if (!project.fechaEntrega) return null;
         
-        // Asegurar que fechaEntrega es un objeto Date
-        const fechaEntregaDate = new Date(project.fechaEntrega);
-        if (isNaN(fechaEntregaDate.getTime())) return null;
-        
         // Crear fechas locales para evitar problemas de timezone
-        const startDate = new Date(
-            fechaEntregaDate.getFullYear(), 
-            fechaEntregaDate.getMonth(), 
-            fechaEntregaDate.getDate()
-        );
+        // Usar el formato ISO para la construcción de fechas para evitar problemas de timezone
+        const fechaEntregaStr = project.fechaEntrega.toString().includes('T') 
+            ? project.fechaEntrega.toString().split('T')[0] 
+            : project.fechaEntrega.toString();
+        const [entregaYear, entregaMonth, entregaDay] = fechaEntregaStr.split('-').map(Number);
+        const startDate = new Date(entregaYear, entregaMonth - 1, entregaDay);
         
         let endDate: Date;
         if (project.fechaCertificacion) {
-            const fechaCertificacionDate = new Date(project.fechaCertificacion);
-            if (!isNaN(fechaCertificacionDate.getTime())) {
-                endDate = new Date(
-                    fechaCertificacionDate.getFullYear(), 
-                    fechaCertificacionDate.getMonth(), 
-                    fechaCertificacionDate.getDate()
-                );
-            } else {
-                endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
-            }
+            const fechaCertificacionStr = project.fechaCertificacion.toString().includes('T') 
+                ? project.fechaCertificacion.toString().split('T')[0] 
+                : project.fechaCertificacion.toString();
+            const [certYear, certMonth, certDay] = fechaCertificacionStr.split('-').map(Number);
+            endDate = new Date(certYear, certMonth - 1, certDay);
         } else {
             endDate = new Date(startDate.getTime() + (project.dias || 1) * 24 * 60 * 60 * 1000);
         }
         
         const currentDate = new Date(date);
         
+        // Comparar fechas usando strings para evitar problemas de tiempo
+        const currentDateStr = currentDate.toISOString().split('T')[0];
+        const startDateStr = startDate.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+        
         // Verificar si la fecha actual está dentro del rango del proyecto
-        if (currentDate < startDate || currentDate > endDate) {
+        if (currentDateStr < startDateStr || currentDateStr > endDateStr) {
             return null;
         }
         
@@ -158,12 +155,13 @@ const ProjectItem = memo(({
             
             // Encontrar el índice del día actual en el array de días laborales
             const dayIndex = workingDates.findIndex(workingDate => 
-                workingDate.toDateString() === currentDate.toDateString()
+                workingDate.toISOString().split('T')[0] === currentDateStr
             );
             
             // Verificar si encontramos el día y si está dentro del rango de horas distribuidas
             if (dayIndex >= 0 && dayIndex < project.horasPorDia.length) {
-                return project.horasPorDia[dayIndex];
+                const hours = project.horasPorDia[dayIndex];
+                return hours;
             }
         } else {
             // Fallback: Distribución simple basada en las horas totales y días laborales
@@ -171,8 +169,9 @@ const ProjectItem = memo(({
                 const workingDates = getWorkingDatesArray(startDate, endDate);
                 if (workingDates.length > 0) {
                     // Verificar si el día actual está en los días laborales
+                    // Usar el mismo formato de comparación que en el resto del código
                     const isCurrentDayWorking = workingDates.some(workingDate => 
-                        workingDate.toDateString() === currentDate.toDateString()
+                        workingDate.toISOString().split('T')[0] === currentDateStr
                     );
                     
                     if (isCurrentDayWorking) {
@@ -327,7 +326,8 @@ const DayCell = memo(({
     analysts: QAAnalyst[];
     analystId: string;
     vacations?: AnalystVacation[];
-}) => {    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+}) => {
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const isColombianHoliday = isHoliday(date);
     const isNonWorkingDay = isWeekend || isColombianHoliday;
     
@@ -349,7 +349,7 @@ const DayCell = memo(({
         isFirstDay = dateStr === startDate;
         isLastDay = dateStr === endDate;
         
-    // Verificar si es el primer día laboral después de un fin de semana o festivo
+        // Verificar si es el primer día laboral después de un fin de semana o festivo
         if (!isNonWorkingDay) {
             // Crear fecha del día anterior
             const prevDate = new Date(date);
@@ -395,6 +395,7 @@ const DayCell = memo(({
             }
         }
     }
+    
     // Log para depurar problemas de visualización de vacaciones
     if (isOnVacation && vacation) {
         const dateStr = date.toISOString().split('T')[0];
@@ -431,7 +432,8 @@ const DayCell = memo(({
         });
     }, [analystProjects, date, isNonWorkingDay]);
 
-    return (        <div
+    return (
+        <div
             className={`w-12 flex-shrink-0 border-r relative
                 ${isNonWorkingDay ? 'bg-gray-100' : ''}
                 ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
@@ -442,7 +444,10 @@ const DayCell = memo(({
                 vacation.type === 'training' ? 'Capacitación' : 
                 vacation.type === 'leave' ? 'Permiso' : 
                 'Ausencia'}: ${vacation.description || 'Sin descripción'}` : ''}
-        >{/* Mostrar indicador de vacaciones cuando corresponda */}            {isOnVacation && vacation && (                <div className="absolute inset-0 z-10">
+        >
+            {/* Mostrar indicador de vacaciones cuando corresponda */}
+            {isOnVacation && vacation && (
+                <div className="absolute inset-0 z-10">
                     <div className={`w-full h-full 
                         ${isNonWorkingDay 
                           ? (vacation.type === 'vacation' ? 'bg-purple-50' : 
@@ -453,7 +458,7 @@ const DayCell = memo(({
                              vacation.type === 'training' ? 'bg-green-100' : 
                              vacation.type === 'leave' ? 'bg-yellow-100' : 
                              'bg-gray-100')
-                        }`}>{/* Línea horizontal para conectar días consecutivos - solo para días laborales */}
+                        }`}>
                         {/* Líneas conectoras horizontales - solo para días laborales */}
                         {!isNonWorkingDay && (
                             <>
@@ -491,7 +496,9 @@ const DayCell = memo(({
                         {isLastDay && (
                             <div className="absolute right-0 top-0 bottom-0 w-1 
                                 bg-gradient-to-l from-white to-transparent"></div>
-                        )}                        {/* Indicador central para todos los días */}
+                        )}
+                        
+                        {/* Indicador central para todos los días */}
                         {isNonWorkingDay ? (
                             // Indicador sutil para días no laborables
                             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -617,7 +624,8 @@ export function TimelineView({
     selectedDateFilter,
     vacations = [] // Valor por defecto: array vacío
 }: Readonly<TimelineViewProps>): ReactNode {
-    const [dates, setDates] = useState<Date[]>([]);    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
+    const [dates, setDates] = useState<Date[]>([]);
+    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
     const [currentPage, setCurrentPage] = useState(0); // Página actual
     
     // Efecto para actualizar el calendario basado en los filtros de fecha del padre
@@ -727,7 +735,10 @@ export function TimelineView({
         
         return () => {
             window.removeEventListener('resize', updatePageSize);
-        };    }, []);    return (
+        };
+    }, []);
+
+    return (
         <div className="flex flex-col w-full overflow-hidden">
             {/* Cabecera con la fecha o rango seleccionado */}
             <div className="bg-white p-4 border-b shadow-sm mb-4 rounded-t-lg flex justify-between items-center">
@@ -787,7 +798,9 @@ export function TimelineView({
                                 vacations={vacations.filter(v => v.analystId === analyst.id)}
                             />
                         ))}
-                    </div>                    {/* Información sobre la fecha seleccionada */}
+                    </div>
+
+                    {/* Información sobre la fecha seleccionada */}
                     <div className="mt-4 text-center">
                         <span className="font-semibold">{dateHeader}</span>
                     </div>
@@ -795,7 +808,8 @@ export function TimelineView({
                     {/* Leyenda de colores */}
                     <div className="mt-6 bg-white p-4 rounded-lg border shadow-sm">
                         <h4 className="font-medium mb-2">Leyenda</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">                            <div className="flex items-center">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="flex items-center">
                                 <div className="w-4 h-4 rounded-full bg-purple-500 border border-purple-700 mr-2"></div>
                                 <span className="text-sm">Vacaciones</span>
                             </div>
@@ -818,7 +832,7 @@ export function TimelineView({
                             <div className="flex items-center">
                                 <div className="w-4 h-4 bg-blue-50 border border-blue-200 mr-2"></div>
                                 <span className="text-sm">Hoy</span>
-                            </div>
+            </div>
                         </div>
                     </div>
                 </div>
