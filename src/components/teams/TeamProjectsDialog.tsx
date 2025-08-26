@@ -20,11 +20,17 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
   const { projects, isLoading } = useProjects({ limit: 500 }); // Usar límite alto para obtener todos los proyectos
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Debug temporal
+  console.log('TeamProjectsDialog - projects:', projects.length);
+  console.log('TeamProjectsDialog - team name:', team.name);
+
   // Filtrar proyectos por equipo
   const teamProjects = useMemo(() => {
-    return projects.filter(project => 
+    const filtered = projects.filter(project => 
       project.equipo?.toLowerCase() === team.name.toLowerCase()
     );
+    console.log('TeamProjectsDialog - teamProjects for', team.name, ':', filtered.length);
+    return filtered;
   }, [projects, team.name]);
 
   // Agregar una opción para mostrar solo proyectos activos
@@ -165,7 +171,7 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
               <Checkbox 
                 id="show-active" 
                 checked={showOnlyActive}
-                onCheckedChange={setShowOnlyActive}
+                onCheckedChange={(checked) => setShowOnlyActive(checked === true)}
               />
               <label 
                 htmlFor="show-active" 
