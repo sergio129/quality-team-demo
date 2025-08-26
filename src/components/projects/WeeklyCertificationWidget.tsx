@@ -35,6 +35,11 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         return new Date(year, month - 1, day);
     };
 
+    // Función helper para determinar si un proyecto está certificado
+    const isProjectCertified = (project: Project) => {
+        return project.estado === 'certificado' || project.estadoCalculado === 'Certificado';
+    };
+
     // Filtrar proyectos con certificación en la semana actual
     const weeklyProjects = useMemo(() => {
         return projects
@@ -46,8 +51,8 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
             })
             .sort((a, b) => {
                 // Primero ordenar por estado (pendientes primero, certificados después)
-                const aIsCertified = a.estadoCalculado === 'Certificado';
-                const bIsCertified = b.estadoCalculado === 'Certificado';
+                const aIsCertified = isProjectCertified(a);
+                const bIsCertified = isProjectCertified(b);
                 
                 if (aIsCertified !== bIsCertified) {
                     return aIsCertified ? 1 : -1; // Certificados al final
@@ -229,7 +234,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                             <div 
                                                 key={project.idJira}
                                                 className={`p-3 rounded-md border transition-all duration-200 hover:shadow-sm ${
-                                                    project.estadoCalculado === 'Certificado'
+                                                    isProjectCertified(project)
                                                         ? 'bg-green-50 border-green-200 hover:border-green-300'
                                                         : isToday(dateStr)
                                                         ? 'bg-white border-blue-200 hover:border-blue-300'
@@ -241,7 +246,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center space-x-2 mb-1">
-                                                            {project.estadoCalculado === 'Certificado' && (
+                                                            {isProjectCertified(project) && (
                                                                 <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
                                                                     CERTIFICADO
                                                                 </span>
@@ -254,14 +259,14 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                             )}
                                                         </div>
                                                         <p className={`text-sm truncate ${
-                                                            project.estadoCalculado === 'Certificado' 
+                                                            isProjectCertified(project) 
                                                                 ? 'text-green-700' 
                                                                 : 'text-gray-600'
                                                         }`} title={project.proyecto}>
                                                             {project.proyecto}
                                                         </p>
                                                         <div className={`flex items-center justify-between mt-2 text-xs ${
-                                                            project.estadoCalculado === 'Certificado' 
+                                                            isProjectCertified(project) 
                                                                 ? 'text-green-600' 
                                                                 : 'text-gray-500'
                                                         }`}>
