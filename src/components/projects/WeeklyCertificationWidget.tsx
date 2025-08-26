@@ -11,6 +11,8 @@ interface WeeklyCertificationWidgetProps {
 
 export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidgetProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [filterStatus, setFilterStatus] = useState<'all' | 'certified' | 'pending'>('all');
+    const [isCompactView, setIsCompactView] = useState(false);
     
     // Obtener la semana actual (lunes a domingo)
     const currentWeek = useMemo(() => {
@@ -65,11 +67,31 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
             });
     }, [projects, currentWeek]);
 
-    // Agrupar proyectos por día
+    // Filtrar proyectos según el estado seleccionado
+    const filteredProjects = useMemo(() => {
+        return weeklyProjects.filter(project => {
+            if (filterStatus === 'all') return true;
+            if (filterStatus === 'certified') return isProjectCertified(project);
+            if (filterStatus === 'pending') return !isProjectCertified(project);
+            return true;
+        });
+    }, [weeklyProjects, filterStatus]);
+
+    // Calcular estadísticas de progreso
+    const progressStats = useMemo(() => {
+        const total = weeklyProjects.length;
+        const certified = weeklyProjects.filter(isProjectCertified).length;
+        const pending = total - certified;
+        const percentage = total > 0 ? Math.round((certified / total) * 100) : 0;
+        
+        return { total, certified, pending, percentage };
+    }, [weeklyProjects]);
+
+    // Agrupar proyectos por día (usando proyectos filtrados)
     const projectsByDay = useMemo(() => {
         const grouped: { [key: string]: Project[] } = {};
         
-        weeklyProjects.forEach(project => {
+        filteredProjects.forEach(project => {
             const certDateStr = project.fechaCertificacion!.toString().includes('T') 
                 ? project.fechaCertificacion!.toString().split('T')[0] 
                 : project.fechaCertificacion!.toString();
@@ -81,7 +103,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         });
         
         return grouped;
-    }, [weeklyProjects]);
+    }, [filteredProjects]);
 
     // Formatear fecha para mostrar
     const formatDate = (dateStr: string) => {
@@ -178,13 +200,124 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                 </div>
             </div>
 
+            {/* Barra de progreso (siempre visible) */}
+            {weeklyProjects.length > 0 && (
+                <div className="px-4 py-2 border-b border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">
+                            Progreso: {progressStats.certified} de {progressStats.total} certificados
+                        </span>
+                        <span className="text-sm font-medium text-gray-900">
+                            {progressStats.percentage}%
+                        </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                            className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${progressStats.percentage}%` }}
+                        ></div>
+                    </div>
+                </div>
+            )}
+
             {/* Content */}
             {isExpanded && (
                 <div className="p-4">
+                    {/* Controles de filtros y vista */}
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        {/* Filtros por estado */}
+                        <div className="flex items-center space-x-1">
+                            <span className="text-sm text-gray-600 mr-2">Filtrar:</span>
+                            <button
+                                onClick={() => setFilterStatus('all')}
+                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                    filterStatus === 'all' 
+                                        ? 'bg-blue-100 text-blue-800 font-medium' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                Todos ({weeklyProjects.length})
+                            </button>
+                            <button
+                                onClick={() => setFilterStatus('certified')}
+                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                    filterStatus === 'certified' 
+                                        ? 'bg-green-100 text-green-800 font-medium' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                Certificados ({progressStats.certified})
+                            </button>
+                            <button
+                                onClick={() => setFilterStatus('pending')}
+                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                    filterStatus === 'pending' 
+                                        ? 'bg-orange-100 text-orange-800 font-medium' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                Pendientes ({progressStats.pending})
+                            </button>
+                        </div>
+
+                        {/* Toggle vista compacta */}
+                        <button
+                            onClick={() => setIsCompactView(!isCompactView)}
+                            className="flex items-center space-x-1 px-3 py-1 text-xs rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                    d={isCompactView ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 10h16M4 14h16M4 18h16"} 
+                                />
+                            </svg>
+                            <span>{isCompactView ? 'Vista detallada' : 'Vista compacta'}</span>
+                        </button>
+                    </div>
+
                     <div className="space-y-4">
-                        {Object.entries(projectsByDay)
-                            .sort(([a], [b]) => a.localeCompare(b))
-                            .map(([dateStr, dayProjects]) => (
+                        {isCompactView ? (
+                            /* Vista Compacta */
+                            <div className="space-y-2">
+                                {filteredProjects.map(project => (
+                                    <div 
+                                        key={project.idJira}
+                                        className={`flex items-center justify-between p-2 rounded border transition-colors hover:bg-gray-50 ${
+                                            isProjectCertified(project)
+                                                ? 'border-green-200 bg-green-50'
+                                                : 'border-gray-200'
+                                        }`}
+                                    >
+                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                            {isProjectCertified(project) ? (
+                                                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                            ) : (
+                                                <Clock className="w-4 h-4 text-orange-600 flex-shrink-0" />
+                                            )}
+                                            {renderJiraLink(project)}
+                                            <span className="truncate text-sm text-gray-900" title={project.proyecto}>
+                                                {project.proyecto}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                            <span className="text-xs text-gray-500">
+                                                {formatDate(project.fechaCertificacion!.toString().includes('T') 
+                                                    ? project.fechaCertificacion!.toString().split('T')[0] 
+                                                    : project.fechaCertificacion!.toString())}
+                                            </span>
+                                            {isProjectCertified(project) && (
+                                                <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                                                    ✓
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            /* Vista Detallada */
+                            Object.entries(projectsByDay)
+                                .sort(([a], [b]) => a.localeCompare(b))
+                                .map(([dateStr, dayProjects]) => (
                                 <div 
                                     key={dateStr} 
                                     className={`border rounded-lg p-3 ${
@@ -279,28 +412,31 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                         ))}
                                     </div>
                                 </div>
-                            ))}
+                                ))
+                        )}
                     </div>
 
                     {/* Summary footer */}
                     <div className="mt-4 pt-4 border-t border-gray-200">
                         <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>
-                                Total: <strong>{weeklyProjects.length}</strong> certificaciones esta semana
+                                {filterStatus === 'all' ? (
+                                    <>Total: <strong>{weeklyProjects.length}</strong> certificaciones esta semana</>
+                                ) : (
+                                    <>Mostrando: <strong>{filteredProjects.length}</strong> de {weeklyProjects.length} proyectos</>
+                                )}
                             </span>
                             <div className="flex items-center space-x-4">
-                                {Object.keys(projectsByDay).some(date => isToday(date)) && (
-                                    <span className="text-blue-600">
-                                        <Clock className="w-4 h-4 inline mr-1" />
-                                        {projectsByDay[new Date().toISOString().split('T')[0]]?.length || 0} hoy
+                                {progressStats.certified > 0 && (
+                                    <span className="text-green-600">
+                                        <CheckCircle className="w-4 h-4 inline mr-1" />
+                                        {progressStats.certified} certificados
                                     </span>
                                 )}
-                                {Object.keys(projectsByDay).some(date => isPast(date)) && (
-                                    <span className="text-red-600">
-                                        <AlertTriangle className="w-4 h-4 inline mr-1" />
-                                        {Object.entries(projectsByDay)
-                                            .filter(([date]) => isPast(date))
-                                            .reduce((sum, [, projects]) => sum + projects.length, 0)} vencidos
+                                {progressStats.pending > 0 && (
+                                    <span className="text-orange-600">
+                                        <Clock className="w-4 h-4 inline mr-1" />
+                                        {progressStats.pending} pendientes
                                     </span>
                                 )}
                             </div>
