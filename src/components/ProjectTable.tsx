@@ -150,7 +150,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
         setEndDate(end);
         
         // Forzar la actualización de los filtros cuando cambia el rango de fechas
-        console.log(`Filtro de fecha cambiado: ${selectedDateFilter} - ${start.toDateString()} a ${end.toDateString()}`);
     }, [selectedDateFilter, selectedYear, selectedMonth]);// La función loadProjects ya no es necesaria porque usamos el hook useProjects
 
     const fetchTeams = async () => {
@@ -430,11 +429,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
             {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
                 <ProjectDashboard projects={allFilteredProjects} />
-            )}
-            
-            {/* Widget de Certificaciones de la Semana */}
-            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
-                <WeeklyCertificationWidget projects={projects} />
             )}
             
             <div className="flex justify-between items-center flex-wrap gap-4">                <div className="flex space-x-2">
@@ -1214,7 +1208,13 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                     />
                 </div>
             )}
-              {/* Diálogo de cambio de estado */}
+            
+            {/* Widget de Certificaciones de la Semana - Movido al final */}
+            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
+                <WeeklyCertificationWidget projects={projects} />
+            )}
+              
+            {/* Diálogo de cambio de estado */}
             {statusDialogOpen && projectToChangeStatus && (
                 <ChangeProjectStatusDialog
                     project={projectToChangeStatus}

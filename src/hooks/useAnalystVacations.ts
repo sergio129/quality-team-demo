@@ -127,18 +127,6 @@ export function isAnalystOnVacation(vacations: AnalystVacation[], analystId: str
     const startDateStr = getDateString(vacation.startDate);
     const endDateStr = getDateString(vacation.endDate);
     
-    // Para depuración
-    if (analystId === '8947b61d-d634-4844-8b30-9100b632d236' || 
-        analystId === 'e3e7ba88-3675-4de0-be02-8caec0b76ff8') {
-      console.log(`[DEBUG] Verificando vacaciones: 
-        Analista: ${analystId}
-        Fecha actual: ${dateToCheckStr} 
-        Fechas vacación: ${startDateStr} a ${endDateStr}
-        Tipo: ${vacation.type}
-        ¿En vacaciones?: ${dateToCheckStr >= startDateStr && dateToCheckStr <= endDateStr ? 'SÍ' : 'NO'}`
-      );
-    }
-    
     // Verificar si la fecha está dentro del rango (inclusive)
     if (dateToCheckStr >= startDateStr && dateToCheckStr <= endDateStr) {
       return vacation;

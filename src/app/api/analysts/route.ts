@@ -43,19 +43,14 @@ export async function DELETE(request: Request) {
     try {
         const { id } = await request.json();
         
-        console.log(`Intentando eliminar analista con ID: ${id}`);
-        
         // Verificar primero si el analista existe
         const existingAnalyst = await analystService.getAnalystById(id);
         if (!existingAnalyst) {
-            console.log(`Intento de eliminar analista inexistente con ID: ${id}`);
             return NextResponse.json({ 
                 error: 'Analyst not found',
                 details: `No se encontró un analista con ID: ${id}`
             }, { status: 404 });
         }
-        
-        console.log(`Eliminando analista: ${existingAnalyst.name} (${id})`);
         
         // Si existe, intentar eliminarlo
         const deleted = await analystService.deleteAnalyst(id);
@@ -67,7 +62,6 @@ export async function DELETE(request: Request) {
             }, { status: 500 });
         }
         
-        console.log(`✅ Analista eliminado con éxito: ${existingAnalyst.name} (${id})`);
         return NextResponse.json({ 
             success: true,
             message: `Analista "${existingAnalyst.name}" eliminado correctamente` 

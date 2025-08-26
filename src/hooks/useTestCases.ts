@@ -31,14 +31,8 @@ export function useTestCases(projectId?: string, testPlanId?: string) {
     }
   );
 
-  // Añadir logs para depuración
-  if (data) {
-    console.log(`Cargados ${data.length} casos de prueba desde ${endpoint}`);
-  }
-  
   // Incluir una función para forzar refresco
   const forceRefresh = () => {
-    console.log(`Forzando actualización de datos desde ${endpoint}`);
     refreshData();
   };
 

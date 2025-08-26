@@ -10,7 +10,7 @@ interface WeeklyCertificationWidgetProps {
 }
 
 export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidgetProps) {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [isExpanded, setIsExpanded] = useState(false);
     
     // Obtener la semana actual (lunes a domingo)
     const currentWeek = useMemo(() => {

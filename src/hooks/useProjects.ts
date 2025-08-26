@@ -177,8 +177,6 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
   // Si no se proporciona idJira, asumimos que id es idJira (para mantener compatibilidad)
   const projectIdJira = idJira || id;
   
-  console.log(`Cambiando estado del proyecto: ${projectIdJira} a ${nuevoEstado}`);
-  
   // Ajustar la fecha de certificación si el nuevo estado es "Certificado"
   let updates: any = {
     estado: nuevoEstado,

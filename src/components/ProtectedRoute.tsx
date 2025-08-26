@@ -15,7 +15,6 @@ export default function ProtectedRoute({ children, requireAuth = true }: Protect
 
     useEffect(() => {
         if (requireAuth && status === "unauthenticated") {
-            console.log("ProtectedRoute: Usuario no autenticado, redirigiendo a login");
             router.replace("/login");
         }
     }, [status, router, requireAuth]);

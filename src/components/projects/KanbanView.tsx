@@ -33,14 +33,12 @@ export default function KanbanView({
   useEffect(() => {
     setLocalProjects(projects);
     // Los proyectos ya vienen filtrados desde ProjectTable
-    console.log(`KanbanView recibió ${projects.length} proyectos filtrados`);
   }, [projects]);  // Agrupar proyectos por estado
   const getColumnProjects = (status: string) => {
     return localProjects.filter(p => {
       if (status === 'Retrasado') {
         // Mostrar en columna "Retrasado" solo si tiene días de retraso > 0 y no está certificado
         const isDelayed = isProjectDelayed(p);
-        console.log(`Proyecto ${p.idJira || p.nombre}: Estado=${p.estadoCalculado}, Días retraso=${p.diasRetraso}, ¿Retrasado? ${isDelayed}`);
         return isDelayed;
       }
       
@@ -69,8 +67,6 @@ export default function KanbanView({
     // Un proyecto está retrasado si:
     // 1. Tiene días de retraso mayor a 0
     // 2. Y NO está certificado
-    
-    console.log(`Proyecto ${project.idJira}: Días retraso: ${project.diasRetraso}, Estado: ${project.estadoCalculado}`);
     
     return project.diasRetraso > 0 && 
            project.estadoCalculado !== 'Certificado';

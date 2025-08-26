@@ -21,22 +21,14 @@ export async function GET(req: NextRequest) {
         const yearFilter = url.searchParams.get('year');
         const role = url.searchParams.get('role') || session.user.role;
         
-        console.log(`[API:Projects] Request from user: ${session.user.name}`);
-        console.log(`[API:Projects] User role: ${session.user.role}`);
-        console.log(`[API:Projects] Analyst ID: ${analystId || 'No asignado'}`);
-        
         // Usar nuestro servicio con filtrado basado en rol
         const projects = await projectService.getAllProjects({
             analystId: analystId || undefined,
             role: role
         });
         
-        console.log(`[API:Projects] Found ${projects.length} projects`);
-        
         if (projects.length === 0 && analystId) {
             // Si no hay proyectos y tenemos un analystId, verificar si el analista existe
-            console.log(`[API:Projects] No projects found for analyst ${analystId}, checking analyst...`);
-            
             try {
                 const analyst = await prisma.qAAnalyst.findUnique({
                     where: { id: analystId },
@@ -44,13 +36,6 @@ export async function GET(req: NextRequest) {
                         projects: true
                     }
                 });
-                
-                if (analyst) {
-                    console.log(`[API:Projects] Analyst found: ${analyst.name}`);
-                    console.log(`[API:Projects] Analyst has ${analyst.projects.length} project relations`);
-                } else {
-                    console.log(`[API:Projects] Analyst not found with ID: ${analystId}`);
-                }
             } catch (error) {
                 console.error(`[API:Projects] Error checking analyst:`, error);
             }
@@ -70,14 +55,9 @@ export async function GET(req: NextRequest) {
         const month = parseInt(monthFilter);
         const year = parseInt(yearFilter);
         
-        // Imprimir los parámetros para debugging
-        console.log(`Filtering by month: ${month}, year: ${year}`);
-        
         // Crear fecha de inicio y fin del mes
         const startOfMonth = new Date(year, month, 1);
         const endOfMonth = new Date(year, month + 1, 0); // El día 0 del siguiente mes es el último del mes actual
-        
-        console.log(`Start of month: ${startOfMonth.toISOString()}, End of month: ${endOfMonth.toISOString()}`);
         
         filteredProjects = filteredProjects.filter(project => {
             // Verificar si hay fecha de entrega
@@ -99,7 +79,6 @@ export async function GET(req: NextRequest) {
                     // El proyecto abarca todo el mes (comienza antes y termina después)
                     (entregaDate <= startOfMonth && fechaCert && fechaCert >= endOfMonth);
                 
-                console.log(`Project ${project.idJira}: date=${entregaDate.toISOString()}, isInMonth=${isInMonth}`);
                 return isInMonth;
             }
             return false;
@@ -128,7 +107,6 @@ export async function POST(req: NextRequest) {
         }
         
         const project = await req.json();
-        console.log('[API] Datos recibidos para crear proyecto:', JSON.stringify(project, null, 2));
         
         // Validar campos obligatorios
         if (!project.idJira || !project.proyecto || !project.equipo || !project.celula) {
@@ -251,14 +229,9 @@ export async function PUT(req: NextRequest) {
     try {
         const data = await req.json();
         
-        // Depuración: mostrar los datos recibidos
-        console.log('[API] Datos recibidos para actualización:', JSON.stringify(data, null, 2));
-        
         // Verificamos si la solicitud viene en el formato nuevo (con idJira separado) 
         // o en el formato antiguo (idJira dentro del proyecto)
         const idJira = data.id || data.idJira || (data.project && data.project.idJira);
-        
-        console.log('[API] ID Jira extraído:', idJira);
         
         if (!idJira) {
             return NextResponse.json(
@@ -271,20 +244,14 @@ export async function PUT(req: NextRequest) {
         // Si tenemos un objeto project anidado, lo aplanamos correctamente
         let projectToUpdate: any = {};
         if (data.project) {
-            console.log('[API] Usando datos del objeto project anidado');
             projectToUpdate = { ...data.project };
             // Aseguramos que idJira está presente en el objeto a actualizar
             if (!projectToUpdate.idJira && idJira) {
                 projectToUpdate.idJira = idJira;
             }
         } else {
-            console.log('[API] Usando datos directamente del objeto principal');
             projectToUpdate = { ...data };
         }
-        
-        console.log('[API] Objeto preparado para actualización:', JSON.stringify(projectToUpdate, null, 2));
-        
-        console.log(`[API] Actualizando proyecto con idJira: ${idJira}`);
         
         try {
             // Preparar el proyecto para actualizar con conversiones seguras
@@ -341,7 +308,6 @@ export async function PUT(req: NextRequest) {
             // establecer la fecha de certificación a la fecha actual
             if ((safeProject.estado === 'Certificado' || safeProject.estadoCalculado === 'Certificado') && 
                 !safeProject.fechaCertificacion) {
-                console.log('[API] Estableciendo fecha de certificación automáticamente');
                 safeProject.fechaCertificacion = new Date();
             }
             

@@ -53,7 +53,6 @@ export async function POST(request: Request) {
                     }
                 });
                 
-                console.log(`Archivo adjuntado con éxito: ${createdImage.id}`);
                 return NextResponse.json({ 
                     success: true, 
                     fileId: createdImage.id,
@@ -63,7 +62,6 @@ export async function POST(request: Request) {
                 console.error("Error al usar prisma.incidentImage:", prismaError);
                 
                 // Segundo intento usando SQL crudo
-                console.log("Intentando con SQL crudo...");
                 const currentDate = new Date();
                 
                 await prisma.$executeRaw`
@@ -79,8 +77,6 @@ export async function POST(request: Request) {
                         ${incidentId}
                     )
                 `;
-                
-                console.log("Archivo insertado mediante SQL crudo");
             }
             
             return NextResponse.json({ 

@@ -419,8 +419,6 @@ const DayCell = memo(({
         const dateStr = date.toISOString().split('T')[0];
         const startDate = toDateString(vacation.startDate);
         const endDate = toDateString(vacation.endDate);
-            
-        console.log(`[${analystId}] Está de ${vacation.type} en ${dateStr}: ${startDate} - ${endDate}`);
     }
     
     // Este cálculo ahora está memoizado
@@ -684,7 +682,6 @@ export function TimelineView({
             daysCount++;
         }
         
-        console.log(`Generadas ${newDates.length} fechas para la vista de ${selectedDateFilter}`);
         setDates(newDates);
     }, [startDate, endDate, selectedDateFilter]);
 
@@ -692,7 +689,6 @@ export function TimelineView({
     useEffect(() => {
         // Importamos la función de limpieza de caché desde TimelineUtils
         import('./TimelineUtils').then(({ clearProjectCache }) => {
-            console.log('[TimelineView] Limpiando caché debido a cambios en proyectos o filtros');
             clearProjectCache();
         });
     }, [projects, filterEquipo, filterAnalista, startDate, endDate]);
