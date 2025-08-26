@@ -219,10 +219,10 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
     }
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
             {/* Header */}
             <div 
-                className="flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center space-x-2">
@@ -305,7 +305,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
             {/* Content */}
             {isExpanded && (
-                <div className="p-4">
+                <div className="p-4 animate-fade-in-up">
                     {/* Campo de búsqueda */}
                     <div className="mb-4">
                         <div className="relative">
@@ -387,14 +387,15 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                         {isCompactView ? (
                             /* Vista Compacta */
                             <div className="space-y-2">
-                                {filteredProjects.map(project => (
+                                {filteredProjects.map((project, index) => (
                                     <div 
                                         key={project.idJira}
-                                        className={`flex items-center justify-between p-2 rounded border transition-colors hover:bg-gray-50 ${
+                                        className={`flex items-center justify-between p-2 rounded border transition-all duration-200 hover:bg-gray-50 hover:shadow-sm animate-fade-in-up ${
                                             isProjectCertified(project)
                                                 ? 'border-green-200 bg-green-50'
                                                 : 'border-gray-200'
                                         }`}
+                                        style={{ animationDelay: `${index * 0.05}s` }}
                                     >
                                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                                             {isProjectCertified(project) ? (
@@ -420,7 +421,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                             ) : (
                                                 <button
                                                     onClick={() => markAsCertified(project)}
-                                                    className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-1 rounded font-medium transition-colors"
+                                                    className="bg-green-100 text-green-700 hover:bg-green-200 hover:scale-105 text-xs px-2 py-1 rounded font-medium transition-all duration-200"
                                                     title="Marcar como certificado"
                                                 >
                                                     Certificar
@@ -434,16 +435,17 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                             /* Vista Detallada */
                             Object.entries(projectsByDay)
                                 .sort(([a], [b]) => a.localeCompare(b))
-                                .map(([dateStr, dayProjects]) => (
+                                .map(([dateStr, dayProjects], dayIndex) => (
                                 <div 
                                     key={dateStr} 
-                                    className={`border rounded-lg p-3 ${
+                                    className={`border rounded-lg p-3 transition-all duration-300 hover:shadow-sm animate-fade-in-up ${
                                         isToday(dateStr) 
                                             ? 'border-blue-200 bg-blue-50' 
                                             : isPast(dateStr)
                                             ? 'border-red-200 bg-red-50'
                                             : 'border-gray-200 bg-gray-50'
                                     }`}
+                                    style={{ animationDelay: `${dayIndex * 0.1}s` }}
                                 >
                                     {/* Day header */}
                                     <div className="flex items-center justify-between mb-3">
@@ -480,10 +482,10 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
                                     {/* Projects list */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                        {dayProjects.map(project => (
+                                        {dayProjects.map((project, projectIndex) => (
                                             <div 
                                                 key={project.idJira}
-                                                className={`p-3 rounded-md border transition-all duration-200 hover:shadow-sm ${
+                                                className={`p-3 rounded-md border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 animate-fade-in-scale ${
                                                     isProjectCertified(project)
                                                         ? 'bg-green-50 border-green-200 hover:border-green-300'
                                                         : isToday(dateStr)
@@ -492,6 +494,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                         ? 'bg-white border-red-200 hover:border-red-300'
                                                         : 'bg-white border-gray-200 hover:border-gray-300'
                                                 }`}
+                                                style={{ animationDelay: `${projectIndex * 0.05}s` }}
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1 min-w-0">
@@ -526,7 +529,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                                 {!isProjectCertified(project) && (
                                                                     <button
                                                                         onClick={() => markAsCertified(project)}
-                                                                        className="bg-green-500 text-white hover:bg-green-600 text-xs px-2 py-1 rounded font-medium transition-colors"
+                                                                        className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 text-xs px-2 py-1 rounded font-medium transition-all duration-200"
                                                                         title="Marcar como certificado"
                                                                     >
                                                                         ✓ Certificar
