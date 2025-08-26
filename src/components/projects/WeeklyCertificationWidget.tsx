@@ -26,13 +26,22 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         return { monday, sunday };
     }, []);
 
+    // Función auxiliar para procesar fechas sin problemas de timezone
+    const getDateWithoutTimezone = (dateString: string | Date) => {
+        const dateStr = dateString.toString().includes('T') 
+            ? dateString.toString().split('T')[0] 
+            : dateString.toString();
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     // Filtrar proyectos con certificación en la semana actual
     const weeklyProjects = useMemo(() => {
         return projects
             .filter(project => {
                 if (!project.fechaCertificacion) return false;
                 
-                const certDate = new Date(project.fechaCertificacion);
+                const certDate = getDateWithoutTimezone(project.fechaCertificacion);
                 return certDate >= currentWeek.monday && certDate <= currentWeek.sunday;
             })
             .sort((a, b) => {
@@ -45,8 +54,8 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                 }
                 
                 // Luego ordenar por fecha
-                const dateA = new Date(a.fechaCertificacion!);
-                const dateB = new Date(b.fechaCertificacion!);
+                const dateA = getDateWithoutTimezone(a.fechaCertificacion!);
+                const dateB = getDateWithoutTimezone(b.fechaCertificacion!);
                 return dateA.getTime() - dateB.getTime();
             });
     }, [projects, currentWeek]);
@@ -56,13 +65,14 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         const grouped: { [key: string]: Project[] } = {};
         
         weeklyProjects.forEach(project => {
-            const certDate = new Date(project.fechaCertificacion!);
-            const dayKey = certDate.toISOString().split('T')[0];
+            const certDateStr = project.fechaCertificacion!.toString().includes('T') 
+                ? project.fechaCertificacion!.toString().split('T')[0] 
+                : project.fechaCertificacion!.toString();
             
-            if (!grouped[dayKey]) {
-                grouped[dayKey] = [];
+            if (!grouped[certDateStr]) {
+                grouped[certDateStr] = [];
             }
-            grouped[dayKey].push(project);
+            grouped[certDateStr].push(project);
         });
         
         return grouped;
@@ -70,7 +80,9 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
     // Formatear fecha para mostrar
     const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
+        // Usar la fecha directamente sin crear objeto Date para evitar problemas de timezone
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
         return date.toLocaleDateString('es-ES', {
             weekday: 'short',
             day: 'numeric',
