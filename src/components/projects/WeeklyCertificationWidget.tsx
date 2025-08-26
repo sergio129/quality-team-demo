@@ -13,12 +13,14 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
     const [isExpanded, setIsExpanded] = useState(false);
     const [filterStatus, setFilterStatus] = useState<'all' | 'certified' | 'pending'>('all');
     const [isCompactView, setIsCompactView] = useState(false);
+    const [weekOffset, setWeekOffset] = useState(0); // Para navegación por semanas
+    const [searchTerm, setSearchTerm] = useState(''); // Para búsqueda
     
-    // Obtener la semana actual (lunes a domingo)
+    // Obtener la semana actual (lunes a domingo) con navegación
     const currentWeek = useMemo(() => {
         const now = new Date();
         const monday = new Date(now);
-        monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+        monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1) + (weekOffset * 7));
         monday.setHours(0, 0, 0, 0);
         
         const sunday = new Date(monday);
@@ -26,7 +28,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         sunday.setHours(23, 59, 59, 999);
         
         return { monday, sunday };
-    }, []);
+    }, [weekOffset]);
 
     // Función auxiliar para procesar fechas sin problemas de timezone
     const getDateWithoutTimezone = (dateString: string | Date) => {
@@ -67,15 +69,25 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
             });
     }, [projects, currentWeek]);
 
-    // Filtrar proyectos según el estado seleccionado
+    // Filtrar proyectos según el estado y búsqueda
     const filteredProjects = useMemo(() => {
         return weeklyProjects.filter(project => {
-            if (filterStatus === 'all') return true;
-            if (filterStatus === 'certified') return isProjectCertified(project);
-            if (filterStatus === 'pending') return !isProjectCertified(project);
-            return true;
+            // Filtro por estado
+            const matchesStatus = 
+                filterStatus === 'all' || 
+                (filterStatus === 'certified' && isProjectCertified(project)) ||
+                (filterStatus === 'pending' && !isProjectCertified(project));
+            
+            // Filtro por búsqueda
+            const matchesSearch = !searchTerm || 
+                project.idJira?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                project.proyecto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                project.equipo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                project.analistaProducto?.toLowerCase().includes(searchTerm.toLowerCase());
+                
+            return matchesStatus && matchesSearch;
         });
-    }, [weeklyProjects, filterStatus]);
+    }, [weeklyProjects, filterStatus, searchTerm]);
 
     // Calcular estadísticas de progreso
     const progressStats = useMemo(() => {
@@ -86,6 +98,40 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         
         return { total, certified, pending, percentage };
     }, [weeklyProjects]);
+
+    // Funciones de navegación por semanas
+    const goToPreviousWeek = () => setWeekOffset(prev => prev - 1);
+    const goToNextWeek = () => setWeekOffset(prev => prev + 1);
+    const goToCurrentWeek = () => setWeekOffset(0);
+
+    // Función para marcar proyecto como certificado
+    const markAsCertified = async (project: Project) => {
+        try {
+            const response = await fetch('/api/projects', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idJira: project.idJira,
+                    project: {
+                        ...project,
+                        estado: 'certificado',
+                        estadoCalculado: 'Certificado',
+                        fechaCertificacion: new Date().toISOString().split('T')[0]
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al actualizar el proyecto');
+            }
+            
+            // Recargar la página o manejar la actualización del estado
+            window.location.reload();
+        } catch (error) {
+            console.error('Error al marcar como certificado:', error);
+            alert('Error al actualizar el proyecto. Por favor, inténtalo de nuevo.');
+        }
+    };
 
     // Agrupar proyectos por día (usando proyectos filtrados)
     const projectsByDay = useMemo(() => {
@@ -187,11 +233,48 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                         {weeklyProjects.length}
                     </span>
+                    {weekOffset !== 0 && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                goToCurrentWeek();
+                            }}
+                            className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                        >
+                            Actual
+                        </button>
+                    )}
                 </div>
                 <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">
+                    {/* Navegación por semanas */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            goToPreviousWeek();
+                        }}
+                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        title="Semana anterior"
+                    >
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <span className="text-sm text-gray-500 min-w-[120px] text-center">
                         {currentWeek.monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {currentWeek.sunday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                        {weekOffset === 0 && <span className="text-blue-600 font-medium"> (Actual)</span>}
                     </span>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            goToNextWeek();
+                        }}
+                        className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        title="Semana siguiente"
+                    >
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                     <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
                         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -223,6 +306,32 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
             {/* Content */}
             {isExpanded && (
                 <div className="p-4">
+                    {/* Campo de búsqueda */}
+                    <div className="mb-4">
+                        <div className="relative">
+                            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Buscar proyectos..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                            />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Controles de filtros y vista */}
                     <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                         {/* Filtros por estado */}
@@ -304,10 +413,18 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                     ? project.fechaCertificacion!.toString().split('T')[0] 
                                                     : project.fechaCertificacion!.toString())}
                                             </span>
-                                            {isProjectCertified(project) && (
+                                            {isProjectCertified(project) ? (
                                                 <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
                                                     ✓
                                                 </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => markAsCertified(project)}
+                                                    className="bg-green-100 text-green-700 hover:bg-green-200 text-xs px-2 py-1 rounded font-medium transition-colors"
+                                                    title="Marcar como certificado"
+                                                >
+                                                    Certificar
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -404,7 +521,18 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                                 : 'text-gray-500'
                                                         }`}>
                                                             <span>{project.equipo}</span>
-                                                            <span>{project.analistaProducto}</span>
+                                                            <div className="flex items-center space-x-2">
+                                                                <span>{project.analistaProducto}</span>
+                                                                {!isProjectCertified(project) && (
+                                                                    <button
+                                                                        onClick={() => markAsCertified(project)}
+                                                                        className="bg-green-500 text-white hover:bg-green-600 text-xs px-2 py-1 rounded font-medium transition-colors"
+                                                                        title="Marcar como certificado"
+                                                                    >
+                                                                        ✓ Certificar
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
