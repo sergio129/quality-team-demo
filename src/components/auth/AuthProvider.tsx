@@ -8,5 +8,14 @@ interface AuthProviderProps {
 }
 
 export default function AuthProvider({ children }: AuthProviderProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider 
+      // Optimizar configuración de session provider
+      refetchInterval={5 * 60} // Refetch cada 5 minutos en lugar del default
+      refetchOnWindowFocus={false} // Evitar refetch excesivo en focus
+      refetchWhenOffline={false} // No refetch cuando esté offline
+    >
+      {children}
+    </SessionProvider>
+  );
 }

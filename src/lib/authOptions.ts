@@ -22,10 +22,25 @@ const generateSecret = () => {
 };
 
 export const authOptions: NextAuthOptions = {
-  // Configuración simplificada usando JWT
+  // Configuración optimizada usando JWT con cache mejorado
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // Actualizar sesión cada hora en lugar de cada request
+  },
+  // Configurar cookies optimizadas
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        // Optimizar tiempo de vida de cookies
+        maxAge: 24 * 60 * 60, // 24 horas
+      }
+    }
   },
   secret: generateSecret(),
   pages: {

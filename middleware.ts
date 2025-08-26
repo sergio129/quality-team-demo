@@ -16,18 +16,18 @@ export async function middleware(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     
-    // Log para debug
-    console.log(`Middleware: Processing ${pathname}`);
+    // Log para debug solo en desarrollo
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Middleware: Processing ${pathname}`);
+    }
     
     // Allow public routes
     if (publicRoutes.some(route => pathname.startsWith(route))) {
-      console.log(`Middleware: ${pathname} is public, allowing`);
       return NextResponse.next();
     }
 
     // Special handling for root path
     if (pathname === '/') {
-      console.log('Middleware: Root path, allowing');
       return NextResponse.next();
     }
 
@@ -36,15 +36,19 @@ export async function middleware(request: NextRequest) {
     //   return auditMiddleware(request);
     // }
 
-    // Usar una clave simple para desarrollo
+    // Usar una clave simple para desarrollo con timeout optimizado
     let token;
     try {
       token = await getToken({ 
         req: request,
-        secret: process.env.NEXTAUTH_SECRET || "ClaveGeneradaParaDesarrolloLocalNoUsarEnProduccion123"
+        secret: process.env.NEXTAUTH_SECRET || "ClaveGeneradaParaDesarrolloLocalNoUsarEnProduccion123",
+        // Optimizar timeout para mejor rendimiento
+        secureCookie: process.env.NODE_ENV === 'production',
       });
 
-      console.log(`Middleware: Token for ${pathname}:`, token ? 'exists' : 'null');
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Middleware: Token for ${pathname}:`, token ? 'exists' : 'null');
+      }
 
       // Redirect to login if not authenticated
       if (!token) {
