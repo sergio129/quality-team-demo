@@ -15,6 +15,7 @@ import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
+import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
 
 const HOURS_PER_DAY = 9;
 
@@ -429,6 +430,11 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
             {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
                 <ProjectDashboard projects={allFilteredProjects} />
+            )}
+            
+            {/* Widget de Certificaciones de la Semana */}
+            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
+                <WeeklyCertificationWidget projects={projects} />
             )}
             
             <div className="flex justify-between items-center flex-wrap gap-4">                <div className="flex space-x-2">
