@@ -15,7 +15,7 @@ import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
-import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
+ import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
 
 const HOURS_PER_DAY = 9;
 
@@ -252,6 +252,13 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             setIsSubmitting(true);
             
             if (editingProject && editingProject.idJira) {
+                // DEBUG: Mostrar lo que se está enviando
+                console.log('🔍 DATOS DEL PROYECTO ANTES DE ENVIAR:');
+                console.log('- ID Jira:', editingProject.idJira);
+                console.log('- Estado original:', editingProject.estadoCalculado);
+                console.log('- Estado nuevo:', newProject.estadoCalculado);
+                console.log('- Proyecto completo a enviar:', JSON.stringify(newProject, null, 2));
+                
                 // Actualizar proyecto existente usando idJira como identificador único
                 await updateProject(editingProject.idJira, newProject);
             } else {
@@ -916,23 +923,47 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 <label className="block text-sm font-medium text-gray-700">Estado del Proyecto</label>
                                 <select
                                     className="border p-2 rounded w-full"
-                                    value={newProject.estadoCalculado || ''}
+                                    value={newProject.estadoCalculado || 'Por Iniciar'}
                                     onChange={(e) => {
+                                        console.log('🔄 CAMBIO DE ESTADO DETECTADO:');
+                                        console.log('- Estado anterior:', newProject.estadoCalculado);
+                                        console.log('- Estado nuevo:', e.target.value);
+                                        
+                                        const nuevoEstado = e.target.value as 'Por Iniciar' | 'En Progreso' | 'Certificado';
+                                        
+                                        // Mapear el estado calculado al estado de base de datos
+                                        let estadoDB: string;
+                                        switch (nuevoEstado) {
+                                            case 'Por Iniciar':
+                                                estadoDB = 'pendiente';
+                                                break;
+                                            case 'En Progreso':
+                                                estadoDB = 'en_progreso';
+                                                break;
+                                            case 'Certificado':
+                                                estadoDB = 'certificado';
+                                                break;
+                                            default:
+                                                estadoDB = 'pendiente';
+                                        }
+                                        
                                         setNewProject({ 
-                                            ...newProject, 
-                                            estadoCalculado: e.target.value as 'Por Iniciar' | 'En Progreso' | 'Certificado' 
+                                            ...newProject,
+                                            estado: estadoDB,
+                                            estadoCalculado: nuevoEstado
                                         });
                                         
                                         // Si se marca como certificado y no tiene fecha de certificación, establecerla automáticamente
                                         if (e.target.value === 'Certificado' && !newProject.fechaCertificacion) {
                                             setNewProject(prev => ({ 
                                                 ...prev, 
+                                                estado: estadoDB,
+                                                estadoCalculado: nuevoEstado,
                                                 fechaCertificacion: new Date() 
                                             }));
                                         }
                                     }}
                                 >
-                                    <option value="">Seleccionar estado</option>
                                     <option value="Por Iniciar">Por Iniciar</option>
                                     <option value="En Progreso">En Progreso</option>
                                     <option value="Certificado">Certificado</option>
@@ -1068,7 +1099,33 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                             return;
                         }
                         setEditingProject(project);
-                        setNewProject(project);
+                        
+                        // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
+                        let estadoCalculadoParaSelect: string;
+                        switch (project.estado) {
+                            case 'pendiente':
+                                estadoCalculadoParaSelect = 'Por Iniciar';
+                                break;
+                            case 'en_progreso':
+                                estadoCalculadoParaSelect = 'En Progreso';
+                                break;
+                            case 'certificado':
+                                estadoCalculadoParaSelect = 'Certificado';
+                                break;
+                            default:
+                                // Si no hay estado o es desconocido, usar el estadoCalculado si existe
+                                estadoCalculadoParaSelect = project.estadoCalculado || 'Por Iniciar';
+                        }
+                        
+                        console.log('🔧 INICIALIZANDO EDICIÓN:');
+                        console.log('- Estado BD:', project.estado);
+                        console.log('- Estado calculado original:', project.estadoCalculado);
+                        console.log('- Estado para select:', estadoCalculadoParaSelect);
+                        
+                        setNewProject({
+                            ...project,
+                            estadoCalculado: estadoCalculadoParaSelect
+                        });
                         setShowForm(true);
                     }}
                     onDeleteProject={(project) => {
@@ -1129,7 +1186,41 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             </span>
         )}
     </div>
-</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {if (!project.idJira) {toast.error('No se puede editar un proyecto sin ID de Jira');return;}setEditingProject(project);setNewProject(project);setShowForm(true);}} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar', onClick: () => {}}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
+</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {
+                        if (!project.idJira) {
+                            toast.error('No se puede editar un proyecto sin ID de Jira');
+                            return;
+                        }
+                        setEditingProject(project);
+                        
+                        // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
+                        let estadoCalculadoParaSelect: string;
+                        switch (project.estado) {
+                            case 'pendiente':
+                                estadoCalculadoParaSelect = 'Por Iniciar';
+                                break;
+                            case 'en_progreso':
+                                estadoCalculadoParaSelect = 'En Progreso';
+                                break;
+                            case 'certificado':
+                                estadoCalculadoParaSelect = 'Certificado';
+                                break;
+                            default:
+                                // Si no hay estado o es desconocido, usar el estadoCalculado si existe
+                                estadoCalculadoParaSelect = project.estadoCalculado || 'Por Iniciar';
+                        }
+                        
+                        console.log('🔧 INICIALIZANDO EDICIÓN (desde tabla):');
+                        console.log('- Estado BD:', project.estado);
+                        console.log('- Estado calculado original:', project.estadoCalculado);
+                        console.log('- Estado para select:', estadoCalculadoParaSelect);
+                        
+                        setNewProject({
+                            ...project,
+                            estadoCalculado: estadoCalculadoParaSelect
+                        });
+                        setShowForm(true);
+                    }} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar', onClick: () => {}}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
 ))}
 </tbody>
                     </table>
