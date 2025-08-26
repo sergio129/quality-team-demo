@@ -188,8 +188,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
 
         if (!newProject.idJira?.trim()) {
             newErrors.idJira = 'El ID de Jira es requerido';
-        } else if (!/^[A-Z]+-\d+$/.test(newProject.idJira)) {
-            newErrors.idJira = 'Formato inválido. Debe ser como "PROJ-123"';
+        } else if (!/^[A-Z0-9]+-\d+$/i.test(newProject.idJira)) {
+            newErrors.idJira = 'Formato inválido. Debe ser como "PROJ-123" o "PROJ1-152"';
         }
 
         if (!newProject.proyecto?.trim()) {
@@ -604,8 +604,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                     <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    placeholder="Ej: PROJ-123"
-                                    pattern="[A-Z]+-[0-9]+"
+                                    placeholder="Ej: RIN1-152, ABC-123, PROJ-999"
+                                    pattern="[A-Z0-9]+-[0-9]+"
                                     className={`border p-2 rounded w-full ${errors.idJira ? 'border-red-500' : ''}`}
                                     value={newProject.idJira || ''}
                                     onChange={(e) => {
