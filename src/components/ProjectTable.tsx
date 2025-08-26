@@ -1101,7 +1101,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         setEditingProject(project);
                         
                         // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
-                        let estadoCalculadoParaSelect: string;
+                        let estadoCalculadoParaSelect: 'Por Iniciar' | 'En Progreso' | 'Certificado';
                         switch (project.estado) {
                             case 'pendiente':
                                 estadoCalculadoParaSelect = 'Por Iniciar';
@@ -1114,13 +1114,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 break;
                             default:
                                 // Si no hay estado o es desconocido, usar el estadoCalculado si existe
-                                estadoCalculadoParaSelect = project.estadoCalculado || 'Por Iniciar';
+                                estadoCalculadoParaSelect = (project.estadoCalculado as 'Por Iniciar' | 'En Progreso' | 'Certificado') || 'Por Iniciar';
                         }
-                        
-                        console.log('🔧 INICIALIZANDO EDICIÓN:');
-                        console.log('- Estado BD:', project.estado);
-                        console.log('- Estado calculado original:', project.estadoCalculado);
-                        console.log('- Estado para select:', estadoCalculadoParaSelect);
                         
                         setNewProject({
                             ...project,
