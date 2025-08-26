@@ -4,8 +4,9 @@
  * Incluye manejo de errores básico y parsing JSON con soporte para ETags.
  */
 
-// Cache en memoria para ETags
+// Cache en memoria para ETags y datos
 const etagCache = new Map<string, string>();
+const dataCache = new Map<string, any>();
 
 /**
  * Fetcher básico para SWR con soporte para ETags
@@ -23,9 +24,25 @@ export const fetcher = async (url: string) => {
   
   const response = await fetch(url, { headers });
 
-  // Manejar 304 Not Modified
+  // Manejar 304 Not Modified - retornar datos cacheados
   if (response.status === 304) {
-    throw new Error('304'); // SWR manejará esto manteniendo los datos en cache
+    const cachedData = dataCache.get(url);
+    if (cachedData) {
+      return cachedData; // Retornar datos del cache interno
+    }
+    // Si no hay datos en cache, hacer request sin ETag
+    const freshResponse = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (freshResponse.ok) {
+      const data = await freshResponse.json();
+      const newEtag = freshResponse.headers.get('ETag');
+      if (newEtag) {
+        etagCache.set(url, newEtag);
+        dataCache.set(url, data);
+      }
+      return data;
+    }
   }
 
   if (!response.ok) {
@@ -38,13 +55,17 @@ export const fetcher = async (url: string) => {
     throw error;
   }
   
-  // Guardar ETag para futuras requests
+  // Obtener los datos
+  const data = await response.json();
+  
+  // Guardar ETag y datos en cache para futuras requests
   const etag = response.headers.get('ETag');
   if (etag) {
     etagCache.set(url, etag);
+    dataCache.set(url, data);
   }
 
-  return response.json();
+  return data;
 };
 
 /**

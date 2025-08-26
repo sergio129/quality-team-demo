@@ -1,16 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { TeamService } from '@/services/teamService';
 import { Team } from '@/models/Team';
-import { generateETag, getStaticDataHeaders } from '@/lib/cacheHeaders';
+import { generateETag, isNotModified, getStaticDataHeaders } from '@/lib/cacheHeaders';
 
 const teamService = new TeamService();
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
         const teams = await teamService.getAllTeams();
         
         // Generar ETag para cache
         const etag = generateETag(teams);
+        
+        // Verificar si el cliente tiene una versión válida en cache
+        if (isNotModified(request, etag)) {
+            return new Response(null, { status: 304 });
+        }
+        
         const cacheHeaders = getStaticDataHeaders(etag);
         
         return NextResponse.json(teams, { headers: cacheHeaders });
