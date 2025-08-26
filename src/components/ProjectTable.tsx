@@ -252,13 +252,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             setIsSubmitting(true);
             
             if (editingProject && editingProject.idJira) {
-                // DEBUG: Mostrar lo que se está enviando
-                console.log('🔍 DATOS DEL PROYECTO ANTES DE ENVIAR:');
-                console.log('- ID Jira:', editingProject.idJira);
-                console.log('- Estado original:', editingProject.estadoCalculado);
-                console.log('- Estado nuevo:', newProject.estadoCalculado);
-                console.log('- Proyecto completo a enviar:', JSON.stringify(newProject, null, 2));
-                
                 // Actualizar proyecto existente usando idJira como identificador único
                 await updateProject(editingProject.idJira, newProject);
             } else {
@@ -925,10 +918,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                     className="border p-2 rounded w-full"
                                     value={newProject.estadoCalculado || 'Por Iniciar'}
                                     onChange={(e) => {
-                                        console.log('🔄 CAMBIO DE ESTADO DETECTADO:');
-                                        console.log('- Estado anterior:', newProject.estadoCalculado);
-                                        console.log('- Estado nuevo:', e.target.value);
-                                        
                                         const nuevoEstado = e.target.value as 'Por Iniciar' | 'En Progreso' | 'Certificado';
                                         
                                         // Mapear el estado calculado al estado de base de datos
@@ -1072,9 +1061,6 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 </div>            ) : activeView === 'timeline' ? (
                 <>
                     {/* Mensajes de depuración para vacaciones */}
-                    {console.log(`[ProjectTable] Pasando ${vacations.length} registros de vacaciones a TimelineView`)}
-                    {console.log(`[ProjectTable] Analistas cargados: ${analysts.map(a => a.name).join(', ')}`)}
-                    {vacations.length > 0 && console.log(`[ProjectTable] Ejemplo de vacación: `, JSON.stringify(vacations[0]))}
                     
                     <TimelineView
                         projects={allFilteredProjects} // Pasar todos los proyectos filtrados, no solo los de la página actual
@@ -1189,7 +1175,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         setEditingProject(project);
                         
                         // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
-                        let estadoCalculadoParaSelect: string;
+                        let estadoCalculadoParaSelect: 'Por Iniciar' | 'En Progreso' | 'Certificado';
                         switch (project.estado) {
                             case 'pendiente':
                                 estadoCalculadoParaSelect = 'Por Iniciar';
@@ -1202,13 +1188,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                 break;
                             default:
                                 // Si no hay estado o es desconocido, usar el estadoCalculado si existe
-                                estadoCalculadoParaSelect = project.estadoCalculado || 'Por Iniciar';
+                                estadoCalculadoParaSelect = (project.estadoCalculado as 'Por Iniciar' | 'En Progreso' | 'Certificado') || 'Por Iniciar';
                         }
-                        
-                        console.log('🔧 INICIALIZANDO EDICIÓN (desde tabla):');
-                        console.log('- Estado BD:', project.estado);
-                        console.log('- Estado calculado original:', project.estadoCalculado);
-                        console.log('- Estado para select:', estadoCalculadoParaSelect);
                         
                         setNewProject({
                             ...project,
