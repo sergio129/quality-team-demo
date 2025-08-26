@@ -10,7 +10,6 @@ import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
-import ProjectCardsView from './projects/ProjectCardsView';
 import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
@@ -604,7 +603,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                                     <span className="text-red-500">*</span>
                                 </label>
                                 <input
-                                    placeholder="Ej: RIN1-152, ABC-123, PROJ-999"
+                                    placeholder="Ej: ABC1-123, ABC-123, PROJ-999"
                                     pattern="[A-Z0-9]+-[0-9]+"
                                     className={`border p-2 rounded w-full ${errors.idJira ? 'border-red-500' : ''}`}
                                     value={newProject.idJira || ''}
