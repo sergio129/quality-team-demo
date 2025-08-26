@@ -20,7 +20,7 @@ import { ExportTeams } from './ExportTeams';
 import { toast } from 'sonner';
 import { useTeams, deleteTeam } from '@/hooks/useTeams';
 import { useAnalysts } from '@/hooks/useAnalysts';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<Team, 'name' | 'description'>;
@@ -44,7 +44,7 @@ export function DataTable() {
   // Usar SWR para obtener datos
   const { teams, isLoading, isError, error } = useTeams();
   const { analysts } = useAnalysts();
-  const { projects } = useProjects(); // Obtener proyectos para calcular carga de trabajo
+  const { projects } = useAllProjects(); // Obtener TODOS los proyectos para calcular carga de trabajo
 
   useEffect(() => {
     // Resetear a la primera página cuando cambia el término de búsqueda
@@ -126,16 +126,22 @@ export function DataTable() {
   }, [teams, sortField, sortDirection, searchTerm, currentFilter, projects]);
   // Calcula la carga de trabajo para cada equipo
   const getTeamWorkload = useCallback((teamName: string) => {
-    // Contar proyectos activos asignados al equipo (tanto "Por Iniciar" como "En Progreso")
-    return projects.filter(project => 
-      project.equipo === teamName && 
-      (
-        project.estadoCalculado === 'En Progreso' || 
-        project.estadoCalculado === 'Por Iniciar' || 
-        project.estado === 'en progreso' || 
-        project.estado?.toLowerCase().includes('iniciar')
-      )
-    ).length;
+    if (!projects || projects.length === 0) {
+      return 0;
+    }
+    
+    // Contar proyectos activos asignados al equipo
+    const activeProjects = projects.filter(project => {
+      const matchesTeam = project.equipo === teamName;
+      const isActive = project.estadoCalculado === 'En Progreso' || 
+                       project.estadoCalculado === 'Por Iniciar' || 
+                       project.estado === 'en progreso' || 
+                       (project.estado && project.estado.toLowerCase().includes('iniciar'));
+      
+      return matchesTeam && isActive;
+    });
+    
+    return activeProjects.length;
   }, [projects]);
 
   // Lógica de paginación

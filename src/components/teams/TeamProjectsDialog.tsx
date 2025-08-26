@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Team } from '@/models/Team';
 import { useProjects } from '@/hooks/useProjects';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,7 +17,7 @@ interface TeamProjectsDialogProps {
 }
 
 export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialogProps) {
-  const { projects, isLoading } = useProjects();
+  const { projects, isLoading } = useProjects({ limit: 500 }); // Usar límite alto para obtener todos los proyectos
   const [searchTerm, setSearchTerm] = useState('');
 
   // Filtrar proyectos por equipo
@@ -25,19 +27,34 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
     );
   }, [projects, team.name]);
 
+  // Agregar una opción para mostrar solo proyectos activos
+  const [showOnlyActive, setShowOnlyActive] = useState(false);
+
+  // Filtrar proyectos activos si está activado el filtro
+  const activeFilteredProjects = useMemo(() => {
+    if (!showOnlyActive) return teamProjects;
+    
+    return teamProjects.filter(project => {
+      return project.estadoCalculado === 'En Progreso' || 
+             project.estadoCalculado === 'Por Iniciar' || 
+             project.estado === 'en progreso' || 
+             (project.estado && project.estado.toLowerCase().includes('iniciar'));
+    });
+  }, [teamProjects, showOnlyActive]);
+
   // Filtrar proyectos por término de búsqueda
   const filteredProjects = useMemo(() => {
-    if (!searchTerm.trim()) return teamProjects;
+    if (!searchTerm.trim()) return activeFilteredProjects;
     
     const searchLower = searchTerm.toLowerCase();
-    return teamProjects.filter(project => 
+    return activeFilteredProjects.filter(project => 
       project.proyecto.toLowerCase().includes(searchLower) ||
       project.idJira.toLowerCase().includes(searchLower) ||
       project.descripcion?.toLowerCase().includes(searchLower) ||
       project.estado?.toLowerCase().includes(searchLower) ||
       project.celula?.toLowerCase().includes(searchLower)
     );
-  }, [teamProjects, searchTerm]);
+  }, [activeFilteredProjects, searchTerm]);
   
   // Obtener estado en formato legible y su clase CSS
   const getStatusInfo = (project: any) => {
@@ -137,13 +154,31 @@ export function TeamProjectsDialog({ team, isOpen, onClose }: TeamProjectsDialog
         </DialogHeader>
 
         <div className="py-4">
-          <div className="flex items-center pb-4">
+          <div className="flex items-center justify-between pb-4">
             <Input
               placeholder="Buscar proyectos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-sm"
             />
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="show-active" 
+                checked={showOnlyActive}
+                onCheckedChange={setShowOnlyActive}
+              />
+              <label 
+                htmlFor="show-active" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Solo proyectos activos ({teamProjects.filter(p => 
+                  p.estadoCalculado === 'En Progreso' || 
+                  p.estadoCalculado === 'Por Iniciar' || 
+                  p.estado === 'en progreso' || 
+                  (p.estado && p.estado.toLowerCase().includes('iniciar'))
+                ).length})
+              </label>
+            </div>
           </div>
 
           {isLoading ? (
