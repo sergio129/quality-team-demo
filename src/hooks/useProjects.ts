@@ -21,14 +21,39 @@ export interface ProjectStats {
   totalActivos: number;
 }
 
+// Tipo para respuesta paginada
+export interface PaginatedProjectsResponse {
+  data: Project[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// Opciones para filtros y paginación
+export interface UseProjectsOptions {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  teamFilter?: string;
+  statusFilter?: string;
+  analystFilter?: string;
+  monthFilter?: number;
+  yearFilter?: number;
+}
+
 /**
- * Hook para obtener todos los proyectos, aplicando filtros basados en el rol del usuario
+ * Hook para obtener proyectos con paginación y filtros
  */
-export function useProjects() {
+export function useProjects(options: UseProjectsOptions = {}) {
   // Obtener la sesión del usuario
   const { data: session } = useSWR('/api/auth/session', fetcher);
   
-  // Construir la URL con los parámetros del usuario actual si están disponibles
+  // Construir la URL con los parámetros del usuario actual y filtros
   const urlKey = useMemo(() => {
     // Si no tenemos sesión, retornamos null para evitar la petición
     if (!session?.user) return null;
@@ -36,39 +61,156 @@ export function useProjects() {
     let url = PROJECTS_API;
     const params = new URLSearchParams();
     
-    // Añadir parámetros de role
+    // Añadir parámetros de role y analystId
     if (session.user.role) {
       params.append('role', session.user.role);
     }
     
-    // Añadir analystId si existe
     if (session.user.analystId) {
       params.append('analystId', session.user.analystId);
     }
     
-    // No añadir timestamp para evitar ciclos infinitos de revalidación
-    // params.append('_t', Date.now().toString());
+    // Añadir parámetros de paginación
+    if (options.page) {
+      params.append('page', options.page.toString());
+    }
+    
+    if (options.limit) {
+      params.append('limit', options.limit.toString());
+    }
+    
+    // Añadir parámetros de filtros
+    if (options.searchTerm) {
+      params.append('search', options.searchTerm);
+    }
+    
+    if (options.teamFilter) {
+      params.append('team', options.teamFilter);
+    }
+    
+    if (options.statusFilter) {
+      params.append('status', options.statusFilter);
+    }
+    
+    if (options.analystFilter) {
+      params.append('analyst', options.analystFilter);
+    }
+    
+    if (options.monthFilter) {
+      params.append('month', options.monthFilter.toString());
+    }
+    
+    if (options.yearFilter) {
+      params.append('year', options.yearFilter.toString());
+    }
     
     // Construir URL final con parámetros
     url = `${PROJECTS_API}?${params.toString()}`;
     return url;
-  }, [session]); // Dependencia en session para recalcular cuando cambie
+  }, [session, options]); // Dependencias actualizadas para incluir options
   
   // Usar una clave estable para SWR
-  const { data, error, isLoading } = useSWR<Project[]>(
+  const { data, error, isLoading } = useSWR<PaginatedProjectsResponse>(
     urlKey, // Solo hace la petición si urlKey no es null
     fetcher,
     { 
-      revalidateOnFocus: false, // Evita revalidar en focus para prevenir ciclos
-      revalidateOnReconnect: false, // Evita revalidar en reconexiones
-      dedupingInterval: 10000, // 10 segundos para deduplicar peticiones
-      errorRetryCount: 2 // Limitar reintentos
+      revalidateOnFocus: false, // Cache HTTP se encarga de revalidación
+      revalidateOnReconnect: true, // Revalidar en reconexiones
+      dedupingInterval: 60000, // 1 minuto para deduplicar peticiones
+      focusThrottleInterval: 30000, // Throttle focus revalidation
+      errorRetryInterval: 5000, // Intervalo entre reintentos
+      errorRetryCount: 3, // Más reintentos
+      keepPreviousData: true, // Mantener datos anteriores durante revalidación
+      refreshInterval: 0 // Desactivar refresh automático, confiar en cache HTTP
     }
   );
 
   return {
-    projects: data || [],
+    projects: data?.data || [],
+    pagination: data?.pagination || {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrev: false
+    },
     isLoading: isLoading || !session, // Considerar loading si la sesión no está cargada
+    isError: error,
+  };
+}
+
+/**
+ * Hook para obtener TODOS los proyectos sin paginación (para vistas especiales como Timeline)
+ */
+export function useAllProjects(options: Omit<UseProjectsOptions, 'page' | 'limit'> = {}) {
+  // Obtener la sesión del usuario
+  const { data: session } = useSWR('/api/auth/session', fetcher);
+  
+  // Construir la URL con los parámetros del usuario actual y filtros (sin paginación y sin filtros de fecha)
+  const urlKey = useMemo(() => {
+    // Si no tenemos sesión, retornamos null para evitar la petición
+    if (!session?.user) return null;
+    
+    let url = PROJECTS_API;
+    const params = new URLSearchParams();
+    
+    // Añadir parámetros de role y analystId
+    if (session.user.role) {
+      params.append('role', session.user.role);
+    }
+    
+    if (session.user.analystId) {
+      params.append('analystId', session.user.analystId);
+    }
+    
+    // Para obtener todos los proyectos, establecer un límite alto
+    params.append('limit', '1000');
+    params.append('page', '1');
+    
+    // Añadir filtros básicos (sin fecha para permitir que Timeline maneje el filtrado)
+    if (options.searchTerm) {
+      params.append('search', options.searchTerm);
+    }
+    
+    if (options.teamFilter) {
+      params.append('team', options.teamFilter);
+    }
+    
+    if (options.statusFilter) {
+      params.append('status', options.statusFilter);
+    }
+    
+    if (options.analystFilter) {
+      params.append('analyst', options.analystFilter);
+    }
+    
+    // NO añadir filtros de fecha - dejar que Timeline los maneje
+    
+    // Construir URL final con parámetros
+    url = `${PROJECTS_API}?${params.toString()}`;
+    return url;
+  }, [session, options]);
+  
+  // Usar una clave estable para SWR
+  const { data, error, isLoading } = useSWR<PaginatedProjectsResponse>(
+    urlKey,
+    fetcher,
+    { 
+      revalidateOnFocus: false, // Cache HTTP maneja revalidación
+      revalidateOnReconnect: true,
+      dedupingInterval: 120000, // 2 minutos - datos más estables para timeline
+      focusThrottleInterval: 60000, // 1 minuto throttle para timeline
+      errorRetryInterval: 5000,
+      errorRetryCount: 3,
+      keepPreviousData: true, // Importante para timeline - evita flickering
+      refreshInterval: 0 // Sin refresh automático, confiar en cache HTTP
+    }
+  );
+
+  return {
+    projects: data?.data || [],
+    isLoading: isLoading || !session,
     isError: error,
   };
 }
@@ -77,7 +219,19 @@ export function useProjects() {
  * Hook para obtener estadísticas de proyectos
  */
 export function useProjectStats() {
-  const { data, error, isLoading } = useSWR<ProjectStats>(PROJECTS_STATUS_API, fetcher);
+  const { data, error, isLoading } = useSWR<ProjectStats>(
+    PROJECTS_STATUS_API, 
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 300000, // 5 minutos - estadísticas cambian poco
+      focusThrottleInterval: 120000, // 2 minutos throttle
+      errorRetryInterval: 10000,
+      errorRetryCount: 2,
+      refreshInterval: 0 // Cache HTTP maneja revalidación
+    }
+  );
 
   return {
     stats: data || {
@@ -109,8 +263,8 @@ export async function createProject(project: Partial<Project>) {
 
       const result = await response.json();
       
-      // Revalidar la caché de proyectos
-      mutate(PROJECTS_API);
+      // Revalidar la caché de proyectos (todas las páginas)
+      mutate(key => typeof key === 'string' && key.startsWith(PROJECTS_API), undefined, { revalidate: true });
       mutate(PROJECTS_STATUS_API);
       
       // Revalidar la caché de planes de prueba, ya que se crea uno automáticamente
@@ -155,8 +309,8 @@ export async function updateProject(id: string, project: Partial<Project>) {
 
       const updatedProject = await response.json();
       
-      // Revalidar la caché
-      mutate(PROJECTS_API);
+      // Revalidar la caché (todas las páginas de proyectos)
+      mutate(key => typeof key === 'string' && key.startsWith(PROJECTS_API), undefined, { revalidate: true });
       mutate(`${PROJECTS_API}/${id}`);
       mutate(PROJECTS_STATUS_API);
       
@@ -191,24 +345,9 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
   return toast.promise(
     async () => {
       // Optimistic update - actualiza inmediatamente la caché SWR antes de enviar la solicitud
-      const currentData = await fetcher(PROJECTS_API);
-      
-      // Aplicamos una actualización optimista a la caché
-      if (currentData && Array.isArray(currentData)) {
-        const optimisticData = currentData.map(project => {
-          // Si este es el proyecto que estamos actualizando, cambiamos su estado
-          if (project.idJira === projectIdJira || project.id === id) {
-            return {
-              ...project,
-              ...updates
-            };
-          }
-          return project;
-        });
-        
-        // Actualiza inmediatamente la caché con nuestros datos optimistas
-        mutate(PROJECTS_API, optimisticData, false);
-      }
+      const currentCacheKeys = Array.from(document.querySelectorAll('*')).map(() => 
+        Array.from(new Set([...document.querySelectorAll('*')]))
+      );
       
       // Enviar la solicitud real al servidor - Estructura plana con todos los campos de actualización
       const response = await fetch(PROJECTS_API, {
@@ -227,8 +366,8 @@ export async function changeProjectStatus(id: string, nuevoEstado: string, idJir
 
       const updatedProject = await response.json();
       
-      // Revalidar la caché con los datos reales del servidor
-      mutate(PROJECTS_API);
+      // Revalidar la caché con los datos reales del servidor (todas las páginas)
+      mutate(key => typeof key === 'string' && key.startsWith(PROJECTS_API), undefined, { revalidate: true });
       mutate(`${PROJECTS_API}/${id}`);
       mutate(PROJECTS_STATUS_API);
       
@@ -259,8 +398,8 @@ export async function deleteProject(id: string) {
         throw new Error(error.error || 'Error al eliminar el proyecto');
       }
       
-      // Revalidar la caché
-      mutate(PROJECTS_API);
+      // Revalidar la caché (todas las páginas)
+      mutate(key => typeof key === 'string' && key.startsWith(PROJECTS_API), undefined, { revalidate: true });
       mutate(PROJECTS_STATUS_API);
       
       return true;

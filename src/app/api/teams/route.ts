@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { TeamService } from '@/services/teamService';
 import { Team } from '@/models/Team';
+import { generateETag, getStaticDataHeaders } from '@/lib/cacheHeaders';
 
 const teamService = new TeamService();
 
 export async function GET() {
     try {
         const teams = await teamService.getAllTeams();
-        return NextResponse.json(teams);
+        
+        // Generar ETag para cache
+        const etag = generateETag(teams);
+        const cacheHeaders = getStaticDataHeaders(etag);
+        
+        return NextResponse.json(teams, { headers: cacheHeaders });
     } catch (error) {
         return NextResponse.json({ error: 'Error getting teams' }, { status: 500 });
     }

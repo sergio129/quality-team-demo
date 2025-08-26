@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { generateETag, getStaticDataHeaders } from '@/lib/cacheHeaders';
 
 // GET handler - get all QA Analysts
 export async function GET() {
@@ -25,7 +26,11 @@ export async function GET() {
       }
     });
 
-    return NextResponse.json(analysts);
+    // Generar cache headers para datos de analistas
+    const etag = generateETag(analysts);
+    const cacheHeaders = getStaticDataHeaders(etag);
+
+    return NextResponse.json(analysts, { headers: cacheHeaders });
   } catch (error: any) {
     console.error("Error getting QA Analysts:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

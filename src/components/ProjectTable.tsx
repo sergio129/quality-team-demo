@@ -12,7 +12,7 @@ import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
 import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
-import { useProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
+import { useProjects, useAllProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
  import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
@@ -23,43 +23,63 @@ interface FormErrors {
     [key: string]: string;
 }
 
-export default function ProjectTable() {    // Usar hook personalizado SWR para proyectos
-    const { projects, isLoading: isLoadingProjects, isError: isErrorProjects } = useProjects();
+export default function ProjectTable() {
+    // Estados para filtros y paginación
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterEquipo, setFilterEquipo] = useState<string>('');
+    const [filterAnalista, setFilterAnalista] = useState<string>('');
+    const [filterEstado, setFilterEstado] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
+    const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
+    
+    // Hook para proyectos paginados (para vista tabla y kanban)
+    const { projects, pagination, isLoading: isLoadingProjects, isError: isErrorProjects } = useProjects({
+        page: currentPage,
+        limit: itemsPerPage,
+        searchTerm: searchTerm || undefined,
+        teamFilter: filterEquipo || undefined,
+        statusFilter: filterEstado || undefined,
+        analystFilter: filterAnalista || undefined,
+        monthFilter: selectedDateFilter === 'custom-month' ? selectedMonth : undefined,
+        yearFilter: selectedDateFilter === 'custom-month' ? selectedYear : undefined
+    });
+    
+    // Hook para TODOS los proyectos (para vista timeline - sin filtros de fecha)
+    const { projects: allProjects, isLoading: isLoadingAllProjects, isError: isErrorAllProjects } = useAllProjects({
+        searchTerm: searchTerm || undefined,
+        teamFilter: filterEquipo || undefined,
+        statusFilter: filterEstado || undefined,
+        analystFilter: filterAnalista || undefined
+    });
     
     // Obtener datos de vacaciones de analistas
     const { vacations, isLoading: isLoadingVacations } = useAnalystVacations();
     
-    const [searchTerm, setSearchTerm] = useState('');
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [newProject, setNewProject] = useState<Partial<Project>>({});
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
-    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);    
+    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+    const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
+    const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [activeView, setActiveView] = useState<'table' | 'timeline' | 'kanban'>('table');
     const [sortConfig, setSortConfig] = useState<{
         key: keyof Project | null;
         direction: 'asc' | 'desc';
-    }>({ key: null, direction: 'asc' });    const [filterEquipo, setFilterEquipo] = useState<string>('');    const [filterAnalista, setFilterAnalista] = useState<string>('');
-    const [filterEstado, setFilterEstado] = useState<string>('');
+    }>({ key: null, direction: 'asc' });
+    
     // Estados para el cambio de estado del proyecto
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-    const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);    const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
-    const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
-    const [startDate, setStartDate] = useState(() => {
-        const today = new Date();
-        return new Date(today.getFullYear(), today.getMonth(), 1);
-    });    const [endDate, setEndDate] = useState<Date | null>(null);
+    const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
     
     // Estado para el tipo de exportación a Excel
     const [exportFilterType, setExportFilterType] = useState<'week' | 'month' | 'year' | 'all'>('month');
     
-    // Estados para paginación
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
     const [pageOptions] = useState([5, 10, 20, 50, 100]);
 
     useEffect(() => {
@@ -70,7 +90,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     }, []);    // Resetear paginación cuando cambian los filtros
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchTerm, filterEquipo, filterAnalista, filterEstado, startDate, endDate]);
+    }, [searchTerm, filterEquipo, filterAnalista, filterEstado, selectedDateFilter, selectedYear, selectedMonth]);
 
     useEffect(() => {
         if (newProject.horas) {
@@ -104,6 +124,27 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             setFilteredCells([]);
         }
     }, [newProject.equipo, cells, teams]);    useEffect(() => {
+        // Solo actualizar el tipo de filtro de exportación según el filtro seleccionado
+        switch (selectedDateFilter) {
+            case 'week':
+                if (exportFilterType !== 'all') {
+                    setExportFilterType('week');
+                }
+                break;
+            case 'custom-month':
+            case 'month':
+            default:
+                if (exportFilterType !== 'all') {
+                    setExportFilterType('month');
+                }
+                break;
+        }
+    }, [selectedDateFilter, exportFilterType]);
+
+    // La función loadProjects ya no es necesaria porque usamos el hook useProjects
+    
+    // Función para calcular fechas basadas en los filtros actuales (para componentes legacy)
+    const getDateRange = () => {
         const today = new Date();
         let start: Date;
         let end: Date;
@@ -116,41 +157,26 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                 start.setHours(0, 0, 0, 0);
                 end = new Date(start);
                 end.setDate(start.getDate() + 6);
-                  // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
-                if (exportFilterType !== 'all') {
-                    setExportFilterType('week');
-                }
-                break;            case 'custom-month':
+                break;
+            case 'custom-month':
                 // Mes específico seleccionado del año seleccionado
                 start = new Date(selectedYear, selectedMonth, 1);
                 end = new Date(selectedYear, selectedMonth + 1, 0);
-                
-                // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
-                if (exportFilterType !== 'all') {
-                    setExportFilterType('month');
-                }
-                break;            case 'month':
+                break;
+            case 'month':
             default:
                 // Inicio del mes actual
                 start = new Date(today.getFullYear(), today.getMonth(), 1);
                 end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                
-                // Solo actualizamos el tipo de filtro de exportación si no está en 'all'
-                if (exportFilterType !== 'all') {
-                    setExportFilterType('month');
-                }
                 break;
         }
         
-        // Asegurarnos de que las fechas estén normalizadas a medianoche
+        // Asegurarnos de que las fechas estén normalizadas
         start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999); // Fin del día para incluir todo el último día
-
-        setStartDate(start);
-        setEndDate(end);
+        end.setHours(23, 59, 59, 999);
         
-        // Forzar la actualización de los filtros cuando cambia el rango de fechas
-    }, [selectedDateFilter, selectedYear, selectedMonth]);// La función loadProjects ya no es necesaria porque usamos el hook useProjects
+        return { start, end };
+    };
 
     const fetchTeams = async () => {
         try {
@@ -362,50 +388,61 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     const closeStatusDialog = () => {
         setStatusDialogOpen(false);
         setProjectToChangeStatus(null);
-    };    // Primero obtenemos todos los proyectos filtrados
-    const allFilteredProjects = sortData(projects.filter(project => {        // Comprobar que las propiedades existan antes de acceder a ellas
+    };    // Función para filtrar proyectos con fechas (solo para vista timeline)
+    const filterProjectsByDate = (projectList: Project[]) => {
+        const { start: startDate, end: endDate } = getDateRange();
+        
+        return projectList.filter(project => {
+            if (!project.fechaEntrega) return false;
+            
+            const fechaEntrega = new Date(project.fechaEntrega);
+            fechaEntrega.setHours(0, 0, 0, 0);
+            
+            const fechaCertificacion = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
+            if (fechaCertificacion) fechaCertificacion.setHours(0, 0, 0, 0);
+            
+            // Un proyecto coincide con el rango de fechas si:
+            // 1. Su fecha de entrega está dentro del rango
+            // 2. Su fecha de certificación está dentro del rango
+            // 3. Su período abarca el rango completo (comenzó antes y termina después)
+            const matchesDate = 
+                (fechaEntrega >= startDate && fechaEntrega <= endDate) ||
+                (fechaCertificacion && fechaCertificacion >= startDate && fechaCertificacion <= endDate) ||
+                (fechaEntrega <= startDate && (fechaCertificacion ? fechaCertificacion >= endDate : true));
+            
+            return matchesDate;
+        });
+    };
+    
+    // Seleccionar los proyectos correctos según la vista activa
+    const sourceProjects = activeView === 'timeline' ? allProjects : projects;
+    const isLoadingSource = activeView === 'timeline' ? isLoadingAllProjects : isLoadingProjects;
+    const isErrorSource = activeView === 'timeline' ? isErrorAllProjects : isErrorProjects;
+    
+    // Aplicar filtros y ordenamiento
+    let filteredForView = sourceProjects.filter(project => {
+        // Comprobar que las propiedades existan antes de acceder a ellas
         const matchesSearch =
             (project.idJira?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.proyecto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.equipo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (project.analistaProducto?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (project.descripcion?.toLowerCase() || '').includes(searchTerm.toLowerCase());        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
+            (project.descripcion?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+            
+        const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
         const matchesEstado = !filterEstado || project.estadoCalculado === filterEstado;
-          // Filtrar por fecha - lógica más inclusiva
-        let matchesDate = true;
-          // Solo aplicamos filtro de fecha para vistas de tabla y tarjetas
-        // Para vista de calendario dejamos que el componente maneje el filtrado por completo
-        if (activeView !== 'timeline' && startDate) {
-            if (project.fechaEntrega) {
-                const fechaEntrega = new Date(project.fechaEntrega);
-                fechaEntrega.setHours(0, 0, 0, 0);
-                
-                const fechaCertificacion = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
-                if (fechaCertificacion) fechaCertificacion.setHours(0, 0, 0, 0);
-                
-                // La fecha de startDate y endDate ya están normalizadas a medianoche
-                
-                // Un proyecto coincide con el rango de fechas si:
-                // 1. Su fecha de entrega está dentro del rango
-                // 2. Su fecha de certificación está dentro del rango
-                // 3. Su período abarca el rango completo (comenzó antes y termina después)
-                // 4. Comenzó antes y aún no se ha certificado
-                matchesDate = 
-                    // Fecha de entrega dentro del rango
-                    (fechaEntrega >= startDate && (!endDate || fechaEntrega <= endDate)) ||
-                    // Fecha de certificación dentro del rango (si existe)
-                    (fechaCertificacion && fechaCertificacion >= startDate && (!endDate || fechaCertificacion <= endDate)) ||
-                    // Proyecto que abarca el rango completo
-                    (fechaEntrega <= startDate && (fechaCertificacion ? fechaCertificacion >= (endDate || new Date()) : true));
-            } else {
-                // Si el proyecto no tiene fecha de entrega, lo consideramos que no coincide con el filtro de fecha
-                matchesDate = false;
-            }
-        }
-
-        return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado && matchesDate;
-    }));
+        
+        return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado;
+    });
+    
+    // Para la vista timeline, aplicar filtro de fecha del lado del cliente
+    if (activeView === 'timeline') {
+        filteredForView = filterProjectsByDate(filteredForView);
+    }
+    
+    // Aplicar ordenamiento
+    const allFilteredProjects = sortData(filteredForView);
     
     // Cálculos para paginación
     const totalItems = allFilteredProjects.length;
@@ -427,7 +464,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
     return (
         <div className="space-y-4">
             {/* Dashboard de Resumen y KPIs - usando allFilteredProjects para mostrar datos de todos los proyectos filtrados */}
-            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
+            {!isLoadingSource && !isErrorSource && allFilteredProjects.length > 0 && (
                 <ProjectDashboard projects={allFilteredProjects} />
             )}
             
@@ -1033,7 +1070,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         </form>
                     </div>
                 </div>
-            )}            {isLoadingProjects ? (
+            )}            {isLoadingSource ? (
                 <div className="flex justify-center items-center p-8">
                     <div className="flex flex-col items-center">
                         <svg className="animate-spin h-8 w-8 text-blue-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1043,7 +1080,7 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         <p className="text-gray-600">Cargando proyectos...</p>
                     </div>
                 </div>
-            ) : isErrorProjects ? (
+            ) : isErrorSource ? (
                 <div className="flex justify-center items-center p-8 bg-red-50 rounded-lg border border-red-200">
                     <div className="flex flex-col items-center text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1061,8 +1098,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
                         analysts={analysts}
                         filterAnalista={filterAnalista}
                         filterEquipo={filterEquipo}
-                        startDate={startDate}
-                        endDate={endDate}
+                        startDate={getDateRange().start}
+                        endDate={getDateRange().end}
                         selectedDateFilter={selectedDateFilter}
                         vacations={vacations} // Pasar las vacaciones de los analistas
                     />
@@ -1070,8 +1107,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             ) : activeView === 'kanban' ? (
                 <KanbanView
                     projects={allFilteredProjects} // Usar todos los proyectos filtrados, sin paginación
-                    startDate={startDate}
-                    endDate={endDate}
+                    startDate={getDateRange().start}
+                    endDate={getDateRange().end}
                     selectedDateFilter={selectedDateFilter}
                     onEditProject={(project) => {
                         if (!project.idJira) {
@@ -1210,8 +1247,8 @@ export default function ProjectTable() {    // Usar hook personalizado SWR para 
             )}
             
             {/* Widget de Certificaciones de la Semana - Movido al final */}
-            {!isLoadingProjects && !isErrorProjects && allFilteredProjects.length > 0 && (
-                <WeeklyCertificationWidget projects={projects} />
+            {!isLoadingAllProjects && !isErrorAllProjects && allProjects.length > 0 && (
+                <WeeklyCertificationWidget projects={allProjects} />
             )}
               
             {/* Diálogo de cambio de estado */}

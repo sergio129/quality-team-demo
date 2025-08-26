@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { prisma } from '@/lib/prisma';
+import { generateETag, getFrequentDataHeaders, isNotModified } from '@/lib/cacheHeaders';
 
 export async function GET(req: NextRequest) {
     try {
@@ -21,71 +22,147 @@ export async function GET(req: NextRequest) {
         const yearFilter = url.searchParams.get('year');
         const role = url.searchParams.get('role') || session.user.role;
         
-        // Usar nuestro servicio con filtrado basado en rol
-        const projects = await projectService.getAllProjects({
+        // Parámetros de paginación
+        const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
+        const limit = Math.min(100, Math.max(5, parseInt(url.searchParams.get('limit') || '10')));
+        const offset = (page - 1) * limit;
+        
+        // Parámetros de filtros adicionales para optimizar la query
+        const searchTerm = url.searchParams.get('search') || '';
+        const teamFilter = url.searchParams.get('team') || '';
+        const statusFilter = url.searchParams.get('status') || '';
+        const analystFilter = url.searchParams.get('analyst') || '';
+        
+        // Usar nuestro servicio con filtrado basado en rol y paginación
+        const result = await projectService.getAllProjects({
             analystId: analystId || undefined,
-            role: role
+            role: role,
+            // Parámetros de paginación
+            page,
+            limit,
+            offset,
+            // Parámetros de filtros
+            searchTerm,
+            teamFilter,
+            statusFilter,
+            analystFilter: analystFilter || analystName || undefined,
+            monthFilter: monthFilter ? parseInt(monthFilter) : undefined,
+            yearFilter: yearFilter ? parseInt(yearFilter) : undefined
         });
         
-        if (projects.length === 0 && analystId) {
-            // Si no hay proyectos y tenemos un analystId, verificar si el analista existe
-            try {
-                const analyst = await prisma.qAAnalyst.findUnique({
-                    where: { id: analystId },
-                    include: {
-                        projects: true
-                    }
-                });
-            } catch (error) {
-                console.error(`[API:Projects] Error checking analyst:`, error);
+        // Si el servicio no retorna paginación, aplicamos la lógica de fallback
+        let projects, totalCount;
+        
+        if (result && typeof result === 'object' && 'data' in result && 'total' in result) {
+            // El servicio ya implementó paginación
+            projects = result.data;
+            totalCount = result.total as number;
+        } else {
+            // Fallback: aplicar paginación manualmente si el servicio no la soporta
+            const allProjects = Array.isArray(result) ? result : [];
+            totalCount = allProjects.length;
+            
+            // Aplicar filtros en el servidor
+            let filteredProjects = allProjects;
+            
+            // Filtro por término de búsqueda
+            if (searchTerm) {
+                const search = searchTerm.toLowerCase();
+                filteredProjects = filteredProjects.filter(project => 
+                    project.idJira?.toLowerCase().includes(search) ||
+                    project.proyecto?.toLowerCase().includes(search) ||
+                    project.equipo?.toLowerCase().includes(search) ||
+                    project.analistaProducto?.toLowerCase().includes(search)
+                );
             }
+            
+            // Filtro por equipo
+            if (teamFilter) {
+                filteredProjects = filteredProjects.filter(project => 
+                    project.equipo === teamFilter
+                );
+            }
+            
+            // Filtro por estado
+            if (statusFilter) {
+                filteredProjects = filteredProjects.filter(project => 
+                    project.estado === statusFilter || project.estadoCalculado === statusFilter
+                );
+            }
+            
+            // Filtro por analista
+            if (analystFilter) {
+                filteredProjects = filteredProjects.filter(project => 
+                    project.analistaProducto === analystFilter
+                );
+            }
+            
+            // Filtrado por mes y año
+            if (monthFilter && yearFilter) {
+                const month = parseInt(monthFilter);
+                const year = parseInt(yearFilter);
+                
+                const startOfMonth = new Date(year, month, 1);
+                const endOfMonth = new Date(year, month + 1, 0);
+                
+                filteredProjects = filteredProjects.filter(project => {
+                    if (project.fechaEntrega) {
+                        const entregaDate = new Date(project.fechaEntrega);
+                        const fechaCert = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
+                        
+                        const isInMonth = 
+                            (entregaDate >= startOfMonth && entregaDate <= endOfMonth) ||
+                            (fechaCert && fechaCert >= startOfMonth && fechaCert <= endOfMonth) ||
+                            (entregaDate <= startOfMonth && fechaCert && fechaCert >= endOfMonth);
+                        
+                        return isInMonth;
+                    }
+                    return false;
+                });
+            }
+            
+            // Actualizar el total después de aplicar filtros
+            totalCount = filteredProjects.length;
+            
+            // Aplicar paginación
+            projects = filteredProjects.slice(offset, offset + limit);
+            }
+        
+        // Respuesta con datos paginados y metadatos
+        const totalPages = Math.ceil(totalCount / limit);
+        
+        // Generar ETag basado en el contenido y filtros para validación de cache
+        const dataHash = generateETag({
+            projects,
+            pagination: { page, limit, total: totalCount, totalPages },
+            filters: { analystId, searchTerm, teamFilter, statusFilter, analystFilter, monthFilter, yearFilter }
+        });
+        
+        // Verificar si el cliente ya tiene esta versión
+        if (isNotModified(req, dataHash)) {
+            return new NextResponse(null, { 
+                status: 304,
+                headers: { 'ETag': dataHash }
+            });
         }
         
-        // Filtrado inicial de proyectos
-        let filteredProjects = projects;
-    
-    // Si se proporciona un nombre de analista (para compatibilidad), filtrar los proyectos
-    if (analystName) {
-        filteredProjects = filteredProjects.filter(project => {
-            // Buscar por nombre en el campo analistaProducto
-            return project.analistaProducto === analystName;
-        });
-    }    // Si se proporciona mes y año, filtrar por fecha
-    if (monthFilter && yearFilter) {
-        const month = parseInt(monthFilter);
-        const year = parseInt(yearFilter);
+        // Headers de cache optimizados
+        const hasFilters = !!(searchTerm || statusFilter || teamFilter || analystFilter);
+        const cacheHeaders = getFrequentDataHeaders(dataHash, hasFilters);
         
-        // Crear fecha de inicio y fin del mes
-        const startOfMonth = new Date(year, month, 1);
-        const endOfMonth = new Date(year, month + 1, 0); // El día 0 del siguiente mes es el último del mes actual
-        
-        filteredProjects = filteredProjects.filter(project => {
-            // Verificar si hay fecha de entrega
-            if (project.fechaEntrega) {
-                const entregaDate = new Date(project.fechaEntrega);
-                
-                // Un proyecto pertenece al mes si:
-                // 1. Su fecha de entrega está dentro del mes, o
-                // 2. Su fecha de certificación está dentro del mes, o
-                // 3. Si se extiende por todo el mes (inicia antes y termina después)
-                
-                const fechaCert = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
-                
-                const isInMonth = 
-                    // La fecha de entrega está en el mes
-                    (entregaDate >= startOfMonth && entregaDate <= endOfMonth) ||
-                    // La fecha de certificación está en el mes
-                    (fechaCert && fechaCert >= startOfMonth && fechaCert <= endOfMonth) ||
-                    // El proyecto abarca todo el mes (comienza antes y termina después)
-                    (entregaDate <= startOfMonth && fechaCert && fechaCert >= endOfMonth);
-                
-                return isInMonth;
+        return NextResponse.json({
+            data: projects,
+            pagination: {
+                page,
+                limit,
+                total: totalCount,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1
             }
-            return false;
+        }, {
+            headers: cacheHeaders
         });
-    }
-    
-    return NextResponse.json(filteredProjects);
     
     } catch (error) {
         console.error('[API] Error al obtener proyectos:', error);
