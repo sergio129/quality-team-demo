@@ -227,6 +227,14 @@ const ProjectItem = memo(({
         return style;
     }, [project, analystColor]);
 
+    // Verificar si este día es el día de certificación
+    const isCertificationDate = useMemo(() => {
+        if (!project.fechaCertificacion) return false;
+        const certDate = new Date(project.fechaCertificacion).toISOString().split('T')[0];
+        const currentDate = date.toISOString().split('T')[0];
+        return certDate === currentDate;
+    }, [project.fechaCertificacion, date]);
+
     const tooltipContent = useMemo(() => {
         const today = new Date();
         const fechaEntrega = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
@@ -279,7 +287,7 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
                 target="_blank"
                 rel="noopener noreferrer"
                 title={tooltipContent}
-                className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block"
+                className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block relative"
                 style={projectStyle}
             >
                 <div className="flex flex-col items-center">
@@ -289,6 +297,11 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
                             {hoursForThisDay}h
                         </span>
                     )}
+                    {/* Punto verde para día de certificación */}
+                    {isCertificationDate && (
+                        <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white" 
+                             title="Día de certificación"></div>
+                    )}
                 </div>
             </a>
         );
@@ -297,7 +310,7 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
     return (
         <span
             title={tooltipContent}
-            className="mx-1 text-xs p-1 rounded shadow-sm block"
+            className="mx-1 text-xs p-1 rounded shadow-sm block relative"
             style={projectStyle}
         >
             <div className="flex flex-col items-center">
@@ -306,6 +319,11 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
                     <span className="text-[10px] font-semibold opacity-75">
                         {hoursForThisDay}h
                     </span>
+                )}
+                {/* Punto verde para día de certificación */}
+                {isCertificationDate && (
+                    <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white" 
+                         title="Día de certificación"></div>
                 )}
             </div>
         </span>
@@ -832,7 +850,11 @@ export function TimelineView({
                             <div className="flex items-center">
                                 <div className="w-4 h-4 bg-blue-50 border border-blue-200 mr-2"></div>
                                 <span className="text-sm">Hoy</span>
-            </div>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-2 h-2 bg-green-500 rounded-full border border-white mr-2"></div>
+                                <span className="text-sm">Día de certificación</span>
+                            </div>
                         </div>
                     </div>
                 </div>
