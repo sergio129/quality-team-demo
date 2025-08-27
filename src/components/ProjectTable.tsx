@@ -5,7 +5,7 @@ import { QAAnalyst } from '@/models/QAAnalyst';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, Clock } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
@@ -1186,14 +1186,21 @@ export default function ProjectTable() {
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaEntrega && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{formatDate(project.fechaEntrega)}</span>)}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td>
-    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaCertificacion && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{formatDate(project.fechaCertificacion)}</span>)}</td>
+        <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+            {project.fechaCertificacion && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    {formatDate(project.fechaCertificacion)}
+                </span>
+            )}
+        </td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900">
     <div className="flex flex-col items-start">
         {project.estadoCalculado ? (
             <span 
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
                     project.estadoCalculado === 'Por Iniciar' 
                         ? 'bg-amber-100 text-amber-800' 
                         : project.estadoCalculado === 'En Progreso' 
@@ -1202,13 +1209,17 @@ export default function ProjectTable() {
                 }`}
                 onClick={() => openStatusDialog(project)}
             >
+                {project.estadoCalculado === 'Por Iniciar' && <Clock className="w-4 h-4 text-amber-400" />}
+                {project.estadoCalculado === 'En Progreso' && <Clock className="w-4 h-4 text-blue-400" />}
+                {project.estadoCalculado === 'Certificado' && <CheckCircle className="w-4 h-4 text-green-500" />}
                 {project.estadoCalculado}
             </span>
         ) : (
             <span 
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 cursor-pointer hover:opacity-80"
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 cursor-pointer hover:opacity-80"
                 onClick={() => openStatusDialog(project)}
             >
+                <Clock className="w-4 h-4 text-gray-400" />
                 Sin estado
             </span>
         )}
