@@ -297,7 +297,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 relative">
                             <div 
-                                className="bg-green-600 h-2 rounded-full transition-all duration-300 group-hover:brightness-110"
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300 group-hover:brightness-110 animate-glow-bar"
                                 style={{ width: `${progressStats.percentage}%` }}
                             ></div>
                             {/* Tooltip */}
@@ -462,7 +462,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                         textColor = 'text-blue-900';
                                         badgeColor = 'bg-blue-100 text-blue-800';
                                         statusText = ' (Hoy)';
-                                        glow = 'ring-4 ring-blue-300/40 animate-pulse';
+                                        glow = 'ring-4 ring-blue-300/40 animate-glow-today';
                                     } else if (isPastDay && allCertified) {
                                         borderColor = 'border-green-300';
                                         bgColor = 'bg-green-50';
@@ -622,6 +622,19 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
                 </div>
             )}
+            {/* Animaciones CSS para glow */}
+            <style jsx>{`
+                @keyframes glow-bar {
+                    0%, 100% { box-shadow: 0 0 0px 0 #60a5fa; }
+                    50% { box-shadow: 0 0 16px 4px #60a5fa88; }
+                }
+                .animate-glow-bar { animation: glow-bar 2s infinite alternate; }
+                @keyframes glow-today {
+                    0%, 100% { box-shadow: 0 0 0px 0 #3b82f6; }
+                    50% { box-shadow: 0 0 16px 4px #3b82f688; }
+                }
+                .animate-glow-today { animation: glow-today 2s infinite alternate; }
+            `}</style>
         </div>
     );
 }
