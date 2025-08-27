@@ -1261,7 +1261,7 @@ export default function ProjectTable() {
             )}
         </td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
-    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 max-w-[180px] truncate whitespace-nowrap cursor-help" title={project.analistaProducto || ''}>{project.analistaProducto || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900">
     <div className="flex flex-col items-start">
         {project.estadoCalculado ? (
@@ -1291,7 +1291,7 @@ export default function ProjectTable() {
             </span>
         )}
     </div>
-</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap">
+</td><td className="px-4 py-2 text-sm text-gray-900 max-w-[300px] truncate whitespace-nowrap cursor-help" title={project.planTrabajo || ''}>{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap">
   <div className="flex items-center gap-1 sm:gap-2">
     {/* Botón Ver Detalles */}
     <button
