@@ -17,6 +17,7 @@ export class TeamPrismaService {
                 id: team.id,
                 name: team.name,
                 description: team.description || '',
+                color: team.color || undefined,
                 members: team.analysts.map((relation: { analystId: string }) => relation.analystId)
             }));
         } catch (error) {
@@ -32,6 +33,7 @@ export class TeamPrismaService {
                 data: {
                     name: team.name,
                     description: team.description,
+                    color: team.color,
                     // Si hay miembros, crear las relaciones
                     ...(team.members && team.members.length > 0 && {
                         analysts: {
@@ -54,6 +56,7 @@ export class TeamPrismaService {
                 id: newTeam.id,
                 name: newTeam.name,
                 description: newTeam.description || '',
+                color: newTeam.color || undefined,
                 members: newTeam.analysts.map((relation: { analystId: string }) => relation.analystId)
             };
         } catch (error) {
@@ -82,6 +85,7 @@ export class TeamPrismaService {
                 data: {
                     name: teamData.name !== undefined ? teamData.name : undefined,
                     description: teamData.description !== undefined ? teamData.description : undefined,
+                    color: teamData.color !== undefined ? teamData.color : undefined,
                 },
                 include: {
                     analysts: {
@@ -128,10 +132,11 @@ export class TeamPrismaService {
                 id: updatedTeam.id,
                 name: updatedTeam.name,
                 description: updatedTeam.description || '',
+                color: updatedTeam.color || undefined,
                 members: updatedTeam.analysts.map((relation: { analystId: string }) => relation.analystId)
             };
         } catch (error) {
-            console.error(`Error updating team ${id}:`, error);
+            console.error(`❌ Error updating team ${id}:`, error);
             throw error;
         }
     }

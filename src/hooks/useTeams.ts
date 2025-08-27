@@ -25,6 +25,7 @@ export function useTeams() {
 export type TeamFormData = {
   name: string;
   description?: string | null;
+  color?: string | null;
   members?: string[]; // IDs de los analistas asignados al equipo
 };
 

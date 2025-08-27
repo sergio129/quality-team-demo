@@ -21,16 +21,19 @@ export async function GET(request: NextRequest) {
         
         return NextResponse.json(teams, { headers: cacheHeaders });
     } catch (error) {
+        console.error('❌ Error en GET /api/teams:', error);
         return NextResponse.json({ error: 'Error getting teams' }, { status: 500 });
     }
 }
 
 export async function POST(request: Request) {
     try {
-        const team: Team = await request.json();
-        const savedTeam = await teamService.saveTeam(team);
-        return NextResponse.json(savedTeam);
+        const body = await request.json();
+        const team: Team = body;
+        const newTeam = await teamService.saveTeam(team);
+        return NextResponse.json(newTeam, { status: 201 });
     } catch (error) {
+        console.error('❌ Error en POST /api/teams:', error);
         return NextResponse.json({ error: 'Error creating team' }, { status: 500 });
     }
 }
@@ -44,6 +47,7 @@ export async function PUT(request: Request) {
         }
         return NextResponse.json(updatedTeam);
     } catch (error) {
+        console.error('❌ Error en PUT /api/teams:', error);
         return NextResponse.json({ error: 'Error updating team' }, { status: 500 });
     }
 }

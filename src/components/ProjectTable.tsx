@@ -73,7 +73,7 @@ export default function ProjectTable() {
     const [newProject, setNewProject] = useState<Partial<Project>>({});
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+    const [teams, setTeams] = useState<{ id: string; name: string; color?: string }[]>([]);
     const [cells, setCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
     const [analysts, setAnalysts] = useState<QAAnalyst[]>([]);
     const [filteredCells, setFilteredCells] = useState<{ id: string; name: string; teamId: string }[]>([]);
@@ -1244,7 +1244,26 @@ export default function ProjectTable() {
 >
     <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td>
     <td className="px-4 py-2 text-sm text-gray-900 max-w-[260px] truncate whitespace-nowrap cursor-help" title={project.proyecto || ''}>{project.proyecto || ''}</td>
-    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
+        {(() => {
+            const team = teams.find(t => t.name === project.equipo);
+            return team?.color ? (
+                <Badge 
+                    variant="secondary" 
+                    className="font-normal"
+                    style={{ 
+                        backgroundColor: team.color + '20', // 20 para opacidad baja
+                        color: team.color,
+                        border: `1px solid ${team.color}40` // 40 para opacidad media
+                    }}
+                >
+                    {project.equipo || ''}
+                </Badge>
+            ) : (
+                <span>{project.equipo || ''}</span>
+            );
+        })()}
+    </td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td>
