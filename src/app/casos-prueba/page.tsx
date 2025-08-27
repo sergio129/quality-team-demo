@@ -57,7 +57,21 @@ export default function TestCasesPage() {
   });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
+  // Hook para manejar clics fuera del dropdown (siempre se ejecuta)
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowProjectDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Verificar autenticación antes de mostrar contenido
   if (status === "loading") {
     return (
@@ -74,19 +88,6 @@ export default function TestCasesPage() {
   if (!session) {
     return null;
   }
-  
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowProjectDropdown(false);
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const filteredProjects = projects.filter((project) => {
     const searchTermLower = projectSearchTerm.toLowerCase();
