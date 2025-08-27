@@ -224,9 +224,9 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl p-1 md:p-2">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl p-1 md:p-2 text-xs sm:text-sm">
             {/* Sticky Header y Progreso */}
-            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-100 rounded-t-2xl shadow-sm">
+            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-100 rounded-t-2xl shadow-sm px-1 sm:px-4 py-1 sm:py-2">
                 <div 
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -496,7 +496,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                 </div>
                                             )}
                                             <div
-                                                className={`border rounded-xl p-3 mb-6 transition-all duration-300 hover:shadow-xl animate-fade-in-up ${borderColor} ${bgColor} ${gradient} ${glow} shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-6`}
+                                                className={`border rounded-xl p-2 sm:p-3 mb-4 sm:mb-6 transition-all duration-300 hover:shadow-xl animate-fade-in-up ${borderColor} ${bgColor} ${gradient} ${glow} shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-1 sm:gap-6`}
                                                 style={{ animationDelay: `${dayIndex * 0.1}s`, background: isTodayDay ? 'linear-gradient(90deg, #e0f2fe 0%, #f0fdfa 100%)' : undefined }}
                                             >
                                                 {/* Day header */}
@@ -535,7 +535,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                 </div>
                                             </div>
                                             {/* Projects list */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+                                            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-1 sm:gap-2 mt-2">
                                                 {dayProjects.map((project, projectIndex) => (
                                                     <div 
                                                         key={project.idJira}
@@ -603,7 +603,8 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
 
                     {/* Summary footer */}
-                    <div className="mt-4 pt-4 border-t border-gray-200 sticky bottom-0 z-30 bg-white/80 backdrop-blur rounded-b-2xl shadow-md">
+                    <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-gray-200 sticky bottom-0 z-30 bg-white/80 backdrop-blur rounded-b-2xl shadow-md px-1 sm:px-4">
+            {/* ...existing code... */}
                         <div className="flex items-center justify-between text-sm text-gray-600">
                             <Tooltip text={
                                 filterStatus === 'all'
@@ -640,8 +641,17 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
                 </div>
             )}
-            {/* Animaciones CSS para glow */}
+            {/* Compactación móvil extrema y animaciones CSS para glow */}
             <style jsx>{`
+                @media (max-width: 480px) {
+                    .xs\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                    .rounded-xl { border-radius: 0.75rem; }
+                    .p-2 { padding: 0.5rem !important; }
+                    .mb-4 { margin-bottom: 0.75rem !important; }
+                    .gap-1 { gap: 0.25rem !important; }
+                    .text-xs { font-size: 0.75rem !important; }
+                    .px-1 { padding-left: 0.25rem !important; padding-right: 0.25rem !important; }
+                }
                 @keyframes glow-bar {
                     0%, 100% { box-shadow: 0 0 0px 0 #60a5fa; }
                     50% { box-shadow: 0 0 16px 4px #60a5fa88; }
