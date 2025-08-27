@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import TestCaseTable from '@/components/testcases/TestCaseTable';
 import TestCaseStats from '@/components/testcases/TestCaseStats';
 import TestCaseDefectTracker from '@/components/testcases/TestCaseDefectTracker';
@@ -89,15 +89,17 @@ export default function TestCasesPage() {
     return null;
   }
 
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = useMemo(() => {
     const searchTermLower = projectSearchTerm.toLowerCase();
-    return (
-      project.proyecto?.toLowerCase().includes(searchTermLower) || 
-      project.idJira?.toLowerCase().includes(searchTermLower)
-    );
-  });
+    return projects.filter((project) => {
+      return (
+        project.proyecto?.toLowerCase().includes(searchTermLower) ||
+        project.idJira?.toLowerCase().includes(searchTermLower)
+      );
+    });
+  }, [projects, projectSearchTerm]);
 
-  const getActiveProjects = () => {
+  const getActiveProjects = useCallback(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -117,11 +119,11 @@ export default function TestCasesPage() {
       const dateB = b.fechaEntrega ? new Date(b.fechaEntrega) : new Date(9999, 11, 31);
       return dateA.getTime() - dateB.getTime();
     });
-  };
+  }, [projects, projectSearchInDialog]);
 
-  const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleProjectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedProjectId(e.target.value);
-    
+
     if (e.target.value) {
       const selectedProject = projects.find(p => p.id === e.target.value || p.idJira === e.target.value);
       if (selectedProject) {
@@ -133,17 +135,17 @@ export default function TestCasesPage() {
         }));
       }
     }
-  };
+  }, [projects]);
   
-  const handleTestPlanInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTestPlanInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewTestPlan(prev => ({
       ...prev,
-      [name]: name === 'estimatedHours' || name === 'estimatedDays' || name === 'testQuality' 
-        ? parseFloat(value) 
+      [name]: name === 'estimatedHours' || name === 'estimatedDays' || name === 'testQuality'
+        ? parseFloat(value)
         : value
     }));
-  };
+  }, []);
   
   const handleCreateTestPlan = async () => {
     try {
@@ -202,7 +204,7 @@ export default function TestCasesPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div key={`testcases-${selectedProjectId}-${selectedTestPlanId}-${activeTab}`} className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Sistema de Gestión de Casos de Prueba</h1>
@@ -315,16 +317,18 @@ export default function TestCasesPage() {
           
           <div className="flex space-x-2">
             <TestCaseExport projectId={selectedProjectId} testCases={testCases} />
-            {activeTab !== 'cases' && (
-              <Button onClick={() => setIsCreatingPlan(true)}>
-                Nuevo Plan de Pruebas
-              </Button>
-            )}
+            <Button
+              onClick={() => setIsCreatingPlan(true)}
+              style={{ display: activeTab === 'cases' ? 'none' : 'inline-flex' }}
+            >
+              Nuevo Plan de Pruebas
+            </Button>
           </div>
         </div>
 
         <TabsContent value="plans">
           <TestCasePlanManager
+            key={`plans-${selectedProjectId}`}
             onPlanSelected={(planId) => {
               setSelectedTestPlanId(planId);
               setSelectedProjectId(testPlans.find(p => p.id === planId)?.projectId || '');
@@ -349,21 +353,24 @@ export default function TestCasesPage() {
               </div>
             )}
           </div>
-          <TestCaseTable 
-            projectId={selectedProjectId}
-            testPlanId={selectedTestPlanId} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="stats" className="mt-6">
-          <TestCaseStats 
+          <TestCaseTable
+            key={`cases-${selectedProjectId}-${selectedTestPlanId}`}
             projectId={selectedProjectId}
             testPlanId={selectedTestPlanId}
           />
         </TabsContent>
-        
+
+        <TabsContent value="stats" className="mt-6">
+          <TestCaseStats
+            key={`stats-${selectedProjectId}-${selectedTestPlanId}`}
+            projectId={selectedProjectId}
+            testPlanId={selectedTestPlanId}
+          />
+        </TabsContent>
+
         <TabsContent value="defects" className="mt-6">
-          <TestCaseDefectTracker 
+          <TestCaseDefectTracker
+            key={`defects-${selectedProjectId}-${selectedTestPlanId}`}
             projectId={selectedProjectId}
             testPlanId={selectedTestPlanId}
           />
