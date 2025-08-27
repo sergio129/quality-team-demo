@@ -29,7 +29,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <ClientProvider>
           <Navigation />
-          <main className="container mx-auto px-4 py-8">
+          <main className="w-full px-4 py-8">
             {children}
           </main>
         </ClientProvider>

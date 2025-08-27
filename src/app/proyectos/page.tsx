@@ -8,7 +8,7 @@ import { useOptimizedAuth } from '@/hooks/useOptimizedAuth';
 function ProjectsLoadingSkeleton() {
     return (
         <div className="min-h-screen bg-gray-50 animate-pulse">
-            <div className="max-w-[95%] mx-auto py-6">
+            <div className="w-full px-4 py-6">
                 {/* Header Skeleton */}
                 <div className="mb-6">
                     <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
@@ -87,7 +87,7 @@ export default function ProyectosPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-[95%] mx-auto py-6">
+            <div className="w-full px-4 py-6">
                 <div className="mb-6">
                     <h1 className="text-2xl font-semibold text-gray-900">
                         Seguimiento de Proyectos

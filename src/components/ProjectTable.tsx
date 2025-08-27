@@ -630,7 +630,7 @@ export default function ProjectTable() {
 
             {showForm && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold mb-4">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* ID Jira */}
