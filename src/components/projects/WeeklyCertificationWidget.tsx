@@ -3,6 +3,10 @@
 import { Project } from '@/models/Project';
 import { useMemo, useState } from 'react';
 import { Calendar, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+// Si tienes un componente Tooltip real, reemplaza el siguiente por el import real
+const Tooltip = ({ children, text }: { children: React.ReactNode, text: string }) => (
+    <span title={text} style={{ cursor: 'help' }}>{children}</span>
+);
 import { getJiraUrl } from '@/utils/jiraUtils';
 
 interface WeeklyCertificationWidgetProps {
@@ -502,17 +506,21 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                         <span className={`font-bold text-base md:text-xl truncate ${textColor}`}>
                                                             {formatDate(dateStr)}{statusText}
                                                         </span>
-                                                        <span className={`text-xs md:text-sm px-2 py-1 rounded-full ${badgeColor} w-fit mt-1`}>
-                                                            {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
-                                                        </span>
+                                                        <Tooltip text={`Proyectos este día: ${dayProjects.length}`}>
+                                                            <span className={`text-xs md:text-sm px-2 py-1 rounded-full ${badgeColor} w-fit mt-1`}>
+                                                                {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
+                                                            </span>
+                                                        </Tooltip>
                                                     </div>
                                                 </div>
                                                 {/* Resumen diario y botón */}
                                                 <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                                                    <span className="text-xs md:text-sm text-gray-500">
-                                                        <span className="font-semibold text-green-700">{certifiedCount}</span> / {dayProjects.length} certificados
-                                                        {pendingCount > 0 && <span className="ml-2 font-semibold text-orange-600">{pendingCount} pendientes</span>}
-                                                    </span>
+                                                    <Tooltip text={`Certificados: ${certifiedCount} / ${dayProjects.length}\nPendientes: ${pendingCount}`}>
+                                                        <span className="text-xs md:text-sm text-gray-500">
+                                                            <span className="font-semibold text-green-700">{certifiedCount}</span> / {dayProjects.length} certificados
+                                                            {pendingCount > 0 && <span className="ml-2 font-semibold text-orange-600">{pendingCount} pendientes</span>}
+                                                        </span>
+                                                    </Tooltip>
                                                     {/* Botón Certificar Todo (solo si hay pendientes) */}
                                                     {pendingCount > 0 && (
                                                         <button
@@ -597,25 +605,35 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     {/* Summary footer */}
                     <div className="mt-4 pt-4 border-t border-gray-200">
                         <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>
-                                {filterStatus === 'all' ? (
-                                    <>Total: <strong>{weeklyProjects.length}</strong> certificaciones esta semana</>
-                                ) : (
-                                    <>Mostrando: <strong>{filteredProjects.length}</strong> de {weeklyProjects.length} proyectos</>
-                                )}
-                            </span>
+                            <Tooltip text={
+                                filterStatus === 'all'
+                                    ? `Total de certificaciones esta semana: ${weeklyProjects.length}`
+                                    : `Mostrando: ${filteredProjects.length} de ${weeklyProjects.length} proyectos`
+                            }>
+                                <span>
+                                    {filterStatus === 'all' ? (
+                                        <>Total: <strong>{weeklyProjects.length}</strong> certificaciones esta semana</>
+                                    ) : (
+                                        <>Mostrando: <strong>{filteredProjects.length}</strong> de {weeklyProjects.length} proyectos</>
+                                    )}
+                                </span>
+                            </Tooltip>
                             <div className="flex items-center space-x-4">
                                 {progressStats.certified > 0 && (
-                                    <span className="text-green-600">
-                                        <CheckCircle className="w-4 h-4 inline mr-1" />
-                                        {progressStats.certified} certificados
-                                    </span>
+                                    <Tooltip text={`Total certificados esta semana: ${progressStats.certified}`}>
+                                        <span className="text-green-600">
+                                            <CheckCircle className="w-4 h-4 inline mr-1" />
+                                            {progressStats.certified} certificados
+                                        </span>
+                                    </Tooltip>
                                 )}
                                 {progressStats.pending > 0 && (
-                                    <span className="text-orange-600">
-                                        <Clock className="w-4 h-4 inline mr-1" />
-                                        {progressStats.pending} pendientes
-                                    </span>
+                                    <Tooltip text={`Total pendientes esta semana: ${progressStats.pending}`}>
+                                        <span className="text-orange-600">
+                                            <Clock className="w-4 h-4 inline mr-1" />
+                                            {progressStats.pending} pendientes
+                                        </span>
+                                    </Tooltip>
                                 )}
                             </div>
                         </div>
