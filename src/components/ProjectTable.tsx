@@ -5,7 +5,7 @@ import { QAAnalyst } from '@/models/QAAnalyst';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
-import { ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, Clock } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, Clock, Eye, Edit, Award, Trash2 } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
@@ -1225,36 +1225,114 @@ export default function ProjectTable() {
             </span>
         )}
     </div>
-</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap"><button onClick={() => {
-                        if (!project.idJira) {
-                            toast.error('No se puede editar un proyecto sin ID de Jira');
-                            return;
-                        }
-                        setEditingProject(project);
-                        
-                        // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
-                        let estadoCalculadoParaSelect: 'Por Iniciar' | 'En Progreso' | 'Certificado';
-                        switch (project.estado) {
-                            case 'pendiente':
-                                estadoCalculadoParaSelect = 'Por Iniciar';
-                                break;
-                            case 'en_progreso':
-                                estadoCalculadoParaSelect = 'En Progreso';
-                                break;
-                            case 'certificado':
-                                estadoCalculadoParaSelect = 'Certificado';
-                                break;
-                            default:
-                                // Si no hay estado o es desconocido, usar el estadoCalculado si existe
-                                estadoCalculadoParaSelect = (project.estadoCalculado as 'Por Iniciar' | 'En Progreso' | 'Certificado') || 'Por Iniciar';
-                        }
-                        
-                        setNewProject({
-                            ...project,
-                            estadoCalculado: estadoCalculadoParaSelect
-                        });
-                        setShowForm(true);
-                    }} className="text-blue-600 hover:text-blue-800 mr-2">Editar</button><button onClick={() => {if (!project.idJira) {toast.error('No se puede eliminar un proyecto sin ID de Jira');return;}toast.info('¿Estás seguro?', {action: {label: 'Eliminar',onClick: () => handleDelete(project.idJira)},description: 'Esta acción no se puede deshacer',cancel: {label: 'Cancelar', onClick: () => {}}});}} className="text-red-600 hover:text-red-800">Eliminar</button></td></tr>
+</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap">
+  <div className="flex items-center gap-1">
+    {/* Botón Ver Detalles */}
+    <button
+      onClick={() => {
+        // Implementar lógica para ver detalles
+        toast.info('Funcionalidad de ver detalles próximamente');
+      }}
+      className="group relative p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      title="Ver detalles"
+    >
+      <Eye className="w-4 h-4" />
+      {/* Tooltip */}
+      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+        Ver detalles
+      </span>
+    </button>
+
+    {/* Botón Editar */}
+    <button
+      onClick={() => {
+        if (!project.idJira) {
+          toast.error('No se puede editar un proyecto sin ID de Jira');
+          return;
+        }
+        setEditingProject(project);
+
+        // Mapear el estado de BD al estado calculado para que se muestre correctamente en el select
+        let estadoCalculadoParaSelect: 'Por Iniciar' | 'En Progreso' | 'Certificado';
+        switch (project.estado) {
+          case 'pendiente':
+            estadoCalculadoParaSelect = 'Por Iniciar';
+            break;
+          case 'en_progreso':
+            estadoCalculadoParaSelect = 'En Progreso';
+            break;
+          case 'certificado':
+            estadoCalculadoParaSelect = 'Certificado';
+            break;
+          default:
+            // Si no hay estado o es desconocido, usar el estadoCalculado si existe
+            estadoCalculadoParaSelect = (project.estadoCalculado as 'Por Iniciar' | 'En Progreso' | 'Certificado') || 'Por Iniciar';
+        }
+
+        setNewProject({
+          ...project,
+          estadoCalculado: estadoCalculadoParaSelect
+        });
+        setShowForm(true);
+      }}
+      className="group relative p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      title="Editar proyecto"
+    >
+      <Edit className="w-4 h-4" />
+      {/* Tooltip */}
+      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+        Editar proyecto
+      </span>
+    </button>
+
+    {/* Botón Certificar - Solo si no está certificado */}
+    {project.estado !== 'certificado' && (
+      <button
+        onClick={() => {
+          // Implementar lógica de certificación
+          toast.info('Funcionalidad de certificación próximamente');
+        }}
+        className="group relative p-1.5 rounded-md text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+        title="Certificar proyecto"
+      >
+        <Award className="w-4 h-4" />
+        {/* Tooltip */}
+        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+          Certificar proyecto
+        </span>
+      </button>
+    )}
+
+    {/* Botón Eliminar */}
+    <button
+      onClick={() => {
+        if (!project.idJira) {
+          toast.error('No se puede eliminar un proyecto sin ID de Jira');
+          return;
+        }
+        toast.info('¿Estás seguro?', {
+          action: {
+            label: 'Eliminar',
+            onClick: () => handleDelete(project.idJira)
+          },
+          description: 'Esta acción no se puede deshacer',
+          cancel: {
+            label: 'Cancelar',
+            onClick: () => {}
+          }
+        });
+      }}
+      className="group relative p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      title="Eliminar proyecto"
+    >
+      <Trash2 className="w-4 h-4" />
+      {/* Tooltip */}
+      <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+        Eliminar proyecto
+      </span>
+    </button>
+  </div>
+</td></tr>
 ))}
 </tbody>
                     </table>
