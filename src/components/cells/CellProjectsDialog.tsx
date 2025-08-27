@@ -44,15 +44,6 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
     );
   }, [projects, cell.name]);
 
-  // Estadísticas de proyectos
-  const projectStats = useMemo(() => {
-    const total = filteredProjects.length;
-    const completados = filteredProjects.filter(p => getStatusInfo(p).text === 'Certificado').length;
-    const enProgreso = filteredProjects.filter(p => getStatusInfo(p).text === 'En Progreso').length;
-    const retrasados = filteredProjects.filter(p => p.diasRetraso > 0).length;
-
-    return { total, completados, enProgreso, retrasados };
-  }, [filteredProjects]);
   const getStatusInfo = (project: any) => {
     // Prioridad de estados: 1. estado (valor manual), 2. estadoCalculado (automático), 3. fallback
     // Si ambos están presentes, preferimos mostrar el estado manual, excepto en casos especiales
@@ -132,6 +123,16 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
     
     return { text: displayEstado, className: statusClass };
   };
+
+  // Estadísticas de proyectos
+  const projectStats = useMemo(() => {
+    const total = cellProjects.length;
+    const completados = cellProjects.filter(p => getStatusInfo(p).text === 'Certificado').length;
+    const enProgreso = cellProjects.filter(p => getStatusInfo(p).text === 'En Progreso').length;
+    const retrasados = cellProjects.filter(p => p.diasRetraso > 0).length;
+
+    return { total, completados, enProgreso, retrasados };
+  }, [cellProjects]);
 
   // Formatear fecha para visualización
   const formatDate = (date: Date | string | undefined) => {
@@ -213,7 +214,7 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
                 <p className="mt-2">Cargando proyectos...</p>
               </div>
-            ) : filteredProjects.length === 0 ? (
+            ) : cellProjects.length === 0 ? (
               <div className="text-center py-8 border rounded-md">
                 <p className="text-gray-500">No hay proyectos asignados a esta célula</p>
               </div>
@@ -230,7 +231,7 @@ export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialog
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProjects.map((project, index) => {
+                    {cellProjects.map((project, index) => {
                       const status = getStatusInfo(project);
 
                       return (

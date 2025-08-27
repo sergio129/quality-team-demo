@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select-radix';
 import { EditCellDialog } from './EditCellDialog';
 import { CellProjectsDialog } from './CellProjectsDialog';
 import { toast } from 'sonner';
@@ -29,7 +29,8 @@ import {
   Briefcase,
   TrendingUp,
   Search,
-  Filter
+  Filter,
+  Building
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -269,7 +270,7 @@ export function DataTable() {
                 className="pl-10"
               />
             </div>
-            <Select value={teamFilter} onValueChange={(value) => setTeamFilter(value)}>
+            <Select value={teamFilter} onValueChange={setTeamFilter}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filtrar por equipo" />
               </SelectTrigger>
@@ -394,9 +395,121 @@ export function DataTable() {
           )}
         </motion.div>
       ) : (
-        <div className="text-center p-8">
-          <p>Contenido en desarrollo...</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-4"
+        >
+          {viewMode === 'cards' ? (
+            // Vista de cards
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredAndSortedCells.map((cell) => (
+                <motion.div
+                  key={cell.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Building className="h-5 w-5 text-blue-600" />
+                          {cell.name}
+                        </CardTitle>
+                        <Badge variant={getCellStatus(cell).variant} className="text-xs">
+                          {getCellStatus(cell).label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{cell.description}</p>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Equipo:</span>
+                        <span className="font-medium">{getTeamName(cell.teamId)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mt-2">
+                        <span className="text-muted-foreground">Proyectos:</span>
+                        <span className="font-medium">
+                          {projects.filter(project =>
+                            project.celula?.toLowerCase() === cell.name.toLowerCase()
+                          ).length}
+                        </span>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewProjects(cell)}
+                          className="flex-1"
+                        >
+                          <Briefcase className="h-4 w-4 mr-1" />
+                          Ver Proyectos
+                        </Button>
+                        <EditCellDialog cell={cell} teams={teams} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            // Vista de tabla
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('name')}>
+                      <div className="flex items-center">
+                        Nombre {renderSortIcon('name')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer" onClick={() => handleSort('team')}>
+                      <div className="flex items-center">
+                        Equipo {renderSortIcon('team')}
+                      </div>
+                    </TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Proyectos</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndSortedCells.map((cell) => (
+                    <TableRow key={cell.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">{cell.name}</TableCell>
+                      <TableCell>{getTeamName(cell.teamId)}</TableCell>
+                      <TableCell className="max-w-xs truncate">{cell.description}</TableCell>
+                      <TableCell>
+                        <Badge variant={getCellStatus(cell).variant}>
+                          {getCellStatus(cell).label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {projects.filter(project =>
+                          project.celula?.toLowerCase() === cell.name.toLowerCase()
+                        ).length}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewProjects(cell)}
+                          >
+                            <Briefcase className="h-4 w-4" />
+                          </Button>
+                          <EditCellDialog cell={cell} teams={teams} />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </motion.div>
       )}
     </div>
   );
