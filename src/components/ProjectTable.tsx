@@ -16,6 +16,16 @@ import { useProjects, useAllProjects, createProject, updateProject, deleteProjec
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
  import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const HOURS_PER_DAY = 9;
 
@@ -76,6 +86,12 @@ export default function ProjectTable() {
     // Estados para el cambio de estado del proyecto
     const [statusDialogOpen, setStatusDialogOpen] = useState(false);
     const [projectToChangeStatus, setProjectToChangeStatus] = useState<Project | null>(null);
+    
+    // Estados para los nuevos modales
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+    const [projectToViewDetails, setProjectToViewDetails] = useState<Project | null>(null);
+    const [certifyDialogOpen, setCertifyDialogOpen] = useState(false);
+    const [projectToCertify, setProjectToCertify] = useState<Project | null>(null);
     
     // Estado para el tipo de exportación a Excel
     const [exportFilterType, setExportFilterType] = useState<'week' | 'month' | 'year' | 'all'>('month');
@@ -388,6 +404,56 @@ export default function ProjectTable() {
     const closeStatusDialog = () => {
         setStatusDialogOpen(false);
         setProjectToChangeStatus(null);
+    };
+    
+    // Funciones para manejar el diálogo de detalles del proyecto
+    const openDetailsDialog = (project: Project) => {
+        setProjectToViewDetails(project);
+        setDetailsDialogOpen(true);
+    };
+    
+    const closeDetailsDialog = () => {
+        setDetailsDialogOpen(false);
+        setProjectToViewDetails(null);
+    };
+    
+    // Funciones para manejar el diálogo de certificación
+    const openCertifyDialog = (project: Project) => {
+        setProjectToCertify(project);
+        setCertifyDialogOpen(true);
+    };
+    
+    const closeCertifyDialog = () => {
+        setCertifyDialogOpen(false);
+        setProjectToCertify(null);
+    };
+    
+    // Función para certificar un proyecto
+    const handleCertifyProject = async (project: Project) => {
+        try {
+            setIsSubmitting(true);
+            
+            const updatedProject = {
+                ...project,
+                estado: 'certificado',
+                fechaCertificacion: new Date(),
+                estadoCalculado: 'Certificado' as const
+            };
+            
+            await updateProject(project.idJira, updatedProject);
+            
+            toast.success(`Proyecto ${project.proyecto} certificado exitosamente`);
+            closeCertifyDialog();
+            
+            // Refrescar los datos
+            // Esto se hará automáticamente por los hooks de React Query
+            
+        } catch (error) {
+            console.error('Error al certificar proyecto:', error);
+            toast.error('Error al certificar el proyecto');
+        } finally {
+            setIsSubmitting(false);
+        }
     };    // Función para filtrar proyectos con fechas (solo para vista timeline)
     const filterProjectsByDate = (projectList: Project[]) => {
         const { start: startDate, end: endDate } = getDateRange();
@@ -1229,10 +1295,7 @@ export default function ProjectTable() {
   <div className="flex items-center gap-1">
     {/* Botón Ver Detalles */}
     <button
-      onClick={() => {
-        // Implementar lógica para ver detalles
-        toast.info('Funcionalidad de ver detalles próximamente');
-      }}
+      onClick={() => openDetailsDialog(project)}
       className="group relative p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 ease-in-out transform hover:scale-105"
       title="Ver detalles"
     >
@@ -1288,10 +1351,7 @@ export default function ProjectTable() {
     {/* Botón Certificar - Solo si no está certificado */}
     {project.estado !== 'certificado' && (
       <button
-        onClick={() => {
-          // Implementar lógica de certificación
-          toast.info('Funcionalidad de certificación próximamente');
-        }}
+        onClick={() => openCertifyDialog(project)}
         className="group relative p-1.5 rounded-md text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 ease-in-out transform hover:scale-105"
         title="Certificar proyecto"
       >
@@ -1356,6 +1416,210 @@ export default function ProjectTable() {
                 <WeeklyCertificationWidget projects={allProjects} />
             )}
               
+            {/* Modal de Detalles del Proyecto */}
+            <Dialog open={detailsDialogOpen} onOpenChange={closeDetailsDialog}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-blue-600" />
+                    Detalles del Proyecto
+                  </DialogTitle>
+                  <DialogDescription>
+                    Información completa del proyecto seleccionado
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {projectToViewDetails && (
+                  <div className="space-y-6">
+                    {/* Información básica */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Información Básica</h3>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-xs text-gray-500">ID Jira:</span>
+                            <p className="font-medium">{projectToViewDetails.idJira}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Proyecto:</span>
+                            <p className="font-medium">{projectToViewDetails.proyecto}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Nombre:</span>
+                            <p className="font-medium">{projectToViewDetails.nombre || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Equipo:</span>
+                            <p className="font-medium">{projectToViewDetails.equipo}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Célula:</span>
+                            <p className="font-medium">{projectToViewDetails.celula}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Estado y Fechas</h3>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-xs text-gray-500">Estado:</span>
+                            <Badge 
+                              variant={projectToViewDetails.estado === 'certificado' ? 'default' : 'secondary'}
+                              className="ml-2"
+                            >
+                              {projectToViewDetails.estadoCalculado || projectToViewDetails.estado || 'Sin estado'}
+                            </Badge>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Fecha Entrega:</span>
+                            <p className="font-medium">
+                              {projectToViewDetails.fechaEntrega ? new Date(projectToViewDetails.fechaEntrega).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Fecha Real Entrega:</span>
+                            <p className="font-medium">
+                              {projectToViewDetails.fechaRealEntrega ? new Date(projectToViewDetails.fechaRealEntrega).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Fecha Certificación:</span>
+                            <p className="font-medium">
+                              {projectToViewDetails.fechaCertificacion ? new Date(projectToViewDetails.fechaCertificacion).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Días de Retraso:</span>
+                            <p className={`font-medium ${projectToViewDetails.diasRetraso > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {projectToViewDetails.diasRetraso}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Esfuerzo y Recursos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Esfuerzo</h3>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-xs text-gray-500">Horas Estimadas:</span>
+                            <p className="font-medium">{projectToViewDetails.horas} horas</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Días Estimados:</span>
+                            <p className="font-medium">{projectToViewDetails.dias} días</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Horas por Día:</span>
+                            <p className="font-medium">
+                              {projectToViewDetails.horasPorDia ? projectToViewDetails.horasPorDia.join(', ') : 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Recursos</h3>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-xs text-gray-500">Analista Producto:</span>
+                            <p className="font-medium">{projectToViewDetails.analistaProducto}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Analistas Asignados:</span>
+                            <p className="font-medium">
+                              {projectToViewDetails.analistas && projectToViewDetails.analistas.length > 0 
+                                ? projectToViewDetails.analistas.join(', ') 
+                                : 'Ninguno asignado'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Descripción y Plan de Trabajo */}
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Descripción</h3>
+                        <p className="text-sm bg-gray-50 p-3 rounded-md">
+                          {projectToViewDetails.descripcion || 'Sin descripción'}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700 mb-2">Plan de Trabajo</h3>
+                        <p className="text-sm bg-gray-50 p-3 rounded-md">
+                          {projectToViewDetails.planTrabajo || 'Sin plan de trabajo definido'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={closeDetailsDialog}>
+                    Cerrar
+                  </Button>
+                  {projectToViewDetails && (
+                    <Button 
+                      onClick={() => {
+                        window.open(getJiraUrl(projectToViewDetails.idJira), '_blank');
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Ver en Jira
+                    </Button>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Modal de Confirmación de Certificación */}
+            <Dialog open={certifyDialogOpen} onOpenChange={closeCertifyDialog}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-purple-600" />
+                    Certificar Proyecto
+                  </DialogTitle>
+                  <DialogDescription>
+                    ¿Estás seguro de que deseas certificar este proyecto?
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {projectToCertify && (
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">{projectToCertify.proyecto}</h4>
+                      <p className="text-sm text-gray-600 mb-2">ID: {projectToCertify.idJira}</p>
+                      <p className="text-sm text-gray-600">Equipo: {projectToCertify.equipo}</p>
+                    </div>
+                    
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Nota:</strong> Una vez certificado, el proyecto se marcará como completado y se registrará la fecha de certificación actual.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <Button variant="outline" onClick={closeCertifyDialog} disabled={isSubmitting}>
+                    Cancelar
+                  </Button>
+                  <Button 
+                    onClick={() => projectToCertify && handleCertifyProject(projectToCertify)}
+                    disabled={isSubmitting}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {isSubmitting ? 'Certificando...' : 'Certificar Proyecto'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
             {/* Diálogo de cambio de estado */}
             {statusDialogOpen && projectToChangeStatus && (
                 <ChangeProjectStatusDialog
