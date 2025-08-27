@@ -224,9 +224,9 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
 
     return (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
+        <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl p-1 md:p-2">
             {/* Sticky Header y Progreso */}
-            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-100">
+            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-100 rounded-t-2xl shadow-sm">
                 <div 
                     className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                     onClick={() => setIsExpanded(!isExpanded)}
@@ -496,8 +496,8 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                 </div>
                                             )}
                                             <div
-                                                className={`border rounded-lg p-3 mb-6 transition-all duration-300 hover:shadow-lg animate-fade-in-up ${borderColor} ${bgColor} ${gradient} ${glow} shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-6`}
-                                                style={{ animationDelay: `${dayIndex * 0.1}s` }}
+                                                className={`border rounded-xl p-3 mb-6 transition-all duration-300 hover:shadow-xl animate-fade-in-up ${borderColor} ${bgColor} ${gradient} ${glow} shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-6`}
+                                                style={{ animationDelay: `${dayIndex * 0.1}s`, background: isTodayDay ? 'linear-gradient(90deg, #e0f2fe 0%, #f0fdfa 100%)' : undefined }}
                                             >
                                                 {/* Day header */}
                                                 <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
