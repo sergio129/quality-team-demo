@@ -1292,14 +1292,14 @@ export default function ProjectTable() {
         )}
     </div>
 </td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.planTrabajo || ''}</td><td className="px-4 py-2 text-sm whitespace-nowrap">
-  <div className="flex items-center gap-1">
+  <div className="flex items-center gap-1 sm:gap-2">
     {/* Botón Ver Detalles */}
     <button
       onClick={() => openDetailsDialog(project)}
-      className="group relative p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      className="group relative p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 ease-in-out transform hover:scale-105"
       title="Ver detalles"
     >
-      <Eye className="w-4 h-4" />
+      <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
       {/* Tooltip */}
       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
         Ver detalles
@@ -1338,10 +1338,10 @@ export default function ProjectTable() {
         });
         setShowForm(true);
       }}
-      className="group relative p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      className="group relative p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200 ease-in-out transform hover:scale-105"
       title="Editar proyecto"
     >
-      <Edit className="w-4 h-4" />
+      <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
       {/* Tooltip */}
       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
         Editar proyecto
@@ -1352,10 +1352,10 @@ export default function ProjectTable() {
     {project.estado?.toLowerCase() !== 'certificado' && (
       <button
         onClick={() => openCertifyDialog(project)}
-        className="group relative p-1.5 rounded-md text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+        className="group relative p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 ease-in-out transform hover:scale-105"
         title="Certificar proyecto"
       >
-        <Award className="w-4 h-4" />
+        <Award className="w-3 h-3 sm:w-4 sm:h-4" />
         {/* Tooltip */}
         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
           Certificar proyecto
@@ -1382,10 +1382,10 @@ export default function ProjectTable() {
           }
         });
       }}
-      className="group relative p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out transform hover:scale-105"
+      className="group relative p-1 sm:p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out transform hover:scale-105"
       title="Eliminar proyecto"
     >
-      <Trash2 className="w-4 h-4" />
+      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
       {/* Tooltip */}
       <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
         Eliminar proyecto
@@ -1418,7 +1418,7 @@ export default function ProjectTable() {
               
             {/* Modal de Detalles del Proyecto */}
             <Dialog open={detailsDialogOpen} onOpenChange={closeDetailsDialog}>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl sm:max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Eye className="w-5 h-5 text-blue-600" />
@@ -1578,7 +1578,7 @@ export default function ProjectTable() {
             
             {/* Modal de Confirmación de Certificación */}
             <Dialog open={certifyDialogOpen} onOpenChange={closeCertifyDialog}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Award className="w-5 h-5 text-purple-600" />
@@ -1605,7 +1605,7 @@ export default function ProjectTable() {
                   </div>
                 )}
                 
-                <DialogFooter>
+                <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2">
                   <Button variant="outline" onClick={closeCertifyDialog} disabled={isSubmitting}>
                     Cancelar
                   </Button>
