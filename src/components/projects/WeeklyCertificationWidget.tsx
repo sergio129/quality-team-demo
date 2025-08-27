@@ -603,7 +603,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
 
                     {/* Summary footer */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 pt-4 border-t border-gray-200 sticky bottom-0 z-30 bg-white/80 backdrop-blur rounded-b-2xl shadow-md">
                         <div className="flex items-center justify-between text-sm text-gray-600">
                             <Tooltip text={
                                 filterStatus === 'all'
