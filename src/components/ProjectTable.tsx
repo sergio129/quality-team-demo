@@ -1174,7 +1174,22 @@ export default function ProjectTable() {
         </td>
     </tr>
 ) : filteredProjects.filter(project => project && project.idJira).map((project, index) => (
-<tr key={index} className="hover:bg-gray-50 transition-colors"><td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaEntrega && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{formatDate(project.fechaEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaCertificacion && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{formatDate(project.fechaCertificacion)}</span>)}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td><td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td><td className="px-4 py-2 text-sm text-gray-900">
+<tr
+    key={index}
+    className={`transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 hover:shadow-sm`}
+>
+    <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.dias || 0}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaEntrega && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{formatDate(project.fechaEntrega)}</span>)}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaCertificacion && (<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{formatDate(project.fechaCertificacion)}</span>)}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.diasRetraso || 0}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.analistaProducto || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900">
     <div className="flex flex-col items-start">
         {project.estadoCalculado ? (
             <span 
