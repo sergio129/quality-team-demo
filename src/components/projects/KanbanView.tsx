@@ -41,13 +41,25 @@ export default function KanbanView({
         const isDelayed = isProjectDelayed(p);
         return isDelayed;
       }
-      
+
+      if (status === 'Sin Estado') {
+        // Mostrar proyectos que no tienen estado definido o es null/undefined
+        const hasNoState = !p.estadoCalculado;
+        return hasNoState && !isProjectDelayed(p);
+      }
+
       // Para otras columnas, mostrar solo si:
       // 1. Coincide con el estado de la columna
-      // 2. Y no está retrasado (o está certificado a pesar de estar retrasado)
+      // 2. Y no está retrasado
+      // 3. Y tiene estado definido
       if (isProjectDelayed(p)) {
         return false; // No mostrar proyectos retrasados en otras columnas
       }
+
+      if (!p.estadoCalculado) {
+        return false; // No mostrar proyectos sin estado en otras columnas
+      }
+
       return p.estadoCalculado === status;
     });
   };
@@ -67,8 +79,8 @@ export default function KanbanView({
     // Un proyecto está retrasado si:
     // 1. Tiene días de retraso mayor a 0
     // 2. Y NO está certificado
-    
-    return project.diasRetraso > 0 && 
+
+    return project.diasRetraso > 0 &&
            project.estadoCalculado !== 'Certificado';
   };
 
@@ -116,9 +128,14 @@ export default function KanbanView({
     // El nuevo estado depende de la columna de destino
     const newStatus = destination.droppableId;
     
-    // Si la columna es "Retrasado", no permitimos el movimiento
+    // Si la columna es "Retrasado" o "Sin Estado", no permitimos el movimiento directo
     if (newStatus === 'Retrasado') {
       toast.error('No se puede mover un proyecto a la columna Retrasado');
+      return;
+    }
+
+    if (newStatus === 'Sin Estado') {
+      toast.error('No se puede mover un proyecto a la columna Sin Estado');
       return;
     }
     
@@ -171,8 +188,10 @@ export default function KanbanView({
     { id: 'Por Iniciar', title: 'Por Iniciar' },
     { id: 'En Progreso', title: 'En Progreso' },
     { id: 'Certificado', title: 'Certificado' },
+    { id: 'Sin Estado', title: 'Sin Estado' },
     { id: 'Retrasado', title: 'Retrasados' },
   ];
+
   // Formatear periodo para mostrar en un mensaje informativo
   const getPeriodMessage = () => {
     if (!startDate) return '';
@@ -201,7 +220,7 @@ export default function KanbanView({
             {getPeriodMessage()}
           </div>
         )}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {columns.map((column) => (
             <div
               key={column.id}
@@ -214,7 +233,7 @@ export default function KanbanView({
                 </span>
               </h3>
               
-              <Droppable droppableId={column.id} isDropDisabled={column.id === 'Retrasado'}>
+              <Droppable droppableId={column.id} isDropDisabled={column.id === 'Retrasado' || column.id === 'Sin Estado'}>
                 {(provided, snapshot) => (
                   <div
                     {...provided.droppableProps}
@@ -230,9 +249,10 @@ export default function KanbanView({
                         key={project.id || project.idJira}
                         draggableId={project.id || project.idJira || ''}
                         index={index}
-                        // Desactivar el drag si está en "Retrasado" o si es "Certificado"
+                        // Desactivar el drag si está en "Retrasado", "Sin Estado" o si es "Certificado"
                         isDragDisabled={
                           column.id === 'Retrasado' || 
+                          column.id === 'Sin Estado' ||
                           project.estadoCalculado === 'Certificado'
                         }
                       >
@@ -243,7 +263,7 @@ export default function KanbanView({
                             {...provided.dragHandleProps}
                             className={`mb-3 p-3 rounded-md bg-white border border-gray-200 shadow-sm
                               ${snapshot.isDragging ? 'shadow-md' : ''}
-                              ${project.estadoCalculado === 'Certificado' ? 'cursor-default opacity-90' : 'cursor-grab'}
+                              ${column.id === 'Retrasado' || column.id === 'Sin Estado' || project.estadoCalculado === 'Certificado' ? 'cursor-default opacity-90' : 'cursor-grab'}
                             `}
                           >                            <div className="flex justify-between items-start mb-2">
                               <h4 className="font-medium text-sm line-clamp-2">

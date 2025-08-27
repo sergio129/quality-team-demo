@@ -497,19 +497,17 @@ export default function ProjectTable() {
             
         const matchesEquipo = !filterEquipo || project.equipo === filterEquipo;
         const matchesAnalista = !filterAnalista || project.analistaProducto === filterAnalista;
-        const matchesEstado = !filterEstado || project.estadoCalculado === filterEstado;
+        const matchesEstado = !filterEstado || (project.estadoCalculado && project.estadoCalculado === filterEstado);
         
         return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado;
-    });
-    
-    // Para la vista timeline, aplicar filtro de fecha del lado del cliente
-    if (activeView === 'timeline') {
+    });    // Para todas las vistas, aplicar filtro de fecha del lado del cliente
+    if (activeView === 'timeline' || activeView === 'kanban' || activeView === 'table') {
         filteredForView = filterProjectsByDate(filteredForView);
     }
     
     // Aplicar ordenamiento
     const allFilteredProjects = sortData(filteredForView);
-    
+
     // Cálculos para paginación
     const totalItems = allFilteredProjects.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
