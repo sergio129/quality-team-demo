@@ -629,8 +629,8 @@ export default function ProjectTable() {
             </div>
 
             {showForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 w-full max-w-xl max-h-[90vh] overflow-y-auto mx-auto">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-lg space-y-4 w-full max-w-xl max-h-[90vh] overflow-y-auto mx-auto z-50">
                         <h2 className="text-xl font-bold mb-4">{editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* ID Jira */}
@@ -1179,7 +1179,7 @@ export default function ProjectTable() {
     className={`transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 hover:shadow-sm`}
 >
     <td className="px-4 py-2 text-sm font-medium text-blue-600 whitespace-nowrap">{renderJiraId(project.idJira)}</td>
-    <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.proyecto || ''}</td>
+    <td className="px-4 py-2 text-sm text-gray-900 max-w-[260px] truncate whitespace-nowrap cursor-help" title={project.proyecto || ''}>{project.proyecto || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.equipo || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.celula || ''}</td>
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.horas || 0}</td>
@@ -1188,7 +1188,7 @@ export default function ProjectTable() {
     <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">{project.fechaRealEntrega && (<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${project.diasRetraso > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{formatDate(project.fechaRealEntrega)}</span>)}</td>
         <td className="px-4 py-2 text-sm text-gray-900 whitespace-nowrap">
             {project.fechaCertificacion && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 max-w-[120px] truncate cursor-help" title={formatDate(project.fechaCertificacion)}>
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     {formatDate(project.fechaCertificacion)}
                 </span>
@@ -1200,13 +1200,14 @@ export default function ProjectTable() {
     <div className="flex flex-col items-start">
         {project.estadoCalculado ? (
             <span 
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 max-w-[120px] truncate ${
                     project.estadoCalculado === 'Por Iniciar' 
                         ? 'bg-amber-100 text-amber-800' 
                         : project.estadoCalculado === 'En Progreso' 
                             ? 'bg-blue-100 text-blue-800' 
                             : 'bg-green-100 text-green-800'
                 }`}
+                title={project.estadoCalculado}
                 onClick={() => openStatusDialog(project)}
             >
                 {project.estadoCalculado === 'Por Iniciar' && <Clock className="w-4 h-4 text-amber-400" />}
