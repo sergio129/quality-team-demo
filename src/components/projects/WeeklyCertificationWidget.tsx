@@ -45,7 +45,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
     // Función helper para determinar si un proyecto está certificado
     const isProjectCertified = (project: Project) => {
-        return project.estado === 'certificado' || project.estadoCalculado === 'Certificado';
+        return project.estado?.toLowerCase() === 'certificado' || project.estadoCalculado === 'Certificado';
     };
 
     // Filtrar proyectos con certificación en la semana actual

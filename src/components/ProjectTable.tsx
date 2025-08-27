@@ -1349,7 +1349,7 @@ export default function ProjectTable() {
     </button>
 
     {/* Botón Certificar - Solo si no está certificado */}
-    {project.estado !== 'certificado' && (
+    {project.estado?.toLowerCase() !== 'certificado' && (
       <button
         onClick={() => openCertifyDialog(project)}
         className="group relative p-1.5 rounded-md text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 ease-in-out transform hover:scale-105"
