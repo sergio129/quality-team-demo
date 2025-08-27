@@ -443,7 +443,7 @@ export class QAAnalystPrismaService {
         cellIds: analyst.cells.map(cell => cell.cellId)
       };
     } catch (error) {
-      console.error('Error getting analyst by ID from database:', error);
+      console.error('Error getting analyst by ID from database:', error || 'Unknown error');
       return null;
     }
   }

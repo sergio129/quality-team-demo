@@ -6,10 +6,11 @@ const analystService = new QAAnalystService();
 
 export async function GET(request: NextRequest) {
   try {
-    // Extraer el ID de la URL en lugar de los parámetros
-    const urlParts = request.url.split('/');
-    // Obtenemos la parte antes de 'stats' que debe ser el ID
-    const id = urlParts[urlParts.indexOf('stats') - 1];
+    // Extraer el ID de la URL de manera más robusta
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const id = pathParts[pathParts.length - 2]; // El ID está antes de 'stats'
+    
     const searchParams = new URL(request.url).searchParams;
     const timeframe = searchParams.get('timeframe') || 'month';
     
@@ -17,8 +18,12 @@ export async function GET(request: NextRequest) {
     const analyst = await analystService.getAnalystById(id);
     if (!analyst) {
       return NextResponse.json({ error: 'Analyst not found' }, { status: 404 });
-    }    // Obtener todos los incidentes
+    }
+    
+    // Obtener todos los incidentes
     const incidents = await incidentService.getAll();
+    console.log(`Total incidents found: ${incidents.length}`);
+    console.log(`Looking for analyst: ${analyst.name}`);
     
     // Filtrar por fecha según el timeframe
     const now = new Date();
@@ -42,8 +47,22 @@ export async function GET(request: NextRequest) {
     const relevantIncidents = incidents.filter(incident => {
       const incidentDate = new Date(incident.fechaCreacion);
       return incidentDate >= cutoffDate && 
-             (incident.informadoPor === analyst.name || incident.asignadoA === analyst.name);
+             (incident.informadoPor === analyst.name || 
+              incident.asignadoA === analyst.name ||
+              // También buscar por coincidencia parcial (case insensitive)
+              incident.informadoPor?.toLowerCase().includes(analyst.name.toLowerCase()) ||
+              incident.asignadoA?.toLowerCase().includes(analyst.name.toLowerCase()));
     });
+    
+    console.log(`Relevant incidents found: ${relevantIncidents.length}`);
+    console.log(`Incidents reported by ${analyst.name}:`, relevantIncidents.filter(inc => 
+      inc.informadoPor === analyst.name || 
+      inc.informadoPor?.toLowerCase().includes(analyst.name.toLowerCase())
+    ).length);
+    console.log(`Incidents assigned to ${analyst.name}:`, relevantIncidents.filter(inc => 
+      inc.asignadoA === analyst.name || 
+      inc.asignadoA?.toLowerCase().includes(analyst.name.toLowerCase())
+    ).length);
 
     // Incidentes reportados por el analista
     const incidentsReported = relevantIncidents.filter(inc => inc.informadoPor === analyst.name);
