@@ -435,115 +435,123 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                             /* Vista Detallada */
                             Object.entries(projectsByDay)
                                 .sort(([a], [b]) => a.localeCompare(b))
-                                .map(([dateStr, dayProjects], dayIndex) => (
-                                <div 
-                                    key={dateStr} 
-                                    className={`border rounded-lg p-3 transition-all duration-300 hover:shadow-sm animate-fade-in-up ${
-                                        isToday(dateStr) 
-                                            ? 'border-blue-200 bg-blue-50' 
-                                            : isPast(dateStr)
-                                            ? 'border-red-200 bg-red-50'
-                                            : 'border-gray-200 bg-gray-50'
-                                    }`}
-                                    style={{ animationDelay: `${dayIndex * 0.1}s` }}
-                                >
-                                    {/* Day header */}
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center space-x-2">
-                                            {isToday(dateStr) ? (
-                                                <Clock className="w-4 h-4 text-blue-600" />
-                                            ) : isPast(dateStr) ? (
-                                                <AlertTriangle className="w-4 h-4 text-red-600" />
-                                            ) : (
-                                                <Calendar className="w-4 h-4 text-gray-600" />
-                                            )}
-                                            <span className={`font-medium ${
-                                                isToday(dateStr) 
-                                                    ? 'text-blue-900' 
-                                                    : isPast(dateStr)
-                                                    ? 'text-red-900'
-                                                    : 'text-gray-900'
-                                            }`}>
-                                                {formatDate(dateStr)}
-                                                {isToday(dateStr) && ' (Hoy)'}
-                                                {isPast(dateStr) && ' (Vencido)'}
-                                            </span>
-                                        </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                            isToday(dateStr)
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : isPast(dateStr)
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
-                                        </span>
-                                    </div>
-
-                                    {/* Projects list */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                        {dayProjects.map((project, projectIndex) => (
-                                            <div 
-                                                key={project.idJira}
-                                                className={`p-3 rounded-md border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 animate-fade-in-scale ${
-                                                    isProjectCertified(project)
-                                                        ? 'bg-green-50 border-green-200 hover:border-green-300'
-                                                        : isToday(dateStr)
-                                                        ? 'bg-white border-blue-200 hover:border-blue-300'
-                                                        : isPast(dateStr)
-                                                        ? 'bg-white border-red-200 hover:border-red-300'
-                                                        : 'bg-white border-gray-200 hover:border-gray-300'
-                                                }`}
-                                                style={{ animationDelay: `${projectIndex * 0.05}s` }}
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center space-x-2 mb-1">
-                                                            {isProjectCertified(project) && (
-                                                                <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
-                                                                    CERTIFICADO
-                                                                </span>
-                                                            )}
-                                                            {renderJiraLink(project)}
-                                                            {project.diasRetraso > 0 && (
-                                                                <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded">
-                                                                    +{project.diasRetraso}d
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className={`text-sm truncate ${
-                                                            isProjectCertified(project) 
-                                                                ? 'text-green-700' 
-                                                                : 'text-gray-600'
-                                                        }`} title={project.proyecto}>
-                                                            {project.proyecto}
-                                                        </p>
-                                                        <div className={`flex items-center justify-between mt-2 text-xs ${
-                                                            isProjectCertified(project) 
-                                                                ? 'text-green-600' 
-                                                                : 'text-gray-500'
-                                                        }`}>
-                                                            <span>{project.equipo}</span>
-                                                            <div className="flex items-center space-x-2">
-                                                                <span>{project.analistaProducto}</span>
-                                                                {!isProjectCertified(project) && (
-                                                                    <button
-                                                                        onClick={() => markAsCertified(project)}
-                                                                        className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 text-xs px-2 py-1 rounded font-medium transition-all duration-200"
-                                                                        title="Marcar como certificado"
-                                                                    >
-                                                                        ✓ Certificar
-                                                                    </button>
-                                                                )}
+                                .map(([dateStr, dayProjects], dayIndex) => {
+                                    const allCertified = dayProjects.every(isProjectCertified);
+                                    const anyPending = dayProjects.some(p => !isProjectCertified(p));
+                                    const isPastDay = isPast(dateStr);
+                                    const isTodayDay = isToday(dateStr);
+                                    // Lógica de color y estado
+                                    let borderColor = 'border-gray-200';
+                                    let bgColor = 'bg-gray-50';
+                                    let icon = <Calendar className="w-4 h-4 text-gray-600" />;
+                                    let textColor = 'text-gray-900';
+                                    let badgeColor = 'bg-gray-100 text-gray-800';
+                                    let statusText = '';
+                                    if (isTodayDay) {
+                                        borderColor = 'border-blue-200';
+                                        bgColor = 'bg-blue-50';
+                                        icon = <Clock className="w-4 h-4 text-blue-600" />;
+                                        textColor = 'text-blue-900';
+                                        badgeColor = 'bg-blue-100 text-blue-800';
+                                        statusText = ' (Hoy)';
+                                    } else if (isPastDay && allCertified) {
+                                        borderColor = 'border-green-200';
+                                        bgColor = 'bg-green-50';
+                                        icon = <CheckCircle className="w-4 h-4 text-green-600" />;
+                                        textColor = 'text-green-900';
+                                        badgeColor = 'bg-green-100 text-green-800';
+                                        statusText = ' (Completado)';
+                                    } else if (isPastDay && anyPending) {
+                                        borderColor = 'border-red-200';
+                                        bgColor = 'bg-red-50';
+                                        icon = <AlertTriangle className="w-4 h-4 text-red-600" />;
+                                        textColor = 'text-red-900';
+                                        badgeColor = 'bg-red-100 text-red-800';
+                                        statusText = ' (Vencido)';
+                                    }
+                                    return (
+                                        <div 
+                                            key={dateStr} 
+                                            className={`border rounded-lg p-3 transition-all duration-300 hover:shadow-sm animate-fade-in-up ${borderColor} ${bgColor}`}
+                                            style={{ animationDelay: `${dayIndex * 0.1}s` }}
+                                        >
+                                            {/* Day header */}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center space-x-2">
+                                                    {icon}
+                                                    <span className={`font-medium ${textColor}`}>
+                                                        {formatDate(dateStr)}{statusText}
+                                                    </span>
+                                                </div>
+                                                <span className={`text-xs px-2 py-1 rounded-full ${badgeColor}`}>
+                                                    {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
+                                                </span>
+                                            </div>
+                                            {/* Projects list */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                {dayProjects.map((project, projectIndex) => (
+                                                    <div 
+                                                        key={project.idJira}
+                                                        className={`p-3 rounded-md border transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5 animate-fade-in-scale ${
+                                                            isProjectCertified(project)
+                                                                ? 'bg-green-50 border-green-200 hover:border-green-300'
+                                                                : isToday(dateStr)
+                                                                ? 'bg-white border-blue-200 hover:border-blue-300'
+                                                                : isPast(dateStr)
+                                                                ? 'bg-white border-red-200 hover:border-red-300'
+                                                                : 'bg-white border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                        style={{ animationDelay: `${projectIndex * 0.05}s` }}
+                                                    >
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center space-x-2 mb-1">
+                                                                    {isProjectCertified(project) && (
+                                                                        <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                                                                            CERTIFICADO
+                                                                        </span>
+                                                                    )}
+                                                                    {renderJiraLink(project)}
+                                                                    {project.diasRetraso > 0 && (
+                                                                        <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded">
+                                                                            +{project.diasRetraso}d
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className={`text-sm truncate ${
+                                                                    isProjectCertified(project) 
+                                                                        ? 'text-green-700' 
+                                                                        : 'text-gray-600'
+                                                                }`} title={project.proyecto}>
+                                                                    {project.proyecto}
+                                                                </p>
+                                                                <div className={`flex items-center justify-between mt-2 text-xs ${
+                                                                    isProjectCertified(project) 
+                                                                        ? 'text-green-600' 
+                                                                        : 'text-gray-500'
+                                                                }`}>
+                                                                    <span>{project.equipo}</span>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <span>{project.analistaProducto}</span>
+                                                                        {!isProjectCertified(project) && (
+                                                                            <button
+                                                                                onClick={() => markAsCertified(project)}
+                                                                                className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 text-xs px-2 py-1 rounded font-medium transition-all duration-200"
+                                                                                title="Marcar como certificado"
+                                                                            >
+                                                                                ✓ Certificar
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                ))
+                                        </div>
+                                    );
+                                })
                         )}
                     </div>
 
