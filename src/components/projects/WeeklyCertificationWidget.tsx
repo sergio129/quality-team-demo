@@ -218,90 +218,96 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
         );
     }
 
+
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-md">
-            {/* Header */}
-            <div 
-                className="flex items-center justify-between p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-all duration-200"
-                onClick={() => setIsExpanded(!isExpanded)}
-            >
-                <div className="flex items-center space-x-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        Certificaciones de esta semana
-                    </h3>
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                        {weeklyProjects.length}
-                    </span>
-                    {weekOffset !== 0 && (
+            {/* Sticky Header y Progreso */}
+            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-100">
+                <div 
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    <div className="flex items-center space-x-3">
+                        <Calendar className="w-7 h-7 text-green-600" />
+                        <h3 className="text-xl font-bold text-gray-900">
+                            Certificaciones de esta semana
+                        </h3>
+                        <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
+                            {weeklyProjects.length}
+                        </span>
+                        {weekOffset !== 0 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goToCurrentWeek();
+                                }}
+                                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                            >
+                                Actual
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        {/* Navegación por semanas */}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                goToCurrentWeek();
+                                goToPreviousWeek();
                             }}
-                            className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            title="Semana anterior"
                         >
-                            Actual
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
                         </button>
-                    )}
-                </div>
-                <div className="flex items-center space-x-2">
-                    {/* Navegación por semanas */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            goToPreviousWeek();
-                        }}
-                        className="p-1 hover:bg-gray-200 rounded transition-colors"
-                        title="Semana anterior"
-                    >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    <span className="text-sm text-gray-500 min-w-[120px] text-center">
-                        {currentWeek.monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {currentWeek.sunday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                        {weekOffset === 0 && <span className="text-blue-600 font-medium"> (Actual)</span>}
-                    </span>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            goToNextWeek();
-                        }}
-                        className="p-1 hover:bg-gray-200 rounded transition-colors"
-                        title="Semana siguiente"
-                    >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                    </button>
-                    <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <span className="text-base text-gray-700 min-w-[120px] text-center">
+                            {currentWeek.monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {currentWeek.sunday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                            {weekOffset === 0 && <span className="text-blue-600 font-semibold"> (Actual)</span>}
+                        </span>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                goToNextWeek();
+                            }}
+                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                            title="Semana siguiente"
+                        >
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                        <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
+                {/* Barra de progreso sticky con tooltip */}
+                {weeklyProjects.length > 0 && (
+                    <div className="px-4 py-2 border-b border-gray-100 group relative">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-gray-600">
+                                Progreso: {progressStats.certified} de {progressStats.total} certificados
+                            </span>
+                            <span className="text-sm font-medium text-gray-900">
+                                {progressStats.percentage}%
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 relative">
+                            <div 
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300 group-hover:brightness-110"
+                                style={{ width: `${progressStats.percentage}%` }}
+                            ></div>
+                            {/* Tooltip */}
+                            <div className="absolute left-1/2 -top-8 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-gray-900 text-white text-xs rounded px-2 py-1 shadow-lg z-30">
+                                {progressStats.certified} certificados / {progressStats.pending} pendientes ({progressStats.percentage}%)
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Barra de progreso (siempre visible) */}
-            {weeklyProjects.length > 0 && (
-                <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">
-                            Progreso: {progressStats.certified} de {progressStats.total} certificados
-                        </span>
-                        <span className="text-sm font-medium text-gray-900">
-                            {progressStats.percentage}%
-                        </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                            className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${progressStats.percentage}%` }}
-                        ></div>
-                    </div>
-                </div>
-            )}
 
             {/* Content */}
             {isExpanded && (
@@ -443,52 +449,85 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                     // Lógica de color y estado
                                     let borderColor = 'border-gray-200';
                                     let bgColor = 'bg-gray-50';
-                                    let icon = <Calendar className="w-4 h-4 text-gray-600" />;
+                                    let icon = <Calendar className="w-10 h-10 text-gray-400" />;
                                     let textColor = 'text-gray-900';
                                     let badgeColor = 'bg-gray-100 text-gray-800';
                                     let statusText = '';
+                                    let gradient = '';
+                                    let glow = '';
                                     if (isTodayDay) {
-                                        borderColor = 'border-blue-200';
+                                        borderColor = 'border-blue-300';
                                         bgColor = 'bg-blue-50';
-                                        icon = <Clock className="w-4 h-4 text-blue-600" />;
+                                        icon = <Clock className="w-10 h-10 text-blue-500" />;
                                         textColor = 'text-blue-900';
                                         badgeColor = 'bg-blue-100 text-blue-800';
                                         statusText = ' (Hoy)';
+                                        glow = 'ring-4 ring-blue-300/40 animate-pulse';
                                     } else if (isPastDay && allCertified) {
-                                        borderColor = 'border-green-200';
+                                        borderColor = 'border-green-300';
                                         bgColor = 'bg-green-50';
-                                        icon = <CheckCircle className="w-4 h-4 text-green-600" />;
+                                        icon = <CheckCircle className="w-10 h-10 text-green-500" />;
                                         textColor = 'text-green-900';
                                         badgeColor = 'bg-green-100 text-green-800';
                                         statusText = ' (Completado)';
+                                        gradient = 'bg-gradient-to-br from-green-50 via-green-100 to-green-50';
                                     } else if (isPastDay && anyPending) {
-                                        borderColor = 'border-red-200';
+                                        borderColor = 'border-red-300';
                                         bgColor = 'bg-red-50';
-                                        icon = <AlertTriangle className="w-4 h-4 text-red-600" />;
+                                        icon = <AlertTriangle className="w-10 h-10 text-red-500" />;
                                         textColor = 'text-red-900';
                                         badgeColor = 'bg-red-100 text-red-800';
                                         statusText = ' (Vencido)';
+                                        gradient = 'bg-gradient-to-br from-red-50 via-red-100 to-red-50';
                                     }
+                                    // Resumen diario
+                                    const certifiedCount = dayProjects.filter(isProjectCertified).length;
+                                    const pendingCount = dayProjects.length - certifiedCount;
                                     return (
-                                        <div 
-                                            key={dateStr} 
-                                            className={`border rounded-lg p-3 transition-all duration-300 hover:shadow-sm animate-fade-in-up ${borderColor} ${bgColor}`}
-                                            style={{ animationDelay: `${dayIndex * 0.1}s` }}
-                                        >
-                                            {/* Day header */}
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex items-center space-x-2">
-                                                    {icon}
-                                                    <span className={`font-medium ${textColor}`}>
-                                                        {formatDate(dateStr)}{statusText}
-                                                    </span>
+                                        <div key={dateStr} className="relative">
+                                            {/* Separador visual entre días */}
+                                            {dayIndex > 0 && (
+                                                <div className="absolute -top-4 left-0 w-full flex items-center justify-center z-0">
+                                                    <div className="h-2 w-2 rounded-full bg-gray-300 opacity-60 animate-pulse" />
                                                 </div>
-                                                <span className={`text-xs px-2 py-1 rounded-full ${badgeColor}`}>
-                                                    {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
-                                                </span>
+                                            )}
+                                            <div
+                                                className={`border rounded-lg p-3 mb-6 transition-all duration-300 hover:shadow-lg animate-fade-in-up ${borderColor} ${bgColor} ${gradient} ${glow} shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-6`}
+                                                style={{ animationDelay: `${dayIndex * 0.1}s` }}
+                                            >
+                                                {/* Day header */}
+                                                <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
+                                                    {icon}
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className={`font-bold text-base md:text-xl truncate ${textColor}`}>
+                                                            {formatDate(dateStr)}{statusText}
+                                                        </span>
+                                                        <span className={`text-xs md:text-sm px-2 py-1 rounded-full ${badgeColor} w-fit mt-1`}>
+                                                            {dayProjects.length} proyecto{dayProjects.length > 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {/* Resumen diario y botón */}
+                                                <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                                                    <span className="text-xs md:text-sm text-gray-500">
+                                                        <span className="font-semibold text-green-700">{certifiedCount}</span> / {dayProjects.length} certificados
+                                                        {pendingCount > 0 && <span className="ml-2 font-semibold text-orange-600">{pendingCount} pendientes</span>}
+                                                    </span>
+                                                    {/* Botón Certificar Todo (solo si hay pendientes) */}
+                                                    {pendingCount > 0 && (
+                                                        <button
+                                                            className="bg-blue-500 hover:bg-blue-600 text-white text-xs md:text-sm font-semibold px-3 py-1 rounded shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                                            // onClick={() => handleCertifyAll(dateStr)}
+                                                            title="Certificar todos los proyectos de este día"
+                                                            disabled
+                                                        >
+                                                            Certificar Todo
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                             {/* Projects list */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
                                                 {dayProjects.map((project, projectIndex) => (
                                                     <div 
                                                         key={project.idJira}
