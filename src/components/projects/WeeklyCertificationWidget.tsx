@@ -425,7 +425,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                     : project.fechaCertificacion!.toString())}
                                             </span>
                                             {isProjectCertified(project) ? (
-                                                <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                                                <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium animate-pulse-badge">
                                                     ✓
                                                 </span>
                                             ) : (
@@ -560,7 +560,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                                     )}
                                                                     {renderJiraLink(project)}
                                                                     {project.diasRetraso > 0 && (
-                                                                        <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded">
+                                                                        <span className="bg-red-100 text-red-800 text-xs px-1.5 py-0.5 rounded animate-pulse-badge">
                                                                             +{project.diasRetraso}d
                                                                         </span>
                                                                     )}
@@ -580,7 +580,11 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                                                     <span>{project.equipo}</span>
                                                                     <div className="flex items-center space-x-2">
                                                                         <span>{project.analistaProducto}</span>
-                                                                        {!isProjectCertified(project) && (
+                                                                        {isProjectCertified(project) ? (
+                                                                            <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded font-medium animate-pulse-badge">
+                                                                                CERTIFICADO
+                                                                            </span>
+                                                                        ) : (
                                                                             <button
                                                                                 onClick={() => markAsCertified(project)}
                                                                                 className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 text-xs px-2 py-1 rounded font-medium transition-all duration-200"
@@ -603,9 +607,9 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
 
                     {/* Summary footer */}
-                    <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-gray-200 sticky bottom-0 z-30 bg-white/80 backdrop-blur rounded-b-2xl shadow-md px-1 sm:px-4">
-            {/* ...existing code... */}
-                        <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-gray-200 sticky bottom-0 z-30 bg-white/80 backdrop-blur rounded-b-2xl shadow-md px-1 sm:px-4 animate-fade-in-up">
+        {/* ...existing code... */}
+            <div className="flex items-center justify-between text-sm text-gray-600">
                             <Tooltip text={
                                 filterStatus === 'all'
                                     ? `Total de certificaciones esta semana: ${weeklyProjects.length}`
@@ -643,6 +647,21 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
             )}
             {/* Compactación móvil extrema y animaciones CSS para glow */}
             <style jsx>{`
+                @keyframes pulse-badge {
+                    0%, 100% { box-shadow: 0 0 0 0 #34d39944; }
+                    50% { box-shadow: 0 0 8px 2px #34d39988; }
+                }
+                .animate-pulse-badge { animation: pulse-badge 1.5s infinite alternate; }
+                @keyframes fade-in-scale {
+                    0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    100% { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                .animate-fade-in-scale { animation: fade-in-scale 0.5s cubic-bezier(0.4,0,0.2,1) both; }
+                @keyframes fade-in-up {
+                    0% { opacity: 0; transform: translateY(20px); }
+                    100% { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up { animation: fade-in-up 0.6s cubic-bezier(0.4,0,0.2,1) both; }
                 @media (max-width: 480px) {
                     .xs\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
                     .rounded-xl { border-radius: 0.75rem; }
