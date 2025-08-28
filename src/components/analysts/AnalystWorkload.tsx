@@ -237,13 +237,26 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       totalHours: activeHours + completedHours
     };
   }, [allAnalystProjects, selectedPeriod, selectedMonth, selectedYear, currentMonth, currentYear, today]);
-  // Capacidad máxima de horas
+  // Capacidad máxima de horas según período
   const MAX_MONTHLY_HOURS = 180;
-  const MAX_WEEKLY_HOURS = 45; // 180h / 4 semanas
+  const MAX_WEEKLY_HOURS = 44; // 5 días x 8.8 horas promedio
+  const MAX_YEARLY_HOURS = 2228; // Capacidad anual total
+
+  // Función para obtener la capacidad máxima según el período
+  const getMaxHoursForPeriod = (period: 'current' | 'month' | 'week' | 'history') => {
+    switch (period) {
+      case 'week':
+        return MAX_WEEKLY_HOURS;
+      case 'history':
+        return MAX_YEARLY_HOURS;
+      default:
+        return MAX_MONTHLY_HOURS;
+    }
+  };
 
   // Determinar el nivel de carga
-  const getWorkloadLevel = (hours: number, isWeekly: boolean = false) => {
-    const maxHours = isWeekly ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS;
+  const getWorkloadLevel = (hours: number, period: 'current' | 'month' | 'week' | 'history') => {
+    const maxHours = getMaxHoursForPeriod(period);
     const percentageUsed = (hours / maxHours) * 100;
 
     if (percentageUsed < 30) return { level: 'Bajo', color: 'bg-green-100 text-green-800' };
@@ -253,18 +266,18 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   };
 
   // Calcular disponibilidad
-  const calculateAvailability = (hoursAssigned: number, isWeekly: boolean = false) => {
-    const maxHours = isWeekly ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS;
+  const calculateAvailability = (hoursAssigned: number, period: 'current' | 'month' | 'week' | 'history') => {
+    const maxHours = getMaxHoursForPeriod(period);
     const usedCapacity = Math.min(hoursAssigned / maxHours, 1);
     const availabilityPercentage = Math.max(0, Math.round((1 - usedCapacity) * 100));
     return availabilityPercentage;
   };
 
   // Determinar el nivel de carga basado en TODAS las horas asignadas
-  const workload = getWorkloadLevel(workloadData.totalAssignedHours, selectedPeriod === 'week');
+  const workload = getWorkloadLevel(workloadData.totalAssignedHours, selectedPeriod);
 
   // Calcular disponibilidad basada en TODAS las horas asignadas
-  const availabilityPercentage = calculateAvailability(workloadData.totalAssignedHours, selectedPeriod === 'week');
+  const availabilityPercentage = calculateAvailability(workloadData.totalAssignedHours, selectedPeriod);
 
   // Función para cambiar período
   const changePeriod = (direction: 'prev' | 'next') => {
@@ -441,7 +454,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
         <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
-          <p className="text-xs font-medium font-mono">{workloadData.totalAssignedHours}h / {selectedPeriod === 'week' ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS}h</p>
+          <p className="text-xs font-medium font-mono">{workloadData.totalAssignedHours}h / {getMaxHoursForPeriod(selectedPeriod)}h</p>
         </div>
         <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center w-32">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
