@@ -480,13 +480,13 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           <h3 className="text-sm font-medium">
             Proyectos Asignados 
             <span className="text-gray-500 ml-2 text-xs">
-              {showAllProjects ? 'Todos los proyectos' : 'Actuales y próximos'}
+              {showAllProjects ? 'Todos los proyectos' : getPeriodName()}
             </span>
           </h3>
           
           {/* Controles de filtro */}
           <div className="flex items-center gap-2">
-            {workloadData.activeProjects.length === 0 && allAnalystProjects.length > 0 && (
+            {allAnalystProjects.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -502,7 +502,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
         
         {/* Determinar qué proyectos mostrar */}
         {(() => {
-          const projectsToShow = showAllProjects ? allAnalystProjects : workloadData.activeProjects;
+          const projectsToShow = showAllProjects ? allAnalystProjects : workloadData.filteredProjects;
           
           if (projectsToShow.length > 0) {
             return (
