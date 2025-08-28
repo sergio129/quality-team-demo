@@ -72,23 +72,7 @@ export default function TestCasesPage() {
     };
   }, []);
 
-  // Verificar autenticación antes de mostrar contenido
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si no hay sesión, no mostrar nada (se redirigirá)
-  if (!session) {
-    return null;
-  }
-
+  // Hooks que necesitan ejecutarse siempre, antes de cualquier return condicional
   const filteredProjects = useMemo(() => {
     const searchTermLower = projectSearchTerm.toLowerCase();
     return projects.filter((project) => {
@@ -102,17 +86,17 @@ export default function TestCasesPage() {
   const getActiveProjects = useCallback(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     return projects.filter(project => {
       const entregaDate = project.fechaEntrega ? new Date(project.fechaEntrega) : null;
       const isActive = entregaDate ? entregaDate >= today : false;
-      
+
       const searchLower = projectSearchInDialog.toLowerCase().trim();
       const matchesSearch = searchLower === '' ||
         project.proyecto?.toLowerCase().includes(searchLower) ||
         project.idJira?.toLowerCase().includes(searchLower) ||
         project.equipo?.toLowerCase().includes(searchLower);
-      
+
       return isActive && matchesSearch;
     }).sort((a, b) => {
       const dateA = a.fechaEntrega ? new Date(a.fechaEntrega) : new Date(9999, 11, 31);
@@ -136,7 +120,7 @@ export default function TestCasesPage() {
       }
     }
   }, [projects]);
-  
+
   const handleTestPlanInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewTestPlan(prev => ({
@@ -146,6 +130,23 @@ export default function TestCasesPage() {
         : value
     }));
   }, []);
+
+  // Verificar autenticación antes de mostrar contenido
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no hay sesión, no mostrar nada (se redirigirá)
+  if (!session) {
+    return null;
+  }
   
   const handleCreateTestPlan = async () => {
     try {

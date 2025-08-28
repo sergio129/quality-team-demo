@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileDown, FileUp, FileText, Sparkles, Edit2, Check, Plus, Trash2 } from 'lucide-react';
+import { FileDown, FileUp, FileText, Sparkles, Edit2, Check, Plus, Trash2, Target, BarChart3 } from 'lucide-react';
 import { createTestCase } from '@/hooks/useTestCases';
 import { TestCase as BaseTestCase, TestStep } from '@/models/TestCase';
 import { ExtendedTestCase, PartialExtendedTestCase } from './types';
@@ -17,6 +17,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { useProjects } from '@/hooks/useProjects';
 import { useTestPlans } from '@/hooks/useTestCases';
 import { AITestCaseGeneratorService, ExcelRequirementData } from '@/services/aiTestCaseGeneratorService';
+import { AITestCaseGenerator, CoverageReport } from '@/types/aiTestCaseGenerator';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -41,11 +44,23 @@ const ExcelTestCaseImportExport = ({
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(initialMode === 'export');
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);  const [isLoading, setIsLoading] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [generatedTestCases, setGeneratedTestCases] = useState<PartialExtendedTestCase[]>([]);
   const [editingTestCaseIndex, setEditingTestCaseIndex] = useState<number | null>(null);
   const [editingTestCase, setEditingTestCase] = useState<PartialExtendedTestCase | null>(null);
+
+  // Nuevos estados para las funcionalidades adicionales
+  const [userStoryInput, setUserStoryInput] = useState('');
+  const [requirementsInput, setRequirementsInput] = useState('');
+  const [suggestedScenarios, setSuggestedScenarios] = useState<string[]>([]);
+  const [coverageReport, setCoverageReport] = useState<CoverageReport | null>(null);
+  const [isUserStoryDialogOpen, setIsUserStoryDialogOpen] = useState(false);
+  const [isRequirementsDialogOpen, setIsRequirementsDialogOpen] = useState(false);
+  const [isScenariosDialogOpen, setIsScenariosDialogOpen] = useState(false);
+  const [isCoverageDialogOpen, setIsCoverageDialogOpen] = useState(false);
+  const [testPlanSearchTerm, setTestPlanSearchTerm] = useState('');
   const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
     selectedProjectId && selectedProjectId !== 'select_project' ? selectedProjectId : undefined
   );
@@ -54,6 +69,17 @@ const ExcelTestCaseImportExport = ({
   const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [useAI, setUseAI] = useState<boolean>(initialMode === 'ai');
   
+  // Obtener la sesión del usuario para debugging
+  const { data: session } = useSWR('/api/auth/session', fetcher);
+  
+  // Depuración para ver qué está pasando con los proyectos
+  useEffect(() => {
+    console.log('Proyectos disponibles:', projects);
+    console.log('Número de proyectos:', projects?.length || 0);
+    console.log('¿Hay sesión?:', !!session);
+    console.log('Sesión completa:', session);
+  }, [projects, session]);
+
   // Depuración para ver qué está pasando con los planes de prueba
   useEffect(() => {
     console.log('selectedProjectId:', selectedProjectId);
@@ -62,13 +88,40 @@ const ExcelTestCaseImportExport = ({
     console.log('isErrorPlans:', isErrorPlans);
   }, [selectedProjectId, testPlans, isLoadingPlans, isErrorPlans]);
   
-  // Efecto para abrir automáticamente el diálogo de importación cuando se inicia en modo AI
+  // Efecto para sincronizar proyecto cuando cambia el plan de pruebas
+  useEffect(() => {
+    if (testPlanId && testPlans.length > 0) {
+      const selectedPlan = testPlans.find(plan => plan.id === testPlanId);
+      if (selectedPlan && selectedPlan.projectId && selectedPlan.projectId !== selectedProjectId) {
+        setSelectedProjectId(selectedPlan.projectId);
+      }
+    }
+  }, [testPlanId, testPlans, selectedProjectId]);
+
+  // Efecto para manejar la inicialización en modo AI
   useEffect(() => {
     if (initialMode === 'ai') {
       setUseAI(true);
-      setIsImportDialogOpen(true);
+      // No abrir automáticamente el modal de importación cuando estamos en modo AI
+      // porque ya estamos dentro de un modal del componente padre
+
+      // Inicializar con los valores de las props si están disponibles
+      if (projectId && !selectedProjectId) {
+        setSelectedProjectId(projectId);
+      }
+      if (testPlanId && !selectedTestPlanId) {
+        setSelectedTestPlanId(testPlanId);
+      }
     }
-  }, [initialMode]);
+  }, [initialMode, projectId, testPlanId, selectedProjectId, selectedTestPlanId]);
+
+  // Efecto para sincronizar plan de pruebas cuando cambia el proyecto
+  useEffect(() => {
+    if (selectedProjectId && !selectedTestPlanId && testPlans.length > 0) {
+      // Si hay planes de prueba para el proyecto, seleccionar el primero por defecto
+      setSelectedTestPlanId(testPlans[0].id);
+    }
+  }, [selectedProjectId, testPlans, selectedTestPlanId]);
   
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -658,7 +711,7 @@ const ExcelTestCaseImportExport = ({
       return;
     }
     
-    if (!selectedTestPlanId || selectedTestPlanId === 'select_test_plan') {
+    if (!selectedTestPlanId || selectedTestPlanId === 'select_plan') {
       toast.warning('No has seleccionado un plan de prueba. Se recomienda asociar los casos a un plan.');
     }
     
@@ -898,18 +951,288 @@ const ExcelTestCaseImportExport = ({
   // Mapear estado desde el Excel a los valores del modelo
   const mapStatus = (status: string = ''): BaseTestCase['status'] => {
     const lowerStatus = status.toLowerCase();
-    
+
     if (lowerStatus.includes('exit')) return 'Exitoso';
     if (lowerStatus.includes('fall')) return 'Fallido';
     if (lowerStatus.includes('bloq')) return 'Bloqueado';
     if (lowerStatus.includes('progres')) return 'En progreso';
-    
+
     return 'No ejecutado'; // Valor por defecto
   }
 
+  // ============ NUEVAS FUNCIONES PARA LA INTERFAZ AITestCaseGenerator ============
+
+  /**
+   * Generar casos de prueba desde una historia de usuario específica
+   */
+  const handleGenerateFromUserStory = async (userStory: string) => {
+    if (!userStory.trim()) {
+      toast.error('Por favor ingresa una historia de usuario');
+      return;
+    }
+
+    if (!selectedProjectId) {
+      toast.error('Selecciona un proyecto primero');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const service = new AITestCaseGeneratorService();
+      const testCases = await service.generateFromUserStory(userStory, {
+        projectId: selectedProjectId,
+        testPlanId: selectedTestPlanId,
+        cycleNumber: cycle,
+        contextualInfo: `Proyecto: ${projects.find(p => p.id === selectedProjectId)?.proyecto || 'Proyecto sin nombre'}`
+      });
+
+      setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
+      toast.success(`Generados ${testCases.length} casos de prueba desde la historia de usuario`);
+    } catch (error) {
+      console.error('Error generando casos desde historia de usuario:', error);
+      toast.error('Error generando casos de prueba');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  /**
+   * Generar casos de prueba desde múltiples requisitos
+   */
+  const handleGenerateFromRequirements = async (requirements: string[]) => {
+    if (!requirements.length || requirements.every(req => !req.trim())) {
+      toast.error('Por favor ingresa al menos un requisito');
+      return;
+    }
+
+    if (!selectedProjectId) {
+      toast.error('Selecciona un proyecto primero');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const service = new AITestCaseGeneratorService();
+      const testCases = await service.generateFromRequirements(requirements, {
+        projectId: selectedProjectId,
+        testPlanId: selectedTestPlanId,
+        cycleNumber: cycle,
+        contextualInfo: `Proyecto: ${projects.find(p => p.id === selectedProjectId)?.proyecto || 'Proyecto sin nombre'}`
+      });
+
+      setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
+      toast.success(`Generados ${testCases.length} casos de prueba desde los requisitos`);
+    } catch (error) {
+      console.error('Error generando casos desde requisitos:', error);
+      toast.error('Error generando casos de prueba');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  /**
+   * Sugerir escenarios de prueba para el proyecto
+   */
+  const handleSuggestScenarios = async () => {
+    if (!selectedProjectId) {
+      toast.error('Selecciona un proyecto primero');
+      return;
+    }
+
+    const project = projects.find(p => p.id === selectedProjectId);
+    if (!project) {
+      toast.error('Proyecto no encontrado');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const service = new AITestCaseGeneratorService();
+      const scenarios = await service.suggestTestScenarios(project as any, {
+        contextualInfo: `Proyecto con ${testCases.length} casos de prueba existentes`
+      });
+
+      setSuggestedScenarios(scenarios);
+      setIsScenariosDialogOpen(true);
+      toast.success(`Generadas ${scenarios.length} sugerencias de escenarios`);
+
+    } catch (error) {
+      console.error('Error generando sugerencias de escenarios:', error);
+      toast.error('Error generando sugerencias de escenarios');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  /**
+   * Analizar cobertura de pruebas del proyecto
+   */
+  const handleAnalyzeCoverage = async () => {
+    if (!selectedProjectId) {
+      toast.error('Selecciona un proyecto primero');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const service = new AITestCaseGeneratorService();
+      const report = await service.analyzeTestCoverage(selectedProjectId, testCases as BaseTestCase[]);
+
+      setCoverageReport(report);
+      setIsCoverageDialogOpen(true);
+      toast.success('Análisis de cobertura completado');
+
+    } catch (error) {
+      console.error('Error analizando cobertura:', error);
+      toast.error('Error analizando cobertura de pruebas');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const renderContent = (): JSX.Element => {
+    console.log('renderContent called with initialMode:', initialMode);
+    console.log('projects length:', projects?.length || 0);
+
     return (
       <div>
+        {/* Mostrar botones de IA cuando esté en modo AI */}
+        {initialMode === 'ai' && (
+          <div className="space-y-4">
+            {/* Selector de proyecto y plan de pruebas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                <Label htmlFor="aiProject">Proyecto</Label>
+                <Select
+                  value={selectedProjectId}
+                  onValueChange={(value) => {
+                    setSelectedProjectId(value);
+                    setSelectedTestPlanId(''); // Limpiar plan seleccionado
+                  }}
+                >
+                  <SelectTrigger id="aiProject">
+                    <SelectValue placeholder="Seleccionar proyecto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select_project">Seleccionar proyecto</SelectItem>
+                    {projects && projects.length > 0 ? (
+                      projects.map((project) => (
+                        <SelectItem key={project.id || project.idJira || 'unknown'} value={project.idJira || project.id || 'unknown'}>
+                          {project.proyecto} {project.idJira && `(${project.idJira})`}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no_projects" disabled>
+                        No hay proyectos disponibles
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="aiTestPlan">Plan de Prueba</Label>
+                <div className="relative">
+                  <Input
+                    id="testPlanSearch"
+                    placeholder="Buscar plan de prueba..."
+                    value={testPlanSearchTerm}
+                    onChange={(e) => setTestPlanSearchTerm(e.target.value)}
+                    className="pr-8"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <Select
+                  value={selectedTestPlanId}
+                  onValueChange={setSelectedTestPlanId}
+                  disabled={!selectedProjectId || isLoadingPlans}
+                >
+                  <SelectTrigger id="aiTestPlan">
+                    <SelectValue placeholder={isLoadingPlans ? "Cargando..." : "Seleccionar plan"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select_plan">Seleccionar plan de prueba</SelectItem>
+                    {testPlans && testPlans.length > 0 ? (
+                      testPlans
+                        .filter((plan) =>
+                          !testPlanSearchTerm ||
+                          plan.codeReference?.toLowerCase().includes(testPlanSearchTerm.toLowerCase()) ||
+                          plan.id?.toLowerCase().includes(testPlanSearchTerm.toLowerCase())
+                        )
+                        .map((plan) => (
+                          <SelectItem key={plan.id} value={plan.id}>
+                            {plan.codeReference || `Plan ${plan.id.substring(0, 8)}`}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <SelectItem value="no_plans" disabled>
+                        {isLoadingPlans ? "Cargando planes..." : "No hay planes disponibles"}
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Botones de funcionalidades de IA */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsUserStoryDialogOpen(true)}
+                className="flex items-center gap-2"
+                disabled={!selectedProjectId}
+              >
+                <FileText size={16} /> Desde Historia Usuario
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setIsRequirementsDialogOpen(true)}
+                className="flex items-center gap-2"
+                disabled={!selectedProjectId}
+              >
+                <Target size={16} /> Desde Requisitos
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleSuggestScenarios}
+                className="flex items-center gap-2"
+                disabled={!selectedProjectId || isGeneratingAI}
+              >
+                <BarChart3 size={16} />
+                {isGeneratingAI ? 'Generando...' : 'Sugerir Escenarios'}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={handleAnalyzeCoverage}
+                className="flex items-center gap-2"
+                disabled={!selectedProjectId || isGeneratingAI}
+              >
+                <BarChart3 size={16} />
+                {isGeneratingAI ? 'Analizando...' : 'Analizar Cobertura'}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUseAI(true);
+                  setIsImportDialogOpen(true);
+                }}
+                className="flex items-center gap-2"
+                disabled={!selectedProjectId}
+              >
+                <FileUp size={16} /> Desde Excel
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Solo mostrar los botones si no se especificó un modo inicial */}
         {!initialMode && (
           <div className="flex gap-2">
@@ -939,6 +1262,45 @@ const ExcelTestCaseImportExport = ({
               className="flex items-center gap-2"
             >
               <Sparkles size={16} /> Generar casos con IA
+            </Button>
+
+            {/* Nuevos botones para funcionalidades específicas */}
+            <Button
+              variant="outline"
+              onClick={() => setIsUserStoryDialogOpen(true)}
+              className="flex items-center gap-2"
+              disabled={!selectedProjectId}
+            >
+              <FileText size={16} /> Desde Historia Usuario
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setIsRequirementsDialogOpen(true)}
+              className="flex items-center gap-2"
+              disabled={!selectedProjectId}
+            >
+              <Target size={16} /> Desde Requisitos
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleSuggestScenarios}
+              className="flex items-center gap-2"
+              disabled={!selectedProjectId || isGeneratingAI}
+            >
+              <BarChart3 size={16} />
+              {isGeneratingAI ? 'Generando...' : 'Sugerir Escenarios'}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleAnalyzeCoverage}
+              className="flex items-center gap-2"
+              disabled={!selectedProjectId || isGeneratingAI}
+            >
+              <BarChart3 size={16} />
+              {isGeneratingAI ? 'Analizando...' : 'Analizar Cobertura'}
             </Button>
           </div>
         )}
@@ -987,7 +1349,7 @@ const ExcelTestCaseImportExport = ({
                       <SelectValue placeholder={isLoadingPlans ? "Cargando planes..." : "Seleccionar plan de prueba"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="select_test_plan">Seleccionar plan de prueba</SelectItem>
+                      <SelectItem value="select_plan">Seleccionar plan de prueba</SelectItem>
                       {testPlans && testPlans.length > 0 ? (
                         testPlans.map((plan) => (
                           <SelectItem key={plan.id} value={plan.id}>
@@ -1587,6 +1949,217 @@ const ExcelTestCaseImportExport = ({
                   }}
                 >
                   Guardar Cambios
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Nuevo diálogo: Generar desde Historia de Usuario */}
+        {isUserStoryDialogOpen && (
+          <Dialog open={isUserStoryDialogOpen} onOpenChange={setIsUserStoryDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Generar Casos desde Historia de Usuario
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="userStory">Historia de Usuario</Label>
+                  <Textarea
+                    id="userStory"
+                    value={userStoryInput}
+                    onChange={(e) => setUserStoryInput(e.target.value)}
+                    placeholder="Como [usuario], quiero [funcionalidad] para [beneficio]..."
+                    rows={4}
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p><strong>Ejemplo:</strong> Como administrador del sistema, quiero poder gestionar usuarios para controlar quién tiene acceso al sistema.</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsUserStoryDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleGenerateFromUserStory(userStoryInput);
+                    setIsUserStoryDialogOpen(false);
+                  }}
+                  disabled={isGeneratingAI || !userStoryInput.trim()}
+                >
+                  {isGeneratingAI ? 'Generando...' : 'Generar Casos'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Nuevo diálogo: Generar desde Requisitos */}
+        {isRequirementsDialogOpen && (
+          <Dialog open={isRequirementsDialogOpen} onOpenChange={setIsRequirementsDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Generar Casos desde Requisitos
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="requirements">Requisitos (uno por línea)</Label>
+                  <Textarea
+                    id="requirements"
+                    value={requirementsInput}
+                    onChange={(e) => setRequirementsInput(e.target.value)}
+                    placeholder="El sistema debe permitir login
+El sistema debe validar contraseñas
+El sistema debe mostrar dashboard..."
+                    rows={6}
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p><strong>Consejo:</strong> Escribe cada requisito en una línea separada para mejores resultados.</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsRequirementsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => {
+                    const requirements = requirementsInput
+                      .split('\n')
+                      .map(req => req.trim())
+                      .filter(req => req.length > 0);
+                    handleGenerateFromRequirements(requirements);
+                    setIsRequirementsDialogOpen(false);
+                  }}
+                  disabled={isGeneratingAI || !requirementsInput.trim()}
+                >
+                  {isGeneratingAI ? 'Generando...' : 'Generar Casos'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Nuevo diálogo: Escenarios Sugeridos */}
+        {isScenariosDialogOpen && (
+          <Dialog open={isScenariosDialogOpen} onOpenChange={setIsScenariosDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Escenarios de Prueba Sugeridos
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {suggestedScenarios.length > 0 ? (
+                  <div className="space-y-2">
+                    {suggestedScenarios.map((scenario, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded border-l-4 border-blue-500">
+                        <div className="font-medium text-sm">Escenario {index + 1}</div>
+                        <div className="text-sm mt-1">{scenario}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay escenarios sugeridos aún. Haz clic en "Sugerir Escenarios" para generarlos.
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsScenariosDialogOpen(false)}>
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleSuggestScenarios();
+                  }}
+                  disabled={isGeneratingAI}
+                >
+                  {isGeneratingAI ? 'Generando...' : 'Regenerar Escenarios'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Nuevo diálogo: Reporte de Cobertura */}
+        {isCoverageDialogOpen && (
+          <Dialog open={isCoverageDialogOpen} onOpenChange={setIsCoverageDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Análisis de Cobertura de Pruebas
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {coverageReport ? (
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">
+                        {coverageReport.coveragePercentage}%
+                      </div>
+                      <div className="text-sm text-gray-600">Cobertura Actual</div>
+                    </div>
+
+                    {coverageReport.missingScenarios.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-red-600 mb-2">Escenarios Faltantes:</h4>
+                        <ul className="space-y-1">
+                          {coverageReport.missingScenarios.map((scenario, index) => (
+                            <li key={index} className="text-sm">• {scenario}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {coverageReport.riskAreas.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-orange-600 mb-2">Áreas de Riesgo:</h4>
+                        <ul className="space-y-1">
+                          {coverageReport.riskAreas.map((risk, index) => (
+                            <li key={index} className="text-sm">• {risk}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {coverageReport.recommendations.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-green-600 mb-2">Recomendaciones:</h4>
+                        <ul className="space-y-1">
+                          {coverageReport.recommendations.map((rec, index) => (
+                            <li key={index} className="text-sm">• {rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No hay reporte de cobertura aún. Haz clic en "Analizar Cobertura" para generarlo.
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCoverageDialogOpen(false)}>
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleAnalyzeCoverage();
+                  }}
+                  disabled={isGeneratingAI}
+                >
+                  {isGeneratingAI ? 'Analizando...' : 'Regenerar Análisis'}
                 </Button>
               </DialogFooter>
             </DialogContent>

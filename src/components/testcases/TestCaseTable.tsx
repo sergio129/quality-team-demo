@@ -228,7 +228,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
   const casesWithoutResponsible = testCases.filter(tc => !tc.responsiblePerson || tc.responsiblePerson === '-').length;
 
   return (
-    <div className="space-y-4">      <div className="flex justify-between items-center">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div className="flex items-start gap-4">
           <div>
             <h2 className="text-2xl font-bold">Casos de Prueba</h2>
@@ -261,7 +262,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </Button>
           ) : testPlans?.length > 0 ? (
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={() => {
                   setEditingTestCase(null);
                   setIsFormOpen(true);
@@ -269,8 +270,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               >
                 Nuevo Caso de Prueba
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => setIsAIDialogOpen(true)}
                 className="flex items-center gap-2"
@@ -279,7 +280,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               </Button>
             </div>
           ) : (
-            <Button 
+            <Button
               variant="outline"
               disabled
               title="Debe crear un plan de pruebas primero"
@@ -288,7 +289,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </Button>
           )}
         </div>
-      </div>      {/* Filtros */}      
+      </div>      {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="relative z-30">
           <SelectTestPlan
@@ -297,7 +298,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             onSelectPlan={(planId) => setFilters(prev => ({ ...prev, testPlanId: planId }))}
           />
         </div>
-        
+
         <div className="space-y-2">
           <label htmlFor="search-input" className="text-sm font-medium">Búsqueda</label>
           <Input
@@ -307,13 +308,14 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
           />
         </div>
-          <div className="space-y-2">
+        <div className="space-y-2">
           <label htmlFor="status-select" className="text-sm font-medium">Estado</label>
           <Select value={filters.status} onValueChange={value => setFilters(prev => ({ ...prev, status: value }))}>
             <SelectTrigger id="status-select">
               <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
-            <SelectContent>              <SelectItem value="all_status">Todos los estados</SelectItem>
+            <SelectContent>
+              <SelectItem value="all_status">Todos los estados</SelectItem>
               <SelectItem value="No ejecutado">No ejecutado</SelectItem>
               <SelectItem value="Exitoso">Exitoso</SelectItem>
               <SelectItem value="Fallido">Fallido</SelectItem>
@@ -321,12 +323,15 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               <SelectItem value="En progreso">En progreso</SelectItem>
             </SelectContent>
           </Select>
-        </div><div className="space-y-2">          <label htmlFor="type-select" className="text-sm font-medium">Tipo de prueba</label>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="type-select" className="text-sm font-medium">Tipo de prueba</label>
           <Select value={filters.testType} onValueChange={value => setFilters(prev => ({ ...prev, testType: value }))}>
             <SelectTrigger id="type-select">
               <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
-            <SelectContent>              <SelectItem value="all_types">Todos los tipos</SelectItem>
+            <SelectContent>
+              <SelectItem value="all_types">Todos los tipos</SelectItem>
               <SelectItem value="Funcional">Funcional</SelectItem>
               <SelectItem value="No Funcional">No Funcional</SelectItem>
               <SelectItem value="Regresión">Regresión</SelectItem>
@@ -337,7 +342,7 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
           {selectedTestCaseIds.length > 0 && (
             <Button
@@ -346,7 +351,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               Asignar {selectedTestCaseIds.length} caso(s)
             </Button>
           )}
-        </div>      </div>
+        </div>
+      </div>
       
       {/* Selector de HU */}
       <div className="mt-4 pt-4 border-t border-blue-100">
@@ -359,20 +365,22 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
               {uniqueUserStories.length} {uniqueUserStories.length === 1 ? 'historia' : 'historias'} disponibles
             </span>
           )}
-        </div>        <Select
+        </div>
+        <Select
           value={filters.userStory}
           onValueChange={(value) => setFilters(prev => ({ ...prev, userStory: value }))}
           disabled={!filters.testPlanId || uniqueUserStories.length === 0}
         >
           <SelectTrigger className={!filters.testPlanId ? "bg-gray-50 text-gray-400" : "border-blue-200 focus:border-blue-400"}>
             <SelectValue placeholder={
-              !filters.testPlanId 
-              ? "Seleccione un plan primero" 
-              : uniqueUserStories.length === 0 
-                ? "No hay historias en este plan" 
+              !filters.testPlanId
+              ? "Seleccione un plan primero"
+              : uniqueUserStories.length === 0
+                ? "No hay historias en este plan"
                 : "Seleccionar historia"
             } />
-          </SelectTrigger>          <SelectContent>
+          </SelectTrigger>
+          <SelectContent>
             {!filters.testPlanId ? (
               <SelectItem value="no_plan">Seleccione un plan primero</SelectItem>
             ) : uniqueUserStories.length === 0 ? (
@@ -411,23 +419,23 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           >
             Deseleccionar todo
           </Button>
-          
+
           {selectedTestCaseIds.length > 0 && (
             <span className="text-sm text-gray-500">
               {selectedTestCaseIds.length} caso(s) seleccionado(s)
             </span>
           )}
         </div>
-          <div className="flex gap-2">
-          <Button 
+        <div className="flex gap-2">
+          <Button
             variant="outline"
             onClick={() => setIsBulkAssignDialogOpen(true)}
           >
             Asignación masiva
           </Button>
-          
+
           {selectedTestCaseIds.length > 0 && (
-            <Button 
+            <Button
               variant="destructive"
               onClick={handleBulkDelete}
             >
@@ -525,7 +533,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>{testCase.testType}</TableCell>                  <TableCell onClick={e => e.stopPropagation()}>
+                  <TableCell>{testCase.testType}</TableCell>
+                  <TableCell onClick={e => e.stopPropagation()}>
                     <TestCaseStatusChanger testCase={testCase} />
                   </TableCell>
                   <TableCell>{testCase.cycle}</TableCell>
@@ -537,7 +546,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                       <span className="text-amber-600 font-medium">Sin asignar</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right space-x-2" onClick={e => e.stopPropagation()}>                    <Button variant="outline" size="sm" onClick={() => handleEdit(testCase)}>
+                  <TableCell className="text-right space-x-2" onClick={e => e.stopPropagation()}>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(testCase)}>
                       Editar
                     </Button>
                     <Button variant="outline" size="sm" onClick={(e) => {
@@ -575,7 +585,10 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
           }}
           testCase={selectedTestCase}
         />
-      )}      {/* Diálogo de asignación masiva */}      {isBulkAssignDialogOpen && (
+      )}
+
+      {/* Diálogo de asignación masiva */}
+      {isBulkAssignDialogOpen && (
         <BulkAssignmentDialog
           isOpen={isBulkAssignDialogOpen}
           onClose={() => setIsBulkAssignDialogOpen(false)}
