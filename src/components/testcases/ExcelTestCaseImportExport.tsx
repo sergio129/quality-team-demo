@@ -62,7 +62,7 @@ const ExcelTestCaseImportExport = ({
   const [isCoverageDialogOpen, setIsCoverageDialogOpen] = useState(false);
   const [testPlanSearchTerm, setTestPlanSearchTerm] = useState('');
   const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
-    selectedProjectId && selectedProjectId !== 'select_project' ? selectedProjectId : undefined
+    selectedProjectId && selectedProjectId !== '' && selectedProjectId !== 'select_project' ? selectedProjectId : null
   );
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');
   const [cycle, setCycle] = useState<number>(1);  const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -88,11 +88,20 @@ const ExcelTestCaseImportExport = ({
     console.log('isErrorPlans:', isErrorPlans);
   }, [selectedProjectId, testPlans, isLoadingPlans, isErrorPlans]);
   
+  // Efecto para inicializar proyecto automáticamente si no hay uno seleccionado
+  useEffect(() => {
+    if (!selectedProjectId && projects && projects.length > 0 && !projectId) {
+      console.log('Inicializando proyecto automáticamente:', projects[0]);
+      setSelectedProjectId(projects[0].idJira || projects[0].id || 'unknown');
+    }
+  }, [projects, selectedProjectId, projectId]);
+
   // Efecto para sincronizar proyecto cuando cambia el plan de pruebas
   useEffect(() => {
-    if (testPlanId && testPlans.length > 0) {
+    if (testPlanId && testPlans && testPlans.length > 0) {
       const selectedPlan = testPlans.find(plan => plan.id === testPlanId);
       if (selectedPlan && selectedPlan.projectId && selectedPlan.projectId !== selectedProjectId) {
+        console.log('Sincronizando proyecto desde plan:', selectedPlan.projectId);
         setSelectedProjectId(selectedPlan.projectId);
       }
     }
@@ -1156,23 +1165,33 @@ const ExcelTestCaseImportExport = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="select_plan">Seleccionar plan de prueba</SelectItem>
-                    {testPlans && testPlans.length > 0 ? (
-                      testPlans
-                        .filter((plan) =>
-                          !testPlanSearchTerm ||
-                          plan.codeReference?.toLowerCase().includes(testPlanSearchTerm.toLowerCase()) ||
-                          plan.id?.toLowerCase().includes(testPlanSearchTerm.toLowerCase())
-                        )
-                        .map((plan) => (
+                    {(() => {
+                      const filteredPlans = testPlans && testPlans.length > 0 ? 
+                        testPlans.filter((plan) => {
+                          // Solo filtrar por término de búsqueda (el filtrado por proyecto ya se hace en el hook)
+                          const searchMatch = !testPlanSearchTerm ||
+                            plan.codeReference?.toLowerCase().includes(testPlanSearchTerm.toLowerCase()) ||
+                            plan.id?.toLowerCase().includes(testPlanSearchTerm.toLowerCase());
+                          
+                          return searchMatch;
+                        }) : [];
+                      
+                      console.log('Planes totales para proyecto:', testPlans?.length || 0);
+                      console.log('Planes filtrados por búsqueda:', filteredPlans.length);
+                      console.log('Proyecto seleccionado:', selectedProjectId);
+                      
+                      return filteredPlans.length > 0 ? (
+                        filteredPlans.map((plan) => (
                           <SelectItem key={plan.id} value={plan.id}>
                             {plan.codeReference || `Plan ${plan.id.substring(0, 8)}`}
                           </SelectItem>
                         ))
-                    ) : (
-                      <SelectItem value="no_plans" disabled>
-                        {isLoadingPlans ? "Cargando planes..." : "No hay planes disponibles"}
-                      </SelectItem>
-                    )}
+                      ) : (
+                        <SelectItem value="no_plans" disabled>
+                          {isLoadingPlans ? "Cargando planes..." : `No hay planes disponibles para el proyecto seleccionado`}
+                        </SelectItem>
+                      );
+                    })()}
                   </SelectContent>
                 </Select>
               </div>

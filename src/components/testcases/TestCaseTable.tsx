@@ -22,7 +22,7 @@ import TestCaseStatusChanger from './TestCaseStatusChanger';
 import BulkAssignmentDialog from './BulkAssignmentDialog';
 import ExcelTestCaseImportExport from './ExcelTestCaseImportExport';
 import { useTestCases, useTestPlans, deleteTestCase } from '@/hooks/useTestCases';
-import { useProjects } from '@/hooks/useProjects';
+import { useAllProjects } from '@/hooks/useProjects';
 import { TestCase } from '@/models/TestCase';
 import SelectTestPlan from './SelectTestPlan';
 import { Sparkles } from 'lucide-react';
@@ -36,7 +36,7 @@ interface TestCaseTableProps {
 export default function TestCaseTable({ projectId, testPlanId }: TestCaseTableProps) {
   const { testCases, isLoading, isError, refreshData } = useTestCases(projectId);
   const { testPlans, isLoading: isLoadingPlans } = useTestPlans(projectId);
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const [filters, setFilters] = useState({
     search: '',
     status: '',

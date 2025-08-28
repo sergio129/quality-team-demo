@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { TestPlan } from '@/models/TestCase';
-import { useProjects } from '@/hooks/useProjects';
+import { useAllProjects } from '@/hooks/useProjects';
 
 interface SelectTestPlanProps {
   testPlans: TestPlan[];
@@ -16,7 +16,7 @@ export default function SelectTestPlan({ testPlans, onSelectPlan, selectedPlanId
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Agrupar planes por proyecto

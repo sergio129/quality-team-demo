@@ -7,7 +7,7 @@ import TestCaseDefectTracker from '@/components/testcases/TestCaseDefectTracker'
 import TestCasePlanManager from '@/components/testcases/TestCasePlanManager';
 import TestCaseExport from '@/components/testcases/TestCaseExport';
 import SelectTestPlan from '@/components/testcases/SelectTestPlan';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { useTestCases, useTestPlans, createTestPlan } from '@/hooks/useTestCases';
 import { Select } from '@/components/ui/select';
 import { TestPlan } from '@/models/TestCase';
@@ -33,7 +33,7 @@ export default function TestCasesPage() {
     }
   }, [status, router]);
 
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedTestPlanId, setSelectedTestPlanId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('plans');

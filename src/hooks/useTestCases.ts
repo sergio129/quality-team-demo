@@ -60,8 +60,8 @@ export function useTestCase(id: string) {
 /**
  * Hook para obtener planes de prueba
  */
-export function useTestPlans(projectId?: string) {
-  const endpoint = projectId ? `${TEST_PLANS_API}?projectId=${projectId}` : TEST_PLANS_API;
+export function useTestPlans(projectId?: string | null) {
+  const endpoint = projectId ? `${TEST_PLANS_API}?projectId=${projectId}` : null;
   const { data, error, isLoading } = useSWR<TestPlan[]>(endpoint, fetcher);
 
   return {
