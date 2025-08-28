@@ -694,8 +694,10 @@ const ExcelTestCaseImportExport = ({
         
         if (aiResult.success && aiResult.data.length > 0) {
           setGeneratedTestCases(aiResult.data);
-          toast.success(`Se generaron ${aiResult.data.length} casos de prueba con IA.`);
-          setIsAIDialogOpen(true);
+
+          // Guardar automáticamente los casos generados
+          toast.success(`Se generaron ${aiResult.data.length} casos de prueba con IA. Guardando automáticamente...`);
+          await handleSaveGeneratedCases(true);
         } else {
           toast.error(aiResult.error || 'Error al generar casos de prueba con IA.');
         }
@@ -748,7 +750,7 @@ const ExcelTestCaseImportExport = ({
     setIsPreviewDialogOpen(true);
   };
 
-  const handleSaveGeneratedCases = async () => {
+  const handleSaveGeneratedCases = async (autoSave: boolean = false) => {
     if (generatedTestCases.length === 0) {
       toast.error('No hay casos de prueba generados para guardar.');
       return;
@@ -779,33 +781,35 @@ const ExcelTestCaseImportExport = ({
         updatedAt: new Date().toISOString()
       }));
       
-      // Abrir vista previa si hay muchos casos antes de guardar
-      if (casesToSave.length > 5 && !isPreviewDialogOpen) {
+      // Si es guardado automático o pocos casos, guardar directamente
+      // Si es guardado manual y hay muchos casos, mostrar vista previa
+      if (autoSave || casesToSave.length <= 5 || isPreviewDialogOpen) {
+        // Guardado directo
+        for (const testCase of casesToSave) {
+          try {
+            await createTestCase(testCase);
+            created++;
+          } catch (error) {
+            console.error('Error al guardar caso de prueba:', error);
+            errors++;
+          }
+        }
+        
+        toast.success(`Guardado completado. ${created} casos creados. ${errors} errores.`);
+        setIsAIDialogOpen(false);
+        setIsPreviewDialogOpen(false);
+        
+        // Si hay una función de refresh, la llamamos para actualizar la vista
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        // Abrir vista previa para confirmación manual
         setGeneratedTestCases(casesToSave);
         setIsAIDialogOpen(false);
         setIsPreviewDialogOpen(true);
         setIsLoading(false);
         return;
-      }
-      
-      // Guardado directo si son pocos casos o ya fue confirmado en la vista previa
-      for (const testCase of casesToSave) {
-        try {
-          await createTestCase(testCase);
-          created++;
-        } catch (error) {
-          console.error('Error al guardar caso de prueba:', error);
-          errors++;
-        }
-      }
-      
-      toast.success(`Guardado completado. ${created} casos creados. ${errors} errores.`);
-      setIsAIDialogOpen(false);
-      setIsPreviewDialogOpen(false);
-      
-      // Si hay una función de refresh, la llamamos para actualizar la vista
-      if (onRefresh) {
-        onRefresh();
       }
     } catch (error) {
       console.error('Error al guardar los casos generados:', error);
@@ -996,7 +1000,14 @@ const ExcelTestCaseImportExport = ({
       });
 
       setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
-      toast.success(`Generados ${testCases.length} casos de prueba desde la historia de usuario`);
+
+      // Guardar automáticamente los casos generados
+      if (testCases.length > 0) {
+        toast.success(`Generados ${testCases.length} casos de prueba. Guardando automáticamente...`);
+        await handleSaveGeneratedCases(true);
+      } else {
+        toast.success(`Generados ${testCases.length} casos de prueba desde la historia de usuario`);
+      }
     } catch (error) {
       console.error('Error generando casos desde historia de usuario:', error);
       toast.error('Error generando casos de prueba');
@@ -1030,7 +1041,14 @@ const ExcelTestCaseImportExport = ({
       });
 
       setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
-      toast.success(`Generados ${testCases.length} casos de prueba desde los requisitos`);
+
+      // Guardar automáticamente los casos generados
+      if (testCases.length > 0) {
+        toast.success(`Generados ${testCases.length} casos de prueba. Guardando automáticamente...`);
+        await handleSaveGeneratedCases(true);
+      } else {
+        toast.success(`Generados ${testCases.length} casos de prueba desde los requisitos`);
+      }
     } catch (error) {
       console.error('Error generando casos desde requisitos:', error);
       toast.error('Error generando casos de prueba');
@@ -1635,7 +1653,7 @@ const ExcelTestCaseImportExport = ({
                       }));
                       
                       setGeneratedTestCases(updatedCases);
-                      handleSaveGeneratedCases();
+                      handleSaveGeneratedCases(false);
                     }}
                     className="flex-1"
                   >
