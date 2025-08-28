@@ -7,7 +7,7 @@ import { Project } from '@/models/Project';
 import { Card } from '@/components/ui/card';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ProjectStatusButton } from '@/components/analysts/ProjectStatusButton';
-import { useProjects, changeProjectStatus } from '@/hooks/useProjects'; // Importamos el hook completo y la función
+import { useProjects, useAllProjects, changeProjectStatus } from '@/hooks/useProjects'; // Importamos el hook completo y la función
 
 interface AnalystWorkloadProps {
   analystId: string;
@@ -18,7 +18,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const [loading, setLoading] = useState<boolean>(true);
   
   // Usar el hook para obtener todos los proyectos
-  const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useProjects();
+  const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useAllProjects();
     // Usar la fecha actual del sistema
   const today = new Date(); // Fecha actual
   const currentMonth = today.getMonth();
@@ -159,7 +159,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       p.estadoCalculado === 'En Progreso'
     );
     
-    // Combinar proyectos activos (por iniciar + en progreso)
+    // Combinar proyectos activos (por iniciar + en progreso) - EXCLUIR CERTIFICADOS
     const activeProjects = [...notStartedProjects, ...inProgressProjects];
     
     const completedProjects = updatedProjects.filter(p => 
@@ -204,7 +204,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
       // Identificar si necesitamos usar el id o idJira para actualizar el proyecto
-      const project = projects.find(p => p.id === projectId || p.idJira === projectId);
+      const project = allAnalystProjects.find(p => p.id === projectId || p.idJira === projectId);
       
       if (!project) {
         console.error('Proyecto no encontrado:', projectId);
@@ -265,13 +265,13 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
   }
     // Mostrar mensaje si no hay proyectos en el mes actual
-  if (projects.length === 0) {
+  if (activeProjects.length === 0) {
     if (allAnalystProjects.length > 0) {
       return (
         <div className="py-4 text-center">
-          <p className="text-gray-600 mb-2">No hay proyectos actuales o próximos asignados a este analista</p>
+          <p className="text-gray-600 mb-2">No hay proyectos activos asignados a este analista</p>
           <p className="text-sm text-gray-500">
-            (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en otros períodos)
+            (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en total)
           </p>
         </div>
       );
@@ -370,46 +370,6 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           </div>
         )}
       </div>
-        {/* Proyectos completados (certificados) */}
-      {completedProjects.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium border-b pb-1">
-            Proyectos Certificados
-            <span className="text-gray-500 ml-2 text-xs">
-              {new Date(currentYear, currentMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-            </span>
-          </h3>          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {completedProjects.map((project) => (
-              <div
-                key={project.id || project.idJira}
-                className="p-2 border rounded-md shadow-sm bg-gray-50 text-sm"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="font-medium text-xs">{project.nombre || project.proyecto}</div>
-                  <div className="flex items-center gap-1">
-                    {project.idJira && (
-                      <span className="text-[10px] text-blue-600">
-                        {project.idJira}
-                      </span>
-                    )}
-                    <span className="text-[9px] bg-green-100 text-green-800 px-1 py-0.5 rounded">Certificado</span>
-                  </div>
-                </div>
-                <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-500">
-                  <div>
-                    <span className="font-medium">Certificado: </span>
-                    {project.fechaCertificacion ? new Date(project.fechaCertificacion).toLocaleDateString() : 'N/A'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Horas: </span>
-                    {project.horasEstimadas || project.horas || 'N/A'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
