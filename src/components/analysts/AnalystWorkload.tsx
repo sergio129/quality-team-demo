@@ -5,9 +5,23 @@ import { mutate } from 'swr';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { Project } from '@/models/Project';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ProjectStatusButton } from '@/components/analysts/ProjectStatusButton';
-import { useProjects, useAllProjects, changeProjectStatus } from '@/hooks/useProjects'; // Importamos el hook completo y la función
+import { useProjects, useAllProjects, changeProjectStatus } from '@/hooks/useProjects';
+import {
+  Calendar,
+  Clock,
+  TrendingUp,
+  BarChart3,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Target
+} from 'lucide-react';
 
 interface AnalystWorkloadProps {
   analystId: string;
@@ -16,6 +30,9 @@ interface AnalystWorkloadProps {
 export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const [analyst, setAnalyst] = useState<QAAnalyst | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'month' | 'week' | 'history'>('current');
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   
   // Usar el hook para obtener todos los proyectos
   const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useAllProjects();
@@ -38,26 +55,121 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       return isAssignedToAnalyst;
     });
   }, [analystId, allProjects, analyst]);
-    // Filtrar proyectos actuales y próximos para cálculos de carga y visualización
-  const projects = useMemo(() => {
-    return allAnalystProjects.filter(project => {
-      // Incluir todos los proyectos activos independientemente de la fecha de entrega
-      if (project.estado === 'En Progreso' || project.estado === 'Por Iniciar') {
-        return true;
+  // Función para determinar si un proyecto pertenece a un período específico
+  const isProjectInPeriod = (project: Project, period: 'current' | 'month' | 'week' | 'history', month?: number, year?: number) => {
+    const projectStatus = getCalculatedStatus(project);
+
+    // Para proyectos certificados, usar fecha de certificación
+    if (projectStatus === 'Certificado' && project.fechaCertificacion) {
+      const certDate = new Date(project.fechaCertificacion);
+      const certMonth = certDate.getMonth();
+      const certYear = certDate.getFullYear();
+
+      switch (period) {
+        case 'current':
+          return certMonth === currentMonth && certYear === currentYear;
+        case 'month':
+          return certMonth === (month ?? currentMonth) && certYear === (year ?? currentYear);
+        case 'week':
+          // Para semana, verificar si la certificación fue en la semana actual
+          const weekStart = new Date(today);
+          weekStart.setDate(today.getDate() - today.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          return certDate >= weekStart && certDate <= weekEnd;
+        case 'history':
+          return true; // Mostrar todos los proyectos históricos
+        default:
+          return false;
       }
-      
-      // Verificar si el proyecto tiene fecha de entrega
-      if (project.fechaEntrega) {
-        const entregaDate = new Date(project.fechaEntrega);
-        const threeMonthsFromNow = new Date();
-        threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3); // Mostrar proyectos hasta 3 meses en el futuro
-        
-        // Incluir proyectos del mes actual o proyectos futuros hasta 3 meses adelante
-        return entregaDate <= threeMonthsFromNow;
+    }
+
+    // Para proyectos activos, usar fecha de entrega o inicio
+    const relevantDate = project.fechaEntrega || project.fechaInicio;
+    if (!relevantDate) return period === 'current' || period === 'history';
+
+    const projectDate = new Date(relevantDate);
+    const projectMonth = projectDate.getMonth();
+    const projectYear = projectDate.getFullYear();
+
+    switch (period) {
+      case 'current':
+        return projectMonth === currentMonth && projectYear === currentYear;
+      case 'month':
+        return projectMonth === (month ?? currentMonth) && projectYear === (year ?? currentYear);
+      case 'week':
+        // Para semana, verificar si la fecha relevante está en la semana actual
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        return projectDate >= weekStart && projectDate <= weekEnd;
+      case 'history':
+        return true; // Mostrar todos los proyectos
+      default:
+        return false;
+    }
+  };
+
+  // Función para determinar el estado calculado de un proyecto
+  const getCalculatedStatus = (project: Project) => {
+    // Si ya tiene un estado definido en la base de datos, usarlo
+    if (project.estado) {
+      // Normalizar el estado para usar nuestros estados estándar
+      if (project.estado.toLowerCase().includes('progreso')) {
+        return 'En Progreso';
+      } else if (project.estado.toLowerCase().includes('certificado') ||
+                project.estado.toLowerCase().includes('completado') ||
+                project.estado.toLowerCase().includes('terminado')) {
+        return 'Certificado';
+      } else if (project.estado.toLowerCase().includes('iniciar')) {
+        return 'Por Iniciar';
+      } else {
+        return 'Por Iniciar';
       }
-      return false;
-    });
-  }, [allAnalystProjects]);
+    }
+
+    // Si no tiene estado definido, calcularlo automáticamente
+    else {
+      // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
+      if (project.fechaCertificacion && new Date(project.fechaCertificacion) <= today) {
+        return 'Certificado';
+      }
+      // Si tiene fecha de inicio definida
+      else if (project.fechaInicio) {
+        const fechaInicio = new Date(project.fechaInicio);
+        // Si la fecha de inicio es futura, está "Por Iniciar"
+        if (fechaInicio > today) {
+          return 'Por Iniciar';
+        }
+        // Si ya pasó la fecha de inicio pero no la de entrega, está "En Progreso"
+        else if (project.fechaEntrega && new Date(project.fechaEntrega) > today) {
+          return 'En Progreso';
+        }
+        // Si ya pasó la fecha de entrega y no tiene certificación, está "En Progreso" (con retraso)
+        else {
+          return 'En Progreso';
+        }
+      }
+      // Si no tiene fecha de inicio pero tiene fecha de entrega
+      else if (project.fechaEntrega) {
+        const fechaEntrega = new Date(project.fechaEntrega);
+        // Si la entrega es en más de 7 días, podemos asumir "Por Iniciar"
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(today.getDate() + 7);
+
+        if (fechaEntrega > sevenDaysFromNow) {
+          return 'Por Iniciar';
+        } else {
+          return 'En Progreso';
+        }
+      }
+      // Sin fechas definidas, asumimos "Por Iniciar" como valor seguro
+      else {
+        return 'Por Iniciar';
+      }
+    }
+  };
   
   // Obtener datos del analista
   useEffect(() => {
@@ -79,128 +191,110 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     if (analystId) {
       fetchAnalyst();
     }
-  }, [analystId]);  // Usar useMemo para el cálculo de estados y proyectos filtrados
-  // Esto mejora el rendimiento al evitar cálculos innecesarios en cada renderizado
-  const { 
-    updatedProjects,
-    activeProjects,
-    completedProjects,
-    totalHoursAssigned
-  } = useMemo(() => {    // Determinar el estado real de cada proyecto
-    const updatedProjects = projects.map(p => {
-      // Copiar el proyecto para no mutar el original
-      const updatedProject = { ...p };
-      
-      // Si ya tiene un estado definido en la base de datos, usarlo
-      if (p.estado) {
-        // Normalizar el estado para usar nuestros estados estándar
-        if (p.estado.toLowerCase().includes('progreso')) {
-          updatedProject.estadoCalculado = 'En Progreso';
-        } else if (p.estado.toLowerCase().includes('certificado') || 
-                  p.estado.toLowerCase().includes('completado') || 
-                  p.estado.toLowerCase().includes('terminado')) {
-          updatedProject.estadoCalculado = 'Certificado';
-        } else if (p.estado.toLowerCase().includes('iniciar')) {
-          updatedProject.estadoCalculado = 'Por Iniciar';
-        } else {
-          // Estado desconocido, asignar un valor por defecto compatible con el tipo
-          updatedProject.estadoCalculado = 'Por Iniciar';
-        }
-      }      // Si no tiene estado definido, calcularlo automáticamente
-      else {
-        // Si tiene certificación en el pasado, siempre debe estar en estado "Certificado"
-        if (p.fechaCertificacion && new Date(p.fechaCertificacion) <= today) {
-          updatedProject.estadoCalculado = 'Certificado';
-        }
-        // Si tiene fecha de inicio definida
-        else if (p.fechaInicio) {
-          const fechaInicio = new Date(p.fechaInicio);
-          // Si la fecha de inicio es futura, está "Por Iniciar"
-          if (fechaInicio > today) {
-            updatedProject.estadoCalculado = 'Por Iniciar';
-          }
-          // Si ya pasó la fecha de inicio pero no la de entrega, está "En Progreso"
-          else if (p.fechaEntrega && new Date(p.fechaEntrega) > today) {
-            updatedProject.estadoCalculado = 'En Progreso';
-          }
-          // Si ya pasó la fecha de entrega y no tiene certificación, está "En Progreso" (con retraso)
-          else {
-            updatedProject.estadoCalculado = 'En Progreso';
-          }
-        }
-        // Si no tiene fecha de inicio pero tiene fecha de entrega
-        else if (p.fechaEntrega) {
-          const fechaEntrega = new Date(p.fechaEntrega);
-          // Si la fecha de entrega es en más de 7 días, podemos asumir "Por Iniciar"
-          const sevenDaysFromNow = new Date();
-          sevenDaysFromNow.setDate(today.getDate() + 7);
-          
-          if (fechaEntrega > sevenDaysFromNow) {
-            updatedProject.estadoCalculado = 'Por Iniciar';
-          } else {
-            // Si la entrega es próxima o ya pasó, está "En Progreso"
-            updatedProject.estadoCalculado = 'En Progreso';
-          }
-        }
-        // Sin fechas definidas, asumimos "Por Iniciar" como valor seguro
-        else {
-          updatedProject.estadoCalculado = 'Por Iniciar';
-        }
-      }
-      
-      return updatedProject;
+  }, [analystId]);
+
+  // Calcular carga laboral por período - INCLUYENDO TODOS LOS PROYECTOS
+  const workloadData = useMemo(() => {
+    const filteredProjects = allAnalystProjects.filter(project =>
+      isProjectInPeriod(project, selectedPeriod, selectedMonth, selectedYear)
+    );
+
+    // INCLUIR TODOS LOS PROYECTOS para cálculo de carga laboral real
+    const allProjectsInPeriod = filteredProjects;
+
+    // Separar por estado para visualización
+    const activeProjects = filteredProjects.filter(project => {
+      const status = getCalculatedStatus(project);
+      return status === 'Por Iniciar' || status === 'En Progreso';
     });
-      // Filtrar los proyectos por estado
-    const notStartedProjects = updatedProjects.filter(p => 
-      p.estadoCalculado === 'Por Iniciar'
+
+    const completedProjects = filteredProjects.filter(project =>
+      getCalculatedStatus(project) === 'Certificado'
     );
-    
-    const inProgressProjects = updatedProjects.filter(p => 
-      p.estadoCalculado === 'En Progreso'
+
+    // Calcular TODAS las horas asignadas (incluyendo proyectos certificados)
+    const totalAssignedHours = allProjectsInPeriod.reduce((total, project) =>
+      total + (project.horasEstimadas || project.horas || 0), 0
     );
-    
-    // Combinar proyectos activos (por iniciar + en progreso) - EXCLUIR CERTIFICADOS
-    const activeProjects = [...notStartedProjects, ...inProgressProjects];
-    
-    const completedProjects = updatedProjects.filter(p => 
-      p.estadoCalculado === 'Certificado'
+
+    // Calcular horas por estado
+    const activeHours = activeProjects.reduce((total, project) =>
+      total + (project.horasEstimadas || project.horas || 0), 0
     );
-      // Calcular horas asignadas (solo de proyectos activos: Por Iniciar o En Progreso)
-    const totalHoursAssigned = activeProjects.reduce((total, project) => {
-      return total + (project.horasEstimadas || project.horas || 0);
-    }, 0);
-    
-    return { 
-      updatedProjects, 
-      activeProjects, 
-      completedProjects, 
-      totalHoursAssigned 
+
+    const completedHours = completedProjects.reduce((total, project) =>
+      total + (project.horasEstimadas || project.horas || 0), 0
+    );
+
+    return {
+      filteredProjects,
+      allProjectsInPeriod,
+      activeProjects,
+      completedProjects,
+      totalAssignedHours, // TODAS las horas asignadas
+      activeHours,
+      completedHours,
+      totalHours: activeHours + completedHours
     };
-  }, [projects, today]);
-  // Capacidad máxima de horas mensuales
+  }, [allAnalystProjects, selectedPeriod, selectedMonth, selectedYear, currentMonth, currentYear, today]);
+  // Capacidad máxima de horas
   const MAX_MONTHLY_HOURS = 180;
+  const MAX_WEEKLY_HOURS = 45; // 180h / 4 semanas
 
   // Determinar el nivel de carga
-  const getWorkloadLevel = (hours: number) => {
-    const percentageUsed = (hours / MAX_MONTHLY_HOURS) * 100;
-    
+  const getWorkloadLevel = (hours: number, isWeekly: boolean = false) => {
+    const maxHours = isWeekly ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS;
+    const percentageUsed = (hours / maxHours) * 100;
+
     if (percentageUsed < 30) return { level: 'Bajo', color: 'bg-green-100 text-green-800' };
     if (percentageUsed < 70) return { level: 'Medio', color: 'bg-yellow-100 text-yellow-800' };
-    return { level: 'Alto', color: 'bg-red-100 text-red-800' };
+    if (percentageUsed < 100) return { level: 'Alto', color: 'bg-orange-100 text-orange-800' };
+    return { level: 'Sobrecarga', color: 'bg-red-100 text-red-800' };
   };
 
-  const workload = getWorkloadLevel(totalHoursAssigned);
-    // Calcular la disponibilidad en función de las horas asignadas
-  const calculateAvailability = (hoursAssigned: number) => {
-    // Asegurar que no sea negativo incluso si se sobrepasan las horas
-    const usedCapacity = Math.min(hoursAssigned / MAX_MONTHLY_HOURS, 1); // No superar el 100% de uso
-    // Redondear a un número entero para mostrar un porcentaje limpio
-    const availabilityPercentage = Math.max(0, Math.round((1 - usedCapacity) * 100)); // No menor que 0%
+  // Calcular disponibilidad
+  const calculateAvailability = (hoursAssigned: number, isWeekly: boolean = false) => {
+    const maxHours = isWeekly ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS;
+    const usedCapacity = Math.min(hoursAssigned / maxHours, 1);
+    const availabilityPercentage = Math.max(0, Math.round((1 - usedCapacity) * 100));
     return availabilityPercentage;
   };
 
-  // Calcular disponibilidad basada en horas del mes actual
-  const availabilityPercentage = calculateAvailability(totalHoursAssigned);  // Función para actualizar el estado de un proyecto utilizando el hook useProjects
+  // Determinar el nivel de carga basado en TODAS las horas asignadas
+  const workload = getWorkloadLevel(workloadData.totalAssignedHours, selectedPeriod === 'week');
+
+  // Calcular disponibilidad basada en TODAS las horas asignadas
+  const availabilityPercentage = calculateAvailability(workloadData.totalAssignedHours, selectedPeriod === 'week');
+
+  // Función para cambiar período
+  const changePeriod = (direction: 'prev' | 'next') => {
+    if (selectedPeriod === 'month') {
+      const newDate = new Date(selectedYear, selectedMonth + (direction === 'next' ? 1 : -1), 1);
+      setSelectedMonth(newDate.getMonth());
+      setSelectedYear(newDate.getFullYear());
+    } else if (selectedPeriod === 'week') {
+      const newDate = new Date(today);
+      newDate.setDate(today.getDate() + (direction === 'next' ? 7 : -7));
+      setSelectedMonth(newDate.getMonth());
+      setSelectedYear(newDate.getFullYear());
+    }
+  };
+
+  // Función para obtener nombre del período actual
+  const getPeriodName = () => {
+    switch (selectedPeriod) {
+      case 'current':
+        return `Mes Actual (${new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })})`;
+      case 'month':
+        return new Date(selectedYear, selectedMonth).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+      case 'week':
+        return `Semana del ${today.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`;
+      case 'history':
+        return 'Histórico Completo';
+      default:
+        return '';
+    }
+  };
   const handleStatusChange = async (projectId: string, newStatus: string) => {
     try {
       // Identificar si necesitamos usar el id o idJira para actualizar el proyecto
@@ -264,48 +358,118 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   if (!analyst) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
   }
-    // Mostrar mensaje si no hay proyectos en el mes actual
-  if (activeProjects.length === 0) {
+  // Mostrar mensaje si no hay proyectos activos
+  if (workloadData.activeProjects.length === 0) {
     if (allAnalystProjects.length > 0) {
       return (
         <div className="py-4 text-center">
-          <p className="text-gray-600 mb-2">No hay proyectos activos asignados a este analista</p>
+          <p className="text-gray-600 mb-2">No hay proyectos activos asignados al analista</p>
           <p className="text-sm text-gray-500">
             (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en total)
           </p>
         </div>
       );
     } else {
-      return <div className="py-4 text-center">No hay proyectos asignados a este analista</div>;
+      return <div className="py-4 text-center">No hay proyectos asignados al analista</div>;
     }
   }
     return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Controles de Filtro y Período */}
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="h-5 w-5 text-gray-600" />
+            <span className="font-medium text-gray-900">Análisis de Carga Laboral</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            {/* Selector de período */}
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-500" />
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value as 'current' | 'month' | 'week' | 'history')}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="current">Mes Actual</option>
+                <option value="month">Mes Específico</option>
+                <option value="week">Esta Semana</option>
+                <option value="history">Histórico</option>
+              </select>
+            </div>
+
+            {/* Controles de navegación para mes/semana */}
+            {(selectedPeriod === 'month' || selectedPeriod === 'week') && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePeriod('prev')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <Badge variant="secondary" className="px-3 py-1">
+                  {getPeriodName()}
+                </Badge>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changePeriod('next')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Información del período actual */}
+            {selectedPeriod === 'current' && (
+              <Badge variant="secondary" className="px-3 py-1">
+                {getPeriodName()}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Métricas de Carga Laboral */}
       <div className="flex flex-wrap gap-3 justify-center">
         <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
           <p className="text-xl font-bold">{workload.level}</p>
-          <p className="text-xs font-medium font-mono">{totalHoursAssigned}h / {MAX_MONTHLY_HOURS}h</p>
+          <p className="text-xs font-medium font-mono">{workloadData.totalAssignedHours}h / {selectedPeriod === 'week' ? MAX_WEEKLY_HOURS : MAX_MONTHLY_HOURS}h</p>
         </div>
         <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center w-32">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
-          <p className="text-xl font-bold text-blue-600">{activeProjects.length}</p>
+          <p className="text-xl font-bold text-blue-600">{workloadData.activeProjects.length}</p>
           <p className="text-xs text-gray-500">en curso</p>
         </div>
+        <div key="totalProjects" className="bg-purple-50 p-3 rounded-lg text-center w-32">
+          <p className="text-xs text-gray-700">Total Proyectos</p>
+          <p className="text-xl font-bold text-purple-600">{workloadData.allProjectsInPeriod.length}</p>
+          <p className="text-xs text-gray-500">todos los estados</p>
+        </div>
         <div key="availability" className={`p-3 rounded-lg text-center w-32 ${
-          availabilityPercentage > 70 ? 'bg-green-50' : 
+          availabilityPercentage > 70 ? 'bg-green-50' :
           availabilityPercentage > 30 ? 'bg-yellow-50' :
           'bg-red-50'
         }`}>
           <p className="text-xs text-gray-700">Disponibilidad</p>
           <p className={`text-xl font-bold ${
-            availabilityPercentage > 70 ? 'text-green-600' : 
+            availabilityPercentage > 70 ? 'text-green-600' :
             availabilityPercentage > 30 ? 'text-yellow-600' :
             'text-red-600'
           }`}>{availabilityPercentage}%</p>
           <p className="text-xs text-gray-500">para proyectos</p>
         </div>
-      </div>      {/* Lista de proyectos activos */}      <div className="space-y-3">
+      </div>
+
+      {/* Lista de proyectos activos */}
+      <div className="space-y-3">
         <h3 className="text-sm font-medium border-b pb-1">
           Proyectos Asignados 
           <span className="text-gray-500 ml-2 text-xs">
@@ -313,9 +477,9 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
           </span>
         </h3>
         
-        {activeProjects.length > 0 ? (
+        {workloadData.activeProjects.length > 0 ? (
           <div className="space-y-2">
-            {activeProjects.map((project) => (
+            {workloadData.activeProjects.map((project) => (
               <div
                 key={project.id || project.idJira}
                 className="p-2 border rounded-md shadow-sm hover:bg-gray-50 text-sm"
