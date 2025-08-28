@@ -1,7 +1,7 @@
 'use client';
 
 import { useTeams } from '@/hooks/useTeams';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { useMemo } from 'react';
 import {
   Chart as ChartJS,
@@ -28,7 +28,7 @@ ChartJS.register(
 
 export function TeamCharts() {
   const { teams } = useTeams();
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
 
   // Datos para el gráfico de distribución de proyectos por equipo
   const projectDistributionData = useMemo(() => {

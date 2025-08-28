@@ -1,7 +1,7 @@
 'use client';
 
 import { Team } from '@/models/Team';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { useAnalysts } from '@/hooks/useAnalysts';
 import { useCallback } from 'react';
@@ -13,7 +13,7 @@ interface ExportTeamsProps {
 }
 
 export function ExportTeams({ teams }: ExportTeamsProps) {
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const { analysts } = useAnalysts();
 
   const exportToExcel = useCallback(() => {

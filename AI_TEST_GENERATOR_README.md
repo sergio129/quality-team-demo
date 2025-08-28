@@ -36,18 +36,23 @@ src/
 ## 🔧 Instalación y Configuración
 
 ### 1. Variables de Entorno
-Asegúrate de tener configuradas las siguientes variables:
+Configura la variable de entorno correspondiente al proveedor que deseas usar:
 
 ```env
-# OpenAI (por defecto)
+# Para usar OpenAI
 NEXT_PUBLIC_OPENAI_API_KEY=sk-your-openai-key
 
-# O Anthropic
-NEXT_PUBLIC_OPENAI_API_KEY=sk-ant-your-anthropic-key
+# Para usar Anthropic/Claude
+NEXT_PUBLIC_ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
 
-# O Groq
-NEXT_PUBLIC_OPENAI_API_KEY=gsk_your-groq-key
+# Para usar Groq (recomendado - más económico y rápido)
+NEXT_PUBLIC_GROQ_API_KEY=gsk_your-groq-key
 ```
+
+**Nota:** El sistema detecta automáticamente qué proveedor usar basado en el formato de la API key:
+- `sk-` → OpenAI
+- `sk-ant-` → Anthropic
+- `gsk_` → Groq
 
 ### 2. Dependencias Requeridas
 Si no las tienes, instala:

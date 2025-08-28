@@ -1,13 +1,13 @@
 'use client';
 
 import { useTeams } from '@/hooks/useTeams';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { useAnalysts } from '@/hooks/useAnalysts';
 import { useMemo } from 'react';
 
 export function TeamStats() {
   const { teams } = useTeams();
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const { analysts } = useAnalysts();
 
   const stats = useMemo(() => {

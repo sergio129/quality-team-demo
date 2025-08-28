@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FileDown, Search } from 'lucide-react';
 import { TestCase } from '@/models/TestCase';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { TestPlan } from '@/hooks/useTestPlans';
 
 interface ExcelExportProps {
@@ -22,7 +22,7 @@ export default function ExcelExport({ projectId, testCases = [] }: ExcelExportPr
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);

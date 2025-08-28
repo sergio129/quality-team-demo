@@ -14,7 +14,7 @@ import { createTestCase } from '@/hooks/useTestCases';
 import { TestCase as BaseTestCase, TestStep } from '@/models/TestCase';
 import { ExtendedTestCase, PartialExtendedTestCase } from './types';
 import { v4 as uuidv4 } from 'uuid';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { useTestPlans } from '@/hooks/useTestCases';
 import { AITestCaseGeneratorService, ExcelRequirementData } from '@/services/aiTestCaseGeneratorService';
 import { AITestCaseGenerator, CoverageReport } from '@/types/aiTestCaseGenerator';
@@ -61,7 +61,7 @@ const ExcelTestCaseImportExport = ({
   const [isScenariosDialogOpen, setIsScenariosDialogOpen] = useState(false);
   const [isCoverageDialogOpen, setIsCoverageDialogOpen] = useState(false);
   const [testPlanSearchTerm, setTestPlanSearchTerm] = useState('');
-  const { projects } = useProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
+  const { projects } = useAllProjects();  const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');  const { testPlans, isLoading: isLoadingPlans, isError: isErrorPlans } = useTestPlans(
     selectedProjectId && selectedProjectId !== '' && selectedProjectId !== 'select_project' ? selectedProjectId : null
   );
   const [selectedTestPlanId, setSelectedTestPlanId] = useState(testPlanId || '');

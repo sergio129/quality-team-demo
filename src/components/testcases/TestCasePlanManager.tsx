@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useTestPlans, createTestPlan } from '@/hooks/useTestCases';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -65,7 +65,7 @@ interface TestCasePlanManagerProps {
 
 export default function TestCasePlanManager({ onPlanSelected }: TestCasePlanManagerProps) {
   const [selectedProjectId, setSelectedProjectId] = useState('');
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const { testPlans, isLoading } = useTestPlans();
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const [isEditingPlan, setIsEditingPlan] = useState(false);

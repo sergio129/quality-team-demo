@@ -11,7 +11,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FileDown, FileUp, FileText } from 'lucide-react';
 import { TestCase, TestStep } from '@/models/TestCase';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { v4 as uuidv4 } from 'uuid';
 import { createTestCase } from '@/hooks/useTestCases';
 
@@ -24,7 +24,7 @@ export default function ExcelImportExport({ projectId, testCases = [] }: ExcelIm
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
   const [selectedProjectId, setSelectedProjectId] = useState(projectId || '');
   const [cycle, setCycle] = useState(1);
   const handleExportToExcel = () => {
