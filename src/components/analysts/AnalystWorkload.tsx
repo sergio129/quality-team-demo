@@ -33,6 +33,7 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'month' | 'week' | 'history'>('current');
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [showAllProjects, setShowAllProjects] = useState<boolean>(false);
   
   // Usar el hook para obtener todos los proyectos
   const { projects: allProjects, isLoading: isLoadingProjects, isError: isProjectsError } = useAllProjects();
@@ -293,6 +294,11 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
     }
   };
 
+  // Resetear filtros cuando cambia el período
+  useEffect(() => {
+    setShowAllProjects(false);
+  }, [selectedPeriod, selectedMonth, selectedYear]);
+
   // Función para obtener nombre del período actual
   const getPeriodName = () => {
     switch (selectedPeriod) {
@@ -371,21 +377,8 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
   if (!analyst) {
     return <div className="py-4 text-center">No se encontró información del analista</div>;
   }
-  // Mostrar mensaje si no hay proyectos activos
-  if (workloadData.activeProjects.length === 0) {
-    if (allAnalystProjects.length > 0) {
-      return (
-        <div className="py-4 text-center">
-          <p className="text-gray-600 mb-2">No hay proyectos activos asignados al analista</p>
-          <p className="text-sm text-gray-500">
-            (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en total)
-          </p>
-        </div>
-      );
-    } else {
-      return <div className="py-4 text-center">No hay proyectos asignados al analista</div>;
-    }
-  }
+  // Mostrar mensaje si no hay proyectos activos, pero permitir ver todos los proyectos
+  const shouldShowAllProjectsView = workloadData.activeProjects.length === 0 && allAnalystProjects.length > 0;
     return (
     <div className="space-y-6">
       {/* Controles de Filtro y Período */}
@@ -481,71 +474,121 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
         </div>
       </div>
 
-      {/* Lista de proyectos activos */}
+      {/* Lista de proyectos */}  
       <div className="space-y-3">
-        <h3 className="text-sm font-medium border-b pb-1">
-          Proyectos Asignados 
-          <span className="text-gray-500 ml-2 text-xs">
-            Actuales y próximos
-          </span>
-        </h3>
-        
-        {workloadData.activeProjects.length > 0 ? (
-          <div className="space-y-2">
-            {workloadData.activeProjects.map((project) => (
-              <div
-                key={project.id || project.idJira}
-                className="p-2 border rounded-md shadow-sm hover:bg-gray-50 text-sm"
+        <div className="flex items-center justify-between border-b pb-1">
+          <h3 className="text-sm font-medium">
+            Proyectos Asignados 
+            <span className="text-gray-500 ml-2 text-xs">
+              {showAllProjects ? 'Todos los proyectos' : 'Actuales y próximos'}
+            </span>
+          </h3>
+          
+          {/* Controles de filtro */}
+          <div className="flex items-center gap-2">
+            {workloadData.activeProjects.length === 0 && allAnalystProjects.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllProjects(!showAllProjects)}
+                className="text-xs"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium">{project.nombre || project.proyecto}</div>
-                    <div className="text-xs text-gray-600 line-clamp-1">{project.descripcion}</div>
-                    <div className="mt-1 flex items-center gap-2 text-xs">
-                      <span className="flex items-center gap-1">
-                        <span className="text-gray-500">Célula:</span> {project.celula}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="text-gray-500">Horas:</span> {project.horasEstimadas || project.horas || 'N/A'}
-                      </span>                      <span className="flex items-center gap-1">
-                        <span className="text-gray-500">Estado:</span>
-                        <span 
-                          className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                            project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' :
-                            project.estadoCalculado === 'Por Iniciar' ? 'bg-amber-100 text-amber-800' :
-                            project.estadoCalculado === 'Certificado' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {project.estadoCalculado}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">                    {project.idJira && (
-                      <a
-                        href={getJiraUrl(project.idJira)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded flex items-center"
-                      >
-                        {project.idJira}
-                      </a>
-                    )}
-                    <ProjectStatusButton 
-                      project={project} 
-                      onStatusChange={handleStatusChange} 
-                    />
-                  </div>
-                </div>              </div>
-            ))}
+                <Filter className="h-3 w-3 mr-1" />
+                {showAllProjects ? 'Ver solo activos' : 'Ver todos los proyectos'}
+              </Button>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-4 text-gray-500 text-sm">
-            No hay proyectos asignados a este analista
-          </div>
-        )}
+        </div>
+        
+        {/* Determinar qué proyectos mostrar */}
+        {(() => {
+          const projectsToShow = showAllProjects ? allAnalystProjects : workloadData.activeProjects;
+          
+          if (projectsToShow.length > 0) {
+            return (
+              <div className="space-y-2">
+                {projectsToShow.map((project) => (
+                  <div
+                    key={project.id || project.idJira}
+                    className="p-2 border rounded-md shadow-sm hover:bg-gray-50 text-sm"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">{project.nombre || project.proyecto}</div>
+                        <div className="text-xs text-gray-600 line-clamp-1">{project.descripcion}</div>
+                        <div className="mt-1 flex items-center gap-2 text-xs">
+                          <span className="flex items-center gap-1">
+                            <span className="text-gray-500">Célula:</span> {project.celula}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="text-gray-500">Horas:</span> {project.horasEstimadas || project.horas || 'N/A'}
+                          </span>                      <span className="flex items-center gap-1">
+                            <span className="text-gray-500">Estado:</span>
+                            <span 
+                              className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                project.estadoCalculado === 'En Progreso' ? 'bg-blue-100 text-blue-800' :
+                                project.estadoCalculado === 'Por Iniciar' ? 'bg-amber-100 text-amber-800' :
+                                project.estadoCalculado === 'Certificado' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {project.estadoCalculado}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1">                    {project.idJira && (
+                          <a
+                            href={getJiraUrl(project.idJira)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded flex items-center"
+                          >
+                            {project.idJira}
+                          </a>
+                        )}
+                        <ProjectStatusButton 
+                          project={project} 
+                          onStatusChange={handleStatusChange} 
+                        />
+                      </div>
+                    </div>              </div>
+                ))}
+              </div>
+            );
+          } else if (allAnalystProjects.length > 0) {
+            // No hay proyectos en la vista actual pero sí hay proyectos asignados
+            return (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm mb-2">
+                  {showAllProjects ? 'No hay proyectos en esta vista' : 'No hay proyectos activos asignados al analista'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  (El analista tiene {allAnalystProjects.length} proyecto(s) asignado(s) en total)
+                </p>
+                {!showAllProjects && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllProjects(true)}
+                    className="mt-2 text-xs"
+                  >
+                    <Filter className="h-3 w-3 mr-1" />
+                    Ver todos los proyectos
+                  </Button>
+                )}
+              </div>
+            );
+          } else {
+            // No hay proyectos asignados en absoluto
+            return (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                No hay proyectos asignados a este analista
+              </div>
+            );
+          }
+        })()}
       </div>
     </div>
   );
