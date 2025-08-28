@@ -19,7 +19,7 @@ import { EditCellDialog } from './EditCellDialog';
 import { CellProjectsDialog } from './CellProjectsDialog';
 import { toast } from 'sonner';
 import { useCells, useTeams, deleteCell, TeamInfo } from '@/hooks/useCells';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import {
   Grid,
   List,
@@ -59,7 +59,7 @@ export function DataTable() {
   // Usar SWR para obtener datos
   const { cells, isLoading: cellsLoading, isError: cellsError } = useCells();
   const { teams, isLoading: teamsLoading } = useTeams();
-  const { projects } = useProjects();
+  const { projects } = useAllProjects();
 
   const isLoading = cellsLoading || teamsLoading;
   const isError = cellsError;

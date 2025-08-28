@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Cell } from '@/models/Cell';
 import { Project } from '@/models/Project';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from '../projects/ChangeProjectStatusDialog';
 import {
@@ -32,16 +32,36 @@ interface CellProjectsDialogProps {
 }
 
 export function CellProjectsDialog({ cell, isOpen, onClose }: CellProjectsDialogProps) {
-  const { projects, isLoading } = useProjects();
+  const { projects, isLoading } = useAllProjects();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  // Filtrar proyectos por la célula actual
+  // Filtrar proyectos por la célula actual con lógica más flexible
   const cellProjects = useMemo(() => {
-    return projects.filter(project => 
-      project.celula?.toLowerCase() === cell.name.toLowerCase()
-    );
+    const filtered = projects.filter(project => {
+      const projectCellName = project.celula?.toLowerCase().trim();
+      const currentCellName = cell.name.toLowerCase().trim();
+      
+      // Lógica de matching más flexible
+      const matches = 
+        // 1. Coincidencia exacta
+        projectCellName === currentCellName ||
+        // 2. La célula del proyecto contiene el nombre actual
+        projectCellName?.includes(currentCellName) ||
+        // 3. El nombre actual contiene la célula del proyecto
+        currentCellName.includes(projectCellName || '') ||
+        // 4. Buscar por nombre del proyecto (útil para casos como "CRM")
+        project.proyecto?.toLowerCase().includes(currentCellName) ||
+        // 5. Buscar por descripción
+        project.descripcion?.toLowerCase().includes(currentCellName) ||
+        // 6. Buscar por ID de Jira
+        project.idJira?.toLowerCase().includes(currentCellName);
+      
+      return matches;
+    });
+    
+    return filtered;
   }, [projects, cell.name]);
 
   const getStatusInfo = (project: any) => {
