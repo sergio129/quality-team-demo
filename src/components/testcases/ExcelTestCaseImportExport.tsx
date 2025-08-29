@@ -389,29 +389,113 @@ const ExcelTestCaseImportExport = ({
   const processFileForAI = async (file: File) => {
     const reader = new FileReader();
     setIsGeneratingAI(true);
-    
+    let processedSheetName = '';
+
     reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[];
-        
-        // Intento de detección automática del tipo de formato
+
+        // Buscar específicamente la hoja "HU" (Historias de Usuario)
+        const huSheetName = workbook.SheetNames.find(name =>
+          name.toLowerCase().includes('hu') ||
+          name.toLowerCase().includes('historias') ||
+          name.toLowerCase().includes('user stories') ||
+          name.toLowerCase().includes('stories')
+        );
+
+        if (!huSheetName) {
+          toast.error('No se encontró una hoja llamada "HU", "Historias" o "User Stories" en el archivo Excel. Por favor, asegúrese de que el archivo contenga una hoja con las historias de usuario.');
+          setIsGeneratingAI(false);
+          return;
+        }
+
+        processedSheetName = huSheetName;
+
+        console.log(`✅ Hoja encontrada: "${processedSheetName}". Procesando historias de usuario...`);
+        toast.info(`Procesando hoja "${processedSheetName}" - Buscando historias de usuario en formato "Como/Quiero/Para"...`);
+
+        const huSheet = workbook.Sheets[processedSheetName];
+        const rows = XLSX.utils.sheet_to_json(huSheet, { header: 1 }) as any[];
+
+        if (rows.length === 0) {
+          toast.error(`La hoja "${processedSheetName}" está vacía.`);
+          setIsGeneratingAI(false);
+          return;
+        }
+
+        console.log(`📊 Procesando ${rows.length} filas de historias de usuario`);
+
+        // Validar que la hoja tenga un formato reconocible de historias de usuario
+        const validateHUFormat = (sheetRows: any[]): boolean => {
+          if (sheetRows.length < 2) return false; // Necesita al menos encabezados y una fila de datos
+
+          const headerRow = sheetRows[0];
+          if (!headerRow || !Array.isArray(headerRow)) return false;
+
+          // Contar cuántos encabezados de historias de usuario se reconocen
+          let recognizedHeaders = 0;
+          const headerText = headerRow.map(cell => String(cell || '').toLowerCase().trim());
+
+          // Encabezados específicos de historias de usuario
+          const userStoryHeaders = [
+            'id', 'hu', 'historia', 'user story', 'como', 'quiero', 'para',
+            'rol', 'funcionalidad', 'razón', 'actor', 'necesito', 'resultado',
+            'criterios', 'aceptación', 'descripción', 'titulo', 'title',
+            // NUEVOS: Encabezados específicos del formato del usuario
+            'como un [rol]', 'como un', 'como [rol]',
+            'necesito [característica', 'necesito [característica funcionalidad]',
+            'con la finalidad de', 'con la finalidad de [razón',
+            'número (#) de escenario', 'número de escenario',
+            'nombre o titulo criterio', 'titulo criterio',
+            'cuando [evento]', 'espero que el sistema',
+            'resultado esperado', 'comportamiento esperado'
+          ];
+
+          headerText.forEach(header => {
+            if (userStoryHeaders.some(ush => header.includes(ush) || ush.includes(header))) {
+              recognizedHeaders++;
+            }
+          });
+
+          // Para este formato específico, si encontramos al menos ID + 2 elementos del formato HU, es válido
+          return recognizedHeaders >= 3; // Al menos ID + 2 encabezados de HU
+        };
+
+        if (!validateHUFormat(rows)) {
+          toast.error(
+            `La hoja "${processedSheetName}" no parece contener historias de usuario en el formato esperado. ` +
+            'La hoja debe tener encabezados como: ID, HU, Como, Quiero, Para, Descripción, Criterios de Aceptación, etc. ' +
+            'Por favor, revise el formato de su archivo Excel.'
+          );
+          setIsGeneratingAI(false);
+          return;
+        }
+
+        // Intento de detección automática del tipo de formato para historias de usuario
         const requirements: ExcelRequirementData[] = [];          // Buscar encabezados comunes en diferentes formatos
         const possibleHeaders = [
           // Formato estándar
-          ['ID Historia', 'Historia', 'HU', 'User Story', 'ID', 'Código', 'Codigo', 'Code', 'Story ID', 'ID US', 'US ID'], 
-          ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title', 'Nombre Historia', 'Story Title', 'Nombre US'], 
-          ['Descripción', 'Detalle', 'Description', 'Descripcion', 'Detalles', 'Texto Historia', 'Story Description', 'Desc'], 
+          ['ID Historia', 'Historia', 'HU', 'User Story', 'ID', 'Código', 'Codigo', 'Code', 'Story ID', 'ID US', 'US ID'],
+          ['Nombre del Requerimiento', 'Requerimiento', 'Requisito', 'Nombre', 'Título', 'Title', 'Nombre Historia', 'Story Title', 'Nombre US'],
+          ['Descripción', 'Detalle', 'Description', 'Descripcion', 'Detalles', 'Texto Historia', 'Story Description', 'Desc'],
           ['Criterios de Aceptación', 'Criterios', 'Acceptance Criteria', 'Condiciones', 'Criterios Aceptación', 'AC', 'Criterios de Éxito', 'Criterios Aceptacion'],
           // Formato historias de usuario
-          ['Rol', 'Como', 'As a', 'Actor', 'Usuario', 'Perfil', 'Tipo Usuario', 'Role', 'As an', 'Como un', 'Stakeholder', 'Interesado'], 
+          ['Rol', 'Como', 'As a', 'Actor', 'Usuario', 'Perfil', 'Tipo Usuario', 'Role', 'As an', 'Como un', 'Stakeholder', 'Interesado'],
           ['Funcionalidad', 'Quiero', 'I want', 'Necesito', 'I need', 'Deseo', 'Característica', 'Caracteristica', 'Functionality', 'Want to', 'Ability', 'Capacidad', 'Need to'],
           ['Razón', 'Resultado', 'Para', 'So that', 'A fin de', 'Con el fin de', 'Beneficio', 'Objetivo', 'Reason', 'Benefit', 'Purpose', 'Propósito', 'In order to'],
           // Formato adicional: Precondiciones y datos
           ['Precondiciones', 'Precondición', 'Pre-requisitos', 'Prerequisitos', 'Precondition', 'Pre-condition', 'Condiciones previas'],
-          ['Datos de prueba', 'Test Data', 'Datos', 'Ejemplos', 'Escenarios', 'Valores', 'Data']
+          ['Datos de prueba', 'Test Data', 'Datos', 'Ejemplos', 'Escenarios', 'Valores', 'Data'],
+          // NUEVO: Formato específico del usuario
+          ['como un [rol]', 'como un', 'como [rol]'],
+          ['necesito [característica', 'necesito', 'requiero', 'necesito [característica funcionalidad]'],
+          ['con la finalidad de', 'finalidad de', 'con el fin de', 'para [razón', 'con la finalidad de [razón'],
+          ['número (#) de escenario', 'número de escenario', 'escenario', 'número (#)'],
+          ['nombre o titulo criterio', 'titulo criterio', 'criterio de aceptación', 'nombre criterio'],
+          ['contexto', 'condiciones', 'precondiciones'],
+          ['cuando [evento]', 'cuando', 'evento'],
+          ['espero que el sistema', 'resultado esperado', 'comportamiento esperado', 'espero que']
         ];
         
         // Encontrar la fila de encabezados escaneando las primeras 10 filas
@@ -458,50 +542,65 @@ const ExcelTestCaseImportExport = ({
           // Buscar cualquier fila que tenga al menos una celda con "requerimiento", "requisito" o "historia"
           for (let i = 0; i < Math.min(15, rows.length); i++) {
             if (!Array.isArray(rows[i])) continue;
-            
+
             const rowText = rows[i].join(' ').toLowerCase();
-            if (rowText.includes('requerimiento') || rowText.includes('requisito') || 
-                rowText.includes('historia') || rowText.includes('user story')) {
+            if (rowText.includes('requerimiento') || rowText.includes('requisito') ||
+                rowText.includes('historia') || rowText.includes('user story') ||
+                rowText.includes('hu') || rowText.includes('id') ||
+                rowText.includes('como') || rowText.includes('necesito')) {
               headerRowIndex = i;
-              // Crear un mapeo basado en posición
-              headerMapping = {'0': 0, '1': 1, '2': 2, '3': 3};
+              // Crear un mapeo más completo basado en el número de columnas
+              const numColumns = rows[i].length;
+              headerMapping = {};
+              for (let j = 0; j < numColumns; j++) {
+                headerMapping[j.toString()] = j;
+              }
+              console.log(`✅ Encabezados detectados en fila ${i + 1}, ${numColumns} columnas mapeadas`);
               break;
             }
           }
         }
-        
+
         // Si aún no encontramos encabezados, usar un enfoque simplificado
         if (headerRowIndex === -1) {
           toast.warning('No se detectaron encabezados claros. Intentando procesamiento simplificado...');
           headerRowIndex = 0;
-          headerMapping = {'0': 0, '1': 1, '2': 2};
-        }          // Procesar los datos desde la fila posterior a la de encabezados
+          // Crear mapeo completo para todas las columnas disponibles
+          const numColumns = rows[0]?.length || 9;
+          headerMapping = {};
+          for (let j = 0; j < numColumns; j++) {
+            headerMapping[j.toString()] = j;
+          }
+        }
+
+        console.log(`📋 Header mapping final:`, headerMapping);
+        console.log(`📋 Fila de encabezados detectada: ${headerRowIndex + 1}`);
+        if (headerRowIndex >= 0 && rows[headerRowIndex]) {
+          console.log(`📋 Encabezados encontrados:`, rows[headerRowIndex].map((cell: any) => `"${cell || ''}"`).join(', '));
+        }
+
+        // Procesar los datos desde la fila posterior a la de encabezados
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const row = rows[i];
           if (!row || !Array.isArray(row) || row.every(cell => !cell)) continue;
-            // Extraer campos basados en el mapeo detectado
-          const idColIndex = headerMapping['0'];
-          const nameColIndex = headerMapping['1']; 
-          const descColIndex = headerMapping['2'];
-          const criteriaColIndex = headerMapping['3'];
-          const rolColIndex = headerMapping['4']; // Nuevo formato: Rol
-          const funcionalidadColIndex = headerMapping['5']; // Nuevo formato: Funcionalidad
-          const razonColIndex = headerMapping['6']; // Nuevo formato: Razón/Resultado
-          const precondicionesColIndex = headerMapping['7']; // Precondiciones
-          const datosColIndex = headerMapping['8']; // Datos de prueba
-          const prioridadColIndex = row.findIndex((cell: any) => 
-            cell && typeof cell === 'string' && 
-            /alta|media|baja|high|medium|low|crítica|critical|normal|priority/i.test(cell)          ); // Buscar columna de prioridad
-          
-          const complejidadColIndex = row.findIndex((cell: any) => 
-            cell && typeof cell === 'string' && 
-            /alta|media|baja|high|medium|low|complejidad|complexity|complex/i.test(cell)
-          ); // Buscar columna de complejidad
+
+          console.log(`🔍 Procesando fila ${i + 1}:`, row.map(cell => `"${cell || ''}"`).join(', '));
+
+          // Usar índices directos basados en el formato conocido del Excel
+          // Formato esperado: ID, Como un [Rol], Necesito [Característica Funcionalidad], Con la finalidad de [Razón / Resultado], etc.
+          const userStoryId = row[0]?.toString() || ''; // Columna 0: ID
+          const rol = row[1]?.toString() || ''; // Columna 1: Como un [Rol]
+          const funcionalidad = row[2]?.toString() || ''; // Columna 2: Necesito [Característica Funcionalidad]
+          const razon = row[3]?.toString() || ''; // Columna 3: Con la finalidad de [Razón / Resultado]
+          const escenario = row[4]?.toString() || ''; // Columna 4: Número (#) de Escenario
+          const contexto = row[6]?.toString() || ''; // Columna 6: Contexto
+
+          console.log(`📋 Valores extraídos - ID: "${userStoryId}", Rol: "${rol}", Funcionalidad: "${funcionalidad}", Razón: "${razon}"`);
           
           // Procesamiento especial para criterios de aceptación
           let acceptanceCriteria: string[] = [];
-          if (criteriaColIndex !== undefined && row[criteriaColIndex]) {
-            const criteriaText = row[criteriaColIndex]?.toString() || '';
+          if (row[5]) { // Columna 5: Nombre o titulo Criterio de Aceptación
+            const criteriaText = row[5]?.toString() || '';
             const cleanText = criteriaText.trim();
             
             // Caso 1: Texto ya dividido por líneas con numeración o viñetas (formato más común)
@@ -566,55 +665,22 @@ const ExcelTestCaseImportExport = ({
                 acceptanceCriteria = [cleanText];
               }
             }
-          }
-            // Detectar si es el formato de historias de usuario (con rol, funcionalidad, razón)
-          const isUserStoryFormat = rolColIndex !== undefined && funcionalidadColIndex !== undefined && 
-            row[rolColIndex] && row[funcionalidadColIndex];
-          
+          // Crear descripción completa basada en el formato de historia de usuario
+          const fullDescription = rol && funcionalidad ?
+            `Como ${rol}, necesito ${funcionalidad}${razon ? ` con la finalidad de ${razon}` : ''}` :
+            `${rol || ''} ${funcionalidad || ''} ${razon || ''}`.trim();
+
           // Crear nombre y descripción basados en el formato
-          let userStoryId = idColIndex !== undefined ? row[idColIndex]?.toString() || '' : '';
-          let requirementName = nameColIndex !== undefined ? row[nameColIndex]?.toString() || '' : '';
-          let description = descColIndex !== undefined ? row[descColIndex]?.toString() || '' : '';
-          
-          // Si es formato de historia de usuario, construir descripción usando ese formato
-          if (isUserStoryFormat) {
-            const rol = row[rolColIndex]?.toString() || '';
-            const funcionalidad = row[funcionalidadColIndex]?.toString() || '';
-            const razon = razonColIndex !== undefined ? row[razonColIndex]?.toString() || '' : '';
-            
-            // Normalizar los valores para evitar redundancia
-            const rolNormalizado = rol.replace(/^como\s+/i, '').trim();
-            const funcionalidadNormalizada = funcionalidad.replace(/^quiero\s+/i, '').replace(/^necesito\s+/i, '').trim();
-            const razonNormalizada = razon.replace(/^para\s+/i, '').replace(/^a fin de\s+/i, '').trim();
-            
-            // Si no hay nombre de requisito pero hay rol+funcionalidad, crearlos
-            if (!requirementName && (rolNormalizado || funcionalidadNormalizada)) {
-              requirementName = rolNormalizado && funcionalidadNormalizada 
-                ? `${rolNormalizado} - ${funcionalidadNormalizada}`.substring(0, 100) 
-                : (rolNormalizado || funcionalidadNormalizada).substring(0, 100);
-            }
-            
-            // Si no hay ID pero tiene uno en la historia, usarlo
-            if (!userStoryId && requirementName.match(/^(HU|US)-\d+/i)) {
-              const match = requirementName.match(/^(HU|US)-\d+/i);
-              if (match) {
-                userStoryId = match[0];
-                // Si el ID está en el nombre, quitarlo del nombre
-                requirementName = requirementName.replace(/^(HU|US)-\d+\s*[-:]\s*/i, '');
-              }
-            }
-            
-            // Construir descripción en formato de historia de usuario
-            const userStoryDesc = [
-              `Como ${rolNormalizado}`,
-              `Quiero ${funcionalidadNormalizada}`,
-              razonNormalizada ? `Para ${razonNormalizada}` : ''
-            ].filter(Boolean).join('\n');
-            
-            // Si hay descripción previa, añadir la historia de usuario, sino usar la historia
-            description = description ? `${description}\n\n${userStoryDesc}` : userStoryDesc;
-          }
-            // Extraer prioridad y complejidad si están disponibles
+          let requirementName = userStoryId ? `Historia ${userStoryId}` : `HU-${i}`;
+          let description = fullDescription;
+
+          // Variables para índices de columnas adicionales (inicialmente no definidas)
+          const prioridadColIndex = -1; // No mapeado aún
+          const complejidadColIndex = -1; // No mapeado aún
+          const precondicionesColIndex = -1; // No mapeado aún
+          const datosColIndex = -1; // No mapeado aún
+
+          // Extraer prioridad y complejidad si están disponibles
           let prioridad = '';
           if (prioridadColIndex !== -1) {
             const prioridadText = row[prioridadColIndex]?.toString()?.toLowerCase() || '';
@@ -626,7 +692,7 @@ const ExcelTestCaseImportExport = ({
               prioridad = 'Baja';
             }
           }
-          
+
           let complejidad = '';
           if (complejidadColIndex !== -1) {
             const complejidadText = row[complejidadColIndex]?.toString()?.toLowerCase() || '';
@@ -638,46 +704,54 @@ const ExcelTestCaseImportExport = ({
               complejidad = 'Baja';
             }
           }
-          
+
           // Extraer precondiciones y datos de prueba si están disponibles
-          const precondiciones = precondicionesColIndex !== undefined ? row[precondicionesColIndex]?.toString() || '' : '';
-          const datosPrueba = datosColIndex !== undefined ? row[datosColIndex]?.toString() || '' : '';
-          
+          const precondiciones = precondicionesColIndex !== -1 ? row[precondicionesColIndex]?.toString() || '' : '';
+          const datosPrueba = datosColIndex !== -1 ? row[datosColIndex]?.toString() || '' : '';
+
           const requirement: ExcelRequirementData = {
             userStoryId,
-            requirementName,
-            description,
+            requirementName: requirementName || `HU-${userStoryId || (i + 1)}`,
+            description: fullDescription,
             acceptanceCriteria,
-            functionalDescription: row[descColIndex]?.toString() || '',
-            priority: prioridad,
-            complexity: complejidad,
-            preconditions: precondiciones,
-            testData: datosPrueba
+            functionalDescription: contexto || escenario || '',
+            priority: prioridad || 'Media', // Usar prioridad extraída o default
+            complexity: complejidad || 'Media', // Usar complejidad extraída o default
+            preconditions: precondiciones || contexto || '',
+            testData: datosPrueba || ''
           };
+
+          console.log(`📋 Requerimiento creado:`, {
+            userStoryId: requirement.userStoryId,
+            requirementName: requirement.requirementName,
+            description: requirement.description?.substring(0, 100) + '...',
+            acceptanceCriteriaCount: requirement.acceptanceCriteria?.length || 0
+          });
           
           // Solo añadimos requerimientos con información suficiente
-          if ((requirement.requirementName && requirement.requirementName.trim()) || 
+          if ((requirement.requirementName && requirement.requirementName.trim()) ||
               (requirement.description && requirement.description.trim())) {
             requirements.push(requirement);
           }
         }
-          if (requirements.length === 0) {
+
+        if (requirements.length === 0) {
           toast.error('No se encontraron requerimientos válidos en el archivo.');
           setIsGeneratingAI(false);
           return;
         }
 
         // Verificar si se encontraron historias en formato user story o requerimientos tradicionales
-        const userStoryCount = requirements.filter(req => 
-          req.description && 
+        const userStoryCount = requirements.filter(req =>
+          req.description &&
           (req.description.includes('Como ') || req.description.includes('Quiero ') || req.description.includes('Para '))
         ).length;
 
         // Mostrar feedback para que el usuario sepa qué tipo de formato se detectó
         if (userStoryCount > 0) {
-          toast.info(`Se detectaron ${userStoryCount} historias de usuario en formato "Como/Quiero/Para".`);
+          toast.info(`Se detectaron ${userStoryCount} historias de usuario en formato "Como/Quiero/Para" de la hoja "${processedSheetName}".`);
         } else {
-          toast.info(`Se detectaron ${requirements.length} requerimientos en formato tradicional.`);
+          toast.info(`Se detectaron ${requirements.length} requerimientos en formato tradicional de la hoja "${processedSheetName}".`);
         }
 
         // Llamar al servicio de IA para generar los casos de prueba
@@ -687,27 +761,31 @@ const ExcelTestCaseImportExport = ({
             projectId: selectedProjectId,
             testPlanId: selectedTestPlanId,
             cycleNumber: Number(cycle),
-            contextualInfo: selectedTestPlanId ? 
-              `Este caso de prueba forma parte del plan de pruebas con ID: ${selectedTestPlanId}. Estos casos pertenecerán al ciclo ${cycle}.` : undefined
+            contextualInfo: selectedTestPlanId ?
+              `Estos casos de prueba se generaron desde la hoja "${processedSheetName}" del archivo Excel y forman parte del plan de pruebas con ID: ${selectedTestPlanId}. Los casos pertenecerán al ciclo ${cycle}.` :
+              `Estos casos de prueba se generaron desde la hoja "${processedSheetName}" del archivo Excel. Los casos pertenecerán al ciclo ${cycle}.`
           }
         );
-        
+
         if (aiResult.success && aiResult.data.length > 0) {
           setGeneratedTestCases(aiResult.data);
 
           // Guardar automáticamente los casos generados
-          toast.success(`Se generaron ${aiResult.data.length} casos de prueba con IA. Guardando automáticamente...`);
+          toast.success(`Se generaron ${aiResult.data.length} casos de prueba desde la hoja "${processedSheetName}". Guardando automáticamente...`);
           await handleSaveGeneratedCases(true);
         } else {
-          toast.error(aiResult.error || 'Error al generar casos de prueba con IA.');
+          toast.error(aiResult.error || `Error al generar casos de prueba desde la hoja "${processedSheetName}".`);
         }
-      } catch (error) {
-        console.error('Error al procesar archivo para IA:', error);
-        toast.error('Error al procesar el archivo para generación con IA');
-      } finally {
-        setIsGeneratingAI(false);
-      }
-    };
+    }
+  }
+  catch (error) {
+    console.error('Error al procesar archivo para IA:', error);
+    const sheetInfo = processedSheetName ? ` desde la hoja "${processedSheetName}"` : '';
+    toast.error(`Error al procesar el archivo${sheetInfo} para generación con IA`);
+  } finally {
+    setIsGeneratingAI(false);
+  }
+};
     
     reader.readAsArrayBuffer(file);
   };
@@ -872,7 +950,70 @@ const ExcelTestCaseImportExport = ({
       toast.error('Error al descargar la plantilla');
     }
   };
-  
+
+  const handleDownloadHUTemplate = () => {
+    try {
+      // Crear datos para la plantilla de historias de usuario
+      const templateData = [
+        ['PLANTILLA DE HISTORIAS DE USUARIO PARA GENERACIÓN DE CASOS DE PRUEBA CON IA', '', '', '', '', '', '', '', '', ''],
+        [''],
+        ['IMPORTANTE: Esta hoja debe llamarse "HU" o contener "Historias" en el nombre', '', '', '', '', '', '', '', '', ''],
+        ['INSTRUCCIONES:', 'Complete las columnas según el formato de historia de usuario "Como [rol] Quiero [funcionalidad] Para [razón]"', '', '', '', '', '', '', '', ''],
+        ['También puede agregar criterios de aceptación detallados para mejorar la generación de casos de prueba', '', '', '', '', '', '', '', '', ''],
+        [''],
+        ['ID', 'Como (Rol)', 'Quiero (Funcionalidad)', 'Para (Razón/Beneficio)', 'Descripción Detallada', 'Criterios de Aceptación', 'Prioridad', 'Complejidad', 'Precondiciones', 'Datos de Prueba'],
+        ['HU-001', 'Como administrador del sistema', 'Quiero poder gestionar usuarios', 'Para controlar quién tiene acceso al sistema', 'El sistema debe permitir la gestión completa del ciclo de vida de usuarios, incluyendo la asignación de roles y permisos.', '1. Poder ver lista de usuarios\n2. Poder crear nuevos usuarios\n3. Poder editar usuarios existentes\n4. Poder desactivar usuarios', 'Alta', 'Media', 'Usuario con rol de administrador ya autenticado', 'Usuario1 (admin), Usuario2 (normal), Usuario3 (bloqueado)'],
+        ['HU-002', 'Como usuario registrado', 'Quiero poder restablecer mi contraseña', 'Para recuperar el acceso a mi cuenta', 'El proceso debe ser seguro y confirmar al usuario cuando se ha cambiado la contraseña correctamente.', '1. Recibir email con enlace para restablecer\n2. Enlace debe expirar después de 24 horas\n3. Poder crear nueva contraseña que cumpla requisitos', 'Media', 'Baja', 'Usuario registrado con email verificado', 'Email: usuario@example.com'],
+        ['HU-003', 'Como analista de calidad', 'Quiero poder generar reportes', 'Para evaluar la cobertura de pruebas', 'Los reportes deben incluir métricas de éxito, cobertura y defectos encontrados durante las pruebas.', '1. Filtrar reportes por fecha\n2. Filtrar reportes por proyecto\n3. Exportar en formato Excel\n4. Visualizar gráficos de resultados', 'Alta', 'Alta', 'Datos de pruebas existentes en el sistema', 'Proyecto: Sistema de Pagos, Fechas: 01/01/2025-30/05/2025'],
+        ['HU-004', 'Como usuario del sistema', 'Quiero personalizar mi perfil', 'Para ajustar configuración según mis preferencias', 'La función debe guardar automáticamente los cambios y aplicarlos inmediatamente.', '1. Modificar información personal\n2. Cambiar configuración de notificaciones\n3. Seleccionar tema visual\n4. Guardar cambios automáticamente', 'Baja', 'Media', 'Usuario con sesión iniciada', 'Temas: claro, oscuro, azul'],
+        [''],
+        ['NOTAS IMPORTANTES:', '', '', '', '', '', '', '', '', ''],
+        ['1. La primera columna debe contener IDs únicos (HU-001, HU-002, etc.)', '', '', '', '', '', '', '', '', ''],
+        ['2. Las columnas "Como", "Quiero" y "Para" son obligatorias para el formato de historia de usuario', '', '', '', '', '', '', '', '', ''],
+        ['3. Los criterios de aceptación pueden estar en una sola celda separados por saltos de línea', '', '', '', '', '', '', '', '', ''],
+        ['4. La prioridad y complejidad ayudan a la IA a generar casos más apropiados', '', '', '', '', '', '', '', '', ''],
+        ['5. Guarde esta hoja con el nombre "HU" en su archivo Excel', '', '', '', '', '', '', '', '', '']
+      ];
+
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+
+      // Estilizar algunas celdas
+      if (!ws['!merges']) ws['!merges'] = [];
+      // Merge para el título principal
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } });
+      ws['!merges'].push({ s: { r: 2, c: 0 }, e: { r: 2, c: 9 } });
+      ws['!merges'].push({ s: { r: 3, c: 1 }, e: { r: 3, c: 9 } });
+      ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: 9 } });
+
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { width: 12 }, // ID
+        { width: 30 }, // Como (Rol)
+        { width: 35 }, // Quiero (Funcionalidad)
+        { width: 35 }, // Para (Razón)
+        { width: 40 }, // Descripción
+        { width: 50 }, // Criterios
+        { width: 10 }, // Prioridad
+        { width: 12 }, // Complejidad
+        { width: 35 }, // Precondiciones
+        { width: 30 }  // Datos de Prueba
+      ];
+
+      // Crear libro de trabajo con la hoja "HU"
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'HU');
+
+      // Guardar archivo
+      saveAs(new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], { type: 'application/octet-stream' }), 'plantilla_historias_usuario.xlsx');
+
+      toast.success('Plantilla de historias de usuario descargada correctamente');
+    } catch (error) {
+      console.error('Error al descargar plantilla HU:', error);
+      toast.error('Error al descargar la plantilla de historias de usuario');
+    }
+  };
+
   const handleDownloadGeneratedCases = () => {
     if (generatedTestCases.length === 0) {
       toast.error('No hay casos de prueba generados para descargar.');
@@ -1484,7 +1625,7 @@ const ExcelTestCaseImportExport = ({
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={handleDownloadTemplate}
+                            onClick={handleDownloadHUTemplate}
                             disabled={isLoading}
                             className="mb-2"
                           >
@@ -2207,6 +2348,6 @@ El sistema debe mostrar dashboard..."
   }
 
   return renderContent();
-}
+};
 
 export default ExcelTestCaseImportExport;
