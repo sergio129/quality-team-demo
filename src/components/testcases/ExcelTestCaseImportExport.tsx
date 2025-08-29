@@ -588,12 +588,14 @@ const ExcelTestCaseImportExport = ({
 
           // Usar índices directos basados en el formato conocido del Excel
           // Formato esperado: ID, Como un [Rol], Necesito [Característica Funcionalidad], Con la finalidad de [Razón / Resultado], etc.
-          const userStoryId = row[0]?.toString() || ''; // Columna 0: ID
-          const rol = row[1]?.toString() || ''; // Columna 1: Como un [Rol]
-          const funcionalidad = row[2]?.toString() || ''; // Columna 2: Necesito [Característica Funcionalidad]
-          const razon = row[3]?.toString() || ''; // Columna 3: Con la finalidad de [Razón / Resultado]
-          const escenario = row[4]?.toString() || ''; // Columna 4: Número (#) de Escenario
-          const contexto = row[6]?.toString() || ''; // Columna 6: Contexto
+          const rawUserStoryId = row[0]?.toString().trim() || '';
+          // Generar ID de historia de usuario: usar el ID del Excel o generar HU-X basado en la fila
+          const userStoryId = rawUserStoryId ? rawUserStoryId : `HU${i - headerRowIndex}`;
+          const rol = row[1]?.toString().trim() || ''; // Columna 1: Como un [Rol]
+          const funcionalidad = row[2]?.toString().trim() || ''; // Columna 2: Necesito [Característica Funcionalidad]
+          const razon = row[3]?.toString().trim() || ''; // Columna 3: Con la finalidad de [Razón / Resultado]
+          const escenario = row[4]?.toString().trim() || ''; // Columna 4: Número (#) de Escenario
+          const contexto = row[6]?.toString().trim() || ''; // Columna 6: Contexto
 
           console.log(`📋 Valores extraídos - ID: "${userStoryId}", Rol: "${rol}", Funcionalidad: "${funcionalidad}", Razón: "${razon}"`);
           
@@ -604,12 +606,13 @@ const ExcelTestCaseImportExport = ({
             const cleanText = criteriaText.trim();
             
             // Caso 1: Texto ya dividido por líneas con numeración o viñetas (formato más común)
-            if (cleanText.match(/^\d+[\.\)-]\s|^[-*•]\s/m)) {        acceptanceCriteria = cleanText
-          .split(/\n/)
-          .map((line: string) => line.trim())
-          .filter(Boolean)
-          // Eliminar números o viñetas del inicio para normalizar
-          .map((line: string) => line.replace(/^\d+[\.\)-]\s+|^[-*•]\s+/, ''));
+            if (cleanText.match(/^\d+[\.\)-]\s|^[-*•]\s/m)) {
+              acceptanceCriteria = cleanText
+                .split(/\n/)
+                .map((line: string) => line.trim())
+                .filter(Boolean)
+                // Eliminar números o viñetas del inicio para normalizar
+                .map((line: string) => line.replace(/^\d+[\.\)-]\s+|^[-*•]\s+/, ''));
             }
             // Caso 2: Lista separada por puntos
             else if (cleanText.includes('. ') && cleanText.split('. ').length > 1) {
@@ -754,6 +757,18 @@ const ExcelTestCaseImportExport = ({
           toast.info(`Se detectaron ${requirements.length} requerimientos en formato tradicional de la hoja "${processedSheetName}".`);
         }
 
+        // Agregar delay para evitar rate limiting de Groq
+        const initialDelay = 5000;
+        const perRequirementDelay = 5000;
+        const estimatedTotalTime = initialDelay + (requirements.length * perRequirementDelay);
+
+        toast.info(`Procesando ${requirements.length} requisitos con IA. Tiempo estimado: ${Math.ceil(estimatedTotalTime/1000)} segundos.`, {
+          duration: 5000,
+        });
+
+        console.log(`⏳ Esperando ${initialDelay/1000} segundos antes de llamar a la API de Groq...`);
+        await new Promise(resolve => setTimeout(resolve, initialDelay));
+
         // Llamar al servicio de IA para generar los casos de prueba
         const aiResult = await AITestCaseGeneratorService.generateTestCasesWithAI(
           requirements,
@@ -768,20 +783,43 @@ const ExcelTestCaseImportExport = ({
         );
 
         if (aiResult.success && aiResult.data.length > 0) {
+          console.log('✅ Respuesta exitosa de Groq:', aiResult);
+          console.log('📊 Número de casos generados:', aiResult.data.length);
+          console.log('📋 Primer caso de ejemplo:', aiResult.data[0]);
+
           setGeneratedTestCases(aiResult.data);
 
           // Guardar automáticamente los casos generados
           toast.success(`Se generaron ${aiResult.data.length} casos de prueba desde la hoja "${processedSheetName}". Guardando automáticamente...`);
-          await handleSaveGeneratedCases(true);
+
+          // Pasar los datos directamente en lugar de depender del estado
+          await handleSaveGeneratedCases(true, aiResult.data);
         } else {
-          toast.error(aiResult.error || `Error al generar casos de prueba desde la hoja "${processedSheetName}".`);
+          console.log('❌ Respuesta fallida de Groq:', aiResult);
+
+          // Verificar si es un error de rate limiting
+          if (aiResult.error && aiResult.error.includes('Rate limit') || aiResult.error.includes('429')) {
+            toast.error(`Límite de tasa alcanzado. Se procesaron algunos requisitos. Considera esperar unos minutos antes de procesar más archivos.`, {
+              duration: 8000,
+            });
+          } else {
+            toast.error(aiResult.error || `Error al generar casos de prueba desde la hoja "${processedSheetName}".`);
+          }
         }
     }
   }
   catch (error) {
     console.error('Error al procesar archivo para IA:', error);
     const sheetInfo = processedSheetName ? ` desde la hoja "${processedSheetName}"` : '';
-    toast.error(`Error al procesar el archivo${sheetInfo} para generación con IA`);
+
+    // Verificar si es un error de rate limiting en la excepción
+    if (error instanceof Error && (error.message.includes('Rate limit') || error.message.includes('429'))) {
+      toast.error(`Límite de tasa de la API alcanzado${sheetInfo}. Espera unos minutos antes de intentar nuevamente.`, {
+        duration: 8000,
+      });
+    } else {
+      toast.error(`Error al procesar el archivo${sheetInfo} para generación con IA`);
+    }
   } finally {
     setIsGeneratingAI(false);
   }
@@ -828,12 +866,20 @@ const ExcelTestCaseImportExport = ({
     setIsPreviewDialogOpen(true);
   };
 
-  const handleSaveGeneratedCases = async (autoSave: boolean = false) => {
-    if (generatedTestCases.length === 0) {
+  const handleSaveGeneratedCases = async (autoSave: boolean = false, testCasesData?: PartialExtendedTestCase[]) => {
+    // Usar los datos proporcionados o los del estado
+    const casesToSave = testCasesData || generatedTestCases;
+
+    console.log('💾 Intentando guardar casos de prueba...');
+    console.log('📊 Casos a guardar:', casesToSave.length);
+    console.log('📋 Datos de casos:', casesToSave);
+
+    if (casesToSave.length === 0) {
+      console.log('❌ No hay casos para guardar');
       toast.error('No hay casos de prueba generados para guardar.');
       return;
     }
-    
+
     if (!selectedProjectId) {
       toast.error('Selecciona un proyecto para guardar los casos.');
       return;
@@ -849,30 +895,34 @@ const ExcelTestCaseImportExport = ({
     try {
       let created = 0;
       let errors = 0;
-      
+
       // Asegurarnos que todos los casos tengan los datos necesarios
-      const casesToSave = generatedTestCases.map((tc: PartialExtendedTestCase) => ({
+      const processedCasesToSave = casesToSave.map((tc: PartialExtendedTestCase) => ({
         ...tc,
         projectId: selectedProjectId,
         testPlanId: selectedTestPlanId || '',
         cycle: Number(cycle),
         updatedAt: new Date().toISOString()
       }));
-      
+
       // Si es guardado automático o pocos casos, guardar directamente
       // Si es guardado manual y hay muchos casos, mostrar vista previa
-      if (autoSave || casesToSave.length <= 5 || isPreviewDialogOpen) {
+      if (autoSave || processedCasesToSave.length <= 5 || isPreviewDialogOpen) {
+        console.log('💾 Guardando casos directamente...');
         // Guardado directo
-        for (const testCase of casesToSave) {
+        for (const testCase of processedCasesToSave) {
           try {
+            console.log('📝 Guardando caso:', testCase.name || 'Sin nombre');
             await createTestCase(testCase);
             created++;
+            console.log('✅ Caso guardado exitosamente');
           } catch (error) {
-            console.error('Error al guardar caso de prueba:', error);
+            console.error('❌ Error al guardar caso de prueba:', error);
             errors++;
           }
         }
         
+        console.log(`📊 Resultado del guardado - Creados: ${created}, Errores: ${errors}`);
         toast.success(`Guardado completado. ${created} casos creados. ${errors} errores.`);
         setIsAIDialogOpen(false);
         setIsPreviewDialogOpen(false);
@@ -883,7 +933,7 @@ const ExcelTestCaseImportExport = ({
         }
       } else {
         // Abrir vista previa para confirmación manual
-        setGeneratedTestCases(casesToSave);
+        setGeneratedTestCases(processedCasesToSave);
         setIsAIDialogOpen(false);
         setIsPreviewDialogOpen(true);
         setIsLoading(false);
