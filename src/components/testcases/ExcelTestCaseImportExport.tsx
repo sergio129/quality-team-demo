@@ -589,6 +589,15 @@ const ExcelTestCaseImportExport = ({
           // Usar índices directos basados en el formato conocido del Excel
           // Formato esperado: ID, Como un [Rol], Necesito [Característica Funcionalidad], Con la finalidad de [Razón / Resultado], etc.
           const rawUserStoryId = row[0]?.toString().trim() || '';
+
+          // FILTRAR filas que parecen ser encabezados o plantillas
+          if (rawUserStoryId === 'ID' || rawUserStoryId === '' ||
+              rawUserStoryId.toLowerCase().includes('como un [rol]') ||
+              rawUserStoryId.toLowerCase().includes('necesito [')) {
+            console.log(`⏭️ Saltando fila ${i + 1} - parece ser encabezado o plantilla: "${rawUserStoryId}"`);
+            continue;
+          }
+
           // Generar ID de historia de usuario: usar el ID del Excel o generar HU-X basado en la fila
           const userStoryId = rawUserStoryId ? rawUserStoryId : `HU${i - headerRowIndex}`;
           const rol = row[1]?.toString().trim() || ''; // Columna 1: Como un [Rol]
@@ -798,7 +807,7 @@ const ExcelTestCaseImportExport = ({
           console.log('❌ Respuesta fallida de Groq:', aiResult);
 
           // Verificar si es un error de rate limiting
-          if (aiResult.error && aiResult.error.includes('Rate limit') || aiResult.error.includes('429')) {
+          if (aiResult.error && (aiResult.error.includes('Rate limit') || aiResult.error.includes('429'))) {
             toast.error(`Límite de tasa alcanzado. Se procesaron algunos requisitos. Considera esperar unos minutos antes de procesar más archivos.`, {
               duration: 8000,
             });
