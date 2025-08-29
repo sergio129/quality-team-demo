@@ -676,7 +676,8 @@ export default function TestCaseTable({ projectId, testPlanId }: TestCaseTablePr
                 testPlanId={testPlanId}
                 initialMode="ai"
                 onRefresh={() => {
-                  // Cerrar el diálogo después de importar
+                  // Refrescar los datos de la tabla y cerrar el diálogo
+                  refreshData();
                   setIsAIDialogOpen(false);
                 }}
               />

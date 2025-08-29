@@ -107,30 +107,26 @@ const ExcelTestCaseImportExport = ({
     }
   }, [testPlanId, testPlans, selectedProjectId]);
 
-  // Efecto para manejar la inicialización en modo AI
+  // Log para debugging del flujo de inicialización
   useEffect(() => {
-    if (initialMode === 'ai') {
-      setUseAI(true);
-      // No abrir automáticamente el modal de importación cuando estamos en modo AI
-      // porque ya estamos dentro de un modal del componente padre
+    console.log('🔧 ExcelTestCaseImportExport inicializado con:');
+    console.log('🔧 initialMode:', initialMode);
+    console.log('🔧 projectId:', projectId);
+    console.log('🔧 testPlanId:', testPlanId);
+    console.log('🔧 useAI:', useAI);
+    console.log('🔧 selectedProjectId:', selectedProjectId);
+    console.log('🔧 selectedTestPlanId:', selectedTestPlanId);
+  }, []);
 
-      // Inicializar con los valores de las props si están disponibles
-      if (projectId && !selectedProjectId) {
-        setSelectedProjectId(projectId);
-      }
-      if (testPlanId && !selectedTestPlanId) {
-        setSelectedTestPlanId(testPlanId);
-      }
-    }
-  }, [initialMode, projectId, testPlanId, selectedProjectId, selectedTestPlanId]);
-
-  // Efecto para sincronizar plan de pruebas cuando cambia el proyecto
+  // Log para debugging del diálogo de historia de usuario
   useEffect(() => {
-    if (selectedProjectId && !selectedTestPlanId && testPlans.length > 0) {
-      // Si hay planes de prueba para el proyecto, seleccionar el primero por defecto
-      setSelectedTestPlanId(testPlans[0].id);
+    if (isUserStoryDialogOpen) {
+      console.log('🚨 Diálogo de historia de usuario ABIERTO');
+      console.log('🚨 userStoryInput:', userStoryInput);
+      console.log('🚨 selectedProjectId:', selectedProjectId);
+      console.log('🚨 selectedTestPlanId:', selectedTestPlanId);
     }
-  }, [selectedProjectId, testPlans, selectedTestPlanId]);
+  }, [isUserStoryDialogOpen]);
   
   const handleExportToExcel = () => {
     setIsLoading(true);
@@ -795,14 +791,32 @@ const ExcelTestCaseImportExport = ({
           console.log('✅ Respuesta exitosa de Groq:', aiResult);
           console.log('📊 Número de casos generados:', aiResult.data.length);
           console.log('📋 Primer caso de ejemplo:', aiResult.data[0]);
+          console.log('📋 Todos los casos generados:', aiResult.data);
 
-          setGeneratedTestCases(aiResult.data);
+          // Convertir los datos del servicio IA al tipo esperado por el componente
+          const convertedTestCases: PartialExtendedTestCase[] = aiResult.data.map(tc => ({
+            ...tc,
+            observations: '', // Campo adicional de ExtendedTestCase
+            // Asegurar que todos los campos opcionales estén presentes
+            testPlanId: tc.testPlanId || '',
+            category: tc.category || '',
+            responsiblePerson: tc.responsiblePerson || '',
+            priority: tc.priority || 'Media' as const
+          }));
+
+          console.log('🔄 Casos convertidos:', convertedTestCases);
+          console.log('🔄 Longitud de casos convertidos:', convertedTestCases.length);
+
+          setGeneratedTestCases(convertedTestCases);
 
           // Guardar automáticamente los casos generados
           toast.success(`Se generaron ${aiResult.data.length} casos de prueba desde la hoja "${processedSheetName}". Guardando automáticamente...`);
 
-          // Pasar los datos directamente en lugar de depender del estado
-          await handleSaveGeneratedCases(true, aiResult.data);
+          // Pasar los datos convertidos directamente en lugar de depender del estado
+          console.log('🚀 EXCEL - Llamando a handleSaveGeneratedCases con datos convertidos...');
+          console.log('🚀 EXCEL - Datos que se pasan:', convertedTestCases);
+          console.log('🚀 EXCEL - Longitud de datos que se pasan:', convertedTestCases.length);
+          await handleSaveGeneratedCases(true, convertedTestCases);
         } else {
           console.log('❌ Respuesta fallida de Groq:', aiResult);
 
@@ -876,10 +890,31 @@ const ExcelTestCaseImportExport = ({
   };
 
   const handleSaveGeneratedCases = async (autoSave: boolean = false, testCasesData?: PartialExtendedTestCase[]) => {
-    // Usar los datos proporcionados o los del estado
-    const casesToSave = testCasesData || generatedTestCases;
+    console.log('🎯 handleSaveGeneratedCases llamada con parámetros:');
+    console.log('🎯 autoSave:', autoSave);
+    console.log('🎯 testCasesData recibido:', testCasesData);
+    console.log('🎯 testCasesData length:', testCasesData?.length || 0);
+    console.log('🎯 Estado generatedTestCases actual:', generatedTestCases);
+    console.log('🎯 Estado generatedTestCases length:', generatedTestCases?.length || 0);
 
-    console.log('💾 Intentando guardar casos de prueba...');
+    // Usar los datos proporcionados o los del estado
+    let casesToSave = testCasesData || generatedTestCases;
+
+    // Si se proporcionaron datos directamente, usarlos sin esperar
+    if (testCasesData && testCasesData.length > 0) {
+      casesToSave = testCasesData;
+      console.log('✅ Usando datos proporcionados directamente:', casesToSave.length);
+    }
+    // Si no hay datos proporcionados Y el estado está vacío, intentar esperar un poco más
+    else if (!testCasesData && casesToSave.length === 0) {
+      console.log('⏳ Esperando a que el estado se actualice...');
+      // Esperar más tiempo para permitir que el estado se actualice
+      await new Promise(resolve => setTimeout(resolve, 500));
+      casesToSave = generatedTestCases;
+      console.log('⏳ Estado después del delay extendido:', casesToSave);
+    }
+
+    console.log('� Intentando guardar casos de prueba...');
     console.log('📊 Casos a guardar:', casesToSave.length);
     console.log('📋 Datos de casos:', casesToSave);
 
@@ -938,8 +973,18 @@ const ExcelTestCaseImportExport = ({
         
         // Si hay una función de refresh, la llamamos para actualizar la vista
         if (onRefresh) {
+          console.log('🔄 Llamando a onRefresh para actualizar la tabla...');
           onRefresh();
         }
+        
+        // También intentar refrescar directamente si hay un refreshData disponible
+        // Esto es una medida adicional por si SWR no está revalidando correctamente
+        setTimeout(() => {
+          if (onRefresh) {
+            console.log('🔄 Refresh adicional después de timeout...');
+            onRefresh();
+          }
+        }, 1000);
       } else {
         // Abrir vista previa para confirmación manual
         setGeneratedTestCases(processedCasesToSave);
@@ -1199,12 +1244,14 @@ const ExcelTestCaseImportExport = ({
         contextualInfo: `Proyecto: ${projects.find(p => p.id === selectedProjectId)?.proyecto || 'Proyecto sin nombre'}`
       });
 
-      setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
+      // NO actualizar el estado primero - guardar directamente
+      // setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
 
-      // Guardar automáticamente los casos generados
+      // Guardar automáticamente los casos generados - PASAR LOS DATOS DIRECTAMENTE
       if (testCases.length > 0) {
+        console.log('🔥 GENERANDO DESDE HISTORIA DE USUARIO - Guardando automáticamente...');
         toast.success(`Generados ${testCases.length} casos de prueba. Guardando automáticamente...`);
-        await handleSaveGeneratedCases(true);
+        await handleSaveGeneratedCases(true, testCases as PartialExtendedTestCase[]);
       } else {
         toast.success(`Generados ${testCases.length} casos de prueba desde la historia de usuario`);
       }
@@ -1240,12 +1287,14 @@ const ExcelTestCaseImportExport = ({
         contextualInfo: `Proyecto: ${projects.find(p => p.id === selectedProjectId)?.proyecto || 'Proyecto sin nombre'}`
       });
 
-      setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
+      // NO actualizar el estado primero - guardar directamente
+      // setGeneratedTestCases(testCases as PartialExtendedTestCase[]);
 
-      // Guardar automáticamente los casos generados
+      // Guardar automáticamente los casos generados - PASAR LOS DATOS DIRECTAMENTE
       if (testCases.length > 0) {
+        console.log('🔥 GENERANDO DESDE REQUISITOS - Guardando automáticamente...');
         toast.success(`Generados ${testCases.length} casos de prueba. Guardando automáticamente...`);
-        await handleSaveGeneratedCases(true);
+        await handleSaveGeneratedCases(true, testCases as PartialExtendedTestCase[]);
       } else {
         toast.success(`Generados ${testCases.length} casos de prueba desde los requisitos`);
       }

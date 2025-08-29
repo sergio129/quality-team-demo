@@ -27,12 +27,15 @@ export function useTestCases(projectId?: string, testPlanId?: string) {
       revalidateOnFocus: true,
       revalidateOnMount: true,
       revalidateIfStale: true,
-      dedupingInterval: 2000 // Reducido para recargar más frecuentemente
+      dedupingInterval: 1000, // Reducido para recargar más frecuentemente
+      focusThrottleInterval: 1000, // Reducido para revalidar más rápido al enfocar
+      errorRetryInterval: 1000 // Reintentar errores más rápido
     }
   );
 
   // Incluir una función para forzar refresco
   const forceRefresh = () => {
+    console.log('🔄 Forzando refresh de casos de prueba para endpoint:', endpoint);
     refreshData();
   };
 
@@ -124,12 +127,27 @@ export async function createTestCase(testCase: Partial<TestCase>) {
 
       const newTestCase = await response.json();
       
-      // Revalidar la caché
-      mutate(TEST_CASES_API);
+      console.log('✅ Caso guardado exitosamente:', {
+        id: newTestCase.id,
+        name: newTestCase.name,
+        projectId: newTestCase.projectId,
+        testPlanId: newTestCase.testPlanId
+      });
+      
+      // Revalidar la caché de manera más agresiva
+      await mutate(TEST_CASES_API);
       if (testCase.projectId) {
-        mutate(`${TEST_CASES_API}?projectId=${testCase.projectId}`);
-        mutate(`${TEST_CASE_STATS_API}?projectId=${testCase.projectId}`);
+        await mutate(`${TEST_CASES_API}?projectId=${testCase.projectId}`);
+        await mutate(`${TEST_CASE_STATS_API}?projectId=${testCase.projectId}`);
       }
+      
+      // Revalidación adicional con delay para asegurar que se actualice
+      setTimeout(() => {
+        mutate(TEST_CASES_API);
+        if (testCase.projectId) {
+          mutate(`${TEST_CASES_API}?projectId=${testCase.projectId}`);
+        }
+      }, 500);
       
       return newTestCase;
     },
