@@ -1174,9 +1174,6 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
 
               // Generar cada caso de prueba con su sección de evidencias
               ...filteredTestCases.map((tc, index) => {
-                const pasos = tc.steps?.map((step, stepIndex) => 
-                  `${stepIndex + 1}. ${step.description}`
-                ).join('\n') || '';
                 
                 return [
                   // Título del caso de prueba
@@ -1210,7 +1207,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                         children: [
                           new TableCell({
                             children: [new Paragraph({ 
-                              children: [new TextRun({ text: "Historia de Usuario:", bold: true, color: "FFFFFF", size: 20 })],
+                              children: [new TextRun({ text: "Historia de Usuario:", bold: true, color: "000000", size: 20 })],
                               alignment: AlignmentType.CENTER
                             })],
                             width: { size: 30, type: WidthType.PERCENTAGE },
@@ -1231,7 +1228,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                         children: [
                           new TableCell({
                             children: [new Paragraph({ 
-                              children: [new TextRun({ text: "Nombre del Caso:", bold: true, color: "FFFFFF", size: 20 })],
+                              children: [new TextRun({ text: "Nombre del Caso:", bold: true, color: "000000", size: 20 })],
                               alignment: AlignmentType.CENTER
                             })],
                             shading: { type: ShadingType.CLEAR, color: "1F4E79" }
@@ -1250,16 +1247,25 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                         children: [
                           new TableCell({
                             children: [new Paragraph({ 
-                              children: [new TextRun({ text: "Pasos de Ejecución:", bold: true, color: "FFFFFF", size: 20 })],
+                              children: [new TextRun({ text: "Pasos de Ejecución:", bold: true, color: "000000", size: 20 })],
                               alignment: AlignmentType.CENTER
                             })],
                             shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                           }),
                           new TableCell({
-                            children: [new Paragraph({ 
-                              children: [new TextRun({ text: pasos, size: 16 })],
-                              alignment: AlignmentType.LEFT
-                            })],
+                            children: [
+                              // Generar cada paso como un párrafo separado
+                              ...(tc.steps?.map((step, stepIndex) => 
+                                new Paragraph({ 
+                                  children: [new TextRun({ 
+                                    text: `${stepIndex + 1}. ${step.description}`, 
+                                    size: 16 
+                                  })],
+                                  alignment: AlignmentType.LEFT,
+                                  spacing: { after: 120 }
+                                })
+                              ) || [new Paragraph({ children: [new TextRun({ text: "No hay pasos definidos", size: 16 })] })])
+                            ],
                             shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
                           })
                         ]
@@ -1269,7 +1275,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                         children: [
                           new TableCell({
                             children: [new Paragraph({ 
-                              children: [new TextRun({ text: "Resultado Esperado:", bold: true, color: "FFFFFF", size: 20 })],
+                              children: [new TextRun({ text: "Resultado Esperado:", bold: true, color: "000000", size: 20 })],
                               alignment: AlignmentType.CENTER
                             })],
                             shading: { type: ShadingType.CLEAR, color: "1F4E79" }
