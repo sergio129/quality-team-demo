@@ -850,11 +850,24 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                   new TextRun({
                     text: "CASOS DE PRUEBA - QUALITY TEAMS",
                     bold: true,
-                    size: 32,
-                    color: "2F5597"
+                    size: 36,
+                    color: "1F4E79"
                   })
                 ],
                 heading: HeadingLevel.TITLE,
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 600 }
+              }),
+
+              // Línea decorativa
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "═══════════════════════════════════════════════════════════════",
+                    color: "1F4E79",
+                    size: 24
+                  })
+                ],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 400 }
               }),
@@ -865,70 +878,110 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                   new TextRun({
                     text: "INFORMACIÓN DEL PROYECTO",
                     bold: true,
-                    size: 24,
-                    color: "2F5597"
+                    size: 28,
+                    color: "1F4E79"
                   })
                 ],
                 heading: HeadingLevel.HEADING_1,
-                spacing: { before: 200, after: 200 }
+                spacing: { before: 300, after: 300 }
               }),
 
               new Table({
                 width: { size: 100, type: WidthType.PERCENTAGE },
                 borders: {
-                  top: { style: BorderStyle.SINGLE, size: 1 },
-                  bottom: { style: BorderStyle.SINGLE, size: 1 },
-                  left: { style: BorderStyle.SINGLE, size: 1 },
-                  right: { style: BorderStyle.SINGLE, size: 1 },
-                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-                  insideVertical: { style: BorderStyle.SINGLE, size: 1 }
+                  top: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  bottom: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  left: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  right: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" }
                 },
                 rows: [
                   new TableRow({
                     children: [
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Proyecto:", bold: true })] })],
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Proyecto:", bold: true, color: "FFFFFF" })],
+                          alignment: AlignmentType.CENTER
+                        })],
                         width: { size: 25, type: WidthType.PERCENTAGE },
-                        shading: { type: ShadingType.CLEAR, color: "E8F4FD" }
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: project?.proyecto || '' })] })],
-                        width: { size: 25, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Código JIRA:", bold: true })] })],
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: project?.proyecto || '', size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
                         width: { size: 25, type: WidthType.PERCENTAGE },
-                        shading: { type: ShadingType.CLEAR, color: "E8F4FD" }
+                        shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: project?.idJira || '' })] })],
-                        width: { size: 25, type: WidthType.PERCENTAGE }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Código JIRA:", bold: true, color: "FFFFFF" })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        width: { size: 25, type: WidthType.PERCENTAGE },
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
+                      }),
+                      new TableCell({
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: project?.idJira || '', size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        width: { size: 25, type: WidthType.PERCENTAGE },
+                        shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
                       })
                     ]
                   }),
                   new TableRow({
                     children: [
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Fecha inicio:", bold: true })] })],
-                        shading: { type: ShadingType.CLEAR, color: "E8F4FD" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Fecha inicio:", bold: true, color: "FFFFFF" })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: fechaInicio })] })]
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: fechaInicio, size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Fecha fin:", bold: true })] })],
-                        shading: { type: ShadingType.CLEAR, color: "E8F4FD" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Fecha fin:", bold: true, color: "FFFFFF" })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: fechaFin })] })]
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: fechaFin, size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
                       })
                     ]
                   })
                 ]
               }),
 
-              // Espacio
-              new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 300 } }),
+              // Espacio y línea decorativa
+              new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400, after: 200 } }),
+              
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "───────────────────────────────────────────────────────────────",
+                    color: "D5E0F0",
+                    size: 20
+                  })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 300 }
+              }),
 
               // Estadísticas por ciclo
               new Paragraph({
@@ -936,183 +989,133 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                   new TextRun({
                     text: "ESTADÍSTICAS POR CICLO",
                     bold: true,
-                    size: 24,
-                    color: "2F5597"
+                    size: 28,
+                    color: "1F4E79"
                   })
                 ],
                 heading: HeadingLevel.HEADING_1,
-                spacing: { before: 200, after: 200 }
+                spacing: { before: 200, after: 300 }
               }),
 
               new Table({
                 width: { size: 100, type: WidthType.PERCENTAGE },
                 borders: {
-                  top: { style: BorderStyle.SINGLE, size: 1 },
-                  bottom: { style: BorderStyle.SINGLE, size: 1 },
-                  left: { style: BorderStyle.SINGLE, size: 1 },
-                  right: { style: BorderStyle.SINGLE, size: 1 },
-                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-                  insideVertical: { style: BorderStyle.SINGLE, size: 1 }
+                  top: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  bottom: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  left: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  right: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" }
                 },
                 rows: [
                   new TableRow({
                     children: [
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Ciclo", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Ciclo", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Diseñados", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Diseñados", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Exitosos", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Exitosos", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "No ejecutados", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "No ejecutados", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Defectos", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "Defectos", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "% Exitosos", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "% Exitosos", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       }),
                       new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "% Incidentes", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" }
+                        children: [new Paragraph({ 
+                          children: [new TextRun({ text: "% Incidentes", bold: true, color: "FFFFFF", size: 22 })],
+                          alignment: AlignmentType.CENTER
+                        })],
+                        shading: { type: ShadingType.CLEAR, color: "1F4E79" }
                       })
                     ]
                   }),
-                  ...Object.entries(cycleStats).map(([cycle, stats]) => {
+                  ...Object.entries(cycleStats).map(([cycle, stats], index) => {
                     const exitosoPercent = stats.disenados ? Math.round((stats.exitosos / stats.disenados) * 100) : 0;
                     const incidentesPercent = stats.disenados ? Math.round((stats.defectos / stats.disenados) * 100) : 0;
+                    const isEvenRow = index % 2 === 0;
                     
                     return new TableRow({
                       children: [
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: cycle })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(stats.disenados) })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(stats.exitosos) })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(stats.noEjecutados) })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(stats.defectos) })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${exitosoPercent}%` })] })] }),
-                        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${incidentesPercent}%` })] })] })
-                      ]
-                    });
-                  })
-                ]
-              }),
-
-              // Espacio
-              new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 300 } }),
-
-              // Calidad del desarrollo
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "Calidad del desarrollo: ", bold: true, size: 20 }),
-                  new TextRun({ 
-                    text: calidad === -1 ? 'N/A' : `${Math.round(calidad)}%`, 
-                    bold: true, 
-                    size: 20,
-                    color: calidad === -1 ? "808080" : calidad > 80 ? "2EA043" : calidad > 60 ? "FFA500" : "DC3545"
-                  })
-                ],
-                spacing: { before: 200, after: 400 }
-              }),
-
-              // Casos de prueba
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: "CASOS DE PRUEBA DETALLADOS",
-                    bold: true,
-                    size: 24,
-                    color: "2F5597"
-                  })
-                ],
-                heading: HeadingLevel.HEADING_1,
-                spacing: { before: 200, after: 200 }
-              }),
-
-              // Tabla de casos de prueba
-              new Table({
-                width: { size: 100, type: WidthType.PERCENTAGE },
-                borders: {
-                  top: { style: BorderStyle.SINGLE, size: 1 },
-                  bottom: { style: BorderStyle.SINGLE, size: 1 },
-                  left: { style: BorderStyle.SINGLE, size: 1 },
-                  right: { style: BorderStyle.SINGLE, size: 1 },
-                  insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-                  insideVertical: { style: BorderStyle.SINGLE, size: 1 }
-                },
-                rows: [
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "HU", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 8, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "ID", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 12, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Nombre del caso", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 25, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Pasos", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 25, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Resultado esperado", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 20, type: WidthType.PERCENTAGE }
-                      }),
-                      new TableCell({
-                        children: [new Paragraph({ children: [new TextRun({ text: "Estado", bold: true, color: "FFFFFF" })] })],
-                        shading: { type: ShadingType.CLEAR, color: "2F5597" },
-                        width: { size: 10, type: WidthType.PERCENTAGE }
-                      })
-                    ]
-                  }),
-                  ...filteredTestCases.map((tc, index) => {
-                    const pasos = tc.steps?.map((step, stepIndex) => 
-                      `${stepIndex + 1}. ${step.description}`
-                    ).join('\n') || '';
-                    
-                    return new TableRow({
-                      children: [
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: tc.userStoryId || '' })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: cycle, size: 20, bold: true })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: tc.codeRef || '' })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: String(stats.disenados), size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: tc.name || '' })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: String(stats.exitosos), size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: pasos, size: 18 })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: String(stats.noEjecutados), size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: tc.expectedResult || '', size: 18 })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: String(stats.defectos), size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         }),
-                        new TableCell({
-                          children: [new Paragraph({ children: [new TextRun({ text: tc.status || '' })] })],
-                          shading: index % 2 === 0 ? { type: ShadingType.CLEAR, color: "F8F9FA" } : undefined
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: `${exitosoPercent}%`, size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
+                        }),
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            children: [new TextRun({ text: `${incidentesPercent}%`, size: 20 })],
+                            alignment: AlignmentType.CENTER
+                          })],
+                          shading: isEvenRow ? { type: ShadingType.CLEAR, color: "F8FAFC" } : { type: ShadingType.CLEAR, color: "FFFFFF" }
                         })
                       ]
                     });
@@ -1120,27 +1123,285 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
                 ]
               }),
 
-              // Espacio para evidencias
-              new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400 } }),
+              // Espacio y línea decorativa final
+              new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400, after: 200 } }),
 
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: "SECCIÓN PARA EVIDENCIAS",
+                    text: "───────────────────────────────────────────────────────────────",
+                    color: "D5E0F0",
+                    size: 20
+                  })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 600 }
+              }),
+
+              // Nueva página para los casos de prueba
+              new Paragraph({
+                children: [new TextRun({ text: "" })],
+                pageBreakBefore: true,
+                spacing: { before: 0, after: 400 }
+              }),
+
+              // Título de casos de prueba
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "CASOS DE PRUEBA DETALLADOS",
                     bold: true,
-                    size: 24,
-                    color: "2F5597"
+                    size: 32,
+                    color: "1F4E79"
                   })
                 ],
                 heading: HeadingLevel.HEADING_1,
-                spacing: { before: 200, after: 200 }
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 0, after: 400 }
               }),
 
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: "Esta sección está reservada para que el equipo de QA pueda agregar las evidencias de ejecución de cada caso de prueba. Se recomienda incluir:",
-                    size: 20
+                    text: "═══════════════════════════════════════════════════════════════",
+                    color: "1F4E79",
+                    size: 24
+                  })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 600 }
+              }),
+
+              // Generar cada caso de prueba con su sección de evidencias
+              ...filteredTestCases.map((tc, index) => {
+                const pasos = tc.steps?.map((step, stepIndex) => 
+                  `${stepIndex + 1}. ${step.description}`
+                ).join('\n') || '';
+                
+                return [
+                  // Título del caso de prueba
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `CASO DE PRUEBA: ${tc.codeRef || `TC-${index + 1}`}`,
+                        bold: true,
+                        size: 26,
+                        color: "1F4E79"
+                      })
+                    ],
+                    spacing: { before: 400, after: 300 },
+                    pageBreakBefore: index > 0 // Nueva página para cada caso después del primero
+                  }),
+
+                  // Información del caso de prueba en tabla elegante
+                  new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                      bottom: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                      left: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                      right: { style: BorderStyle.SINGLE, size: 2, color: "1F4E79" },
+                      insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" },
+                      insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" }
+                    },
+                    rows: [
+                      // Fila 1: HU y Estado en una sola fila
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: "Historia de Usuario:", bold: true, color: "FFFFFF", size: 20 })],
+                              alignment: AlignmentType.CENTER
+                            })],
+                            width: { size: 30, type: WidthType.PERCENTAGE },
+                            shading: { type: ShadingType.CLEAR, color: "1F4E79" }
+                          }),
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: tc.userStoryId || '', size: 20, bold: true })],
+                              alignment: AlignmentType.CENTER
+                            })],
+                            width: { size: 70, type: WidthType.PERCENTAGE },
+                            shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
+                          })
+                        ]
+                      }),
+                      // Fila 2: Nombre del caso
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: "Nombre del Caso:", bold: true, color: "FFFFFF", size: 20 })],
+                              alignment: AlignmentType.CENTER
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "1F4E79" }
+                          }),
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: tc.name || '', size: 18 })],
+                              alignment: AlignmentType.LEFT
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "FFFFFF" }
+                          })
+                        ]
+                      }),
+                      // Fila 3: Pasos de ejecución
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: "Pasos de Ejecución:", bold: true, color: "FFFFFF", size: 20 })],
+                              alignment: AlignmentType.CENTER
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "1F4E79" }
+                          }),
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: pasos, size: 16 })],
+                              alignment: AlignmentType.LEFT
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
+                          })
+                        ]
+                      }),
+                      // Fila 4: Resultado esperado
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: "Resultado Esperado:", bold: true, color: "FFFFFF", size: 20 })],
+                              alignment: AlignmentType.CENTER
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "1F4E79" }
+                          }),
+                          new TableCell({
+                            children: [new Paragraph({ 
+                              children: [new TextRun({ text: tc.expectedResult || '', size: 16 })],
+                              alignment: AlignmentType.LEFT
+                            })],
+                            shading: { type: ShadingType.CLEAR, color: "FFFFFF" }
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+
+                  // Espacio antes de la sección de evidencias
+                  new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 400, after: 200 } }),
+
+                  // Sección de evidencias
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `📋 EVIDENCIAS - ${tc.codeRef || `TC-${index + 1}`}`,
+                        bold: true,
+                        size: 24,
+                        color: "0F6CBD"
+                      })
+                    ],
+                    spacing: { before: 200, after: 300 }
+                  }),
+
+                  // Tabla simple para evidencias
+                  new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    borders: {
+                      top: { style: BorderStyle.SINGLE, size: 2, color: "0F6CBD" },
+                      bottom: { style: BorderStyle.SINGLE, size: 2, color: "0F6CBD" },
+                      left: { style: BorderStyle.SINGLE, size: 2, color: "0F6CBD" },
+                      right: { style: BorderStyle.SINGLE, size: 2, color: "0F6CBD" },
+                      insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" },
+                      insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "D5E0F0" }
+                    },
+                    rows: [
+                      new TableRow({
+                        children: [
+                          new TableCell({
+                            children: [
+                              new Paragraph({ 
+                                children: [new TextRun({ 
+                                  text: "[Insertar capturas de pantalla aquí]",
+                                  italics: true,
+                                  color: "666666",
+                                  size: 16
+                                })],
+                                spacing: { before: 200, after: 200 }
+                              }),
+                              new Paragraph({ children: [new TextRun({ text: "" })] }),
+                              new Paragraph({ children: [new TextRun({ text: "" })] }),
+                              new Paragraph({ children: [new TextRun({ text: "" })] }),
+                              new Paragraph({ children: [new TextRun({ text: "" })] }),
+                              new Paragraph({ children: [new TextRun({ text: "" })] }),
+                              new Paragraph({ 
+                                children: [
+                                  new TextRun({ text: "☐ Exitoso   ☐ Fallido   ☐ Bloqueado", size: 18, bold: true })
+                                ],
+                                spacing: { before: 300, after: 200 }
+                              })
+                            ],
+                            shading: { type: ShadingType.CLEAR, color: "F8FAFC" }
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+
+                  // Línea separadora al final de cada caso
+                  new Paragraph({ children: [new TextRun({ text: "" })], spacing: { before: 300, after: 200 } }),
+                  
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: "───────────────────────────────────────────────────────────────",
+                        color: "D5E0F0",
+                        size: 16
+                      })
+                    ],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 200 }
+                  })
+                ];
+              }).flat(),
+
+              // Página final con resumen
+              new Paragraph({
+                children: [new TextRun({ text: "" })],
+                pageBreakBefore: true,
+                spacing: { before: 0, after: 400 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "RESUMEN DE EJECUCIÓN",
+                    bold: true,
+                    size: 32,
+                    color: "1F4E79"
+                  })
+                ],
+                heading: HeadingLevel.HEADING_1,
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 0, after: 400 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `Total de casos de prueba documentados: ${filteredTestCases.length}`,
+                    bold: true,
+                    size: 22
+                  })
+                ],
+                spacing: { after: 300 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "Instrucciones para el equipo de QA:",
+                    bold: true,
+                    size: 20,
+                    color: "1F4E79"
                   })
                 ],
                 spacing: { after: 200 }
@@ -1148,48 +1409,90 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
 
               new Paragraph({
                 children: [
-                  new TextRun({ text: "• Capturas de pantalla de la ejecución", size: 18 })
+                  new TextRun({ 
+                    text: "1. Ejecutar cada caso de prueba siguiendo los pasos detallados", 
+                    size: 18 
+                  })
                 ],
                 spacing: { after: 100 }
-              }),
-
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "• Resultados obtenidos vs esperados", size: 18 })
-                ],
-                spacing: { after: 100 }
-              }),
-
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "• Observaciones y comentarios adicionales", size: 18 })
-                ],
-                spacing: { after: 100 }
-              }),
-
-              new Paragraph({
-                children: [
-                  new TextRun({ text: "• Defectos encontrados y su descripción", size: 18 })
-                ],
-                spacing: { after: 100 }
-              }),
-
-              // Espacio adicional para evidencias
-              new Paragraph({ 
-                children: [new TextRun({ text: "" })], 
-                spacing: { before: 300, after: 300 } 
               }),
 
               new Paragraph({
                 children: [
                   new TextRun({ 
-                    text: "[ESPACIO RESERVADO PARA EVIDENCIAS - INSERTAR CAPTURAS DE PANTALLA Y DOCUMENTACIÓN ADICIONAL]",
+                    text: "2. Documentar todas las evidencias (capturas, logs, etc.)", 
+                    size: 18 
+                  })
+                ],
+                spacing: { after: 100 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "3. Marcar el estado final de cada caso de prueba", 
+                    size: 18 
+                  })
+                ],
+                spacing: { after: 100 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "4. Reportar defectos encontrados con el formato establecido", 
+                    size: 18 
+                  })
+                ],
+                spacing: { after: 100 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "5. Completar la información del ejecutor en cada caso", 
+                    size: 18 
+                  })
+                ],
+                spacing: { after: 300 }
+              }),
+
+              // Información de generación del documento
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: "───────────────────────────────────────────────────────────────",
+                    color: "D5E0F0",
+                    size: 20
+                  })
+                ],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 400, after: 200 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: `Documento generado automáticamente el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`,
                     italics: true,
+                    size: 16,
                     color: "666666"
                   })
                 ],
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 200, after: 200 }
+                spacing: { after: 100 }
+              }),
+
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "Quality Teams - Sistema de Gestión de Casos de Prueba",
+                    italics: true,
+                    size: 16,
+                    color: "666666"
+                  })
+                ],
+                alignment: AlignmentType.CENTER
               })
             ]
           }
