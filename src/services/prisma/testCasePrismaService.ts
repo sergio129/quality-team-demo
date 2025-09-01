@@ -77,20 +77,42 @@ export default class TestCasePrismaService {
   // Guardar un nuevo caso de prueba
   async saveTestCase(testCase: TestCase): Promise<boolean> {
     try {
-      const { steps, evidences, defects, ...testCaseData } = testCase;
+      const { steps, evidences, defects, ...rest } = testCase;
+
+      // Filtrar solo los campos válidos del esquema Prisma
+      const validTestCaseData = {
+        userStoryId: rest.userStoryId,
+        name: rest.name,
+        projectId: rest.projectId,
+        codeRef: rest.codeRef,
+        expectedResult: rest.expectedResult,
+        testType: rest.testType || null,
+        status: rest.status || null,
+        category: rest.category || null,
+        responsiblePerson: rest.responsiblePerson || null,
+        priority: rest.priority || null,
+        cycle: rest.cycle || null,
+        testPlanId: rest.testPlanId
+      };
 
       const createdTestCase = await prisma.testCase.create({
         data: {
-          ...testCaseData,
+          ...validTestCaseData,
           steps: {
             create: steps.map(step => ({
-              ...step
+              description: step.description,
+              expected: step.expected || null
             }))
           },
           evidences: {
             create: evidences?.map(evidence => ({
-              ...evidence,
-              date: new Date(evidence.date)
+              date: new Date(evidence.date),
+              tester: evidence.tester,
+              precondition: evidence.precondition || null,
+              result: evidence.result,
+              comments: evidence.comments || null,
+              steps: evidence.steps || [],
+              screenshots: evidence.screenshots || []
             })) || []
           },
           defects: {
