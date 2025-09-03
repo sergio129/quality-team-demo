@@ -14,7 +14,7 @@ import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, useAllProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
-import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
+import { getWorkingDatesArray, isNonWorkingDay, formatDate } from '@/utils/dateUtils';
  import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
 import {
   Dialog,
@@ -1491,19 +1491,19 @@ export default function ProjectTable() {
                           <div>
                             <span className="text-xs text-gray-500">Fecha Entrega:</span>
                             <p className="font-medium">
-                              {projectToViewDetails.fechaEntrega ? new Date(projectToViewDetails.fechaEntrega).toLocaleDateString() : 'N/A'}
+                              {projectToViewDetails.fechaEntrega ? formatDate(projectToViewDetails.fechaEntrega) : 'N/A'}
                             </p>
                           </div>
                           <div>
                             <span className="text-xs text-gray-500">Fecha Real Entrega:</span>
                             <p className="font-medium">
-                              {projectToViewDetails.fechaRealEntrega ? new Date(projectToViewDetails.fechaRealEntrega).toLocaleDateString() : 'N/A'}
+                              {projectToViewDetails.fechaRealEntrega ? formatDate(projectToViewDetails.fechaRealEntrega) : 'N/A'}
                             </p>
                           </div>
                           <div>
                             <span className="text-xs text-gray-500">Fecha Certificación:</span>
                             <p className="font-medium">
-                              {projectToViewDetails.fechaCertificacion ? new Date(projectToViewDetails.fechaCertificacion).toLocaleDateString() : 'N/A'}
+                              {projectToViewDetails.fechaCertificacion ? formatDate(projectToViewDetails.fechaCertificacion) : 'N/A'}
                             </p>
                           </div>
                           <div>
