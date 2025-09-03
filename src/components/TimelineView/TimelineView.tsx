@@ -63,7 +63,7 @@ const DateHeaderCell = memo(({ date }: { date: Date }) => {
 
     return (
         <div
-            className={`w-12 flex-shrink-0 p-2 text-center border-r transition-all duration-200 relative
+            className={`w-20 flex-shrink-0 p-2 text-center border-r transition-all duration-200 relative
                 ${isNonWorkingDay ? 'bg-gradient-to-b from-red-50 to-red-100' : 'bg-gradient-to-b from-white to-gray-50'}
                 ${isColombianHoliday && !isWeekend ? 'bg-gradient-to-b from-red-100 to-red-200' : ''}
                 ${isCurrentDay ? 'bg-gradient-to-b from-blue-50 to-blue-100 ring-2 ring-blue-400 ring-inset' : ''}
@@ -470,7 +470,7 @@ const DayCell = memo(({
 
     return (
         <div
-            className={`w-12 flex-shrink-0 border-r relative
+            className={`w-20 flex-shrink-0 border-r relative
                 ${isNonWorkingDay ? 'bg-gray-100' : ''}
                 ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
                 ${isToday(date) ? 'bg-blue-50' : ''}
