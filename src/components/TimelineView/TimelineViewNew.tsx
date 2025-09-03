@@ -4,7 +4,7 @@ import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { useEffect, useState } from 'react';
 import { getJiraUrl } from '@/utils/jiraUtils';
-import { isNonWorkingDay, isHoliday, getWorkingDaysBetweenDates, formatDate, getHolidayInfo } from '@/utils/dateUtils';
+import { isNonWorkingDay, isHoliday, getWorkingDaysBetweenDates, formatDate, getHolidayInfo, createSafeDate } from '@/utils/dateUtils';
 
 interface TimelineViewProps {
     projects: Project[];
@@ -118,10 +118,12 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         if (isNonWorkingDay(date)) return false;
         
         // Convertir las fechas a UTC
-        const projectStartDate = new Date(project.fechaEntrega);
+        const projectStartDate = createSafeDate(project.fechaEntrega);
         const projectEndDate = project.fechaCertificacion 
-            ? new Date(project.fechaCertificacion) 
-            : new Date(project.fechaEntrega);
+            ? createSafeDate(project.fechaCertificacion) 
+            : createSafeDate(project.fechaEntrega);
+
+        if (!projectStartDate || !projectEndDate) return false;
 
         // Normalizar todas las fechas a UTC
         const compareDate = new Date(Date.UTC(
@@ -177,8 +179,8 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
         }
         
         // Proyecto no certificado aún
-        const fechaEntrega = new Date(project.fechaEntrega);
-        if (fechaEntrega < today) {
+        const fechaEntrega = createSafeDate(project.fechaEntrega);
+        if (fechaEntrega && fechaEntrega < today) {
             // Ha pasado la fecha de entrega y no está certificado
             return {
                 backgroundColor: '#FFEDD5', // bg-orange-200
@@ -198,7 +200,7 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
 
     const renderProjectTooltip = (project: Project) => {
         const today = new Date();
-        const fechaEntrega = new Date(project.fechaEntrega);
+        const fechaEntrega = createSafeDate(project.fechaEntrega);
         let estado = '';
 
         if (project.fechaCertificacion) {
@@ -207,7 +209,7 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
             } else {
                 estado = '✅ Finalizado a tiempo';
             }
-        } else if (fechaEntrega < today) {
+        } else if (fechaEntrega && fechaEntrega < today) {
             estado = '⚠️ Fecha de entrega vencida';
         } else {
             estado = '🔵 En progreso';
@@ -215,10 +217,12 @@ export function TimelineView({ projects, analysts, filterEquipo, filterAnalista 
 
         // Calcular días laborables entre fechas
         let diasLaborables = '';
-        if (project.fechaCertificacion) {
-            const fechaCertificacion = new Date(project.fechaCertificacion);
-            const workingDays = getWorkingDaysBetweenDates(fechaEntrega, fechaCertificacion);
-            diasLaborables = `\nDías laborables reales: ${workingDays}`;
+        if (project.fechaCertificacion && fechaEntrega) {
+            const fechaCertificacion = createSafeDate(project.fechaCertificacion);
+            if (fechaCertificacion) {
+                const workingDays = getWorkingDaysBetweenDates(fechaEntrega, fechaCertificacion);
+                diasLaborables = `\nDías laborables reales: ${workingDays}`;
+            }
         }
 
         return `

@@ -12,6 +12,7 @@ import { FileDown, FileText, Search, FileType } from 'lucide-react';
 import { TestCase } from '@/models/TestCase';
 import { useProjects, useAllProjects } from '@/hooks/useProjects';
 import { TestPlan } from '@/hooks/useTestPlans';
+import { formatDate, getCurrentDateTime, createSafeDate } from '@/utils/dateUtils';
 // Importamos jspdf correctamente
 import { jsPDF } from 'jspdf';
 // Importamos autotable como plugin
@@ -133,8 +134,8 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         [''],
         ['Codigo Peticion', project?.idJira || ''],
         ['Nombre del proyecto', project?.proyecto || ''],
-        ['Fecha Inicio producto', project?.fechaInicio ? new Date(project.fechaInicio).toLocaleDateString() : ''],
-        ['Fecha Fin Producto', project?.fechaEntrega ? new Date(project.fechaEntrega).toLocaleDateString() : ''],
+        ['Fecha Inicio producto', project?.fechaInicio ? formatDate(project.fechaInicio) : ''],
+        ['Fecha Fin Producto', project?.fechaEntrega ? formatDate(project.fechaEntrega) : ''],
         [''],
         ['Total estimacion en Horas', '', '', 'Total estimacion en Dias', ''],
         ['']
@@ -339,36 +340,14 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
         // Aseguramos que las fechas se formateen correctamente
       let fechaInicio = '';
       if (project?.fechaInicio) {
-        try {
-          // Verificamos si la fecha es un string o un objeto Date
-          const fechaObj = typeof project.fechaInicio === 'string' ? 
-            new Date(project.fechaInicio) : project.fechaInicio;
-          
-          // Formateamos la fecha manualmente para asegurar consistencia
-          fechaInicio = `${fechaObj.getDate().toString().padStart(2, '0')}/${
-            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
-            fechaObj.getFullYear()}`;
-        } catch (e) {
-          console.error('Error al formatear fecha inicio:', e);
-          fechaInicio = 'No disponible';
-        }
+        fechaInicio = formatDate(project.fechaInicio) || 'No disponible';
       } else {
         fechaInicio = 'No disponible';
       }
       
       let fechaFin = '';
       if (project?.fechaEntrega) {
-        try {
-          const fechaObj = typeof project.fechaEntrega === 'string' ? 
-            new Date(project.fechaEntrega) : project.fechaEntrega;
-          
-          fechaFin = `${fechaObj.getDate().toString().padStart(2, '0')}/${
-            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
-            fechaObj.getFullYear()}`;
-        } catch (e) {
-          console.error('Error al formatear fecha fin:', e);
-          fechaFin = 'No disponible';
-        }
+        fechaFin = formatDate(project.fechaEntrega) || 'No disponible';
       } else {
         fechaFin = 'No disponible';
       }
@@ -661,8 +640,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
           );
           
           // Añadir fecha de generación con estilo
-          const fecha = new Date().toLocaleDateString();
-          const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          const { date: fecha, time: hora } = getCurrentDateTime();
           doc.text(
             `Generado: ${fecha} a las ${hora}`,
             15,
@@ -766,30 +744,14 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
       // Formatear fechas
       let fechaInicio = '';
       if (project?.fechaInicio) {
-        try {
-          const fechaObj = typeof project.fechaInicio === 'string' ? 
-            new Date(project.fechaInicio) : project.fechaInicio;
-          fechaInicio = `${fechaObj.getDate().toString().padStart(2, '0')}/${
-            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
-            fechaObj.getFullYear()}`;
-        } catch (e) {
-          fechaInicio = 'No disponible';
-        }
+        fechaInicio = formatDate(project.fechaInicio) || 'No disponible';
       } else {
         fechaInicio = 'No disponible';
       }
       
       let fechaFin = '';
       if (project?.fechaEntrega) {
-        try {
-          const fechaObj = typeof project.fechaEntrega === 'string' ? 
-            new Date(project.fechaEntrega) : project.fechaEntrega;
-          fechaFin = `${fechaObj.getDate().toString().padStart(2, '0')}/${
-            (fechaObj.getMonth()+1).toString().padStart(2, '0')}/${
-            fechaObj.getFullYear()}`;
-        } catch (e) {
-          fechaFin = 'No disponible';
-        }
+        fechaFin = formatDate(project.fechaEntrega) || 'No disponible';
       } else {
         fechaFin = 'No disponible';
       }
@@ -1479,7 +1441,7 @@ export default function TestCaseExport({ projectId, testCases = [] }: TestCaseEx
               new Paragraph({
                 children: [
                   new TextRun({ 
-                    text: `Documento generado automáticamente el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`,
+                    text: `Documento generado automáticamente el ${getCurrentDateTime().date} a las ${getCurrentDateTime().time}`,
                     italics: true,
                     size: 16,
                     color: "666666"

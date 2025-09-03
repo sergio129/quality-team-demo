@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { User } from "@/models/User";
 import { toast } from "sonner";
+import { formatDate, createSafeDate } from "@/utils/dateUtils";
 
 interface UserListProps {
   onEdit: (user: User) => void;
@@ -161,7 +162,7 @@ export default function UserList({ onEdit }: UserListProps) {
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">
                   {user.lastLogin
-                    ? new Date(user.lastLogin).toLocaleString()
+                    ? createSafeDate(user.lastLogin)?.toLocaleString() || "Nunca"
                     : "Nunca"}
                 </div>
               </td>

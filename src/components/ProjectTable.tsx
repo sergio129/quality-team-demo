@@ -14,7 +14,7 @@ import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
 import { useProjects, useAllProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
-import { getWorkingDatesArray, isNonWorkingDay, formatDate } from '@/utils/dateUtils';
+import { getWorkingDatesArray, isNonWorkingDay, formatDate, createSafeDate, dateToInputString } from '@/utils/dateUtils';
  import { WeeklyCertificationWidget } from './projects/WeeklyCertificationWidget';
 import {
   Dialog,
@@ -119,14 +119,17 @@ export default function ProjectTable() {
 
     useEffect(() => {
         if (newProject.fechaEntrega && newProject.fechaRealEntrega) {
-            const entrega = new Date(newProject.fechaEntrega);
-            const realEntrega = new Date(newProject.fechaRealEntrega);
-            const diffTime = realEntrega.getTime() - entrega.getTime();
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            setNewProject(prev => ({
-                ...prev,
-                diasRetraso: Math.max(0, diffDays)
-            }));
+            const entrega = createSafeDate(newProject.fechaEntrega);
+            const realEntrega = createSafeDate(newProject.fechaRealEntrega);
+            
+            if (entrega && realEntrega) {
+                const diffTime = realEntrega.getTime() - entrega.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                setNewProject(prev => ({
+                    ...prev,
+                    diasRetraso: Math.max(0, diffDays)
+                }));
+            }
         }
     }, [newProject.fechaEntrega, newProject.fechaRealEntrega]);
 
@@ -262,10 +265,10 @@ export default function ProjectTable() {
         }
 
         if (newProject.fechaRealEntrega && newProject.fechaCertificacion) {
-            const realEntrega = new Date(newProject.fechaRealEntrega);
-            const certificacion = new Date(newProject.fechaCertificacion);
+            const realEntrega = createSafeDate(newProject.fechaRealEntrega);
+            const certificacion = createSafeDate(newProject.fechaCertificacion);
 
-            if (certificacion < realEntrega) {
+            if (realEntrega && certificacion && certificacion < realEntrega) {
                 newErrors.fechaCertificacion = 'La fecha de certificación no puede ser anterior a la fecha real de entrega';
             }
         }
@@ -461,10 +464,11 @@ export default function ProjectTable() {
         return projectList.filter(project => {
             if (!project.fechaEntrega) return false;
             
-            const fechaEntrega = new Date(project.fechaEntrega);
+            const fechaEntrega = createSafeDate(project.fechaEntrega);
+            if (!fechaEntrega) return false;
             fechaEntrega.setHours(0, 0, 0, 0);
             
-            const fechaCertificacion = project.fechaCertificacion ? new Date(project.fechaCertificacion) : null;
+            const fechaCertificacion = project.fechaCertificacion ? createSafeDate(project.fechaCertificacion) : null;
             if (fechaCertificacion) fechaCertificacion.setHours(0, 0, 0, 0);
             
             // Un proyecto coincide con el rango de fechas si:
@@ -840,9 +844,9 @@ export default function ProjectTable() {
                                 <input
                                     type="date"
                                     className={`border p-2 rounded w-full ${errors.fechaEntrega ? 'border-red-500' : ''}`}
-                                    value={newProject.fechaEntrega ? new Date(newProject.fechaEntrega).toISOString().split('T')[0] : ''}
+                                    value={dateToInputString(newProject.fechaEntrega)}
                                     onChange={(e) => {
-                                        setNewProject({ ...newProject, fechaEntrega: new Date(e.target.value) });
+                                        setNewProject({ ...newProject, fechaEntrega: createSafeDate(e.target.value) || undefined });
                                         if (errors.fechaEntrega) setErrors({ ...errors, fechaEntrega: '' });
                                     }}
                                     required
@@ -856,10 +860,10 @@ export default function ProjectTable() {
                                 <input
                                     type="date"
                                     className={`border p-2 rounded w-full ${errors.fechaRealEntrega ? 'border-red-500' : ''}`}
-                                    value={newProject.fechaRealEntrega ? new Date(newProject.fechaRealEntrega).toISOString().split('T')[0] : ''}
+                                    value={dateToInputString(newProject.fechaRealEntrega)}
                                     onChange={(e) => {
-                                        const date = e.target.value ? new Date(e.target.value) : null;
-                                        setNewProject({ ...newProject, fechaRealEntrega: date || undefined });
+                                        const date = createSafeDate(e.target.value) || undefined;
+                                        setNewProject({ ...newProject, fechaRealEntrega: date });
                                         if (errors.fechaRealEntrega) setErrors({ ...errors, fechaRealEntrega: '' });
                                     }}
                                 />
@@ -872,10 +876,10 @@ export default function ProjectTable() {
                                 <input
                                     type="date"
                                     className={`border p-2 rounded w-full ${errors.fechaCertificacion ? 'border-red-500' : ''}`}
-                                    value={newProject.fechaCertificacion ? new Date(newProject.fechaCertificacion).toISOString().split('T')[0] : ''}
+                                    value={dateToInputString(newProject.fechaCertificacion)}
                                     onChange={(e) => {
-                                        const date = e.target.value ? new Date(e.target.value) : null;
-                                        setNewProject({ ...newProject, fechaCertificacion: date || undefined });
+                                        const date = createSafeDate(e.target.value) || undefined;
+                                        setNewProject({ ...newProject, fechaCertificacion: date });
                                         if (errors.fechaCertificacion) setErrors({ ...errors, fechaCertificacion: '' });
                                     }}
                                 />
@@ -889,16 +893,19 @@ export default function ProjectTable() {
                                         Distribución de Horas por Día
                                         <span className="text-blue-600 ml-2 text-xs">
                                             ({(() => {
-                                                const startDate = new Date(newProject.fechaEntrega);
-                                                const endDate = new Date(newProject.fechaCertificacion);
+                                                const startDate = createSafeDate(newProject.fechaEntrega);
+                                                const endDate = createSafeDate(newProject.fechaCertificacion);
+                                                if (!startDate || !endDate) return 0;
                                                 const workingDates = getWorkingDatesArray(startDate, endDate);
                                                 return workingDates.length;
                                             })()} días laborales)
                                         </span>
                                     </label>
                                     {(() => {
-                                        const startDate = new Date(newProject.fechaEntrega);
-                                        const endDate = new Date(newProject.fechaCertificacion);
+                                        const startDate = createSafeDate(newProject.fechaEntrega);
+                                        const endDate = createSafeDate(newProject.fechaCertificacion);
+                                        if (!startDate || !endDate) return null;
+                                        
                                         const workingDates = getWorkingDatesArray(startDate, endDate);
                                         const totalHours = newProject.horas;
                                         
