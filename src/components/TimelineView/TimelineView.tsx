@@ -63,10 +63,11 @@ const DateHeaderCell = memo(({ date }: { date: Date }) => {
 
     return (
         <div
-            className={`w-12 flex-shrink-0 p-1 text-center border-r
-                ${isNonWorkingDay ? 'bg-gray-100' : 'bg-white'}
-                ${isColombianHoliday && !isWeekend ? 'bg-red-50' : ''}
-                ${isCurrentDay ? 'border-b-2 border-blue-500' : ''}`}
+            className={`w-12 flex-shrink-0 p-2 text-center border-r transition-all duration-200 relative
+                ${isNonWorkingDay ? 'bg-gradient-to-b from-red-50 to-red-100' : 'bg-gradient-to-b from-white to-gray-50'}
+                ${isColombianHoliday && !isWeekend ? 'bg-gradient-to-b from-red-100 to-red-200' : ''}
+                ${isCurrentDay ? 'bg-gradient-to-b from-blue-50 to-blue-100 ring-2 ring-blue-400 ring-inset' : ''}
+                hover:shadow-md hover:scale-105 cursor-pointer`}
             title={`${date.toLocaleDateString('es-ES', { 
                 weekday: 'long',
                 year: 'numeric',
@@ -74,17 +75,27 @@ const DateHeaderCell = memo(({ date }: { date: Date }) => {
                 day: 'numeric'
             })}${isColombianHoliday ? ' - Día festivo en Colombia' : ''}`}
         >
-            <div className={`text-xs ${isNonWorkingDay ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+            <div className={`text-xs font-medium mb-1 ${
+                isCurrentDay ? 'text-blue-700' : 
+                isNonWorkingDay ? 'text-red-600' : 'text-gray-600'
+            }`}>
                 {dayName}
             </div>
-            <div className={`text-sm 
-                ${isCurrentDay ? 'font-bold text-blue-600' : ''} 
-                ${isNonWorkingDay ? 'text-red-600' : ''}`}
-            >
+            <div className={`text-lg font-bold ${
+                isCurrentDay ? 'text-blue-800' : 
+                isNonWorkingDay ? 'text-red-700' : 'text-gray-800'
+            }`}>
                 {day}
             </div>
+            
+            {/* Indicador especial para día actual */}
+            {isCurrentDay && (
+                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            )}
+            
+            {/* Indicador para días festivos */}
             {isColombianHoliday && !isWeekend && (
-                <div className="h-1 w-full bg-red-300 rounded-full mt-0.5"></div>
+                <div className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full"></div>
             )}
         </div>
     );
@@ -288,20 +299,24 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
                 target="_blank"
                 rel="noopener noreferrer"
                 title={tooltipContent}
-                className="mx-1 text-xs p-1 rounded shadow-sm transition-colors cursor-pointer block relative"
+                className="mx-1 my-0.5 text-xs p-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer block relative group hover:scale-110 hover:shadow-xl hover:z-10"
                 style={projectStyle}
             >
                 <div className="flex flex-col items-center">
-                    <span>{project.idJira}</span>
+                    <span className="font-semibold text-gray-800 group-hover:text-white transition-colors">
+                        {project.idJira}
+                    </span>
                     {hoursForThisDay !== null && hoursForThisDay > 0 && (
-                        <span className="text-[10px] font-semibold opacity-75">
+                        <span className="text-[10px] font-bold opacity-80 bg-white/20 px-1 rounded-full mt-1">
                             {hoursForThisDay}h
                         </span>
                     )}
-                    {/* Punto verde para día de certificación */}
+                    {/* Punto verde mejorado para día de certificación */}
                     {isCertificationDate && (
-                        <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white" 
-                             title="Día de certificación"></div>
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-md animate-bounce" 
+                             title="Día de certificación">
+                            <div className="w-1 h-1 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        </div>
                     )}
                 </div>
             </a>
@@ -311,20 +326,24 @@ ${project.diasRetraso > 0 ? `Días de Retraso: ${project.diasRetraso}` : ''}${ho
     return (
         <span
             title={tooltipContent}
-            className="mx-1 text-xs p-1 rounded shadow-sm block relative"
+            className="mx-1 my-0.5 text-xs p-2 rounded-lg shadow-lg transition-all duration-200 block relative group hover:scale-105 hover:shadow-xl"
             style={projectStyle}
         >
             <div className="flex flex-col items-center">
-                <span>{project.idJira}</span>
+                <span className="font-semibold text-gray-800">
+                    {project.idJira}
+                </span>
                 {hoursForThisDay !== null && hoursForThisDay > 0 && (
-                    <span className="text-[10px] font-semibold opacity-75">
+                    <span className="text-[10px] font-bold opacity-80 bg-white/20 px-1 rounded-full mt-1">
                         {hoursForThisDay}h
                     </span>
                 )}
-                {/* Punto verde para día de certificación */}
+                {/* Punto verde mejorado para día de certificación */}
                 {isCertificationDate && (
-                    <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white" 
-                         title="Día de certificación"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-md animate-bounce" 
+                         title="Día de certificación">
+                        <div className="w-1 h-1 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                    </div>
                 )}
             </div>
         </span>
@@ -593,15 +612,31 @@ const AnalystRow = memo(({
     }, [projects, analyst.name, filterEquipo]);
 
     return (
-        <div className="flex border-b hover:bg-gray-50">
+        <div className="flex border-b hover:bg-gradient-to-r hover:from-gray-50 hover:to-transparent transition-all duration-200">
             <div 
-                className="w-40 flex-shrink-0 p-2 border-r" 
+                className="w-40 flex-shrink-0 p-4 border-r flex items-center gap-3 group"
                 style={{ 
-                    backgroundColor: analyst.color ? `${analyst.color}20` : undefined,
-                    borderLeft: analyst.color ? `4px solid ${analyst.color}` : undefined 
+                    backgroundColor: analyst.color ? `${analyst.color}08` : undefined,
+                    borderLeft: analyst.color ? `4px solid ${analyst.color}` : '4px solid #e5e7eb'
                 }}
             >
-                {analyst.name}
+                {/* Avatar con iniciales */}
+                <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md"
+                    style={{ backgroundColor: analyst.color || '#6B7280' }}
+                >
+                    {analyst.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                </div>
+                
+                {/* Nombre del analista */}
+                <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-800 text-sm truncate group-hover:text-blue-600 transition-colors">
+                        {analyst.name}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                        {analystProjects.length} proyecto{analystProjects.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
             </div>
             <div className="flex relative min-h-[50px]">
                 {dates.map((date) => (
