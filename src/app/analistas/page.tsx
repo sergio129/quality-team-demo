@@ -9,7 +9,7 @@ import { AnalystVacationsDialog } from '@/components/analysts/AnalystVacationsDi
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useAnalysts, useCells } from '@/hooks/useAnalysts';
-import { useAnalystsAvailability } from '@/hooks/useAnalystsAvailability';
+import { useAnalystsAvailability } from '@/hooks/useAnalystAvailability';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import {
   Users,
@@ -38,7 +38,7 @@ export default function AnalystsPage() {
   const router = useRouter();
   const { analysts, isLoading: analystsLoading, isError } = useAnalysts();
   const { cells, isLoading: cellsLoading } = useCells();
-  const { analystsAvailability } = useAnalystsAvailability();
+  const analystsAvailability = useAnalystsAvailability(analysts);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
@@ -73,7 +73,8 @@ export default function AnalystsPage() {
     if (!analysts || !analystsAvailability) return [];
     
     return analysts.map(analyst => {
-      const availability = analystsAvailability[analyst.id] ?? 100;
+      const availabilityData = analystsAvailability.find(a => a.analystId === analyst.id);
+      const availability = availabilityData?.availabilityPercentage ?? 100;
       return {
         ...analyst,
         realAvailability: availability,
