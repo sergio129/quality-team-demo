@@ -15,18 +15,32 @@ import { CalendarOff } from "lucide-react";
 
 interface AnalystVacationsDialogProps {
   analyst: QAAnalyst;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: boolean; // Para mostrar el trigger button o no
 }
 
-export function AnalystVacationsDialog({ analyst }: AnalystVacationsDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AnalystVacationsDialog({ 
+  analyst, 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange,
+  trigger = true 
+}: AnalystVacationsDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Usar props externas si están disponibles, sino usar estado interno
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = externalOnOpenChange || setInternalOpen;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" title="Gestionar vacaciones">
-          <CalendarOff className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {trigger && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm" title="Gestionar vacaciones">
+            <CalendarOff className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gestión de ausencias - {analyst.name}</DialogTitle>

@@ -3,9 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { DataTable } from '@/components/analysts/AnalystTable';
 import { AddAnalystButton } from '@/components/analysts/AddAnalystButton';
+import { AnalystStatsDialog } from '@/components/analysts/AnalystStatsDialog';
+import { AnalystWorkloadDialog } from '@/components/analysts/AnalystWorkloadDialog';
+import { AnalystVacationsDialog } from '@/components/analysts/AnalystVacationsDialog';
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useAnalysts, useCells } from '@/hooks/useAnalysts';
+import { QAAnalyst } from '@/models/QAAnalyst';
 import {
   Users,
   UserCheck,
@@ -18,7 +22,14 @@ import {
   RefreshCw,
   Zap,
   Award,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  FolderOpen,
+  Calendar,
+  ExternalLink,
+  Eye,
+  Briefcase,
+  CalendarDays
 } from 'lucide-react';
 
 export default function AnalystsPage() {
@@ -30,12 +41,30 @@ export default function AnalystsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
+  
+  // Estados para los modales
+  const [selectedAnalystForStats, setSelectedAnalystForStats] = useState<QAAnalyst | null>(null);
+  const [selectedAnalystForProjects, setSelectedAnalystForProjects] = useState<QAAnalyst | null>(null);
+  const [selectedAnalystForVacations, setSelectedAnalystForVacations] = useState<QAAnalyst | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
+
+  // Funciones para manejar las acciones de las cards - usando modales como en la tabla
+  const handleViewStats = (analyst: QAAnalyst) => {
+    setSelectedAnalystForStats(analyst);
+  };
+
+  const handleViewProjects = (analyst: QAAnalyst) => {
+    setSelectedAnalystForProjects(analyst);
+  };
+
+  const handleManageVacations = (analyst: QAAnalyst) => {
+    setSelectedAnalystForVacations(analyst);
+  };
 
   // Calcular estadísticas
   const stats = React.useMemo(() => {
@@ -237,7 +266,7 @@ export default function AnalystsPage() {
                       key={analyst.id}
                       className="bg-gradient-to-r from-white to-blue-50 border-2 border-blue-100 hover:border-blue-300 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-4 flex-1">
                           {/* Avatar con color personalizado */}
                           <div 
@@ -279,7 +308,7 @@ export default function AnalystsPage() {
 
                             {/* Células asignadas */}
                             {analyst.cellIds && analyst.cellIds.length > 0 && (
-                              <div className="flex items-center space-x-2 text-sm">
+                              <div className="flex items-center space-x-2 text-sm mb-4">
                                 <Activity className="h-4 w-4 text-blue-500" />
                                 <span className="text-blue-700 font-medium">
                                   {analyst.cellIds.map(cellId => 
@@ -288,11 +317,49 @@ export default function AnalystsPage() {
                                 </span>
                               </div>
                             )}
+
+                            {/* Botones de acción */}
+                            <div className="flex items-center space-x-2 mt-4">
+                              <button
+                                onClick={() => handleViewStats(analyst)}
+                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                title="Ver estadísticas del analista"
+                              >
+                                <BarChart3 className="h-4 w-4" />
+                                <span>Estadísticas</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => handleViewProjects(analyst)}
+                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                title="Ver proyectos asignados"
+                              >
+                                <Briefcase className="h-4 w-4" />
+                                <span>Proyectos</span>
+                              </button>
+                              
+                              <button
+                                onClick={() => handleManageVacations(analyst)}
+                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                title="Gestionar vacaciones y ausencias"
+                              >
+                                <CalendarDays className="h-4 w-4" />
+                                <span>Vacaciones</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Indicador de flecha */}
-                        <ChevronRight className="h-5 w-5 text-gray-300" />
+                        {/* Indicador de flecha - movido arriba */}
+                        <div className="flex flex-col items-center space-y-2">
+                          <ChevronRight className="h-5 w-5 text-gray-300" />
+                          {/* Indicador de actividad */}
+                          <div className={`w-3 h-3 rounded-full ${
+                            analyst.availability && analyst.availability >= 70 ? 'bg-green-400' :
+                            analyst.availability && analyst.availability >= 30 ? 'bg-yellow-400' :
+                            'bg-red-400'
+                          } animate-pulse`}></div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -361,6 +428,34 @@ export default function AnalystsPage() {
           </div>
         </div>
       </div>
+
+      {/* Modales - controlados externamente para las Cards */}
+      {selectedAnalystForStats && (
+        <AnalystStatsDialog 
+          analyst={selectedAnalystForStats}
+          open={true}
+          onOpenChange={(open) => !open && setSelectedAnalystForStats(null)}
+          trigger={false}
+        />
+      )}
+
+      {selectedAnalystForProjects && (
+        <AnalystWorkloadDialog 
+          analyst={selectedAnalystForProjects}
+          open={true}
+          onOpenChange={(open) => !open && setSelectedAnalystForProjects(null)}
+          trigger={false}
+        />
+      )}
+
+      {selectedAnalystForVacations && (
+        <AnalystVacationsDialog 
+          analyst={selectedAnalystForVacations}
+          open={true}
+          onOpenChange={(open) => !open && setSelectedAnalystForVacations(null)}
+          trigger={false}
+        />
+      )}
     </div>
   );
 }
