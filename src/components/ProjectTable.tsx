@@ -1189,6 +1189,24 @@ export default function ProjectTable() {
                         endDate={getDateRange().end}
                         selectedDateFilter={selectedDateFilter}
                         vacations={vacations} // Pasar las vacaciones de los analistas
+                        onPrevMonth={() => {
+                            if (selectedMonth === 0) {
+                                setSelectedMonth(11);
+                                setSelectedYear(selectedYear - 1);
+                            } else {
+                                setSelectedMonth(selectedMonth - 1);
+                            }
+                            setSelectedDateFilter('custom-month');
+                        }}
+                        onNextMonth={() => {
+                            if (selectedMonth === 11) {
+                                setSelectedMonth(0);
+                                setSelectedYear(selectedYear + 1);
+                            } else {
+                                setSelectedMonth(selectedMonth + 1);
+                            }
+                            setSelectedDateFilter('custom-month');
+                        }}
                     />
                 </>
             ) : activeView === 'kanban' ? (

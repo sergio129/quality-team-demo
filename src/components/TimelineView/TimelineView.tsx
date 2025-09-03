@@ -629,6 +629,8 @@ interface TimelineViewProps {
     endDate: Date | null;
     selectedDateFilter: 'week' | 'month' | 'custom-month' | 'custom';
     vacations?: AnalystVacation[]; // Nueva prop para vacaciones
+    onPrevMonth?: () => void; // Función para ir al mes anterior
+    onNextMonth?: () => void; // Función para ir al mes siguiente
 }
 
 export function TimelineView({ 
@@ -639,10 +641,12 @@ export function TimelineView({
     startDate,
     endDate,
     selectedDateFilter,
-    vacations = [] // Valor por defecto: array vacío
+    vacations = [], // Valor por defecto: array vacío
+    onPrevMonth,
+    onNextMonth
 }: Readonly<TimelineViewProps>): ReactNode {
     const [dates, setDates] = useState<Date[]>([]);
-    const [pageSize, setPageSize] = useState(10); // Número de analistas a mostrar por página
+    const [pageSize, setPageSize] = useState(20); // Número suficiente para mostrar todos los analistas
     const [currentPage, setCurrentPage] = useState(0); // Página actual
     
     // Efecto para actualizar el calendario basado en los filtros de fecha del padre
@@ -725,28 +729,24 @@ export function TimelineView({
         return filteredAnalysts.slice(start, start + pageSize);
     }, [filteredAnalysts, currentPage, pageSize]);
 
-    // Manejadores para la paginación
+    // Manejadores para la navegación de mes (no paginación de analistas)
     const handlePrevPage = useCallback(() => {
-        if (currentPage > 0) {
-            setCurrentPage(prev => prev - 1);
+        if (onPrevMonth) {
+            onPrevMonth();
         }
-    }, [currentPage]);
+    }, [onPrevMonth]);
     
     const handleNextPage = useCallback(() => {
-        if (currentPage < totalPages - 1) {
-            setCurrentPage(prev => prev + 1);
+        if (onNextMonth) {
+            onNextMonth();
         }
-    }, [currentPage, totalPages]);
+    }, [onNextMonth]);
 
     // Determinar si el viewport es pequeño para ajustar el número de analistas mostrados
     useEffect(() => {
         const updatePageSize = () => {
-            // En dispositivos móviles o pantallas pequeñas, mostrar menos analistas por página
-            if (window.innerWidth < 768) {
-                setPageSize(5);
-            } else {
-                setPageSize(10);
-            }
+            // Asegurarse de mostrar todos los analistas
+            setPageSize(20); // Número suficiente para todos los analistas
         };
         
         updatePageSize();
@@ -770,31 +770,32 @@ export function TimelineView({
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={handlePrevPage}
-                        disabled={currentPage === 0}
+                        disabled={!onPrevMonth}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                            currentPage === 0 
+                            !onPrevMonth
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:scale-105'
                         }`}
                     >
                         <ChevronLeft className="w-4 h-4" />
-                        <span className="hidden sm:inline">Anterior</span>
+                        <span className="hidden sm:inline">Mes Anterior</span>
                     </button>
                     
                     <div className="hidden sm:flex items-center px-3 py-1 bg-gray-100 rounded-lg text-sm text-gray-600">
-                        Página <span className="font-semibold mx-1">{currentPage + 1}</span> de <span className="font-semibold ml-1">{totalPages}</span>
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span className="font-semibold">{dateHeader}</span>
                     </div>
                     
                     <button 
                         onClick={handleNextPage}
-                        disabled={currentPage >= totalPages - 1}
+                        disabled={!onNextMonth}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-                            currentPage >= totalPages - 1
+                            !onNextMonth
                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:scale-105'
                         }`}
                     >
-                        <span className="hidden sm:inline">Siguiente</span>
+                        <span className="hidden sm:inline">Mes Siguiente</span>
                         <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
