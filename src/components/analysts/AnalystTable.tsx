@@ -18,6 +18,7 @@ import { AnalystWorkloadDialog } from './AnalystWorkloadDialog';
 import { AnalystVacationsDialog } from './AnalystVacationsDialog';
 import { toast } from 'sonner';
 import { useAnalysts, useCells, deleteAnalyst, CellInfo } from '@/hooks/useAnalysts';
+import { useAnalystsAvailability } from '@/hooks/useAnalystAvailability';
 
 // Definir tipos para el ordenamiento
 type SortField = keyof Pick<QAAnalyst, 'name' | 'email' | 'role'> | 'cells';
@@ -37,9 +38,23 @@ export function DataTable() {
   // Usar SWR para obtener datos
   const { analysts, isLoading: analystsLoading, isError: analystsError } = useAnalysts();
   const { cells, isLoading: cellsLoading } = useCells();
+  const analystsAvailability = useAnalystsAvailability(analysts);
   
   const isLoading = analystsLoading || cellsLoading;
   const isError = analystsError;
+
+  // Combinar analistas con disponibilidades calculadas
+  const analystsWithAvailability = useMemo(() => {
+    if (!analysts || !analystsAvailability) return [];
+    
+    return analysts.map(analyst => {
+      const availability = analystsAvailability.find(a => a.analystId === analyst.id);
+      return {
+        ...analyst,
+        availability: availability?.availabilityPercentage ?? analyst.availability ?? 100
+      };
+    });
+  }, [analysts, analystsAvailability]);
 
   useEffect(() => {
     // Resetear a la primera página cuando cambia el término de búsqueda
@@ -83,10 +98,10 @@ export function DataTable() {
   
   // Filtramos y ordenamos analistas con useMemo para optimizar
   const filteredAndSortedAnalysts = useMemo(() => {
-    if (!analysts || analysts.length === 0) return [];
+    if (!analystsWithAvailability || analystsWithAvailability.length === 0) return [];
     
     // Primero filtramos
-    const filtered = analysts.filter(analyst => {
+    const filtered = analystsWithAvailability.filter(analyst => {
       const cellNames = getCellNames(analyst.cellIds || []).toLowerCase();
       const searchLower = searchTerm.toLowerCase();
       
@@ -117,7 +132,7 @@ export function DataTable() {
       
       return 0;
     });
-  }, [analysts, cells, sortField, sortDirection, searchTerm, getCellNames]);
+  }, [analystsWithAvailability, cells, sortField, sortDirection, searchTerm, getCellNames]);
 
   // Lógica de paginación
   const paginationInfo = useMemo(() => {

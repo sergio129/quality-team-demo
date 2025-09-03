@@ -9,6 +9,7 @@ import { AnalystVacationsDialog } from '@/components/analysts/AnalystVacationsDi
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useAnalysts, useCells } from '@/hooks/useAnalysts';
+import { useAnalystsAvailability } from '@/hooks/useAnalystsAvailability';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import {
   Users,
@@ -37,6 +38,7 @@ export default function AnalystsPage() {
   const router = useRouter();
   const { analysts, isLoading: analystsLoading, isError } = useAnalysts();
   const { cells, isLoading: cellsLoading } = useCells();
+  const { analystsAvailability } = useAnalystsAvailability();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
@@ -66,31 +68,45 @@ export default function AnalystsPage() {
     setSelectedAnalystForVacations(analyst);
   };
 
-  // Calcular estadísticas
+  // Combinar datos de analistas con disponibilidades calculadas
+  const analystsWithAvailability = React.useMemo(() => {
+    if (!analysts || !analystsAvailability) return [];
+    
+    return analysts.map(analyst => {
+      const availability = analystsAvailability[analyst.id] ?? 100;
+      return {
+        ...analyst,
+        realAvailability: availability,
+        availability: availability // También actualizar el campo availability original
+      };
+    });
+  }, [analysts, analystsAvailability]);
+
+  // Calcular estadísticas basadas en disponibilidad real
   const stats = React.useMemo(() => {
-    if (!analysts) return { total: 0, leaders: 0, seniors: 0, juniors: 0, available: 0, busy: 0 };
+    if (!analystsWithAvailability) return { total: 0, leaders: 0, seniors: 0, juniors: 0, available: 0, busy: 0 };
     
     return {
-      total: analysts.length,
-      leaders: analysts.filter(a => a.role === 'QA Leader').length,
-      seniors: analysts.filter(a => a.role === 'QA Senior').length,
-      juniors: analysts.filter(a => a.role === 'QA Analyst').length,
-      available: analysts.filter(a => (a.availability || 0) >= 70).length,
-      busy: analysts.filter(a => (a.availability || 0) < 30).length
+      total: analystsWithAvailability.length,
+      leaders: analystsWithAvailability.filter(a => a.role === 'QA Leader').length,
+      seniors: analystsWithAvailability.filter(a => a.role === 'QA Senior').length,
+      juniors: analystsWithAvailability.filter(a => a.role === 'QA Analyst').length,
+      available: analystsWithAvailability.filter(a => a.availability >= 70).length,
+      busy: analystsWithAvailability.filter(a => a.availability < 30).length
     };
-  }, [analysts]);
+  }, [analystsWithAvailability]);
 
-  // Filtrar analistas
+  // Filtrar analistas con disponibilidad actualizada
   const filteredAnalysts = React.useMemo(() => {
-    if (!analysts) return [];
+    if (!analystsWithAvailability) return [];
     
-    return analysts.filter(analyst => {
+    return analystsWithAvailability.filter(analyst => {
       const matchesSearch = analyst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            analyst.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = selectedRole === 'all' || analyst.role === selectedRole;
       return matchesSearch && matchesRole;
     });
-  }, [analysts, searchTerm, selectedRole]);
+  }, [analystsWithAvailability, searchTerm, selectedRole]);
 
   // Mostrar loading mientras se verifica la sesión
   if (status === "loading" || analystsLoading) {
@@ -282,15 +298,13 @@ export default function AnalystsPage() {
                               <h4 className="text-lg font-bold text-gray-800">{analyst.name}</h4>
                               
                               {/* Badge de disponibilidad */}
-                              {analyst.availability !== undefined && (
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                  analyst.availability >= 70 ? 'bg-green-100 text-green-800' :
-                                  analyst.availability >= 30 ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-red-100 text-red-800'
-                                }`}>
-                                  {analyst.availability}% disponible
-                                </span>
-                              )}
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                analyst.realAvailability >= 70 ? 'bg-green-100 text-green-800' :
+                                analyst.realAvailability >= 30 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {analyst.realAvailability}% disponible
+                              </span>
 
                               {/* Badge de rol */}
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
@@ -355,8 +369,8 @@ export default function AnalystsPage() {
                           <ChevronRight className="h-5 w-5 text-gray-300" />
                           {/* Indicador de actividad */}
                           <div className={`w-3 h-3 rounded-full ${
-                            analyst.availability && analyst.availability >= 70 ? 'bg-green-400' :
-                            analyst.availability && analyst.availability >= 30 ? 'bg-yellow-400' :
+                            analyst.realAvailability >= 70 ? 'bg-green-400' :
+                            analyst.realAvailability >= 30 ? 'bg-yellow-400' :
                             'bg-red-400'
                           } animate-pulse`}></div>
                         </div>
@@ -411,8 +425,8 @@ export default function AnalystsPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-300">Promedio disponibilidad:</span>
                         <span className="font-semibold">
-                          {analysts ? Math.round(
-                            analysts.reduce((acc, a) => acc + (a.availability || 0), 0) / analysts.length
+                          {analystsWithAvailability.length > 0 ? Math.round(
+                            analystsWithAvailability.reduce((acc, a) => acc + a.realAvailability, 0) / analystsWithAvailability.length
                           ) : 0}%
                         </span>
                       </div>
