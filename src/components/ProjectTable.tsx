@@ -12,6 +12,8 @@ import ProjectDashboard from './projects/ProjectDashboard';
 import PaginationControls from './projects/PaginationControls';
 import KanbanView from './projects/KanbanView';
 import ExportToExcelButton from './projects/ExportToExcelButton';
+import ReportsModule from './reports/ReportsModule';
+import QuickExportDropdown from './ui/QuickExportDropdown';
 import { useProjects, useAllProjects, createProject, updateProject, deleteProject } from '@/hooks/useProjects';
 import { useAnalystVacations } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay, formatDate, createSafeDate, dateToInputString } from '@/utils/dateUtils';
@@ -552,20 +554,18 @@ export default function ProjectTable() {
                         Nuevo Proyecto
                     </button>
                     
-                    <div className="flex items-center space-x-2">
-                        <select 
-                            className="border rounded px-3 py-2"
-                            value={exportFilterType}
-                            onChange={(e) => setExportFilterType(e.target.value as 'week' | 'month' | 'year' | 'all')}
-                            title="Seleccionar tipo de exportación"
-                        >                            <option value="week">Exportar proyectos semanales</option>
-                            <option value="month">Exportar proyectos mensuales</option>
-                            <option value="year">Exportar proyectos anuales</option>
-                            <option value="all">Exportar TODOS los proyectos</option>
-                        </select>
-                          <ExportToExcelButton 
-                            projects={exportFilterType === 'all' ? projects : allFilteredProjects} 
-                            filterType={exportFilterType}
+                    <div className="flex items-center gap-3">
+                        {/* Exportación rápida */}
+                        <QuickExportDropdown
+                            projects={allProjects || []}
+                            filteredProjects={allFilteredProjects}
+                        />
+                        
+                        {/* Módulo de reportes completo */}
+                        <ReportsModule 
+                            projects={allProjects || []}
+                            teams={equipos}
+                            analysts={analistas}
                         />
                     </div><div className="flex rounded-lg overflow-hidden border">                        <button
                             className={`px-4 py-2 transition-colors ${

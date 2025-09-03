@@ -77,7 +77,6 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
       'Célula': project.celula || '',
       'Horas': project.horas || 0,
       'Días': project.dias || 0,
-      'Horas Estimadas': project.horasEstimadas || 0,
       'Estado': project.estadoCalculado || project.estado || '',
       'Descripción': project.descripcion || '',
       'Fecha Inicio': formatDate(project.fechaInicio),
@@ -103,7 +102,6 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
       { wch: 15 },  // Célula
       { wch: 10 },  // Horas
       { wch: 10 },  // Días
-      { wch: 15 },  // Horas Estimadas
       { wch: 15 },  // Estado
       { wch: 40 },  // Descripción
       { wch: 15 },  // Fecha Inicio
