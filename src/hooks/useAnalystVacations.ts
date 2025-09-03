@@ -8,6 +8,32 @@ import { toast } from 'sonner';
 // API endpoints
 const VACATIONS_API = '/api/analyst-vacations';
 
+// Transformador para convertir fechas string a Date objects
+const transformVacationsData = (vacations: any[] | undefined): AnalystVacation[] => {
+  if (!vacations) return [];
+  
+  const transformed = vacations.map(vacation => {
+    // Función para crear fecha sin problemas de zona horaria
+    const createDateFromISO = (isoString: string) => {
+      if (typeof isoString === 'string' && isoString.includes('T')) {
+        // Extraer solo la parte de la fecha (YYYY-MM-DD)
+        const dateOnly = isoString.split('T')[0];
+        const [year, month, day] = dateOnly.split('-').map(Number);
+        return new Date(year, month - 1, day); // Crear fecha local sin zona horaria
+      }
+      return new Date(isoString);
+    };
+    
+    return {
+      ...vacation,
+      startDate: createDateFromISO(vacation.startDate),
+      endDate: createDateFromISO(vacation.endDate)
+    };
+  });
+  
+  return transformed;
+};
+
 /**
  * Hook para obtener todas las vacaciones
  */
@@ -15,7 +41,7 @@ export function useAnalystVacations() {
   const { data, error, isLoading } = useSWR<AnalystVacation[]>(VACATIONS_API, fetcher);
 
   return {
-    vacations: data || [],
+    vacations: transformVacationsData(data),
     isLoading,
     isError: error,
   };
@@ -32,7 +58,7 @@ export function useAnalystVacationsByAnalyst(analystId: string) {
   );
 
   return {
-    vacations: data || [],
+    vacations: transformVacationsData(data),
     isLoading,
     isError: error,
   };

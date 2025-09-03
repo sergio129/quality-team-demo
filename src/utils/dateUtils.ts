@@ -24,6 +24,12 @@ export const isNonWorkingDay = (date: Date): boolean => {
  * Calcula los días laborables entre dos fechas (excluyendo fines de semana y festivos)
  */
 export const getWorkingDaysBetweenDates = (startDate: Date, endDate: Date): number => {
+    // Validar que las fechas sean válidas
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.error('❌ INVALID DATES:', { startDate, endDate });
+        return 0;
+    }
+    
     let count = 0;
     const currentDate = new Date(startDate);
     
