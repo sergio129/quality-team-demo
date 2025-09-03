@@ -1469,10 +1469,6 @@ export default function ProjectTable() {
                             <p className="font-medium">{projectToViewDetails.proyecto}</p>
                           </div>
                           <div>
-                            <span className="text-xs text-gray-500">Nombre:</span>
-                            <p className="font-medium">{projectToViewDetails.nombre || 'N/A'}</p>
-                          </div>
-                          <div>
                             <span className="text-xs text-gray-500">Equipo:</span>
                             <p className="font-medium">{projectToViewDetails.equipo}</p>
                           </div>
@@ -1549,17 +1545,10 @@ export default function ProjectTable() {
                         <h3 className="font-semibold text-sm text-gray-700 mb-2">Recursos</h3>
                         <div className="space-y-2">
                           <div>
-                            <span className="text-xs text-gray-500">Analista Producto:</span>
-                            <p className="font-medium">{projectToViewDetails.analistaProducto}</p>
+                            <span className="text-xs text-gray-500">Analista Asignado:</span>
+                            <p className="font-medium">{projectToViewDetails.analistaProducto || 'No asignado'}</p>
                           </div>
-                          <div>
-                            <span className="text-xs text-gray-500">Analistas Asignados:</span>
-                            <p className="font-medium">
-                              {projectToViewDetails.analistas && projectToViewDetails.analistas.length > 0 
-                                ? projectToViewDetails.analistas.join(', ') 
-                                : 'Ninguno asignado'}
-                            </p>
-                          </div>
+                          
                         </div>
                       </div>
                     </div>
