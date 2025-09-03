@@ -10,33 +10,22 @@ import {
 import { Calendar, X, Info, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/incidents/ConfirmDialog';
+import { getWorkingDaysBetweenDates, isNonWorkingDay, isHoliday } from '@/utils/dateUtils';
 
-// Función para calcular días hábiles entre dos fechas (excluyendo fines de semana)
-function calcularDiasHabiles(startDate: Date, endDate: Date): number {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  let count = 0;
-  
-  // Establecer ambas fechas a medianoche para comparar solo días
-  start.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
-  
-  // Clonar la fecha de inicio para no modificarla
-  const current = new Date(start);
-  
-  // Iterar día a día
-  while (current <= end) {
-    // Comprobar si el día actual no es sábado (6) ni domingo (0)
-    const dayOfWeek = current.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      count++;
-    }
-    
-    // Avanzar al siguiente día
-    current.setDate(current.getDate() + 1);
+// Función helper para crear fechas de manera segura desde strings
+function createSafeDate(dateString: string | Date): Date {
+  if (dateString instanceof Date) {
+    return dateString;
   }
   
-  return count;
+  // Si es un string en formato ISO (YYYY-MM-DD), crear fecha de manera precisa
+  if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // Mes es 0-indexado
+  }
+  
+  // Fallback para otros formatos
+  return new Date(dateString);
 }
 
 // Función para calcular días calendario entre dos fechas (incluyendo ambos días)
@@ -86,8 +75,8 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
     e.preventDefault();
     
     try {
-      const startDate = new Date(newVacation.startDate);
-      const endDate = new Date(newVacation.endDate);
+      const startDate = createSafeDate(newVacation.startDate);
+      const endDate = createSafeDate(newVacation.endDate);
       
       // Validar fechas
       if (startDate > endDate) {
@@ -106,7 +95,7 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
       }
       
       // Verificar que haya al menos 1 día hábil
-      const diasHabiles = calcularDiasHabiles(startDate, endDate);
+      const diasHabiles = getWorkingDaysBetweenDates(startDate, endDate);
       if (diasHabiles < 1) {
         toast.error('El período debe incluir al menos un día hábil');
         return;
@@ -231,10 +220,10 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
             <h4 className="text-sm font-medium text-gray-700 mb-2">Resumen del período</h4>
             
             {newVacation.startDate && newVacation.endDate && (() => {
-              const startDate = new Date(newVacation.startDate);
-              const endDate = new Date(newVacation.endDate);
+              const startDate = createSafeDate(newVacation.startDate);
+              const endDate = createSafeDate(newVacation.endDate);
               
-              const diasHabiles = calcularDiasHabiles(startDate, endDate);
+              const diasHabiles = getWorkingDaysBetweenDates(startDate, endDate);
               const diasCalendario = calcularDiasCalendario(startDate, endDate);
               const finesDeSemana = diasCalendario - diasHabiles;
               
@@ -381,10 +370,10 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
                         {/* Contadores de días */}
                         <div className="flex justify-between w-full mb-1">
                           <span className="font-semibold text-blue-600 text-sm">
-                            {calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate))} hábiles
+                            {getWorkingDaysBetweenDates(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))} hábiles
                           </span>
                           <span className="text-gray-500 text-sm">
-                            {calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))} calendario
+                            {calcularDiasCalendario(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))} calendario
                           </span>
                         </div>
                         
@@ -393,8 +382,8 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
                           <div 
                             className="h-full bg-blue-600" 
                             style={{ 
-                              width: `${Math.round((calcularDiasHabiles(new Date(vacation.startDate), new Date(vacation.endDate)) / 
-                                calcularDiasCalendario(new Date(vacation.startDate), new Date(vacation.endDate))) * 100)}%` 
+                              width: `${Math.round((getWorkingDaysBetweenDates(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate)) / 
+                                calcularDiasCalendario(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))) * 100)}%` 
                             }}
                           ></div>
                         </div>
