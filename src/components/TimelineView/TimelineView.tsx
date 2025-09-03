@@ -4,6 +4,7 @@ import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { AnalystVacation } from '@/models/AnalystVacation';
 import { useState, useEffect, useMemo, useCallback, memo, ReactNode } from 'react';
+import { ChevronLeft, ChevronRight, Users, Calendar } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { isAnalystOnVacation } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
@@ -716,7 +717,7 @@ export function TimelineView({
     }, [selectedDateFilter, startDate]);
 
     // Calcular el número total de páginas
-    const totalPages = Math.ceil(filteredAnalysts.length / pageSize);
+    const totalPages = Math.max(1, Math.ceil(filteredAnalysts.length / pageSize));
     
     // Obtener los analistas para la página current
     const currentAnalysts = useMemo(() => {
@@ -726,12 +727,16 @@ export function TimelineView({
 
     // Manejadores para la paginación
     const handlePrevPage = useCallback(() => {
-        setCurrentPage(prev => Math.max(0, prev - 1));
-    }, []);
+        if (currentPage > 0) {
+            setCurrentPage(prev => prev - 1);
+        }
+    }, [currentPage]);
     
     const handleNextPage = useCallback(() => {
-        setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
-    }, [totalPages]);
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(prev => prev + 1);
+        }
+    }, [currentPage, totalPages]);
 
     // Determinar si el viewport es pequeño para ajustar el número de analistas mostrados
     useEffect(() => {
@@ -755,32 +760,42 @@ export function TimelineView({
     return (
         <div className="flex flex-col w-full overflow-hidden">
             {/* Cabecera con la fecha o rango seleccionado */}
-            <div className="bg-white p-4 border-b shadow-sm mb-4 rounded-t-lg flex justify-between items-center">
-                <div className="text-sm text-gray-600">
-                    Mostrando {currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, filteredAnalysts.length)} de {filteredAnalysts.length} analistas
+            <div className="bg-white p-6 border-b shadow-sm mb-4 rounded-t-lg flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-blue-600" />
+                    <div className="text-sm text-gray-600">
+                        Mostrando <span className="font-semibold text-gray-800">{currentPage * pageSize + 1} - {Math.min((currentPage + 1) * pageSize, filteredAnalysts.length)}</span> de <span className="font-semibold text-gray-800">{filteredAnalysts.length}</span> analistas
+                    </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex items-center gap-2">
                     <button 
                         onClick={handlePrevPage}
                         disabled={currentPage === 0}
-                        className={`px-3 py-1 rounded ${
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
                             currentPage === 0 
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:scale-105'
                         }`}
                     >
-                        Anterior
+                        <ChevronLeft className="w-4 h-4" />
+                        <span className="hidden sm:inline">Anterior</span>
                     </button>
+                    
+                    <div className="hidden sm:flex items-center px-3 py-1 bg-gray-100 rounded-lg text-sm text-gray-600">
+                        Página <span className="font-semibold mx-1">{currentPage + 1}</span> de <span className="font-semibold ml-1">{totalPages}</span>
+                    </div>
+                    
                     <button 
                         onClick={handleNextPage}
                         disabled={currentPage >= totalPages - 1}
-                        className={`px-3 py-1 rounded ${
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
                             currentPage >= totalPages - 1
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transform hover:scale-105'
                         }`}
                     >
-                        Siguiente
+                        <span className="hidden sm:inline">Siguiente</span>
+                        <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
             </div>
@@ -815,41 +830,54 @@ export function TimelineView({
                     </div>
 
                     {/* Información sobre la fecha seleccionada */}
-                    <div className="mt-4 text-center">
-                        <span className="font-semibold">{dateHeader}</span>
+                    <div className="mt-6 flex justify-center">
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl shadow-xl">
+                            <div className="flex items-center gap-3">
+                                <Calendar className="w-6 h-6" />
+                                <span className="text-xl font-bold tracking-wide">{dateHeader}</span>
+                            </div>
+                            <div className="mt-1 text-center">
+                                <div className="h-0.5 w-full bg-white/30 rounded-full"></div>
+                            </div>
+                        </div>
                     </div>
                     
                     {/* Leyenda de colores */}
-                    <div className="mt-6 bg-white p-4 rounded-lg border shadow-sm">
-                        <h4 className="font-medium mb-2">Leyenda</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 rounded-full bg-purple-500 border border-purple-700 mr-2"></div>
-                                <span className="text-sm">Vacaciones</span>
+                    <div className="mt-6 bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl border border-gray-200 shadow-lg">
+                        <div className="flex items-center mb-4">
+                            <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-3"></div>
+                            <h4 className="font-semibold text-gray-800 text-lg">Leyenda</h4>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Vacaciones</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 rounded-full bg-yellow-500 border border-yellow-700 mr-2"></div>
-                                <span className="text-sm">Permiso</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Permiso</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 rounded-full bg-green-500 border border-green-700 mr-2"></div>
-                                <span className="text-sm">Capacitación</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-green-400 to-green-600 shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Capacitación</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 rounded-full bg-gray-500 border border-gray-700 mr-2"></div>
-                                <span className="text-sm">Otra ausencia</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Otra ausencia</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 bg-red-50 border border-red-200 mr-2"></div>
-                                <span className="text-sm">Día festivo</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 bg-gradient-to-r from-red-100 to-red-200 border-2 border-red-300 rounded shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Día festivo</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-4 h-4 bg-blue-50 border border-blue-200 mr-2"></div>
-                                <span className="text-sm">Hoy</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-5 h-5 bg-gradient-to-r from-blue-100 to-blue-200 border-2 border-blue-400 rounded shadow-md mr-3"></div>
+                                <span className="text-sm font-medium text-gray-700">Hoy</span>
                             </div>
-                            <div className="flex items-center">
-                                <div className="w-2 h-2 bg-green-500 rounded-full border border-white mr-2"></div>
-                                <span className="text-sm">Día de certificación</span>
+                            <div className="flex items-center bg-white p-3 rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                                <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg mr-3 relative">
+                                    <div className="absolute inset-0 bg-green-400 rounded-full animate-pulse"></div>
+                                </div>
+                                <span className="text-sm font-medium text-gray-700">Día de certificación</span>
                             </div>
                         </div>
                     </div>
