@@ -5,7 +5,7 @@ import { QAAnalyst } from '@/models/QAAnalyst';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { TimelineView } from './TimelineView/TimelineView';
-import { ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, Clock, Eye, Edit, Award, Trash2 } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronsUpDown, CheckCircle, Clock, Eye, Edit, Award, Trash2, Table, Calendar, Kanban } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { ChangeProjectStatusDialog } from './projects/ChangeProjectStatusDialog';
 import ProjectDashboard from './projects/ProjectDashboard';
@@ -568,67 +568,74 @@ export default function ProjectTable() {
                             teams={equipos}
                             analysts={analistas}
                         />
-                    </div><div className="flex rounded-lg overflow-hidden border">                        <button
-                            className={`px-4 py-2 transition-colors ${
+                    </div>                    <div className="flex rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white">
+                        <button
+                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
                                 activeView === 'table'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
                             }`}
                             onClick={() => setActiveView('table')}
                         >
-                            Vista Tabla
+                            <Table className="w-4 h-4" />
+                            <span className="hidden sm:inline">Vista Tabla</span>
+                            <span className="sm:hidden">Tabla</span>
                         </button>
                         <button
-                            className={`px-4 py-2 transition-colors ${
+                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
                                 activeView === 'timeline'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
                             }`}
                             onClick={() => setActiveView('timeline')}
                         >
-                            Vista Calendario
+                            <Calendar className="w-4 h-4" />
+                            <span className="hidden sm:inline">Vista Calendario</span>
+                            <span className="sm:hidden">Calendario</span>
                         </button>
                         <button
-                            className={`px-4 py-2 transition-colors ${
+                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
                                 activeView === 'kanban'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
                             }`}
                             onClick={() => setActiveView('kanban')}
                         >
-                            Vista Kanban
+                            <Kanban className="w-4 h-4" />
+                            <span className="hidden sm:inline">Vista Kanban</span>
+                            <span className="sm:hidden">Kanban</span>
                         </button>
                     </div>
                 </div>                <div className="flex items-center space-x-4">                    {/* Filtros de fecha */}
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-3 items-center">
                         <button
                             onClick={() => setSelectedDateFilter('week')}
-                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 selectedDateFilter === 'week'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 hover:bg-gray-200'
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
                             }`}
                         >
                             Semana actual
                         </button>
                         <button
                             onClick={() => setSelectedDateFilter('month')}
-                            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                 selectedDateFilter === 'month'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-100 hover:bg-gray-200'
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
                             }`}
                         >
                             Mes actual
                         </button>
-                        <div className={`flex gap-2 items-center px-2 py-1 rounded ${
-                            selectedDateFilter === 'custom-month' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-gray-100'
+                        <div className={`flex gap-3 items-center px-4 py-2 rounded-lg transition-all duration-200 ${
+                            selectedDateFilter === 'custom-month'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}>
-                            <select 
-                                className={`text-sm rounded ${
-                                    selectedDateFilter === 'custom-month' ? 'bg-blue-500' : 'bg-gray-100'
+                            <select
+                                className={`text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                    selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
                                 }`}
                                 value={selectedYear}
                                 onChange={(e) => {
@@ -640,9 +647,9 @@ export default function ProjectTable() {
                                     <option key={year} value={year}>{year}</option>
                                 ))}
                             </select>
-                            <select 
-                                className={`text-sm rounded ${
-                                    selectedDateFilter === 'custom-month' ? 'bg-blue-500' : 'bg-gray-100'
+                            <select
+                                className={`text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                    selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
                                 }`}
                                 value={selectedMonth}
                                 onChange={(e) => {
@@ -660,9 +667,9 @@ export default function ProjectTable() {
                     </div>
                     
                     {/* Filtros básicos */}
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                         <select
-                            className="border rounded px-3 py-2"
+                            className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                             value={filterEquipo}
                             onChange={(e) => setFilterEquipo(e.target.value)}
                         >
@@ -672,7 +679,7 @@ export default function ProjectTable() {
                             ))}
                         </select>
                         <select
-                            className="border rounded px-3 py-2"
+                            className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                             value={filterAnalista}
                             onChange={(e) => setFilterAnalista(e.target.value)}
                         >
