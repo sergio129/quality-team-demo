@@ -7,7 +7,19 @@ import {
   deleteAnalystVacation,
   useAnalystVacations
 } from '@/hooks/useAnalystVacations';
-import { Calendar, X, Info, UserMinus } from 'lucide-react';
+import { 
+  Calendar, 
+  X, 
+  Info, 
+  UserMinus, 
+  Plane, 
+  Heart, 
+  Clock, 
+  MapPin,
+  TrendingUp,
+  BarChart3,
+  Plus
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/incidents/ConfirmDialog';
 import { getWorkingDaysBetweenDates, isNonWorkingDay, isHoliday } from '@/utils/dateUtils';
@@ -40,6 +52,108 @@ function calcularDiasCalendario(startDate: Date, endDate: Date): number {
   // Calcular diferencia en milisegundos y convertir a días
   // Agregar 1 para incluir ambos días (inicio y fin)
   return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+// Función para calcular días restantes y estado de la ausencia
+function calcularEstadoAusencia(startDate: Date, endDate: Date) {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  
+  const inicio = new Date(startDate);
+  inicio.setHours(0, 0, 0, 0);
+  
+  const fin = new Date(endDate);
+  fin.setHours(0, 0, 0, 0);
+  
+  if (hoy < inicio) {
+    // Ausencia futura
+    const diasHastaInicio = Math.ceil((inicio.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      estado: 'pendiente',
+      mensaje: `Comienza en ${diasHastaInicio} día${diasHastaInicio !== 1 ? 's' : ''}`,
+      diasRestantes: diasHastaInicio,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
+      icon: '📅'
+    };
+  } else if (hoy >= inicio && hoy <= fin) {
+    // Ausencia activa
+    const diasRestantes = Math.ceil((fin.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    if (diasRestantes === 0) {
+      return {
+        estado: 'ultimo_dia',
+        mensaje: '¡Último día de ausencia!',
+        diasRestantes: 0,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50',
+        borderColor: 'border-orange-200',
+        icon: '⚠️'
+      };
+    }
+    return {
+      estado: 'activa',
+      mensaje: `Regresa en ${diasRestantes} día${diasRestantes !== 1 ? 's' : ''}`,
+      diasRestantes: diasRestantes,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
+      icon: '🏖️'
+    };
+  } else {
+    // Ausencia finalizada
+    const diasPasados = Math.floor((hoy.getTime() - fin.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      estado: 'finalizada',
+      mensaje: `Finalizó hace ${diasPasados} día${diasPasados !== 1 ? 's' : ''}`,
+      diasRestantes: -diasPasados,
+      color: 'text-gray-500',
+      bgColor: 'bg-gray-50',
+      borderColor: 'border-gray-200',
+      icon: '✅'
+    };
+  }
+}
+
+// Configuración de tipos de ausencia con iconos y colores
+const vacationTypeConfig = {
+  Vacaciones: {
+    icon: Plane,
+    color: 'bg-blue-500',
+    lightColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    textColor: 'text-blue-700',
+    label: '🏖️ Vacaciones'
+  },
+  Permiso: {
+    icon: Clock,
+    color: 'bg-orange-500',
+    lightColor: 'bg-orange-50',
+    borderColor: 'border-orange-200',
+    textColor: 'text-orange-700',
+    label: '⏰ Permiso'
+  },
+  'Incapacidad Médica': {
+    icon: Heart,
+    color: 'bg-red-500',
+    lightColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    textColor: 'text-red-700',
+    label: '🏥 Incapacidad'
+  },
+  Otro: {
+    icon: MapPin,
+    color: 'bg-gray-500',
+    lightColor: 'bg-gray-50',
+    borderColor: 'border-gray-200',
+    textColor: 'text-gray-700',
+    label: '📝 Otro'
+  }
+};
+
+// Función para obtener configuración de tipo
+function getVacationTypeConfig(type: string) {
+  return vacationTypeConfig[type as keyof typeof vacationTypeConfig] || vacationTypeConfig.Otro;
 }
 
 interface AnalystVacationsManagementProps {
@@ -143,18 +257,129 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg border space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">
-          Gestión de Ausencias - {analyst.name}
-        </h3>
+    <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-100 space-y-6">
+      {/* Header mejorado */}
+      <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+            <Calendar className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">
+              Gestión de Ausencias
+            </h3>
+            <p className="text-sm text-gray-500 flex items-center mt-1">
+              <UserMinus className="h-4 w-4 mr-1" />
+              {analyst.name}
+            </p>
+          </div>
+        </div>
         <button 
-          className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+            showForm 
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+              : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-md'
+          }`}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? 'Cancelar' : 'Añadir Período'}
+          {showForm ? (
+            <>
+              <X className="h-4 w-4" />
+              <span>Cancelar</span>
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" />
+              <span>Añadir Período</span>
+            </>
+          )}
         </button>
       </div>
+
+      {/* Panel de estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {Object.entries(vacationTypeConfig).map(([type, config]) => {
+          const typeVacations = analystVacations.filter(v => {
+            const mappedType = 
+              v.type === 'vacation' ? 'Vacaciones' :
+              v.type === 'leave' ? 'Permiso' :
+              v.type === 'training' ? 'Incapacidad Médica' :
+              'Otro';
+            return mappedType === type;
+          });
+          
+          const totalDays = typeVacations.reduce((sum, vacation) => {
+            const startDate = createSafeDate(vacation.startDate);
+            const endDate = createSafeDate(vacation.endDate);
+            return sum + calcularDiasCalendario(startDate, endDate);
+          }, 0);
+
+          const IconComponent = config.icon;
+
+          return (
+            <div key={type} className={`${config.lightColor} ${config.borderColor} border-2 rounded-lg p-4 transition-transform hover:scale-105`}>
+              <div className="flex items-center justify-between mb-2">
+                <IconComponent className={`h-5 w-5 ${config.textColor}`} />
+                <span className={`text-2xl font-bold ${config.textColor}`}>{totalDays}</span>
+              </div>
+              <p className={`text-sm font-medium ${config.textColor}`}>{config.label}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {typeVacations.length} período{typeVacations.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Resumen anual */}
+      {analystVacations.length > 0 && (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-6">
+          <h4 className="text-lg font-semibold text-indigo-900 mb-4 flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2" />
+            Resumen Anual {new Date().getFullYear()}
+          </h4>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-indigo-600">
+                {analystVacations.reduce((sum, vacation) => {
+                  const startDate = createSafeDate(vacation.startDate);
+                  const endDate = createSafeDate(vacation.endDate);
+                  return sum + getWorkingDaysBetweenDates(startDate, endDate);
+                }, 0)}
+              </div>
+              <div className="text-sm text-indigo-700 font-medium">Total días laborables</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">
+                {analystVacations.reduce((sum, vacation) => {
+                  const startDate = createSafeDate(vacation.startDate);
+                  const endDate = createSafeDate(vacation.endDate);
+                  return sum + calcularDiasCalendario(startDate, endDate);
+                }, 0)}
+              </div>
+              <div className="text-sm text-purple-700 font-medium">Total días calendario</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{analystVacations.length}</div>
+              <div className="text-sm text-green-700 font-medium">Períodos registrados</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-600">
+                {Math.round((analystVacations.reduce((sum, vacation) => {
+                  const startDate = createSafeDate(vacation.startDate);
+                  const endDate = createSafeDate(vacation.endDate);
+                  return sum + getWorkingDaysBetweenDates(startDate, endDate);
+                }, 0) / 250) * 100)}%
+              </div>
+              <div className="text-sm text-orange-700 font-medium">Del año laboral (250 días)</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleSubmit} className="p-4 bg-gray-50 rounded-lg space-y-4">
@@ -297,117 +522,119 @@ export function AnalystVacationsManagement({ analyst }: Readonly<AnalystVacation
           <p>No hay períodos de ausencia registrados para este analista</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="bg-blue-50 p-3 rounded-lg flex items-start">
-            <Info className="w-5 h-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg flex items-start border border-blue-200">
+            <Info className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-700">
               Los períodos de ausencia se mostrarán automáticamente en la vista de calendario. 
               No es necesario crear proyectos ficticios para representar vacaciones.
             </p>
           </div>
           
-          <div className="overflow-hidden border rounded-lg">            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                    Tipo
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-                    Descripción
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                    Período
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
-                    Días
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {analystVacations.map((vacation) => (
-                  <tr key={vacation.id} className="hover:bg-gray-50">                    <td className="px-4 py-2">
-                      {(() => {
-                        // Determinar la clase para el badge según el tipo
-                        let badgeClass = '';
-                        let badgeLabel = '';
-                        
-                        switch(vacation.type) {
-                          case 'vacation':
-                            badgeClass = 'bg-purple-100 text-purple-800';
-                            badgeLabel = 'Vacaciones';
-                            break;
-                          case 'training':
-                            badgeClass = 'bg-green-100 text-green-800';
-                            badgeLabel = 'Capacitación';
-                            break;
-                          case 'leave':
-                            badgeClass = 'bg-yellow-100 text-yellow-800';
-                            badgeLabel = 'Permiso';
-                            break;
-                          default:
-                            badgeClass = 'bg-gray-100 text-gray-800';
-                            badgeLabel = 'Otro';
-                        }
-                        
-                        return (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeClass}`}>
-                            {badgeLabel}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {vacation.description ?? <span className="text-gray-400 italic">Sin descripción</span>}
-                    </td>                    <td className="px-4 py-2">
-                      <div className="flex items-center text-sm">
-                        <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        <span>{formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}</span>
+          {/* Cards de ausencias con estado dinámico */}
+          <div className="grid gap-4">
+            {analystVacations.map((vacation) => {
+              // Mapear el tipo de vacation a nuestros tipos configurados
+              const mappedType = 
+                vacation.type === 'vacation' ? 'Vacaciones' :
+                vacation.type === 'leave' ? 'Permiso' :
+                vacation.type === 'training' ? 'Incapacidad Médica' :
+                'Otro';
+              
+              const config = getVacationTypeConfig(mappedType);
+              const IconComponent = config.icon;
+              
+              const startDate = createSafeDate(vacation.startDate);
+              const endDate = createSafeDate(vacation.endDate);
+              const diasHabiles = getWorkingDaysBetweenDates(startDate, endDate);
+              const diasCalendario = calcularDiasCalendario(startDate, endDate);
+              const porcentajeDiasHabiles = Math.round((diasHabiles / diasCalendario) * 100);
+              
+              // Calcular estado y días restantes
+              const estadoAusencia = calcularEstadoAusencia(startDate, endDate);
+
+              return (
+                <div key={vacation.id} className={`${config.lightColor} border-2 ${config.borderColor} rounded-xl p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-1`}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 ${config.color} rounded-lg shadow-md`}>
+                        <IconComponent className="h-5 w-5 text-white" />
                       </div>
-                    </td>                    <td className="px-4 py-2">
-                      <div className="flex flex-col items-center">
-                        {/* Contadores de días */}
-                        <div className="flex justify-between w-full mb-1">
-                          <span className="font-semibold text-blue-600 text-sm">
-                            {getWorkingDaysBetweenDates(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))} hábiles
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {calcularDiasCalendario(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))} calendario
-                          </span>
-                        </div>
-                        
-                        {/* Barra visual mejorada */}
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-blue-600" 
-                            style={{ 
-                              width: `${Math.round((getWorkingDaysBetweenDates(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate)) / 
-                                calcularDiasCalendario(createSafeDate(vacation.startDate), createSafeDate(vacation.endDate))) * 100)}%` 
-                            }}
-                          ></div>
-                        </div>
-                        
-                        {/* Leyenda */}
-                        <div className="flex justify-between w-full mt-1 text-xs">
-                          <span className="text-blue-600">Laborables</span>
-                          <span className="text-gray-500">Total</span>
-                        </div>
+                      <div>
+                        <h5 className={`font-semibold ${config.textColor} text-lg`}>{config.label}</h5>
+                        <p className="text-sm text-gray-600">
+                          {vacation.description || <span className="italic">Sin descripción</span>}
+                        </p>
                       </div>
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <button
-                        onClick={() => handleDelete(vacation.id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>        </div>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(vacation.id)}
+                      className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                      title="Eliminar período"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Estado dinámico con días restantes */}
+                  <div className={`${estadoAusencia.bgColor} border ${estadoAusencia.borderColor} rounded-lg p-3 mb-4`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl">{estadoAusencia.icon}</span>
+                        <span className={`font-semibold ${estadoAusencia.color}`}>
+                          {estadoAusencia.mensaje}
+                        </span>
+                      </div>
+                      {estadoAusencia.estado === 'activa' && (
+                        <div className={`px-3 py-1 rounded-full text-sm font-bold ${estadoAusencia.color} ${estadoAusencia.bgColor} border ${estadoAusencia.borderColor}`}>
+                          {estadoAusencia.diasRestantes} día{estadoAusencia.diasRestantes !== 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fechas */}
+                  <div className="flex items-center mb-4 text-gray-700">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span className="text-sm font-medium">
+                      {formatDate(vacation.startDate)} → {formatDate(vacation.endDate)}
+                    </span>
+                  </div>
+
+                  {/* Métricas visuales */}
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold ${config.textColor}`}>{diasHabiles}</div>
+                      <div className="text-xs text-gray-600">Días laborables</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-700">{diasCalendario}</div>
+                      <div className="text-xs text-gray-600">Total calendario</div>
+                    </div>
+                  </div>
+
+                  {/* Barra de progreso elegante */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>Laborables</span>
+                      <span>{porcentajeDiasHabiles}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className={`h-full ${config.color} transition-all duration-500 ease-out`}
+                        style={{ width: `${porcentajeDiasHabiles}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>🏢 {diasHabiles} días</span>
+                      <span>🏠 {diasCalendario - diasHabiles} fin de semana/festivos</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
       
       {/* Diálogo de confirmación para eliminar */}
