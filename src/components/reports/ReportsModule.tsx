@@ -34,8 +34,8 @@ const ReportsModule: React.FC<ReportsModuleProps> = ({ projects, teams, analysts
   });
 
   // Estados únicos disponibles
-  const uniqueStates = [...new Set(projects.map(p => p.estadoCalculado || p.estado).filter(Boolean))];
-  const uniqueCells = [...new Set(projects.map(p => p.celula).filter(Boolean))];
+  const uniqueStates = [...new Set(projects.map(p => p.estadoCalculado || p.estado).filter(Boolean))] as string[];
+  const uniqueCells = [...new Set(projects.map(p => p.celula).filter(Boolean))] as string[];
 
   // Filtrar proyectos según criterios seleccionados
   const getFilteredProjects = () => {
