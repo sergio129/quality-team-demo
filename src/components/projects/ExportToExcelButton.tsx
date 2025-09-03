@@ -78,16 +78,12 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
       'Horas': project.horas || 0,
       'Días': project.dias || 0,
       'Estado': project.estadoCalculado || project.estado || '',
-      'Descripción': project.descripcion || '',
-      'Fecha Inicio': formatDate(project.fechaInicio),
-      'Fecha Fin': formatDate(project.fechaFin),
       'Fecha Entrega': formatDate(project.fechaEntrega),
       'Fecha Real Entrega': formatDate(project.fechaRealEntrega),
       'Fecha Certificación': formatDate(project.fechaCertificacion),
       'Días Retraso': project.diasRetraso || 0,
       'Analista Producto': project.analistaProducto || '',
-      'Plan Trabajo': project.planTrabajo || '',
-      'Analistas': project.analistas ? project.analistas.join(', ') : ''
+      'Plan Trabajo': project.planTrabajo || ''
     }));
 
     // Crear un libro de Excel
@@ -103,16 +99,12 @@ const ExportToExcelButton: React.FC<ExportToExcelButtonProps> = ({
       { wch: 10 },  // Horas
       { wch: 10 },  // Días
       { wch: 15 },  // Estado
-      { wch: 40 },  // Descripción
-      { wch: 15 },  // Fecha Inicio
-      { wch: 15 },  // Fecha Fin
       { wch: 15 },  // Fecha Entrega
       { wch: 15 },  // Fecha Real Entrega
       { wch: 15 },  // Fecha Certificación
       { wch: 12 },  // Días Retraso
       { wch: 20 },  // Analista Producto
       { wch: 40 },  // Plan Trabajo
-      { wch: 30 },  // Analistas
     ];
     
     worksheet['!cols'] = columnWidths;
