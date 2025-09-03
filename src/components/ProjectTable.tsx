@@ -536,8 +536,9 @@ export default function ProjectTable() {
     const startIndex = (validCurrentPage - 1) * itemsPerPage;
     const filteredProjects = allFilteredProjects.slice(startIndex, startIndex + itemsPerPage);
     
-    const equipos = Array.from(new Set(projects.map(p => p.equipo || '').filter(Boolean)));
-    const analistas = Array.from(new Set(projects.map(p => p.analistaProducto || '').filter(Boolean)));
+    // Obtener equipos y analistas únicos de TODOS los proyectos (no solo los filtrados)
+    const equipos = Array.from(new Set((allProjects || []).map(p => p.equipo || '').filter(Boolean)));
+    const analistas = Array.from(new Set((allProjects || []).map(p => p.analistaProducto || '').filter(Boolean)));
     
     return (
         <div className="space-y-4">
