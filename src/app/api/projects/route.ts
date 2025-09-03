@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         const teamFilter = url.searchParams.get('team') || '';
         const statusFilter = url.searchParams.get('status') || '';
         const analystFilter = url.searchParams.get('analyst') || '';
+        const weekFilter = url.searchParams.get('week') || '';
         
         // Usar nuestro servicio con filtrado basado en rol y paginación
         const result = await projectService.getAllProjects({
@@ -47,7 +48,8 @@ export async function GET(req: NextRequest) {
             statusFilter,
             analystFilter: analystFilter || analystName || undefined,
             monthFilter: monthFilter ? parseInt(monthFilter) : undefined,
-            yearFilter: yearFilter ? parseInt(yearFilter) : undefined
+            yearFilter: yearFilter ? parseInt(yearFilter) : undefined,
+            weekFilter: weekFilter === 'current' ? true : undefined
         });
         
         // Si el servicio no retorna paginación, aplicamos la lógica de fallback

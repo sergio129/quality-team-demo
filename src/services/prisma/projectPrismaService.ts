@@ -6,13 +6,19 @@ import { GetProjectsOptions } from '@/services/projectServiceTypes';
 export class ProjectPrismaService {
     async getAllProjects(options?: GetProjectsOptions): Promise<Project[]> {
         try {
-            console.log(`[ProjectPrismaService] Getting projects with options:`, options);
+            console.log(`[ProjectPrismaService] 📋 Getting projects with options:`, JSON.stringify(options, null, 2));
             
             // Si el usuario es QA Leader o no se especifica un analista, devolver todos los proyectos
             if (options?.role === 'QA Leader' || !options?.analystId) {
                 console.log(`[ProjectPrismaService] Getting all projects (admin or no filter)`);
+                
+                // Construir filtros de fecha
+                const dateFilters = this.buildDateFilters(options);
+                console.log(`[ProjectPrismaService] 🔍 Date filters built:`, JSON.stringify(dateFilters, null, 2));
+                
                 // Admin o sin filtro específico
                 const projects = await prisma.project.findMany({
+                    where: dateFilters.length > 0 ? { AND: dateFilters } : {},
                     include: {
                         team: true,
                         cell: true,
@@ -23,6 +29,7 @@ export class ProjectPrismaService {
                         }
                     }
                 });
+                console.log(`[ProjectPrismaService] ✅ Found ${projects.length} projects for admin with date filters`);
                 return this.mapProjects(projects);
             }
             
@@ -44,14 +51,22 @@ export class ProjectPrismaService {
             
             console.log(`[ProjectPrismaService] Analista encontrado: ${analista.name}`);
             
+            // Construir filtros de fecha
+            const dateFilters = this.buildDateFilters(options);
+            
             // 1. Proyectos por relación en la tabla ProjectAnalyst
             const projectsByRelation = await prisma.project.findMany({
                 where: {
-                    analysts: {
-                        some: {
-                            analystId: analystId
-                        }
-                    }
+                    AND: [
+                        {
+                            analysts: {
+                                some: {
+                                    analystId: analystId
+                                }
+                            }
+                        },
+                        ...dateFilters
+                    ]
                 },
                 include: {
                     team: true,
@@ -69,7 +84,10 @@ export class ProjectPrismaService {
             // 2. Proyectos por campo analistaProducto
             const projectsByAnalystName = await prisma.project.findMany({
                 where: {
-                    analistaProducto: analista.name
+                    AND: [
+                        { analistaProducto: analista.name },
+                        ...dateFilters
+                    ]
                 },
                 include: {
                     team: true,
@@ -596,5 +614,75 @@ export class ProjectPrismaService {
             console.error('Error getting project by ID from database:', error);
             return null;
         }
+    }
+
+    // Método auxiliar para construir filtros de fecha
+    private buildDateFilters(options?: GetProjectsOptions): any[] {
+        const filters: any[] = [];
+
+        // Filtro por mes y año
+        if (options?.monthFilter !== undefined && options?.yearFilter !== undefined) {
+            const month = options.monthFilter - 1; // Convertir de 1-based a 0-based para JavaScript
+            const year = options.yearFilter;
+            
+            const startOfMonth = new Date(year, month, 1);
+            const endOfMonth = new Date(year, month + 1, 0);
+            endOfMonth.setHours(23, 59, 59, 999);
+            
+            console.log(`[ProjectPrismaService] 🗓️ Filtering by month: ${options.monthFilter}/${year}`);
+            console.log(`[ProjectPrismaService] 🗓️ Date range: ${startOfMonth} - ${endOfMonth}`);
+            
+            filters.push({
+                OR: [
+                    {
+                        fechaEntrega: {
+                            gte: startOfMonth,
+                            lte: endOfMonth
+                        }
+                    },
+                    {
+                        fechaCertificacion: {
+                            gte: startOfMonth,
+                            lte: endOfMonth
+                        }
+                    }
+                ]
+            });
+        }
+
+        // Filtro por semana actual
+        if (options?.weekFilter) {
+            const now = new Date();
+            const startOfWeek = new Date(now);
+            const dayOfWeek = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Lunes como primer día
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+            
+            console.log(`[ProjectPrismaService] Filtering by current week: ${startOfWeek} - ${endOfWeek}`);
+            
+            filters.push({
+                OR: [
+                    {
+                        fechaEntrega: {
+                            gte: startOfWeek,
+                            lte: endOfWeek
+                        }
+                    },
+                    {
+                        fechaCertificacion: {
+                            gte: startOfWeek,
+                            lte: endOfWeek
+                        }
+                    }
+                ]
+            });
+        }
+
+        return filters;
     }
 }

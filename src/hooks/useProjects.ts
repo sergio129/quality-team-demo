@@ -44,6 +44,7 @@ export interface UseProjectsOptions {
   analystFilter?: string;
   monthFilter?: number;
   yearFilter?: number;
+  weekFilter?: boolean; // Para filtrar por semana actual
 }
 
 /**
@@ -102,6 +103,10 @@ export function useProjects(options: UseProjectsOptions = {}) {
     
     if (options.yearFilter) {
       params.append('year', options.yearFilter.toString());
+    }
+    
+    if (options.weekFilter) {
+      params.append('week', 'current');
     }
     
     // Construir URL final con parámetros

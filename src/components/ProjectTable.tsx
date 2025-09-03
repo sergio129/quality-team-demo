@@ -42,7 +42,7 @@ export default function ProjectTable() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedDateFilter, setSelectedDateFilter] = useState<'week' | 'month' | 'custom-month' | 'custom'>('month');
-    const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
+    const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear()); // Volver a 2025
     const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth());
     
     // Hook para proyectos paginados (para vista tabla y kanban)
@@ -53,8 +53,12 @@ export default function ProjectTable() {
         teamFilter: filterEquipo || undefined,
         statusFilter: filterEstado || undefined,
         analystFilter: filterAnalista || undefined,
-        monthFilter: selectedDateFilter === 'custom-month' ? selectedMonth : undefined,
-        yearFilter: selectedDateFilter === 'custom-month' ? selectedYear : undefined
+        // Solo aplicar filtros de fecha si NO es 'custom' (mostrar todos)
+        monthFilter: selectedDateFilter === 'month' ? new Date().getMonth() + 1 : 
+                    selectedDateFilter === 'custom-month' ? selectedMonth + 1 : undefined,
+        yearFilter: selectedDateFilter === 'month' || selectedDateFilter === 'week' ? new Date().getFullYear() : // Volver a usar año actual
+                   selectedDateFilter === 'custom-month' ? selectedYear : undefined,
+        weekFilter: selectedDateFilter === 'week' ? true : undefined
     });
     
     // Hook para TODOS los proyectos (para vista timeline - sin filtros de fecha)
@@ -485,9 +489,11 @@ export default function ProjectTable() {
     };
     
     // Seleccionar los proyectos correctos según la vista activa
-    const sourceProjects = activeView === 'timeline' ? allProjects : projects;
-    const isLoadingSource = activeView === 'timeline' ? isLoadingAllProjects : isLoadingProjects;
-    const isErrorSource = activeView === 'timeline' ? isErrorAllProjects : isErrorProjects;
+    // Para filtros de fecha, siempre usar allProjects para aplicar filtros en frontend
+    const shouldUseAllProjects = activeView === 'timeline' || selectedDateFilter === 'week' || selectedDateFilter === 'month';
+    const sourceProjects = shouldUseAllProjects ? allProjects : projects;
+    const isLoadingSource = shouldUseAllProjects ? isLoadingAllProjects : isLoadingProjects;
+    const isErrorSource = shouldUseAllProjects ? isErrorAllProjects : isErrorProjects;
     
     // Aplicar filtros y ordenamiento
     let filteredForView = sourceProjects.filter(project => {
@@ -504,8 +510,10 @@ export default function ProjectTable() {
         const matchesEstado = !filterEstado || (project.estadoCalculado && project.estadoCalculado === filterEstado);
         
         return matchesSearch && matchesEquipo && matchesAnalista && matchesEstado;
-    });    // Para todas las vistas, aplicar filtro de fecha del lado del cliente
-    if (activeView === 'timeline' || activeView === 'kanban' || activeView === 'table') {
+    });
+    
+    // Aplicar filtro de fecha del lado del cliente cuando hay filtros activos
+    if (selectedDateFilter === 'week' || selectedDateFilter === 'month' || activeView === 'timeline') {
         filteredForView = filterProjectsByDate(filteredForView);
     }
     

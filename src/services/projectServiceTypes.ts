@@ -14,6 +14,7 @@ export interface GetProjectsOptions {
   analystFilter?: string;
   monthFilter?: number;
   yearFilter?: number;
+  weekFilter?: boolean; // Para filtrar por semana actual
 }
 
 export interface PaginatedProjectsResult {
