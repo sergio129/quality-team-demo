@@ -142,9 +142,14 @@ export class UserPrismaService {
       });
       if (existingUser) throw new Error('Email already exists');
 
-      if (userData.analystId) {
+      // Manejar analystId correctamente - convertir cadena vacía a null
+      const analystIdValue = userData.analystId && userData.analystId.trim() !== '' 
+        ? userData.analystId 
+        : null;
+
+      if (analystIdValue) {
         const existingUserWithAnalyst = await prisma.user.findUnique({
-          where: { analystId: userData.analystId },
+          where: { analystId: analystIdValue },
         });
         if (existingUserWithAnalyst)
           throw new Error('This analyst already has a user account');
@@ -159,7 +164,7 @@ export class UserPrismaService {
           name: userData.name,
           isActive:
             userData.isActive !== undefined ? userData.isActive : true,
-          analystId: userData.analystId || null,
+          analystId: analystIdValue,
         },
         include: { analyst: true },
       });
@@ -213,9 +218,14 @@ export class UserPrismaService {
       }
 
       if (userData.analystId !== undefined) {
-        if (userData.analystId) {
+        // Si analystId es una cadena vacía o nula, establecer como null
+        const analystIdValue = userData.analystId && userData.analystId.trim() !== '' 
+          ? userData.analystId 
+          : null;
+        
+        if (analystIdValue) {
           const existingUserWithAnalyst = await prisma.user.findUnique({
-            where: { analystId: userData.analystId },
+            where: { analystId: analystIdValue },
           });
           if (
             existingUserWithAnalyst &&
@@ -224,7 +234,7 @@ export class UserPrismaService {
             throw new Error('This analyst already has a user account');
           }
         }
-        updateData.analystId = userData.analystId;
+        updateData.analystId = analystIdValue;
       }
 
       const updatedUser = await prisma.user.update({
