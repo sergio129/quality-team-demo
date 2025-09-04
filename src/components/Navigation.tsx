@@ -54,13 +54,7 @@ export function Navigation() {
   if (pathname === '/login') {
     return (
       <nav className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-xl font-semibold text-gray-800">Quality Team</span>
-            </div>
-          </div>
-        </div>
+        
       </nav>
     );
   }
