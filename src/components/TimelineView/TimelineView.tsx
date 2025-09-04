@@ -4,7 +4,7 @@ import { Project } from '@/models/Project';
 import { QAAnalyst } from '@/models/QAAnalyst';
 import { AnalystVacation } from '@/models/AnalystVacation';
 import { useState, useEffect, useMemo, useCallback, memo, ReactNode } from 'react';
-import { ChevronLeft, ChevronRight, Users, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Calendar, Filter, ChevronDown, X } from 'lucide-react';
 import { getJiraUrl } from '@/utils/jiraUtils';
 import { isAnalystOnVacation } from '@/hooks/useAnalystVacations';
 import { getWorkingDatesArray, isNonWorkingDay } from '@/utils/dateUtils';
@@ -666,6 +666,7 @@ interface TimelineViewProps {
     vacations?: AnalystVacation[]; // Nueva prop para vacaciones
     onPrevMonth?: () => void; // Función para ir al mes anterior
     onNextMonth?: () => void; // Función para ir al mes siguiente
+    onFilterAnalistaChange?: (analista: string | undefined) => void; // Callback para cambio de filtro
 }
 
 export function TimelineView({ 
@@ -678,11 +679,28 @@ export function TimelineView({
     selectedDateFilter,
     vacations = [], // Valor por defecto: array vacío
     onPrevMonth,
-    onNextMonth
+    onNextMonth,
+    onFilterAnalistaChange
 }: Readonly<TimelineViewProps>): ReactNode {
     const [dates, setDates] = useState<Date[]>([]);
     const [pageSize, setPageSize] = useState(20); // Número suficiente para mostrar todos los analistas
     const [currentPage, setCurrentPage] = useState(0); // Página actual
+    const [showAnalystFilter, setShowAnalystFilter] = useState(false); // Estado para mostrar dropdown de filtro
+    
+    // Efecto para cerrar el dropdown cuando se haga clic fuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest('.analyst-filter-dropdown')) {
+                setShowAnalystFilter(false);
+            }
+        };
+
+        if (showAnalystFilter) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showAnalystFilter]);
     
     // Efecto para actualizar el calendario basado en los filtros de fecha del padre
     useEffect(() => {
@@ -840,8 +858,109 @@ export function TimelineView({
                 <div className="min-w-max">
                     {/* Header con fechas */}
                     <div className="flex border-b">
-                        <div className="w-40 flex-shrink-0 p-2 font-semibold bg-gray-100 border-r">
-                            Analista
+                        <div className="w-44 flex-shrink-0 bg-gray-100 border-r relative analyst-filter-dropdown">
+                            {/* Filtro de Analista */}
+                            <div className="p-2">
+                                <button
+                                    onClick={() => setShowAnalystFilter(!showAnalystFilter)}
+                                    className={`w-full flex items-center justify-between px-2 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
+                                        filterAnalista 
+                                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                                    } border border-gray-200 shadow-sm`}
+                                >
+                                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                        <Filter className="w-3 h-3 flex-shrink-0" />
+                                        <span className="truncate text-xs">
+                                            {filterAnalista ? `${filterAnalista.split(' ')[0]}...` : 'Todos'}
+                                        </span>
+                                    </div>
+                                    <ChevronDown 
+                                        className={`w-3 h-3 flex-shrink-0 ml-1 transition-transform duration-200 ${
+                                            showAnalystFilter ? 'rotate-180' : ''
+                                        }`} 
+                                    />
+                                </button>
+
+                                {/* Dropdown del filtro */}
+                                {showAnalystFilter && (
+                                    <div className="absolute top-full left-2 right-2 z-50 mt-1 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 max-h-60 overflow-y-auto">
+                                        {/* Opción "Todos" */}
+                                        <button
+                                            onClick={() => {
+                                                onFilterAnalistaChange?.(undefined);
+                                                setShowAnalystFilter(false);
+                                            }}
+                                            className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors duration-150 ${
+                                                !filterAnalista 
+                                                    ? 'bg-blue-50 text-blue-700 font-medium' 
+                                                    : 'text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <div className="flex items-center space-x-2 min-w-0">
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center flex-shrink-0">
+                                                    <Users className="w-3 h-3 text-white" />
+                                                </div>
+                                                <span className="truncate">Todos</span>
+                                            </div>
+                                            {!filterAnalista && (
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                            )}
+                                        </button>
+
+                                        {/* Separador */}
+                                        <div className="my-1 mx-3 border-t border-gray-100"></div>
+
+                                        {/* Lista de analistas */}
+                                        {analysts.map((analyst) => (
+                                            <button
+                                                key={analyst.id}
+                                                onClick={() => {
+                                                    onFilterAnalistaChange?.(analyst.name);
+                                                    setShowAnalystFilter(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors duration-150 ${
+                                                    filterAnalista === analyst.name 
+                                                        ? 'bg-blue-50 text-blue-700 font-medium' 
+                                                        : 'text-gray-700 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                                    <div 
+                                                        className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                                        style={{ backgroundColor: analyst.color }}
+                                                    >
+                                                        {analyst.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div className="text-left min-w-0 flex-1">
+                                                        <div className="font-medium truncate">{analyst.name}</div>
+                                                        <div className="text-xs text-gray-500 truncate">
+                                                            {projects.filter(p => p.analistaProducto === analyst.name).length} proy.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {filterAnalista === analyst.name && (
+                                                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Indicador de filtro activo */}
+                                {filterAnalista && (
+                                    <button
+                                        onClick={() => {
+                                            onFilterAnalistaChange?.(undefined);
+                                            setShowAnalystFilter(false);
+                                        }}
+                                        className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors duration-150"
+                                        title="Limpiar filtro"
+                                    >
+                                        <X className="w-2 h-2" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div className="flex">
                             {dates.map((date) => (

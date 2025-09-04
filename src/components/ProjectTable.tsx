@@ -1207,6 +1207,9 @@ export default function ProjectTable() {
                             }
                             setSelectedDateFilter('custom-month');
                         }}
+                        onFilterAnalistaChange={(analista) => {
+                            setFilterAnalista(analista || '');
+                        }}
                     />
                 </>
             ) : activeView === 'kanban' ? (
