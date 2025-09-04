@@ -28,6 +28,28 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
   
+  /* Navigation specific utilities */
+  .nav-height {
+    height: 72px;
+    min-height: 72px;
+  }
+  
+  .nav-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  
+  /* Logo spacing fix */
+  .logo-container {
+    display: flex;
+    align-items: center;
+    height: fit-content;
+    max-height: 60px;
+  }
+  
   /* Login specific animations */
   .login-float {
     animation: loginFloat 6s ease-in-out infinite;

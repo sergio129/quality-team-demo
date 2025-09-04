@@ -60,7 +60,7 @@ export function Navigation() {
   }
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-xl border-b border-white/10">
+    <nav className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-xl border-b border-white/10 sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between relative">
           {/* Background glassmorphism effect */}
@@ -68,16 +68,13 @@ export function Navigation() {
           
           <div className="flex items-center relative z-10">
             <Link href="/" className="group flex items-center space-x-3">
-              <div className="relative bg-white p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                <span className="text-2xl">🔍</span>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative bg-white p-2 rounded-lg shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 flex-shrink-0">
+                <span className="text-lg">🔍</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-indigo-600/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex items-center">
                 <span className="text-xl font-bold text-white group-hover:text-blue-200 transition-colors duration-300">
                   Quality Team
-                </span>
-                <span className="text-xs text-blue-200/70 font-medium hidden sm:block">
-                  Sistema de Gestión QA
                 </span>
               </div>
             </Link>
