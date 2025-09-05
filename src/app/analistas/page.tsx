@@ -269,11 +269,11 @@ export default function AnalystsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                     Equipo de Analistas ({filteredAnalysts.length})
                   </h3>
-                  <RefreshCw className="h-5 w-5 text-gray-400 cursor-pointer hover:text-blue-600 transition-colors" />
+                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 cursor-pointer hover:text-blue-600 transition-colors self-start sm:self-auto" />
                 </div>
                 
                 {/* Vista de Cards */}
@@ -281,51 +281,53 @@ export default function AnalystsPage() {
                   {filteredAnalysts.map((analyst) => (
                     <div
                       key={analyst.id}
-                      className="bg-gradient-to-r from-white to-blue-50 border-2 border-blue-100 hover:border-blue-300 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                      className="bg-gradient-to-r from-white to-blue-50 border-2 border-blue-100 hover:border-blue-300 rounded-xl p-4 sm:p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-4 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                           {/* Avatar con color personalizado */}
                           <div 
-                            className="p-3 rounded-xl text-white flex items-center justify-center shadow-lg"
+                            className="p-2 sm:p-3 rounded-xl text-white flex items-center justify-center shadow-lg flex-shrink-0"
                             style={{ backgroundColor: analyst.color || '#3B82F6' }}
                           >
-                            <Users className="h-6 w-6" />
+                            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
                           </div>
 
                           {/* Información del analista */}
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <h4 className="text-lg font-bold text-gray-800">{analyst.name}</h4>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                              <h4 className="text-base sm:text-lg font-bold text-gray-800 truncate">{analyst.name}</h4>
                               
-                              {/* Badge de disponibilidad */}
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                analyst.realAvailability >= 70 ? 'bg-green-100 text-green-800' :
-                                analyst.realAvailability >= 30 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {analyst.realAvailability}% disponible
-                              </span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {/* Badge de disponibilidad */}
+                                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
+                                  analyst.realAvailability >= 70 ? 'bg-green-100 text-green-800' :
+                                  analyst.realAvailability >= 30 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {analyst.realAvailability}%<span className="hidden sm:inline"> disponible</span>
+                                </span>
 
-                              {/* Badge de rol */}
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                                analyst.role === 'QA Leader' ? 'bg-purple-100 text-purple-800 border-purple-200' :
-                                analyst.role === 'QA Senior' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                                'bg-green-100 text-green-800 border-green-200'
-                              }`}>
-                                {analyst.role || 'Sin rol'}
-                              </span>
+                                {/* Badge de rol */}
+                                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold border whitespace-nowrap ${
+                                  analyst.role === 'QA Leader' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                  analyst.role === 'QA Senior' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                                  'bg-green-100 text-green-800 border-green-200'
+                                }`}>
+                                  {analyst.role || 'Sin rol'}
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="text-sm text-gray-600 mb-3">
+                            <div className="text-xs sm:text-sm text-gray-600 mb-3 truncate">
                               📧 {analyst.email}
                             </div>
 
                             {/* Células asignadas */}
                             {analyst.cellIds && analyst.cellIds.length > 0 && (
-                              <div className="flex items-center space-x-2 text-sm mb-4">
-                                <Activity className="h-4 w-4 text-blue-500" />
-                                <span className="text-blue-700 font-medium">
+                              <div className="flex items-center space-x-2 text-xs sm:text-sm mb-4">
+                                <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
+                                <span className="text-blue-700 font-medium truncate">
                                   {analyst.cellIds.map(cellId => 
                                     cells?.find(c => c.id === cellId)?.name || 'Célula'
                                   ).join(', ')}
@@ -334,31 +336,31 @@ export default function AnalystsPage() {
                             )}
 
                             {/* Botones de acción */}
-                            <div className="flex items-center space-x-2 mt-4">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 mt-4">
                               <button
                                 onClick={() => handleViewStats(analyst)}
-                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                className="flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                                 title="Ver estadísticas del analista"
                               >
-                                <BarChart3 className="h-4 w-4" />
+                                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Estadísticas</span>
                               </button>
                               
                               <button
                                 onClick={() => handleViewProjects(analyst)}
-                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                className="flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                                 title="Ver proyectos asignados"
                               >
-                                <Briefcase className="h-4 w-4" />
+                                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Proyectos</span>
                               </button>
                               
                               <button
                                 onClick={() => handleManageVacations(analyst)}
-                                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                className="flex items-center justify-center sm:justify-start space-x-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-xs sm:text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                                 title="Gestionar vacaciones y ausencias"
                               >
-                                <CalendarDays className="h-4 w-4" />
+                                <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>Vacaciones</span>
                               </button>
                             </div>
@@ -366,10 +368,10 @@ export default function AnalystsPage() {
                         </div>
 
                         {/* Indicador de flecha - movido arriba */}
-                        <div className="flex flex-col items-center space-y-2">
-                          <ChevronRight className="h-5 w-5 text-gray-300" />
+                        <div className="flex sm:flex-col items-center justify-end sm:justify-center space-x-2 sm:space-x-0 sm:space-y-2 flex-shrink-0">
+                          <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300" />
                           {/* Indicador de actividad */}
-                          <div className={`w-3 h-3 rounded-full ${
+                          <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${
                             analyst.realAvailability >= 70 ? 'bg-green-400' :
                             analyst.realAvailability >= 30 ? 'bg-yellow-400' :
                             'bg-red-400'
