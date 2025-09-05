@@ -224,19 +224,19 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
 
     return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl p-1 md:p-2 text-xs sm:text-sm">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-green-50 rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl p-2 sm:p-4 text-xs sm:text-sm">
             {/* Sticky Header y Progreso */}
-            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-100 rounded-t-2xl shadow-sm px-1 sm:px-4 py-1 sm:py-2">
+            <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-100 rounded-t-2xl shadow-sm px-2 sm:px-4 py-2">
                 <div 
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-all duration-200"
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
-                    <div className="flex items-center space-x-3">
-                        <Calendar className="w-7 h-7 text-green-600" />
-                        <h3 className="text-xl font-bold text-gray-900">
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                        <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-green-600 flex-shrink-0" />
+                        <h3 className="text-sm sm:text-xl font-bold text-gray-900 truncate">
                             Certificaciones de esta semana
                         </h3>
-                        <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
+                        <span className="bg-green-100 text-green-800 text-xs sm:text-sm font-semibold px-2 py-1 rounded-full flex-shrink-0">
                             {weeklyProjects.length}
                         </span>
                         {weekOffset !== 0 && (
@@ -245,57 +245,61 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                     e.stopPropagation();
                                     goToCurrentWeek();
                                 }}
-                                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors"
+                                className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200 transition-colors flex-shrink-0"
                             >
                                 Actual
                             </button>
                         )}
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-between sm:justify-end space-x-2 min-w-0">
                         {/* Navegación por semanas */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                goToPreviousWeek();
-                            }}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                            title="Semana anterior"
-                        >
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <span className="text-base text-gray-700 min-w-[120px] text-center">
-                            {currentWeek.monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {currentWeek.sunday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                            {weekOffset === 0 && <span className="text-blue-600 font-semibold"> (Actual)</span>}
-                        </span>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                goToNextWeek();
-                            }}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors"
-                            title="Semana siguiente"
-                        >
-                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
+                        <div className="flex items-center space-x-1">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goToPreviousWeek();
+                                }}
+                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                title="Semana anterior"
+                            >
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <span className="text-xs sm:text-base text-gray-700 min-w-[80px] sm:min-w-[120px] text-center">
+                                {currentWeek.monday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {currentWeek.sunday.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                                {weekOffset === 0 && <span className="hidden sm:inline text-blue-600 font-semibold"> (Actual)</span>}
+                                {weekOffset === 0 && <span className="sm:hidden text-blue-600 font-semibold block text-xs"> (Actual)</span>}
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goToNextWeek();
+                                }}
+                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                title="Semana siguiente"
+                            >
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
                         <div className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
                 </div>
+
                 {/* Barra de progreso sticky con tooltip */}
                 {weeklyProjects.length > 0 && (
-                    <div className="px-4 py-2 border-b border-gray-100 group relative">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm text-gray-600">
+                    <div className="px-2 sm:px-4 py-2 border-b border-gray-100 group relative">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
+                            <span className="text-xs sm:text-sm text-gray-600">
                                 Progreso: {progressStats.certified} de {progressStats.total} certificados
                             </span>
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-xs sm:text-sm font-medium text-gray-900">
                                 {progressStats.percentage}%
                             </span>
                         </div>
@@ -315,7 +319,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
 
             {/* Content */}
             {isExpanded && (
-                <div className="p-4 animate-fade-in-up">
+                <div className="p-2 sm:p-4 animate-fade-in-up">
                     {/* Campo de búsqueda */}
                     <div className="mb-4">
                         <div className="relative">
@@ -327,7 +331,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                                 placeholder="Buscar proyectos..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors text-sm"
                             />
                             {searchTerm && (
                                 <button
@@ -343,13 +347,13 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                     </div>
 
                     {/* Controles de filtros y vista */}
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                         {/* Filtros por estado */}
-                        <div className="flex items-center space-x-1">
-                            <span className="text-sm text-gray-600 mr-2">Filtrar:</span>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                            <span className="text-xs sm:text-sm text-gray-600 mr-1 sm:mr-2">Filtrar:</span>
                             <button
                                 onClick={() => setFilterStatus('all')}
-                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                className={`px-2 sm:px-3 py-1 text-xs rounded-full transition-colors whitespace-nowrap ${
                                     filterStatus === 'all' 
                                         ? 'bg-blue-100 text-blue-800 font-medium' 
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -359,7 +363,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                             </button>
                             <button
                                 onClick={() => setFilterStatus('certified')}
-                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                className={`px-2 sm:px-3 py-1 text-xs rounded-full transition-colors whitespace-nowrap ${
                                     filterStatus === 'certified' 
                                         ? 'bg-green-100 text-green-800 font-medium' 
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -369,7 +373,7 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                             </button>
                             <button
                                 onClick={() => setFilterStatus('pending')}
-                                className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                                className={`px-2 sm:px-3 py-1 text-xs rounded-full transition-colors whitespace-nowrap ${
                                     filterStatus === 'pending' 
                                         ? 'bg-orange-100 text-orange-800 font-medium' 
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -382,14 +386,15 @@ export function WeeklyCertificationWidget({ projects }: WeeklyCertificationWidge
                         {/* Toggle vista compacta */}
                         <button
                             onClick={() => setIsCompactView(!isCompactView)}
-                            className="flex items-center space-x-1 px-3 py-1 text-xs rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                            className="flex items-center space-x-1 px-2 sm:px-3 py-1 text-xs rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors whitespace-nowrap"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                     d={isCompactView ? "M4 6h16M4 12h16M4 18h16" : "M4 6h16M4 10h16M4 14h16M4 18h16"} 
                                 />
                             </svg>
-                            <span>{isCompactView ? 'Vista detallada' : 'Vista compacta'}</span>
+                            <span className="hidden sm:inline">{isCompactView ? 'Vista detallada' : 'Vista compacta'}</span>
+                            <span className="sm:hidden">{isCompactView ? 'Detallada' : 'Compacta'}</span>
                         </button>
                     </div>
 
