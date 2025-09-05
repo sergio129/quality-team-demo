@@ -63,7 +63,7 @@ const DateHeaderCell = memo(({ date }: { date: Date }) => {
 
     return (
         <div
-            className={`w-14 flex-shrink-0 p-2 text-center border-r transition-all duration-200 relative
+            className={`w-14 flex-shrink-0 text-center border-r transition-all duration-200 relative
                 ${isNonWorkingDay ? 'bg-gradient-to-b from-red-50 to-red-100' : 'bg-gradient-to-b from-white to-gray-50'}
                 ${isColombianHoliday && !isWeekend ? 'bg-gradient-to-b from-red-100 to-red-200' : ''}
                 ${isCurrentDay ? 'bg-gradient-to-b from-blue-50 to-blue-100 ring-2 ring-blue-400 ring-inset' : ''}
@@ -75,13 +75,13 @@ const DateHeaderCell = memo(({ date }: { date: Date }) => {
                 day: 'numeric'
             })}${isColombianHoliday ? ' - Día festivo en Colombia' : ''}`}
         >
-            <div className={`text-xs font-medium mb-1 ${
+            <div className={`text-xs font-medium mb-1 mt-2 ${
                 isCurrentDay ? 'text-blue-700' : 
                 isNonWorkingDay ? 'text-red-600' : 'text-gray-600'
             }`}>
                 {dayName}
             </div>
-            <div className={`text-lg font-bold ${
+            <div className={`text-lg font-bold mb-2 ${
                 isCurrentDay ? 'text-blue-800' : 
                 isNonWorkingDay ? 'text-red-700' : 'text-gray-800'
             }`}>
@@ -858,7 +858,7 @@ export function TimelineView({
                 <div className="min-w-max">
                     {/* Header con fechas */}
                     <div className="flex border-b">
-                        <div className="w-44 flex-shrink-0 bg-gray-100 border-r relative analyst-filter-dropdown">
+                        <div className="w-40 flex-shrink-0 bg-gray-100 border-r relative analyst-filter-dropdown">
                             {/* Filtro de Analista */}
                             <div className="p-2">
                                 <button
