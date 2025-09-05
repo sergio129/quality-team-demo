@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import UserProfile from '@/components/auth/UserProfile';
 
 export function Navigation() {
@@ -11,8 +11,31 @@ export function Navigation() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [showMenu, setShowMenu] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   
   const isQALeader = session?.user?.role === 'QA Leader';
+  
+  // Close mobile menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
   
   // Define links based on user role
   const getLinks = () => {
@@ -119,7 +142,7 @@ export function Navigation() {
             })}
           </div>
           
-          {/* User menu - Diferente comportamiento para móvil y desktop */}
+          {/* User menu para desktop y móvil */}
           {session?.user && (
             <div className="relative z-10">
               <UserProfile 
@@ -130,51 +153,34 @@ export function Navigation() {
             </div>
           )}
           
-          {/* Mobile menu button - Solo visible en móvil cuando no hay espacio para UserProfile */}
-          <div className="relative md:hidden z-10 hidden">
+          {/* Mobile navigation menu button */}
+          <div className="relative md:hidden z-10" ref={mobileMenuRef}>
             <button 
               onClick={() => setShowMenu(!showMenu)}
-              className="flex items-center space-x-2 text-white/90 hover:text-white bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="flex items-center justify-center w-10 h-10 text-white/90 hover:text-white bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
             >
-              <span className="text-sm font-medium">{session?.user?.name || 'Usuario'}</span>
               <svg 
-                className="w-4 h-4 transition-transform duration-200" 
+                className="w-5 h-5 transition-transform duration-200" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
-                style={{ transform: showMenu ? 'rotate(180deg)' : 'rotate(0deg)' }}
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  d="M19 9l-7 7-7-7"
-                />
+                {showMenu ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
             
             {showMenu && (
-              <div className="absolute -right-4 sm:right-0 mt-3 w-[95vw] sm:w-64 max-w-sm bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/20 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
-                {/* User Info Section */}
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-bold">
-                        {(session?.user?.name || 'U').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-800 truncate">{session?.user?.name || 'Usuario'}</p>
-                      <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
-                      <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full mt-1">
-                        {session?.user?.role || 'Sin rol'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="absolute -right-4 sm:right-0 mt-3 w-[95vw] sm:w-72 max-w-sm bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/20 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
                 
                 {/* Navigation Links */}
                 <div className="py-2">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <h3 className="text-sm font-semibold text-gray-700">Navegación</h3>
+                  </div>
                   {getLinks().map((link, index) => {
                     const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
                     return (
@@ -199,6 +205,9 @@ export function Navigation() {
                           {index === 7 && '📊'}
                         </span>
                         <span className="font-medium">{link.label}</span>
+                        {isActive && (
+                          <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+                        )}
                       </Link>
                     );
                   })}
@@ -207,7 +216,10 @@ export function Navigation() {
                 {/* Sign Out Section */}
                 <div className="border-t border-gray-100 pt-2">
                   <button 
-                    onClick={handleSignOut}
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleSignOut();
+                    }}
                     className="flex items-center space-x-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
                   >
                     <span className="text-lg">🚪</span>

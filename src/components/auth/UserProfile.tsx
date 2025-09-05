@@ -83,8 +83,12 @@ export default function UserProfile({ name, email, role }: UserProfileProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute -right-4 sm:right-0 z-50 mt-3 w-[95vw] sm:w-80 max-w-sm origin-top-right animate-in slide-in-from-top-2 duration-200">
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+        <>
+          {/* Overlay para móvil */}
+          <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm sm:hidden" onClick={() => setIsOpen(false)}></div>
+          
+          <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 top-20 sm:top-auto z-50 sm:mt-3 w-auto sm:w-80 max-w-[320px] sm:max-w-sm origin-top sm:origin-top-right animate-in slide-in-from-top-2 duration-200">
+            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
             {/* Header with gradient */}
             <div className={`bg-gradient-to-br ${roleConfig.color} px-4 sm:px-6 py-4 relative overflow-hidden`}>
               <div className="absolute inset-0 bg-white/10"></div>
@@ -152,7 +156,8 @@ export default function UserProfile({ name, email, role }: UserProfileProps) {
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
