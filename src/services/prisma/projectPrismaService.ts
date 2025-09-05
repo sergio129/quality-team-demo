@@ -3,18 +3,31 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { GetProjectsOptions } from '@/services/projectServiceTypes';
 
+// Configuración de logs basada en el entorno
+const DEBUG_ENABLED = process.env.NODE_ENV === 'development' && process.env.ENABLE_DEBUG_LOGS === 'true';
+
+const debugLog = (message: string, data?: any) => {
+  if (DEBUG_ENABLED) {
+    console.log(`[ProjectPrismaService] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+  }
+};
+
+const errorLog = (message: string, error?: any) => {
+  console.error(`[ProjectPrismaService] ❌ ${message}`, error);
+};
+
 export class ProjectPrismaService {
     async getAllProjects(options?: GetProjectsOptions): Promise<Project[]> {
         try {
-            console.log(`[ProjectPrismaService] 📋 Getting projects with options:`, JSON.stringify(options, null, 2));
+            debugLog('📋 Getting projects with options:', options);
             
             // Si el usuario es QA Leader o no se especifica un analista, devolver todos los proyectos
             if (options?.role === 'QA Leader' || !options?.analystId) {
-                console.log(`[ProjectPrismaService] Getting all projects (admin or no filter)`);
+                debugLog('Getting all projects (admin or no filter)');
                 
                 // Construir filtros de fecha
                 const dateFilters = this.buildDateFilters(options);
-                console.log(`[ProjectPrismaService] 🔍 Date filters built:`, JSON.stringify(dateFilters, null, 2));
+                debugLog('🔍 Date filters built:', dateFilters);
                 
                 // Admin o sin filtro específico
                 const projects = await prisma.project.findMany({
@@ -29,12 +42,12 @@ export class ProjectPrismaService {
                         }
                     }
                 });
-                console.log(`[ProjectPrismaService] ✅ Found ${projects.length} projects for admin with date filters`);
+                debugLog(`✅ Found ${projects.length} projects for admin with date filters`);
                 return this.mapProjects(projects);
             }
             
             // Para QA Analyst o QA Senior, filtrar para mostrar sus proyectos
-            console.log(`[ProjectPrismaService] Getting projects for analyst: ${options.analystId}`);
+            debugLog(`Getting projects for analyst: ${options.analystId}`);
             
             // Intentar obtener el ID como UUID válido o texto
             const analystId = options.analystId;
@@ -45,11 +58,11 @@ export class ProjectPrismaService {
             });
             
             if (!analista) {
-                console.log(`[ProjectPrismaService] No se encontró el analista con ID: ${analystId}`);
+                debugLog(`No se encontró el analista con ID: ${analystId}`);
                 return [];
             }
             
-            console.log(`[ProjectPrismaService] Analista encontrado: ${analista.name}`);
+            debugLog(`Analista encontrado: ${analista.name}`);
             
             // Construir filtros de fecha
             const dateFilters = this.buildDateFilters(options);
@@ -79,7 +92,7 @@ export class ProjectPrismaService {
                 }
             });
             
-            console.log(`[ProjectPrismaService] Proyectos por relación: ${projectsByRelation.length}`);
+            debugLog(`Proyectos por relación: ${projectsByRelation.length}`);
             
             // 2. Proyectos por campo analistaProducto
             const projectsByAnalystName = await prisma.project.findMany({
@@ -100,7 +113,7 @@ export class ProjectPrismaService {
                 }
             });
             
-            console.log(`[ProjectPrismaService] Proyectos por analistaProducto: ${projectsByAnalystName.length}`);
+            debugLog(`Proyectos por analistaProducto: ${projectsByAnalystName.length}`);
             
             // Combinar resultados eliminando duplicados por ID
             const allProjectIds = new Set();
@@ -122,11 +135,11 @@ export class ProjectPrismaService {
                 }
             }
             
-            console.log(`[ProjectPrismaService] Total proyectos combinados: ${allProjects.length}`);
+            debugLog(`Total proyectos combinados: ${allProjects.length}`);
             
             return this.mapProjects(allProjects);
         } catch (error) {
-            console.error('Error fetching projects from database:', error);
+            errorLog('Error fetching projects from database:', error);
             throw error;
         }
     }
@@ -629,8 +642,8 @@ export class ProjectPrismaService {
             const endOfMonth = new Date(year, month + 1, 0);
             endOfMonth.setHours(23, 59, 59, 999);
             
-            console.log(`[ProjectPrismaService] 🗓️ Filtering by month: ${options.monthFilter}/${year}`);
-            console.log(`[ProjectPrismaService] 🗓️ Date range: ${startOfMonth} - ${endOfMonth}`);
+            debugLog(`🗓️ Filtering by month: ${options.monthFilter}/${year}`);
+            debugLog(`🗓️ Date range: ${startOfMonth} - ${endOfMonth}`);
             
             filters.push({
                 OR: [

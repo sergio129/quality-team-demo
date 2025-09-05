@@ -119,7 +119,7 @@ export function Navigation() {
             })}
           </div>
           
-          {/* User menu */}
+          {/* User menu - Diferente comportamiento para móvil y desktop */}
           {session?.user && (
             <div className="relative z-10">
               <UserProfile 
@@ -130,8 +130,8 @@ export function Navigation() {
             </div>
           )}
           
-          {/* Mobile menu button */}
-          <div className="relative md:hidden z-10">
+          {/* Mobile menu button - Solo visible en móvil cuando no hay espacio para UserProfile */}
+          <div className="relative md:hidden z-10 hidden">
             <button 
               onClick={() => setShowMenu(!showMenu)}
               className="flex items-center space-x-2 text-white/90 hover:text-white bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 transition-all duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
@@ -154,18 +154,18 @@ export function Navigation() {
             </button>
             
             {showMenu && (
-              <div className="absolute right-0 mt-3 w-64 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/20 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+              <div className="absolute -right-4 sm:right-0 mt-3 w-[95vw] sm:w-64 max-w-sm bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-white/20 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
                 {/* User Info Section */}
                 <div className="px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-sm font-bold">
                         {(session?.user?.name || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{session?.user?.name || 'Usuario'}</p>
-                      <p className="text-xs text-gray-500">{session?.user?.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-800 truncate">{session?.user?.name || 'Usuario'}</p>
+                      <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
                       <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full mt-1">
                         {session?.user?.role || 'Sin rol'}
                       </span>
