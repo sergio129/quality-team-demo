@@ -443,29 +443,29 @@ export function AnalystWorkload({ analystId }: AnalystWorkloadProps) {
       </Card>
 
       {/* Métricas de Carga Laboral */}
-      <div className="flex flex-wrap gap-3 justify-center">
-        <div key="workload" className={`${workload.color} p-3 rounded-lg text-center w-32`}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div key="workload" className={`${workload.color} p-3 rounded-lg text-center`}>
           <p className="text-xs text-gray-700">Nivel de Carga</p>
-          <p className="text-xl font-bold">{workload.level}</p>
+          <p className="text-lg sm:text-xl font-bold">{workload.level}</p>
           <p className="text-xs font-medium font-mono">{workloadData.totalAssignedHours}h / {getMaxHoursForPeriod(selectedPeriod)}h</p>
         </div>
-        <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center w-32">
+        <div key="activeProjects" className="bg-blue-50 p-3 rounded-lg text-center">
           <p className="text-xs text-gray-700">Proyectos Activos</p>
-          <p className="text-xl font-bold text-blue-600">{workloadData.activeProjects.length}</p>
+          <p className="text-lg sm:text-xl font-bold text-blue-600">{workloadData.activeProjects.length}</p>
           <p className="text-xs text-gray-500">en curso</p>
         </div>
-        <div key="totalProjects" className="bg-purple-50 p-3 rounded-lg text-center w-32">
+        <div key="totalProjects" className="bg-purple-50 p-3 rounded-lg text-center">
           <p className="text-xs text-gray-700">Total Proyectos</p>
-          <p className="text-xl font-bold text-purple-600">{workloadData.allProjectsInPeriod.length}</p>
+          <p className="text-lg sm:text-xl font-bold text-purple-600">{workloadData.allProjectsInPeriod.length}</p>
           <p className="text-xs text-gray-500">todos los estados</p>
         </div>
-        <div key="availability" className={`p-3 rounded-lg text-center w-32 ${
+        <div key="availability" className={`p-3 rounded-lg text-center ${
           availabilityPercentage > 70 ? 'bg-green-50' :
           availabilityPercentage > 30 ? 'bg-yellow-50' :
           'bg-red-50'
         }`}>
           <p className="text-xs text-gray-700">Disponibilidad</p>
-          <p className={`text-xl font-bold ${
+          <p className={`text-lg sm:text-xl font-bold ${
             availabilityPercentage > 70 ? 'text-green-600' :
             availabilityPercentage > 30 ? 'text-yellow-600' :
             'text-red-600'

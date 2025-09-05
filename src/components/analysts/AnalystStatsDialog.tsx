@@ -39,9 +39,9 @@ export function AnalystStatsDialog({
             <BarChart2 className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-      )}      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      )}      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto mx-auto">
         <DialogHeader>
-          <DialogTitle>Estadísticas de {analyst.name}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Estadísticas de {analyst.name}</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystPerformance analystId={analyst.id} />

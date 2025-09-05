@@ -201,8 +201,8 @@ export default function AnalystsPage() {
         </div>
 
         {/* Controles de filtrado */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
@@ -214,13 +214,13 @@ export default function AnalystsPage() {
               />
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex items-center space-x-2">
-                <Filter className="text-gray-400 h-5 w-5" />
+                <Filter className="text-gray-400 h-5 w-5 flex-shrink-0" />
                 <select
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
-                  className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 sm:flex-initial px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">Todos los roles</option>
                   <option value="QA Leader">QA Leader</option>
@@ -232,7 +232,7 @@ export default function AnalystsPage() {
               <div className="flex bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('cards')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-md text-sm font-medium transition-all ${
                     viewMode === 'cards'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-blue-600'
@@ -242,7 +242,7 @@ export default function AnalystsPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('table')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-md text-sm font-medium transition-all ${
                     viewMode === 'table'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:text-blue-600'
@@ -261,23 +261,25 @@ export default function AnalystsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
+          <div className="w-full lg:col-span-3">
             {viewMode === 'table' ? (
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                 <DataTable />
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                    Equipo de Analistas ({filteredAnalysts.length})
-                  </h3>
-                  <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 cursor-pointer hover:text-blue-600 transition-colors self-start sm:self-auto" />
-                </div>
-                
-                {/* Vista de Cards */}
-                <div className="grid gap-4">
+              <div className="w-full">
+                <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                        Equipo de Analistas ({filteredAnalysts.length})
+                      </h3>
+                      <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 cursor-pointer hover:text-blue-600 transition-colors self-start sm:self-auto" />
+                    </div>
+                    
+                    {/* Vista de Cards */}
+                    <div className="w-full space-y-4">
                   {filteredAnalysts.map((analyst) => (
                     <div
                       key={analyst.id}
@@ -380,6 +382,8 @@ export default function AnalystsPage() {
                       </div>
                     </div>
                   ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

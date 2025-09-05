@@ -52,9 +52,9 @@ export function AnalystWorkloadDialog({
             <LayoutPanelLeft className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-      )}      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      )}      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto mx-auto">
         <DialogHeader>
-          <DialogTitle>Proyectos Asignados a {analyst.name}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Proyectos Asignados a {analyst.name}</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystWorkload key={key} analystId={analyst.id} />

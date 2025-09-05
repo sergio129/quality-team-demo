@@ -41,9 +41,9 @@ export function AnalystVacationsDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto mx-auto">
         <DialogHeader>
-          <DialogTitle>Gestión de ausencias - {analyst.name}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Gestión de ausencias - {analyst.name}</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystVacationsManagement analyst={analyst} />

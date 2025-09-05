@@ -21,9 +21,9 @@ export function AddAnalystButton() {
       <DialogTrigger asChild>
         <Button>Agregar Analista</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto mx-auto">
         <DialogHeader>
-          <DialogTitle className="text-base">Agregar Nuevo Analista</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Agregar Nuevo Analista</DialogTitle>
         </DialogHeader>
         <div className="py-2">
           <AnalystForm 

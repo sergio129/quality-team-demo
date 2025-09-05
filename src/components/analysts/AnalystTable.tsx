@@ -215,31 +215,31 @@ export function DataTable() {
         </div>
       ) : (
         <>
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('name')}>
+                  <TableHead className="cursor-pointer hover:bg-gray-50 min-w-[150px]" onClick={() => handleSort('name')}>
                     <div className="flex items-center">
                       Nombre {renderSortIcon('name')}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('email')}>
+                  <TableHead className="cursor-pointer hover:bg-gray-50 min-w-[200px]" onClick={() => handleSort('email')}>
                     <div className="flex items-center">
                       Email {renderSortIcon('email')}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('cells')}>
+                  <TableHead className="cursor-pointer hover:bg-gray-50 min-w-[120px]" onClick={() => handleSort('cells')}>
                     <div className="flex items-center">
                       Célula {renderSortIcon('cells')}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-gray-50" onClick={() => handleSort('role')}>
+                  <TableHead className="cursor-pointer hover:bg-gray-50 min-w-[100px]" onClick={() => handleSort('role')}>
                     <div className="flex items-center">
                       Rol {renderSortIcon('role')}
                     </div>
                   </TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
+                  <TableHead className="text-right min-w-[200px]">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

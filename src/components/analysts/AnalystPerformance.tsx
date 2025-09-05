@@ -136,34 +136,34 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
         </div>
       ) : stats ? (
         <>          {/* Resumen de métricas clave */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            <div className="bg-blue-50 p-3 rounded-lg text-center w-32">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="bg-blue-50 p-3 rounded-lg text-center">
               <p className="text-xs text-gray-500">Incidentes reportados</p>
-              <p className="text-xl font-bold text-blue-600">{stats.incidentsCaught}</p>
+              <p className="text-lg sm:text-xl font-bold text-blue-600">{stats.incidentsCaught}</p>
             </div>
-            <div className="bg-green-50 p-3 rounded-lg text-center w-32">
+            <div className="bg-green-50 p-3 rounded-lg text-center">
               <p className="text-xs text-gray-500">Incidentes resueltos</p>
-              <p className="text-xl font-bold text-green-600">{stats.incidentsResolved}</p>
+              <p className="text-lg sm:text-xl font-bold text-green-600">{stats.incidentsResolved}</p>
             </div>
-            <div className="bg-amber-50 p-3 rounded-lg text-center w-32">
+            <div className="bg-amber-50 p-3 rounded-lg text-center">
               <p className="text-xs text-gray-500">Tiempo medio (días)</p>
-              <p className="text-xl font-bold text-amber-600">{stats.avgResolutionTime.toFixed(1)}</p>
+              <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.avgResolutionTime.toFixed(1)}</p>
             </div>
             
             {/* Métricas específicas para QA Leader */}
             {isQALeader && stats.leadershipMetrics && (
               <>
-                <div className="bg-indigo-50 p-3 rounded-lg text-center w-32">
+                <div className="bg-indigo-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-gray-500">Revisiones</p>
-                  <p className="text-xl font-bold text-indigo-600">{stats.leadershipMetrics.reviewsCompleted}</p>
+                  <p className="text-lg sm:text-xl font-bold text-indigo-600">{stats.leadershipMetrics.reviewsCompleted}</p>
                 </div>
-                <div className="bg-purple-50 p-3 rounded-lg text-center w-32">
+                <div className="bg-purple-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-gray-500">Capacitaciones</p>
-                  <p className="text-xl font-bold text-purple-600">{stats.leadershipMetrics.trainingsLed}</p>
+                  <p className="text-lg sm:text-xl font-bold text-purple-600">{stats.leadershipMetrics.trainingsLed}</p>
                 </div>
-                <div className="bg-pink-50 p-3 rounded-lg text-center w-32">
+                <div className="bg-pink-50 p-3 rounded-lg text-center">
                   <p className="text-xs text-gray-500">Propuestas</p>
-                  <p className="text-xl font-bold text-pink-600">{stats.leadershipMetrics.improvementProposals}</p>
+                  <p className="text-lg sm:text-xl font-bold text-pink-600">{stats.leadershipMetrics.improvementProposals}</p>
                 </div>
               </>
             )}
@@ -272,7 +272,7 @@ export function AnalystPerformance({ analystId }: AnalystPerformanceProps) {
             <Card className="p-4">
               <h3 className="text-sm font-medium mb-2">Eficiencia de procesos</h3>
               <div className="h-48 flex items-center justify-center">
-                <div className="relative w-36 h-36">
+                <div className="relative w-24 h-24 sm:w-36 sm:h-36">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
                     <circle
                       cx="50"
