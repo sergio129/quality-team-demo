@@ -162,16 +162,16 @@ export default function UserList({ onEdit, users: propUsers, loading: propLoadin
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       {/* Header con contador */}
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800">
           Usuarios del Sistema ({users.length})
         </h3>
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors self-start sm:self-auto"
           >
             <RefreshCw className="h-4 w-4" />
             <span>Actualizar</span>
@@ -188,54 +188,58 @@ export default function UserList({ onEdit, users: propUsers, loading: propLoadin
               user.isActive 
                 ? 'from-white to-green-50 border-green-200 hover:border-green-300' 
                 : 'from-white to-red-50 border-red-200 hover:border-red-300'
-            } border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-1`}
+            } border-2 rounded-xl p-4 sm:p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-1`}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               {/* Info principal del usuario */}
-              <div className="flex items-center space-x-4 flex-1">
+              <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                 {/* Avatar */}
-                <div className={`p-3 rounded-xl ${
+                <div className={`p-2 sm:p-3 rounded-xl ${
                   user.isActive 
                     ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
                     : 'bg-gradient-to-br from-gray-400 to-gray-600'
-                } text-white flex items-center justify-center shadow-lg`}>
-                  <UserIcon className="h-6 w-6" />
+                } text-white flex items-center justify-center shadow-lg flex-shrink-0`}>
+                  <UserIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
 
                 {/* Detalles del usuario */}
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="text-lg font-bold text-gray-800">{user.name}</h4>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                    <h4 className="text-base sm:text-lg font-bold text-gray-800 truncate">{user.name}</h4>
                     
-                    {/* Estado badge */}
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {user.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-
-                    {/* Role badge */}
-                    {user.analyst?.role && (
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRoleColor(user.analyst.role)} flex items-center space-x-1`}>
-                        {getRoleIcon(user.analyst.role)}
-                        <span>{user.analyst.role}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Estado badge */}
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
+                        user.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.isActive ? 'Activo' : 'Inactivo'}
                       </span>
-                    )}
+
+                      {/* Role badge */}
+                      {user.analyst?.role && (
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold border ${getRoleColor(user.analyst.role)} flex items-center space-x-1 whitespace-nowrap`}>
+                          {getRoleIcon(user.analyst.role)}
+                          <span className="hidden sm:inline">{user.analyst.role}</span>
+                          <span className="sm:hidden">QA</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{user.email}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
                     </div>
                     
                     {user.lastLogin && (
-                      <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          Último acceso: {createSafeDate(user.lastLogin)?.toLocaleString() || "Nunca"}
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          <span className="hidden sm:inline">Último acceso: </span>
+                          {createSafeDate(user.lastLogin)?.toLocaleString() || "Nunca"}
                         </span>
                       </div>
                     )}
@@ -244,10 +248,11 @@ export default function UserList({ onEdit, users: propUsers, loading: propLoadin
                   {/* Información del analista */}
                   {user.analyst && (
                     <div className="mt-2 p-2 bg-blue-50 rounded-lg">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Activity className="h-4 w-4 text-blue-500" />
-                        <span className="text-blue-700 font-medium">
-                          Analista: {user.analyst.name}
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm">
+                        <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
+                        <span className="text-blue-700 font-medium truncate">
+                          <span className="hidden sm:inline">Analista: </span>
+                          {user.analyst.name}
                         </span>
                       </div>
                     </div>
@@ -256,18 +261,18 @@ export default function UserList({ onEdit, users: propUsers, loading: propLoadin
               </div>
 
               {/* Botones de acción */}
-              <div className="flex items-center space-x-2 ml-4">
+              <div className="flex items-center justify-end space-x-1 sm:space-x-2 flex-shrink-0">
                 <button
                   onClick={() => onEdit(user)}
-                  className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors group"
+                  className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors group"
                   title="Editar usuario"
                 >
-                  <Edit3 className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                  <Edit3 className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                 </button>
 
                 <button
                   onClick={() => toggleUserStatus(user)}
-                  className={`p-2 rounded-lg transition-colors group ${
+                  className={`p-1.5 sm:p-2 rounded-lg transition-colors group ${
                     user.isActive
                       ? 'text-yellow-600 hover:bg-yellow-100'
                       : 'text-green-600 hover:bg-green-100'
@@ -275,21 +280,21 @@ export default function UserList({ onEdit, users: propUsers, loading: propLoadin
                   title={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
                 >
                   {user.isActive ? (
-                    <ToggleRight className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                    <ToggleRight className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                   ) : (
-                    <ToggleLeft className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                    <ToggleLeft className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                   )}
                 </button>
 
                 <button
                   onClick={() => handleDelete(user)}
-                  className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors group"
+                  className="p-1.5 sm:p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors group"
                   title="Eliminar usuario"
                 >
-                  <Trash2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                  <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                 </button>
 
-                <ChevronRight className="h-5 w-5 text-gray-300" />
+                <ChevronRight className="h-3 w-3 sm:h-5 sm:w-5 text-gray-300" />
               </div>
             </div>
           </div>
