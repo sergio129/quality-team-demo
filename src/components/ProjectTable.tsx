@@ -547,15 +547,17 @@ export default function ProjectTable() {
                 <ProjectDashboard projects={allFilteredProjects} />
             )}
             
-            <div className="flex justify-between items-center flex-wrap gap-4">                <div className="flex space-x-2">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                {/* Primera fila: Botones principales */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <button
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
                         onClick={() => setShowForm(true)}
                     >
                         Nuevo Proyecto
                     </button>
                     
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                         {/* Exportación rápida */}
                         <QuickExportDropdown
                             projects={allProjects || []}
@@ -568,49 +570,58 @@ export default function ProjectTable() {
                             teams={equipos}
                             analysts={analistas}
                         />
-                    </div>                    <div className="flex rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white">
-                        <button
-                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
-                                activeView === 'table'
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
-                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-                            }`}
-                            onClick={() => setActiveView('table')}
-                        >
-                            <Table className="w-4 h-4" />
-                            <span className="hidden sm:inline">Vista Tabla</span>
-                            <span className="sm:hidden">Tabla</span>
-                        </button>
-                        <button
-                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
-                                activeView === 'timeline'
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
-                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-                            }`}
-                            onClick={() => setActiveView('timeline')}
-                        >
-                            <Calendar className="w-4 h-4" />
-                            <span className="hidden sm:inline">Vista Calendario</span>
-                            <span className="sm:hidden">Calendario</span>
-                        </button>
-                        <button
-                            className={`flex items-center gap-2 px-6 py-3 transition-all duration-200 font-medium ${
-                                activeView === 'kanban'
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
-                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
-                            }`}
-                            onClick={() => setActiveView('kanban')}
-                        >
-                            <Kanban className="w-4 h-4" />
-                            <span className="hidden sm:inline">Vista Kanban</span>
-                            <span className="sm:hidden">Kanban</span>
-                        </button>
                     </div>
-                </div>                <div className="flex items-center space-x-4">                    {/* Filtros de fecha */}
-                    <div className="flex gap-3 items-center">
+                </div>
+
+                {/* Segunda fila: Selector de vistas */}
+                <div className="flex rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white max-w-full">
+                    <button
+                        className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 transition-all duration-200 font-medium text-xs sm:text-sm ${
+                            activeView === 'table'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                        }`}
+                        onClick={() => setActiveView('table')}
+                    >
+                        <Table className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Vista Tabla</span>
+                        <span className="sm:hidden">Tabla</span>
+                    </button>
+                    <button
+                        className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 transition-all duration-200 font-medium text-xs sm:text-sm ${
+                            activeView === 'timeline'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                        }`}
+                        onClick={() => setActiveView('timeline')}
+                    >
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Vista Calendario</span>
+                        <span className="sm:hidden">Calendario</span>
+                    </button>
+                    <button
+                        className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 transition-all duration-200 font-medium text-xs sm:text-sm ${
+                            activeView === 'kanban'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
+                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:text-blue-600'
+                        }`}
+                        onClick={() => setActiveView('kanban')}
+                    >
+                        <Kanban className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Vista Kanban</span>
+                        <span className="sm:hidden">Kanban</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Tercera fila: Filtros */}
+            <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+                {/* Filtros de fecha */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
+                    <div className="flex gap-2 overflow-x-auto pb-1">
                         <button
                             onClick={() => setSelectedDateFilter('week')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                                 selectedDateFilter === 'week'
                                     ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
@@ -620,7 +631,7 @@ export default function ProjectTable() {
                         </button>
                         <button
                             onClick={() => setSelectedDateFilter('month')}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            className={`px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                                 selectedDateFilter === 'month'
                                     ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md transform scale-105'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
@@ -628,87 +639,87 @@ export default function ProjectTable() {
                         >
                             Mes actual
                         </button>
-                        <div className={`flex gap-3 items-center px-4 py-2 rounded-lg transition-all duration-200 ${
-                            selectedDateFilter === 'custom-month'
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}>
-                            <select
-                                className={`text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                                    selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
-                                }`}
-                                value={selectedYear}
-                                onChange={(e) => {
-                                    setSelectedYear(parseInt(e.target.value));
-                                    setSelectedDateFilter('custom-month');
-                                }}
-                            >
-                                {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
-                            <select
-                                className={`text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                                    selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
-                                }`}
-                                value={selectedMonth}
-                                onChange={(e) => {
-                                    setSelectedMonth(parseInt(e.target.value));
-                                    setSelectedDateFilter('custom-month');
-                                }}
-                            >
-                                {Array.from({ length: 12 }, (_, i) => i).map(month => (
-                                    <option key={month} value={month}>
-                                        {new Date(2000, month, 1).toLocaleString('es-ES', { month: 'long' })}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
-                    
-                    {/* Filtros básicos */}
-                    <div className="flex flex-wrap gap-3">
+                    <div className={`flex gap-2 items-center px-3 py-2 rounded-lg transition-all duration-200 ${
+                        selectedDateFilter === 'custom-month'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}>
                         <select
-                            className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                            value={filterEquipo}
-                            onChange={(e) => setFilterEquipo(e.target.value)}
+                            className={`text-xs sm:text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
+                            }`}
+                            value={selectedYear}
+                            onChange={(e) => {
+                                setSelectedYear(parseInt(e.target.value));
+                                setSelectedDateFilter('custom-month');
+                            }}
                         >
-                            <option value="">Todos los equipos</option>
-                            {equipos.map(equipo => (
-                                <option key={equipo} value={equipo}>{equipo}</option>
+                            {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map(year => (
+                                <option key={year} value={year}>{year}</option>
                             ))}
                         </select>
                         <select
-                            className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                            value={filterAnalista}
-                            onChange={(e) => setFilterAnalista(e.target.value)}
+                            className={`text-xs sm:text-sm rounded-md border-0 bg-transparent font-medium focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                                selectedDateFilter === 'custom-month' ? 'text-white' : 'text-gray-700'
+                            }`}
+                            value={selectedMonth}
+                            onChange={(e) => {
+                                setSelectedMonth(parseInt(e.target.value));
+                                setSelectedDateFilter('custom-month');
+                            }}
                         >
-                            <option value="">Todos los analistas</option>
-                            {analistas.map(analista => (
-                                <option key={analista} value={analista}>{analista}</option>
+                            {Array.from({ length: 12 }, (_, i) => i).map(month => (
+                                <option key={month} value={month}>
+                                    {new Date(2000, month, 1).toLocaleString('es-ES', { month: 'long' })}
+                                </option>
                             ))}
                         </select>
-                        <select
-                            className="border rounded px-3 py-2"
-                            value={filterEstado}
-                            onChange={(e) => setFilterEstado(e.target.value)}
-                        >
-                            <option value="">Todos los estados</option>
-                            <option value="Por Iniciar">Por Iniciar</option>
-                            <option value="En Progreso">En Progreso</option>
-                            <option value="Certificado">Certificado</option>
-                            <option value="Completado">Completado</option>
-                            <option value="Finalizado">Finalizado</option>
-                            <option value="Cancelado">Cancelado</option>
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Buscar proyecto..."
-                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
                     </div>
+                </div>
+                
+                {/* Filtros básicos */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+                    <select
+                        className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-xs sm:text-sm"
+                        value={filterEquipo}
+                        onChange={(e) => setFilterEquipo(e.target.value)}
+                    >
+                        <option value="">Todos los equipos</option>
+                        {equipos.map(equipo => (
+                            <option key={equipo} value={equipo}>{equipo}</option>
+                        ))}
+                    </select>
+                    <select
+                        className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-xs sm:text-sm"
+                        value={filterAnalista}
+                        onChange={(e) => setFilterAnalista(e.target.value)}
+                    >
+                        <option value="">Todos los analistas</option>
+                        {analistas.map(analista => (
+                            <option key={analista} value={analista}>{analista}</option>
+                        ))}
+                    </select>
+                    <select
+                        className="border border-gray-300 rounded-lg px-3 py-2 bg-white shadow-sm hover:border-blue-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-xs sm:text-sm"
+                        value={filterEstado}
+                        onChange={(e) => setFilterEstado(e.target.value)}
+                    >
+                        <option value="">Todos los estados</option>
+                        <option value="Por Iniciar">Por Iniciar</option>
+                        <option value="En Progreso">En Progreso</option>
+                        <option value="Certificado">Certificado</option>
+                        <option value="Completado">Completado</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="Buscar proyecto..."
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-xs sm:text-sm min-w-0 flex-1 sm:flex-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
             </div>
 
