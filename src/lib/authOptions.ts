@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
   // Configuración optimizada usando JWT con cache mejorado
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 8 * 60 * 60, // 8 hours
     updateAge: 60 * 60, // Actualizar sesión cada hora en lugar de cada request
   },
   // Configurar cookies optimizadas
@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         // Optimizar tiempo de vida de cookies
-        maxAge: 24 * 60 * 60, // 24 horas
+        maxAge: 8 * 60 * 60, // 8 horas
       }
     }
   },

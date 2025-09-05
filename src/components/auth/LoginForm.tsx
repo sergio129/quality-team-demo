@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,14 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Mostrar mensaje si la sesión se cerró por inactividad
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'inactive') {
+      toast.error("Tu sesión se cerró por inactividad (10 minutos sin actividad). Por favor, inicia sesión nuevamente.");
+    }
+  }, [searchParams]);
   
   // Setup form with validation
   const {
